@@ -1,5 +1,11 @@
 # Your project name (code repository)
 
+requirements:
+```
+pip install python-arango
+```
+
+
 
 <!--- example of figure
       always put the link to the img source (e.g. gslide):
