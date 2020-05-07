@@ -50,8 +50,8 @@ else:
 ############### populate graph ###############
 ##############################################
 
-# nodes collection
-file_routers = open("host.txt", "r")
+# nodes collection (routers)
+file_routers = open("routers.txt", "r")
 for line in file_routers:
     [name, ext_reachability] = line.split()
     if not nodes.has(name):
@@ -60,7 +60,7 @@ for line in file_routers:
         nodes.update({"_key": name, "type": "router", "ip_address": ext_reachability})
 file_routers.close()
 
-# core links collection
+# edges collection (core links)
 file_core = open("topologia.txt", "r")
 for line in file_core:
     line = line.split()
@@ -68,10 +68,18 @@ for line in file_core:
     for router in line:
         router = str(router)
         name = router0 + "-" + router
-        print(name, router0, router)
-        # if not edges.has(name):
-        edges.insert({
-            '_from': 'nodes/'+router0,
-            '_to': 'nodes/'+router,
-            'type': 'core'
-        })
+        # print(name, router0, router)
+        # if not edges.has(name):       # control on link id not done atm
+        edges.insert({'_from': 'nodes/'+router0, '_to': 'nodes/'+router, 'type': 'core'})
+
+# add hosts to node collection and hosts links to edges collection
+file_hosts = open("hosts.txt")
+for line in file_hosts:
+    [host, router, ip_add] = line.split(",")
+    if not nodes.has(host):
+        nodes.insert({"_key": host, "type": "host", "ip_address": ip_add})
+    else:
+        nodes.update({"_key": host, "type": "host", "ip_address": ip_add})
+    # insert edge in both directions
+    edges.insert({'_from': 'nodes/' + host, '_to': 'nodes/' + router, 'type': 'host'})
+    edges.insert({'_from': 'nodes/' + router, '_to': 'nodes/' + host, 'type': 'host'})
