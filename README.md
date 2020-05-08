@@ -3,6 +3,7 @@
 requirements:
 ```
 pip install python-arango
+pip install pyyaml
 ```
 
 
