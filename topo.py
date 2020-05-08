@@ -53,11 +53,11 @@ else:
 # nodes collection (routers)
 file_routers = open("routers.txt", "r")
 for line in file_routers:
-    [name, ext_reachability] = line.split()
+    [name, ext_reachability, ip_add] = line.split()
     if not nodes.has(name):
-        nodes.insert({"_key": name, "type": "router", "ip_address": ext_reachability})
+        nodes.insert({"_key": name, "type": "router", "ip_address": ip_add, "ext_reachability": ext_reachability})
     else:   # only specified fields are changed
-        nodes.update({"_key": name, "type": "router", "ip_address": ext_reachability})
+        nodes.update({"_key": name, "type": "router", "ip_address": ip_add, "ext_reachability": ext_reachability})
 file_routers.close()
 
 # edges collection (core links)
