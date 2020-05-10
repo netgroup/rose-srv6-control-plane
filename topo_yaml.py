@@ -2,8 +2,8 @@ from arango import ArangoClient
 import yaml
 
 USER = "root"
-PASSWORD = "giulio"
-ARANGO_URL = "http://192.168.56.101:8529"
+PASSWORD = "12345678"
+ARANGO_URL = "http://localhost:8529"
 
 # Initialize the ArangoDB client.
 client = ArangoClient(hosts=ARANGO_URL)
