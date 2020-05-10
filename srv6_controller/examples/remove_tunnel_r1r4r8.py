@@ -42,7 +42,7 @@ if not os.path.exists(controller_path):
           'remove_tunnel_r1r4r8.py points to a non existing folder\n')
     sys.exit(-2)
 
-sys.path.append(srv6_controller)
+sys.path.append(controller_path)
 from srv6_controller import handle_srv6_path, handle_srv6_behavior
 from srv6_controller import get_grpc_session
 

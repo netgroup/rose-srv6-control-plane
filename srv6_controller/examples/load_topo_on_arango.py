@@ -46,7 +46,7 @@ if not os.path.exists(controller_path):
           'load_topo_on_arango.py points to a non existing folder\n')
     sys.exit(-2)
 
-sys.path.append(srv6_controller)
+sys.path.append(controller_path)
 from srv6_controller import extract_topo_from_isis
 from srv6_controller import load_topo_on_arango
 
