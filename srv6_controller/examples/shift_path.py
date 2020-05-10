@@ -29,8 +29,11 @@ import os
 import sys
 import logging
 
+# Folder containing this script
+BASEPATH = os.path.dirname(os.path.realpath(__file__))
+
 # SRv6 controller dependencies
-controller_path = '../'
+controller_path = os.path.join(BASEPATH, '../')
 if controller_path == '':
     print('Error : Set controller_path variable in shift_path.py')
     sys.exit(-2)
@@ -45,7 +48,7 @@ from srv6_controller import handle_srv6_path, handle_srv6_behavior
 from srv6_controller import get_grpc_session
 
 # SRv6 Manager dependencies
-proto_path = '../protos/gen-py/'
+proto_path = os.path.join(BASEPATH, '../protos/gen-py/')
 if proto_path == '':
     print('Error : Set proto_path variable in shift_path.py')
     sys.exit(-2)

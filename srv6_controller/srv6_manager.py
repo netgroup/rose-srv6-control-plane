@@ -39,8 +39,11 @@ from socket import AF_INET6
 from pyroute2.netlink.exceptions import NetlinkError
 from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
+# Folder containing this script
+BASEPATH = os.path.dirname(os.path.realpath(__file__))
+
 # SRv6 Manager dependencies
-proto_path = 'protos/gen-py/'
+proto_path = os.path.join(BASEPATH, 'protos/gen-py/')
 if proto_path == '':
     print('Error : Set proto_path variable in srv6_manager.py')
     sys.exit(-2)

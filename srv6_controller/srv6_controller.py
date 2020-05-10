@@ -39,8 +39,11 @@ import json
 import sys
 import os
 
+# Folder containing this script
+BASEPATH = os.path.dirname(os.path.realpath(__file__))
+
 # SRv6 Manager dependencies
-proto_path = 'protos/gen-py/'
+proto_path = os.path.join(BASEPATH, 'protos/gen-py/')
 if proto_path == '':
     print('Error : Set proto_path variable in srv6_controller.py')
     sys.exit(-2)

@@ -32,8 +32,11 @@ from pyaml import yaml
 import re
 import logging
 
+# Folder containing this script
+BASEPATH = os.path.dirname(os.path.realpath(__file__))
+
 # SRv6 Controller dependencies
-controller_path = '../'
+controller_path = os.path.join(BASEPATH, '../')
 if controller_path == '':
     print('Error : Set controller_path variable in load_topo_on_arango.py')
     sys.exit(-2)
