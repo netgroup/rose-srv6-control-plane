@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ##############################################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome 'Tor Vergata')
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -12,7 +12,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -25,9 +25,34 @@
 
 # Imports
 import logging
+
+# SRv6 Controller dependencies
+controller_path = '../'
+if controller_path == '':
+    print('Error : Set controller_path variable in create_tunnel_r1r7r8.py')
+    sys.exit(-2)
+
+if not os.path.exists(controller_path):
+    print('Error : controller_path variable in '
+          'create_tunnel_r1r7r8.py points to a non existing folder\n')
+    sys.exit(-2)
+
+sys.path.append(srv6_controller)
 from srv6_controller import handle_srv6_path, handle_srv6_behavior
 from srv6_controller import get_grpc_session
+
 # SRv6 Manager dependencies
+proto_path = '../protos/gen-py/'
+if proto_path == '':
+    print('Error : Set proto_path variable in create_tunnel_r1r7r8.py')
+    sys.exit(-2)
+
+if not os.path.exists(proto_path):
+    print('Error : proto_path variable in '
+          'create_tunnel_r1r7r8.py points to a non existing folder\n')
+    sys.exit(-2)
+
+sys.path.append(proto_path)
 import srv6_manager_pb2
 
 

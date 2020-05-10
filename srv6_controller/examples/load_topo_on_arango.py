@@ -29,6 +29,19 @@ from ipaddress import IPv6Interface
 from pyaml import yaml
 import re
 import logging
+
+# SRv6 Controller dependencies
+controller_path = '../'
+if controller_path == '':
+    print('Error : Set controller_path variable in load_topo_on_arango.py')
+    sys.exit(-2)
+
+if not os.path.exists(controller_path):
+    print('Error : controller_path variable in '
+          'load_topo_on_arango.py points to a non existing folder\n')
+    sys.exit(-2)
+
+sys.path.append(srv6_controller)
 from srv6_controller import extract_topo_from_isis
 from srv6_controller import load_topo_on_arango
 
