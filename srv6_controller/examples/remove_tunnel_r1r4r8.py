@@ -97,7 +97,7 @@ def remove_tunnel_r1r4r8():
             channel=r8_chan,
             segment='fcff:8::100',
             device='r8-h83',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Decap route removed successfully')
@@ -112,7 +112,7 @@ def remove_tunnel_r1r4r8():
             channel=r1_chan,
             destination='fd00:0:83::/64',
             device='r1-h11',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Encap route removed successfully')
@@ -133,7 +133,7 @@ def remove_tunnel_r1r4r8():
             channel=r1_chan,
             segment='fcff:1::100',
             device='r1-h11',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Decap route removed successfully')
@@ -148,7 +148,7 @@ def remove_tunnel_r1r4r8():
             channel=r8_chan,
             destination='fd00:0:11::/64',
             device='r8-h83',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Encap route removed successfully')
