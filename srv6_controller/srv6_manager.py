@@ -38,6 +38,17 @@ from pyroute2.netlink.exceptions import NetlinkError
 from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # SRv6 Manager dependencies
+proto_path = 'protos/gen-py/'
+if proto_path == '':
+    print('Error : Set proto_path variable in srv6_manager.py')
+    sys.exit(-2)
+
+if not os.path.exists(proto_path):
+    print('Error : proto_path variable in '
+          'srv6_manager.py points to a non existing folder\n')
+    sys.exit(-2)
+
+sys.path.append(proto_path)
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
