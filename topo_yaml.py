@@ -4,6 +4,8 @@ import yaml
 USER = "root"
 PASSWORD = "12345678"
 ARANGO_URL = "http://localhost:8529"
+NODES_FILE = "nodes_hc.yaml"
+EDGES_FILE = "edges_hc.yaml"
 
 # Initialize the ArangoDB client.
 client = ArangoClient(hosts=ARANGO_URL)
@@ -52,7 +54,7 @@ else:
 ##############################################
 
 # nodes
-with open('nodes.yaml') as f:
+with open(NODES_FILE) as f:
     nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
     for node in nodes_dict:
         if not nodes.has(node["_key"]):
@@ -61,7 +63,7 @@ with open('nodes.yaml') as f:
             nodes.update(node)
 
 # edges
-with open('edges.yaml') as f:
+with open(EDGES_FILE) as f:
     edges_dict = yaml.load(f, Loader=yaml.FullLoader)
     for edge in edges_dict:
         edges.insert(edge)      # no control on key

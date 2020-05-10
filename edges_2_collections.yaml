@@ -59,21 +59,21 @@
 - _from: routers/r2
   _to: routers/r1
   type: core
-- _from: hosts/hdc1
+- _from: provider_hosts/hdc1
   _to: routers/r2
   type: host
 - _from: routers/r2
-  _to: hosts/hdc1
+  _to: provider_hosts/hdc1
   type: host
-- _from: hosts/hdc2
+- _from: provider_hosts/hdc2
   _to: routers/r8
   type: host
 - _from: routers/r8
-  _to: hosts/hdc2
+  _to: provider_hosts/hdc2
   type: host
-- _from: hosts/hdc3
+- _from: provider_hosts/hdc3
   _to: routers/r5
   type: host
 - _from: routers/r5
-  _to: hosts/hdc3
+  _to: provider_hosts/hdc3
   type: host
