@@ -1,4 +1,4 @@
-# Your project name (code repository)
+# rose-srv6-control-plane
 
 requirements:
 ```
