@@ -1,8 +1,0 @@
-r1: r2
-r7: r8 r6 r2
-r3: r4 r2 r2
-r4: r6 r3
-r5: r6
-r6: r8 r7 r5 r4
-r8: r7 r6
-r2: r7 r3 r3 r1
