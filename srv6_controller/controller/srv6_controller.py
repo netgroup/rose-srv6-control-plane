@@ -65,6 +65,10 @@ from ti_extraction import dump_topo_yaml
 # Global variables definition
 #
 #
+# ArangoDB parameters
+ARANGO_USER = 'root'
+ARANGO_PASSWORD = '12345678'
+ARANGO_URL = 'http://localhost:8529'
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
