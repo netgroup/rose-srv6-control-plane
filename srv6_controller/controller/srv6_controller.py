@@ -204,10 +204,6 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
     # If the device is not specified (i.e. empty string),
     # it will be chosen by the gRPC server
     behavior.device = text_type(device)
-    # Set table ID
-    # If the table ID is not specified (i.e. table=-1),
-    # the main table will be used
-    behavior.table = int(table)
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
@@ -266,6 +262,9 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
         elif op == 'del':
             # Remove the SRv6 behavior
             response = stub.Remove(request)
+        else:
+            logger.error('Invalid operation: %s' % op)
+            return None
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as e:
