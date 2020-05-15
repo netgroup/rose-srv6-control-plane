@@ -377,7 +377,7 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                     edges_file_yaml=edges_yaml
                 )
             if arango_url is not None and \
-                    user is not None and password is not None:
+                    arango_user is not None and arango_password is not None:
                 # Load the topology on Arango DB
                 load_topo_on_arango(
                     arango_url=arango_url,
