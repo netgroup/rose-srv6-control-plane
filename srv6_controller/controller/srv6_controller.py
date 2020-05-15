@@ -38,6 +38,7 @@ import time
 import json
 import sys
 import os
+from utils import get_address_family
 
 # Folder containing this script
 BASEPATH = os.path.dirname(os.path.realpath(__file__))
@@ -80,8 +81,19 @@ CERTIFICATE = 'client_cert.pem'
 
 # Build a grpc stub
 def get_grpc_session(server_ip, server_port):
-    # Get server IP
-    server_ip = "ipv6:[%s]:%s" % (server_ip, server_port)
+    # Get family of the gRPC IP
+    addr_family = get_address_family(server_ip)
+    # Build address depending on the family
+    if addr_family == AF_INET:
+        # IPv4 address
+        server_ip = 'ipv4:%s:%s' % (server_ip, server_port)
+    elif addr_family == AF_INET6:
+        # IPv6 address
+        server_ip =  'ipv6:[%s]:%s' % (server_ip, server_port)
+    else:
+        # Invalid address
+        logger.fatal('Invalid gRPC address: %s' % server_ip)
+        exit(-2)
     # If secure we need to establish a channel with the secure endpoint
     if SECURE:
         if CERTIFICATE is None:
