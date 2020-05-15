@@ -107,7 +107,7 @@ def dump_topo_json(G, topo_file):
     logger.info('Topology exported\n')
 
 
-def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml, edges_file_yaml):
+def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml=None, edges_file_yaml=None):
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
@@ -115,7 +115,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml, edges_file_y
     if 'pyaml' not in sys.modules:
         logger.critical('pyaml library required by dump_topo_yaml()'
                         'has not been imported. Is it installed?')
-        return
+        return None, None
     # Export nodes in YAML format
     nodes_yaml = [{
         '_key': node,
@@ -124,9 +124,10 @@ def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml, edges_file_y
         'ext_reachability': node_to_systemid[node]
     } for node in nodes]
     # Write nodes to file
-    logger.info('*** Exporting topology nodes to %s' % nodes_file_yaml)
-    with open(nodes_file_yaml, 'w') as outfile:
-        yaml.dump(nodes_yaml, outfile)
+    if nodes_file_yaml is not None:
+        logger.info('*** Exporting topology nodes to %s' % nodes_file_yaml)
+        with open(nodes_file_yaml, 'w') as outfile:
+            yaml.dump(nodes_yaml, outfile)
     # Export edges in YAML format
     edges_yaml = [{
         '_from': 'nodes/%s' % edge[0],
@@ -134,10 +135,12 @@ def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml, edges_file_y
         'type': 'core'
     } for edge in edges]
     # Write edges to file
-    logger.info('*** Exporting topology edges to %s' % edges_file_yaml)
-    with open(edges_file_yaml, 'w') as outfile:
-        yaml.dump(edges_yaml, outfile)
+    if edges_file_yaml is not None:
+        logger.info('*** Exporting topology edges to %s' % edges_file_yaml)
+        with open(edges_file_yaml, 'w') as outfile:
+            yaml.dump(edges_yaml, outfile)
     logger.info('Topology exported\n')
+    return nodes_yaml, edges_yaml
 
 
 def connect_telnet(router, port):

@@ -318,7 +318,7 @@ def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
     #
-    # Connect to a node and extracts the topology
+    # Connect to a node and extract the topology
     nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
         ips_ports=isis_nodes,
         verbose=verbose
@@ -340,31 +340,58 @@ def load_topo_on_arango(arango_url, user, password,
                         nodes_yaml, edges_yaml, verbose=False):
     # Load the topology on Arango DB
     # TODO... load_arango(arango_url, user, password, nodes_yaml, edges_yaml)
-    pass    
+    pass
 
 
-def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url,
-                                              user, password, nodes_yaml,
-                                              edges_yaml, verbose=False):
+def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
+                                              arango_user=None,
+                                              arango_password=None,
+                                              nodes_yaml=None, edges_yaml=None,
+                                              period=0, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])7
     #
-    # Extract the topology
-    extract_topo_from_isis(
-        isis_nodes=isis_nodes,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        verbose=verbose
-    )
-    # Load the topology on Arango DB
-    load_topo_on_arango(
-        arango_url=arango_url,
-        user=user,
-        password=password,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        verbose=verbose
-    )
+    # Topology Information Extraction
+    while (True):
+        # Connect to a node and extract the topology
+        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
+            ips_ports=isis_nodes,
+            verbose=verbose
+        )
+        if nodes is None or edges is None or node_to_systemid is None:
+            logger.error('Cannot extract topology')
+        else:
+            logger.info('Topology extracted')
+            if nodes_yaml is not None and edges_yaml is not None:
+                # Export the topology in YAML format
+                # This function returns a representation of nodes and
+                # edges ready to get uploaded on ArangoDB.
+                # Optionally, the nodes and the edges are exported in
+                # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
+                # are not None
+                nodes, edges = dump_topo_yaml(
+                    nodes=nodes,
+                    edges=edges,
+                    node_to_systemid=node_to_systemid,
+                    nodes_file_yaml=nodes_yaml,
+                    edges_file_yaml=edges_yaml
+                )
+            if arango_url is not None and \
+                    user is not None and password is not None:
+                # Load the topology on Arango DB
+                load_topo_on_arango(
+                    arango_url=arango_url,
+                    user=arango_user,
+                    password=arango_password,
+                    nodes_yaml=nodes,
+                    edges_yaml=edges,
+                    verbose=verbose
+                )
+            # Period = 0 means a single extraction
+            if period == 0:
+                break
+        # Wait 'period' seconds between two extractions
+        time.sleep(period)
 
 
 # Parse options
@@ -385,8 +412,8 @@ def parse_arguments():
     )
     parser.add_argument(
         '--loop-update', dest='loop_update', action='store', type=int,
-        default=-1, help='The interval between two consecutive topology '
-                         'extractions (in seconds)'
+        default=0, help='The interval between two consecutive topology '
+        'extractions (in seconds)'
     )
     parser.add_argument(
         '--router-list', dest='router_list', action='store', type=str,
@@ -401,6 +428,9 @@ def parse_arguments():
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
+    )
+    parser.add_argument(
+        '-v', '--verbose', action='store_true', help='Enable verbose mode'
     )
     # Parse input parameters
     args = parser.parse_args()
@@ -422,6 +452,8 @@ if __name__ == "__main__":
     router_list = args.router_list
     # Port on which the ISIS daemon is listening
     isis_port = args.isis_port
+    # Define whether enable the verbose mode or not
+    verbose = args.verbose
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
@@ -440,3 +472,37 @@ if __name__ == "__main__":
                  '**************************************\n'
                  % (yaml_output, update_arango, loop_update,
                     router_list, isis_port))
+    # Parameters
+    #
+    # IS-IS nodes (e.g. [2000::1-2608,2000::2-2608])
+    isis_nodes = list()
+    for ip in router_list.split(','):
+        isis_nodes.append('%s-%s' % (ip, isis_port))
+    # Nodes YAML filename
+    nodes_yaml = None
+    if yaml_output is not None:
+        nodes_yaml = os.path.join(yaml_output, 'nodes.yaml')
+    # Edges YAML filename
+    edges_yaml = None
+    if yaml_output is not None:
+        edges_yaml = os.path.join(yaml_output, 'edges.yaml')
+    # ArangoDB params
+    arango_url = None
+    arango_user = None
+    arango_password = None
+    if update_arango:
+        arango_url = ARANGO_URL
+        arango_user = ARANGO_USER
+        arango_password = ARANGO_PASSWORD
+    # Extract topology from ISIS, (optionally) export it in YAML format
+    # and (optionally) upload it on ArangoDB
+    extract_topo_from_isis_and_load_on_arango(
+        isis_nodes=isis_nodes,
+        arango_url=arango_url,
+        arango_user=arango_user,
+        arango_password=arango_password,
+        nodes_yaml=nodes_yaml,
+        edges_yaml=edges_yaml,
+        period=loop_update,
+        verbose=verbose
+    )
