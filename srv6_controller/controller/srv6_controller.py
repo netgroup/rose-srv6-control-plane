@@ -112,6 +112,8 @@ GRPC_PORT = 12345
 SECURE = False
 # SSL certificate of the root CA
 CERTIFICATE = 'client_cert.pem'
+# Default ISIS port
+DEFAULT_ISIS_PORT = 2608
 
 
 # Build a grpc stub
@@ -363,3 +365,78 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url,
         edges_yaml=edges_yaml,
         verbose=verbose
     )
+
+
+# Parse options
+def parse_arguments():
+    # Get parser
+    parser = ArgumentParser(
+        description='SRv6 Controller'
+    )
+    parser.add_argument(
+        '--yaml-output', dest='yaml_output', action='store_true',
+        default=None,
+        help='Path where the topology has to be exported in YAML format'
+    )
+    parser.add_argument(
+        '--update-arango', dest='update_arango', action='store_true',
+        default=False,
+        help='Define whether to load the topology on ArangoDB or not'
+    )
+    parser.add_argument(
+        '--loop-update', dest='loop_update', action='store', type=int,
+        default=-1, help='The interval between two consecutive topology '
+                         'extractions (in seconds)'
+    )
+    parser.add_argument(
+        '--router-list', dest='router_list', action='store', type=str,
+        required=True,
+        help='Comma-separated list of '
+             'routers from which the topology has been extracted'
+    )
+    parser.add_argument(
+        '--isis-port', dest='isis_port', action='store', type=int,
+        default=DEFAULT_ISIS_PORT,
+        help='Port on which the ISIS daemon is listening'
+    )
+    parser.add_argument(
+        '-d', '--debug', action='store_true', help='Activate debug logs'
+    )
+    # Parse input parameters
+    args = parser.parse_args()
+    # Return the arguments
+    return args
+
+
+if __name__ == "__main__":
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Path where the YAML files have to be stored
+    yaml_output = args.yaml_output
+    # Define whether to load the topology on ArangoDB or not
+    update_arango = args.update_arango
+    # Interval between two consecutive topology extractions
+    loop_update = args.loop_update
+    # Comma-separated list of routers from which the topology
+    # has been extracted
+    router_list = args.router_list
+    # Port on which the ISIS daemon is listening
+    isis_port = args.isis_port
+    # Setup properly the logger
+    if args.debug:
+        logger.setLevel(level=logging.DEBUG)
+    else:
+        logger.setLevel(level=logging.INFO)
+    # Debug settings
+    server_debug = logger.getEffectiveLevel() == logging.DEBUG
+    logging.info('SERVER_DEBUG:' + str(server_debug))
+    # Print configuration
+    logger.debug('\n\n****** Controller Configuration ******\n'
+                 '  YAML output: %s\n'
+                 '  Update Arango: %s\n'
+                 '  Loop update: %s\n'
+                 '  Router list: %s\n'
+                 '  ISIS port: %s\n'
+                 '**************************************\n'
+                 % (yaml_output, update_arango, loop_update,
+                    router_list, isis_port))
