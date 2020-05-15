@@ -91,10 +91,16 @@ from ti_extraction import dump_topo_yaml
 # Global variables definition
 #
 #
-# ArangoDB parameters
+# ArangoDB default parameters
 ARANGO_USER = 'root'
 ARANGO_PASSWORD = '12345678'
 ARANGO_URL = 'http://localhost:8529'
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+ARANGO_USER = os.getenv('ARANGO_USER', default=ARANGO_USER)
+ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', default=ARANGO_PASSWORD)
+ARANGO_URL = os.getenv('ARANGO_URL', default=ARANGO_URL)
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
