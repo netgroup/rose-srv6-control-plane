@@ -23,6 +23,8 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install graphviz
+      run: sudo apt-get install graphviz libgraphviz-dev
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
