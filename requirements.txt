@@ -2,7 +2,6 @@ decorator==4.4.2
 grpcio==1.28.1
 grpcio-tools==1.28.1
 networkx==2.4
-pkg-resources==0.0.0
 protobuf==3.11.3
 pyaml==20.4.0
 pygraphviz==1.5

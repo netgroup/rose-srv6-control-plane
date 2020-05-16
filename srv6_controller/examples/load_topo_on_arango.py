@@ -133,7 +133,8 @@ def fill_ip_addresses(nodes_yaml):
         if nodeid <= 0 or nodeid >= 2**16:
             # Overflow, address out of range
             logging.critical('Network overflow: no space left in the '
-                             'loopback subnet for the router %s' % _key)
+                             'loopback subnet for the router %s'
+                             % node['_key'])
             return
         # Prefix
         prefix = int(IPv6Interface(u'fcff::/16'))

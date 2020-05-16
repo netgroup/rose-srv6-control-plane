@@ -34,6 +34,11 @@ import re
 import socket
 import sys
 from optparse import OptionParser
+
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
+
 # Optional imports:
 #     NetworkX - only required to export the topology in JSON format
 #                and to draw the topology
@@ -53,9 +58,6 @@ except ImportError:
 # Global variables definition
 #
 #
-# Logger reference
-logging.basicConfig(level=logging.NOTSET)
-logger = logging.getLogger(__name__)
 # Default topology file
 DEFAULT_TOPOLOGY_FILE = '/tmp/topology.json'
 # Default nodes file
