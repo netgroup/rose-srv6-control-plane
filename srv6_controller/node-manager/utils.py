@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Implementation of SRv6 Manager
+# Utils for node manager
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #

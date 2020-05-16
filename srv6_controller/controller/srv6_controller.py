@@ -93,12 +93,12 @@ def get_grpc_session(server_ip, server_port):
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s' % server_ip)
-        exit(-2)
+        return None
     # If secure we need to establish a channel with the secure endpoint
     if SECURE:
         if CERTIFICATE is None:
             logger.fatal('Certificate required for gRPC secure mode')
-            exit(-1)
+            return None
         # Open the certificate file
         with open(CERTIFICATE, 'rb') as f:
             certificate = f.read()
