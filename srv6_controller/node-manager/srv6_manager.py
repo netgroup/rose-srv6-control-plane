@@ -56,7 +56,8 @@ import time
 import grpc
 from concurrent import futures
 from pyroute2 import IPRoute
-from socket import AF_INET6
+from socket import AF_INET, AF_INET6
+from utils import get_address_family
 # pyroute2 dependencies
 from pyroute2.netlink.exceptions import NetlinkError
 from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
@@ -323,6 +324,19 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  secure=DEFAULT_SECURE,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
+    # Get family of the gRPC IP
+    addr_family = get_address_family(grpc_ip)
+    # Build address depending on the family
+    if addr_family == AF_INET:
+        # IPv4 address
+        server_addr = '%s:%s' % (grpc_ip, grpc_port)
+    elif addr_family == AF_INET6:
+        # IPv6 address
+        server_addr =  '[%s]:%s' % (grpc_ip, grpc_port)
+    else:
+        # Invalid address
+        logger.fatal('Invalid gRPC address: %s' % grpc_ip)
+        exit(-2)
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     (srv6_manager_pb2_grpc
@@ -341,13 +355,12 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                                    .ssl_server_credentials(((key,
                                                              certificate),)))
         # Create a secure endpoint
-        grpc_server.add_secure_port('[%s]:%s' % (grpc_ip, grpc_port),
-                                    grpc_server_credentials)
+        grpc_server.add_secure_port(server_addr, grpc_server_credentials)
     else:
         # Create an insecure endpoint
-        grpc_server.add_insecure_port('[%s]:%s' % (grpc_ip, grpc_port))
+        grpc_server.add_insecure_port(server_addr)
     # Start the loop for gRPC
-    logger.info('*** Listening gRPC on address [%s]:%s' % (grpc_ip, grpc_port))
+    logger.info('*** Listening gRPC on address %s' % server_addr)
     grpc_server.start()
     while True:
         time.sleep(5)
