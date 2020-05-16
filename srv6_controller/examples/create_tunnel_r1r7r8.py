@@ -49,38 +49,86 @@ if __name__ == '__main__':
 # Imports
 import sys
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Folder containing this script
-BASEPATH = os.path.dirname(os.path.realpath(__file__))
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# SRv6 Controller dependencies
-controller_path = os.path.join(BASEPATH, '../')
-if controller_path == '':
-    print('Error : Set controller_path variable in create_tunnel_r1r7r8.py')
-    sys.exit(-2)
+# Folder containing the files auto-generated from proto files
+PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
 
-if not os.path.exists(controller_path):
-    print('Error : controller_path variable in '
-          'create_tunnel_r1r7r8.py points to a non existing folder\n')
-    sys.exit(-2)
+# Folder containing the controller
+CONTROLLER_PATH = os.path.join(BASE_PATH, '../controller/')
 
-sys.path.append(controller_path)
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+
+# PROTO_PATH
+if os.getenv('PROTO_PATH') is not None:
+    # Check if the PROTO_PATH variable is set
+    if os.getenv('PROTO_PATH') == '':
+        print('Error : Set PROTO_PATH variable in .env\n')
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(PROTO_PATH):
+        print('Error : PROTO_PATH variable in '
+              '.env points to a non existing folder')
+        sys.exit(-2)
+    # PROTO_PATH in .env is correct. We use it.
+    PROTO_PATH = os.getenv('PROTO_PATH')
+else:
+    # PROTO_PATH in .env is not set, we use the hardcoded path
+    #
+    # Check if the PROTO_PATH variable is set
+    if PROTO_PATH == '':
+        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(PROTO_PATH):
+        print('Error : PROTO_PATH variable in '
+              '%s points to a non existing folder' % sys.argv[0])
+        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
+        sys.exit(-2)
+
+# CONTROLLER_PATH
+if os.getenv('CONTROLLER_PATH') is not None:
+    # Check if the CONTROLLER_PATH variable is set
+    if os.getenv('CONTROLLER_PATH') == '':
+        print('Error : Set CONTROLLER_PATH variable in .env\n')
+        sys.exit(-2)
+    # Check if the CONTROLLER_PATH variable points to an existing folder
+    if not os.path.exists(CONTROLLER_PATH):
+        print('Error : CONTROLLER_PATH variable in '
+              '.env points to a non existing folder')
+        sys.exit(-2)
+    # CONTROLLER_PATH in .env is correct. We use it.
+    CONTROLLER_PATH = os.getenv('CONTROLLER_PATH')
+else:
+    # CONTROLLER_PATH in .env is not set, we use the hardcoded path
+    #
+    # Check if the CONTROLLER_PATH variable is set
+    if CONTROLLER_PATH == '':
+        print('Error : Set CONTROLLER_PATH variable in .env or %s' % sys.argv[0])
+        sys.exit(-2)
+    # Check if the CONTROLLER_PATH variable points to an existing folder
+    if not os.path.exists(CONTROLLER_PATH):
+        print('Error : CONTROLLER_PATH variable in '
+              '%s points to a non existing folder' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' % sys.argv[0])
+        sys.exit(-2)
+
+# Proto dependencies
+sys.path.append(PROTO_PATH)
+import srv6_manager_pb2
+
+# Controller dependencies
+sys.path.append(CONTROLLER_PATH)
 from srv6_controller import handle_srv6_path, handle_srv6_behavior
 from srv6_controller import get_grpc_session
-
-# SRv6 Manager dependencies
-proto_path = os.path.join(BASEPATH, '../protos/gen-py/')
-if proto_path == '':
-    print('Error : Set proto_path variable in create_tunnel_r1r7r8.py')
-    sys.exit(-2)
-
-if not os.path.exists(proto_path):
-    print('Error : proto_path variable in '
-          'create_tunnel_r1r7r8.py points to a non existing folder\n')
-    sys.exit(-2)
-
-sys.path.append(proto_path)
-import srv6_manager_pb2
 
 
 # Global variables definition

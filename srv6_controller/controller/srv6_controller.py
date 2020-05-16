@@ -55,6 +55,7 @@ from socket import AF_INET, AF_INET6
 from six import text_type
 from ipaddress import IPv4Interface, IPv6Interface
 from ipaddress import AddressValueError
+from dotenv import load_dotenv
 import grpc
 import logging
 import time
@@ -62,21 +63,46 @@ import json
 import sys
 from utils import get_address_family
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Folder containing this script
-BASEPATH = os.path.dirname(os.path.realpath(__file__))
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# SRv6 Manager dependencies
-proto_path = os.path.join(BASEPATH, 'protos/gen-py/')
-if proto_path == '':
-    print('Error : Set proto_path variable in srv6_controller.py')
-    sys.exit(-2)
+# Folder containing the files auto-generated from proto files
+PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
 
-if not os.path.exists(proto_path):
-    print('Error : proto_path variable in '
-          'srv6_controller.py points to a non existing folder\n')
-    sys.exit(-2)
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+if os.getenv('PROTO_PATH') is not None:
+    # Check if the PROTO_PATH variable is set
+    if os.getenv('PROTO_PATH') == '':
+        print('Error : Set PROTO_PATH variable in .env\n')
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(PROTO_PATH):
+        print('Error : PROTO_PATH variable in '
+              '.env points to a non existing folder')
+        sys.exit(-2)
+    # PROTO_PATH in .env is correct. We use it.
+    PROTO_PATH = os.getenv('PROTO_PATH')
+else:
+    # PROTO_PATH in .env is not set, we use the hardcoded path
+    #
+    # Check if the PROTO_PATH variable is set
+    if PROTO_PATH == '':
+        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(PROTO_PATH):
+        print('Error : PROTO_PATH variable in '
+              '%s points to a non existing folder' % sys.argv[0])
+        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
+        sys.exit(-2)
 
-sys.path.append(proto_path)
+# Proto dependencies
+sys.path.append(PROTO_PATH)
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
@@ -88,6 +114,16 @@ from ti_extraction import dump_topo_yaml
 # Global variables definition
 #
 #
+# ArangoDB default parameters
+ARANGO_USER = 'root'
+ARANGO_PASSWORD = '12345678'
+ARANGO_URL = 'http://localhost:8529'
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+ARANGO_USER = os.getenv('ARANGO_USER', default=ARANGO_USER)
+ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', default=ARANGO_PASSWORD)
+ARANGO_URL = os.getenv('ARANGO_URL', default=ARANGO_URL)
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
@@ -99,6 +135,8 @@ GRPC_PORT = 12345
 SECURE = False
 # SSL certificate of the root CA
 CERTIFICATE = 'client_cert.pem'
+# Default ISIS port
+DEFAULT_ISIS_PORT = 2608
 
 
 # Build a grpc stub
@@ -311,9 +349,9 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
 
 def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
     # Param isis_nodes: list of ip-port
-    # (e.g. [2000::1-2608,2000::2-2608])7
+    # (e.g. [2000::1-2608,2000::2-2608])
     #
-    # Connect to a node and extracts the topology
+    # Connect to a node and extract the topology
     nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
         ips_ports=isis_nodes,
         verbose=verbose
@@ -335,28 +373,169 @@ def load_topo_on_arango(arango_url, user, password,
                         nodes_yaml, edges_yaml, verbose=False):
     # Load the topology on Arango DB
     # TODO... load_arango(arango_url, user, password, nodes_yaml, edges_yaml)
-    pass    
+    pass
 
 
-def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url,
-                                              user, password, nodes_yaml,
-                                              edges_yaml, verbose=False):
+def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
+                                              arango_user=None,
+                                              arango_password=None,
+                                              nodes_yaml=None, edges_yaml=None,
+                                              period=0, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])7
     #
-    # Extract the topology
-    extract_topo_from_isis(
-        isis_nodes=isis_nodes,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        verbose=verbose
+    # Topology Information Extraction
+    while (True):
+        # Connect to a node and extract the topology
+        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
+            ips_ports=isis_nodes,
+            verbose=verbose
+        )
+        if nodes is None or edges is None or node_to_systemid is None:
+            logger.error('Cannot extract topology')
+        else:
+            logger.info('Topology extracted')
+            if nodes_yaml is not None and edges_yaml is not None:
+                # Export the topology in YAML format
+                # This function returns a representation of nodes and
+                # edges ready to get uploaded on ArangoDB.
+                # Optionally, the nodes and the edges are exported in
+                # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
+                # are not None
+                nodes, edges = dump_topo_yaml(
+                    nodes=nodes,
+                    edges=edges,
+                    node_to_systemid=node_to_systemid,
+                    nodes_file_yaml=nodes_yaml,
+                    edges_file_yaml=edges_yaml
+                )
+            if arango_url is not None and \
+                    arango_user is not None and arango_password is not None:
+                # Load the topology on Arango DB
+                load_topo_on_arango(
+                    arango_url=arango_url,
+                    user=arango_user,
+                    password=arango_password,
+                    nodes_yaml=nodes,
+                    edges_yaml=edges,
+                    verbose=verbose
+                )
+            # Period = 0 means a single extraction
+            if period == 0:
+                break
+        # Wait 'period' seconds between two extractions
+        time.sleep(period)
+
+
+# Parse options
+def parse_arguments():
+    # Get parser
+    parser = ArgumentParser(
+        description='SRv6 Controller'
     )
-    # Load the topology on Arango DB
-    load_topo_on_arango(
+    parser.add_argument(
+        '--yaml-output', dest='yaml_output', action='store_true',
+        default=None,
+        help='Path where the topology has to be exported in YAML format'
+    )
+    parser.add_argument(
+        '--update-arango', dest='update_arango', action='store_true',
+        default=False,
+        help='Define whether to load the topology on ArangoDB or not'
+    )
+    parser.add_argument(
+        '--loop-update', dest='loop_update', action='store', type=int,
+        default=0, help='The interval between two consecutive topology '
+        'extractions (in seconds)'
+    )
+    parser.add_argument(
+        '--router-list', dest='router_list', action='store', type=str,
+        required=True,
+        help='Comma-separated list of '
+             'routers from which the topology has been extracted'
+    )
+    parser.add_argument(
+        '--isis-port', dest='isis_port', action='store', type=int,
+        default=DEFAULT_ISIS_PORT,
+        help='Port on which the ISIS daemon is listening'
+    )
+    parser.add_argument(
+        '-d', '--debug', action='store_true', help='Activate debug logs'
+    )
+    parser.add_argument(
+        '-v', '--verbose', action='store_true', help='Enable verbose mode'
+    )
+    # Parse input parameters
+    args = parser.parse_args()
+    # Return the arguments
+    return args
+
+
+if __name__ == "__main__":
+    # Parse command-line arguments
+    args = parse_arguments()
+    # Path where the YAML files have to be stored
+    yaml_output = args.yaml_output
+    # Define whether to load the topology on ArangoDB or not
+    update_arango = args.update_arango
+    # Interval between two consecutive topology extractions
+    loop_update = args.loop_update
+    # Comma-separated list of routers from which the topology
+    # has been extracted
+    router_list = args.router_list
+    # Port on which the ISIS daemon is listening
+    isis_port = args.isis_port
+    # Define whether enable the verbose mode or not
+    verbose = args.verbose
+    # Setup properly the logger
+    if args.debug:
+        logger.setLevel(level=logging.DEBUG)
+    else:
+        logger.setLevel(level=logging.INFO)
+    # Debug settings
+    server_debug = logger.getEffectiveLevel() == logging.DEBUG
+    logging.info('SERVER_DEBUG:' + str(server_debug))
+    # Print configuration
+    logger.debug('\n\n****** Controller Configuration ******\n'
+                 '  YAML output: %s\n'
+                 '  Update Arango: %s\n'
+                 '  Loop update: %s\n'
+                 '  Router list: %s\n'
+                 '  ISIS port: %s\n'
+                 '**************************************\n'
+                 % (yaml_output, update_arango, loop_update,
+                    router_list, isis_port))
+    # Parameters
+    #
+    # IS-IS nodes (e.g. [2000::1-2608,2000::2-2608])
+    isis_nodes = list()
+    for ip in router_list.split(','):
+        isis_nodes.append('%s-%s' % (ip, isis_port))
+    # Nodes YAML filename
+    nodes_yaml = None
+    if yaml_output is not None:
+        nodes_yaml = os.path.join(yaml_output, 'nodes.yaml')
+    # Edges YAML filename
+    edges_yaml = None
+    if yaml_output is not None:
+        edges_yaml = os.path.join(yaml_output, 'edges.yaml')
+    # ArangoDB params
+    arango_url = None
+    arango_user = None
+    arango_password = None
+    if update_arango:
+        arango_url = ARANGO_URL
+        arango_user = ARANGO_USER
+        arango_password = ARANGO_PASSWORD
+    # Extract topology from ISIS, (optionally) export it in YAML format
+    # and (optionally) upload it on ArangoDB
+    extract_topo_from_isis_and_load_on_arango(
+        isis_nodes=isis_nodes,
         arango_url=arango_url,
-        user=user,
-        password=password,
+        arango_user=arango_user,
+        arango_password=arango_password,
         nodes_yaml=nodes_yaml,
         edges_yaml=edges_yaml,
+        period=loop_update,
         verbose=verbose
     )
