@@ -392,6 +392,12 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         time.sleep(5)
 
 
+# Check whether we have root permission or not
+# Return True if we have root permission, False otherwise
+def check_root():
+    return os.getuid() == 0
+
+
 # Parse options
 def parse_arguments():
     # Get parser
@@ -446,5 +452,9 @@ if __name__ == '__main__':
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
     logging.info('SERVER_DEBUG:' + str(server_debug))
+    # This script must be run as root
+    if not check_root():
+        print('*** %s must be run as root.\n' % sys.argv[0])
+        exit(1)
     # Start the server
     start_server(grpc_ip, grpc_port, secure, certificate, key)
