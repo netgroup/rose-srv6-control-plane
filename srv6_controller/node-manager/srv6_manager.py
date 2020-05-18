@@ -46,7 +46,6 @@ if __name__ == '__main__':
             # Execute the activation script to activate the venv
             exec(code, {'__file__': venv_path})
 
-from __future__ import absolute_import, division, print_function
 
 # General imports
 import sys
