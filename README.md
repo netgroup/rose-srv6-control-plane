@@ -107,6 +107,10 @@ user@rose-srv6:~$ cd protos
 user@rose-srv6:~$ bash build.sh
 ```
 
+The command above creates a new folder *gen-py* containing the server and the client stubs, under the directory *protos*.
+
+Edit the *PROTO_PATH* environment variable defined in *.env* under the folder **srv6_controller/controller** to make it pointing to the gen-py folder.
+
 
 ### Usage
 
@@ -203,6 +207,28 @@ Compile the protocol buffers (not requested if you have already done it for the 
 ```console
 user@rose-srv6:~$ cd protos
 user@rose-srv6:~$ bash build.sh
+```
+
+The command above creates a new folder *gen-py* containing the server and the client stubs, under the directory *protos*.
+
+Edit the *PROTO_PATH* environment variable defined in *.env* under the folder **srv6_controller/controller** to make it pointing to the gen-py folder.
+
+Optionally, you can set the following environment variable in .env if you want to connect the Controller to ArangoDB:
+
+```
+* ARANGO_USER
+* ARANGO_URL
+* ARANGO_PASSWORD
+```
+
+# Configure ArangoDB params
+export ARANGO_USER=root
+export ARANGO_PASSWORD=12345678
+export ARANGO_URL=http://localhost:8529
+
+make it pointing to the virtual environment folder of the controller.
+```text
+/root/.controller-venv
 ```
 
 
@@ -315,6 +341,12 @@ The examples are structure as follows:
     └── ...
 
 These examples are intented to be run on the *8r-1c-in-band-isis* Mininet-emulated topology, provided by https://github.com/netgroup/rose-srv6-tutorial.
+
+To run the SRv6 examples, you must start the srv6_manager.py on the 12345 port.
+
+Then you need to edit the following environment variables in *.env* under the folder **srv6_controller/examples**:
+* **PROTO_PATH**, path to the folder gen-py containing the gRPC auto-generated files.
+* **CONTROLLER_PATH**, path to the controller folder of this project.
 
 For a detailed explaination of the examples, see the documentation at https://docs.google.com/document/d/1izO3H8dUt7VoemXtcH-RG4cL127tG9m48edOdFFmktU/
 
