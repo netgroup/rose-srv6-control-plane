@@ -252,9 +252,20 @@ r1_chan = srv6_controller.get_grpc_session('fcff:1::1', 50000)
 # Get a gRPC Channel to the gRPC server executing on 'fcff:8::1'
 r1_chan = srv6_controller.get_grpc_session('fcff:8::1', 50000)
 # Create a SRv6 path from 'fcff:1::1' to 'fcff:8::1'
-srv6_controller.handle_srv6_path('add', r1_chan, destination='fd00:0:83::/64', segments=['fcff:7::1', 'fcff:8::100'], device='r1-h11', metric=100)
+srv6_controller.handle_srv6_path('add', r1_chan,
+    destination='fd00:0:83::/64',
+    segments=['fcff:7::1', 'fcff:8::100'],
+    device='r1-h11',
+    metric=100
+)
 # Create the decap behavior on 'fcff:8::1'
-srv6_controller.handle_srv6_behavior('add', r8_chan, segment='fcff:8::100', action='End.DT6', lookup_table=254, device='r8-h83', metric=100)
+srv6_controller.handle_srv6_behavior('add', r8_chan,
+    segment='fcff:8::100',
+    action='End.DT6',
+    lookup_table=254,
+    device='r8-h83',
+    metric=100
+)
 # Close the gRPC Channel
 channel.close()
 ```
@@ -262,12 +273,19 @@ channel.close()
 Example of interaction with ArangoDB:
 
 ```python
-# Extract the topology from the two nodes 'fcff:1::1' and 'fcff:2::1', export it to 'nodes.yaml' and 'edges.yaml' files and load the topology on ArangoDB
-srv6_controller.extract_topo_from_isis_and_load_on_arango(isis_nodes=['fcff:1::1-2608','fcff:2::1-2608'], arango_url='http://localhost:8529',
-                                                          arango_user='root',
-                                                          arango_password='12345678',
-                                                          nodes_yaml='nodes.yaml', edges_yaml='edges.yaml',
-                                                          period=0, verbose=False)
+# Extract the topology from the two nodes 'fcff:1::1' and 'fcff:2::1',
+# export it to 'nodes.yaml' and 'edges.yaml' files
+# and load the topology on ArangoDB
+srv6_controller.extract_topo_from_isis_and_load_on_arango(
+    isis_nodes=['fcff:1::1-2608','fcff:2::1-2608'],
+    arango_url='http://localhost:8529',
+    arango_user='root',
+    arango_password='12345678',
+    nodes_yaml='nodes.yaml',
+    edges_yaml='edges.yaml',
+    period=0,
+    verbose=False
+)
 ```
 
 
