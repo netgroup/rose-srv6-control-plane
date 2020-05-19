@@ -26,14 +26,14 @@
 import os
 
 # Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
+# This must be executed only if this file has been executed as a
 # script (instead of a module)
 if __name__ == '__main__':
     # Check if .venv file exists
     if os.path.exists('.venv'):
         with open('.venv', 'r') as venv_file:
             # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
+            venv_path = venv_file.read().rstrip()
         # Get path of the activation script
         venv_path = os.path.join(venv_path, 'bin/activate_this.py')
         if not os.path.exists(venv_path):
@@ -46,7 +46,6 @@ if __name__ == '__main__':
             # Execute the activation script to activate the venv
             exec(code, {'__file__': venv_path})
 
-from __future__ import absolute_import, division, print_function
 
 # General imports
 import sys
@@ -154,7 +153,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 self.loopback_interfaces.append(
                     link.get_attr('IFLA_IFNAME'))
             else:
-                self.non_loopback_interfaces.append(link.get_attr('IFLA_IFNAME'))        
+                self.non_loopback_interfaces.append(
+                    link.get_attr('IFLA_IFNAME'))
         # Build mapping interface to index
         interfaces = self.loopback_interfaces + self.non_loopback_interfaces
         # Iterate on the interfaces
@@ -203,7 +203,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     if path.device != '':
                         oif = self.interface_to_idx[path.device]
                     else:
-                        oif = self.interface_to_idx[self.non_loopback_interfaces[0]]
+                        oif = self.interface_to_idx[
+                            self.non_loopback_interfaces[0]]
                     self.ip_route.route(op, dst=path.destination, oif=oif,
                                         table=table,
                                         priority=metric,
@@ -243,7 +244,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 nexthop = nexthop if nexthop != '' else None
                 lookup_table = lookup_table if lookup_table != -1 else None
                 interface = interface if interface != '' else None
-                device = device if device != '' else self.non_loopback_interfaces[0]
+                device = device if device != '' \
+                    else self.non_loopback_interfaces[0]
                 table = table if table != -1 else None
                 metric = metric if metric != -1 else None
                 # Perform operation
@@ -358,7 +360,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '%s:%s' % (grpc_ip, grpc_port)
     elif addr_family == AF_INET6:
         # IPv6 address
-        server_addr =  '[%s]:%s' % (grpc_ip, grpc_port)
+        server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s' % grpc_ip)
