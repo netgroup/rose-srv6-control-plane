@@ -19,3 +19,6 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# in Docker environment we do not need virtual env
+*.venv

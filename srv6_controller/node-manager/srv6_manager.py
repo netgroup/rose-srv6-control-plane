@@ -23,10 +23,24 @@
 #
 
 
+import srv6_manager_pb2_grpc
+import srv6_manager_pb2
+from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
+from pyroute2.netlink.exceptions import NetlinkError
+from dotenv import load_dotenv
+from utils import get_address_family
+from socket import AF_INET, AF_INET6
+from pyroute2 import IPRoute
+from concurrent import futures
+import grpc
+import time
+import logging
+from argparse import ArgumentParser
+import sys
 import os
 
 # Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
+# This must be executed only if this file has been executed as a
 # script (instead of a module)
 if __name__ == '__main__':
     # Check if .venv file exists
@@ -46,22 +60,9 @@ if __name__ == '__main__':
             # Execute the activation script to activate the venv
             exec(code, {'__file__': venv_path})
 
-from __future__ import absolute_import, division, print_function
 
 # General imports
-import sys
-from argparse import ArgumentParser
-import logging
-import time
-import grpc
-from concurrent import futures
-from pyroute2 import IPRoute
-from socket import AF_INET, AF_INET6
-from utils import get_address_family
-from dotenv import load_dotenv
 # pyroute2 dependencies
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # Load environment variables from .env file
 load_dotenv()
@@ -103,8 +104,6 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
-import srv6_manager_pb2
-import srv6_manager_pb2_grpc
 
 
 # Global variables definition
@@ -154,7 +153,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 self.loopback_interfaces.append(
                     link.get_attr('IFLA_IFNAME'))
             else:
-                self.non_loopback_interfaces.append(link.get_attr('IFLA_IFNAME'))        
+                self.non_loopback_interfaces.append(
+                    link.get_attr('IFLA_IFNAME'))
         # Build mapping interface to index
         interfaces = self.loopback_interfaces + self.non_loopback_interfaces
         # Iterate on the interfaces
@@ -358,7 +358,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '%s:%s' % (grpc_ip, grpc_port)
     elif addr_family == AF_INET6:
         # IPv6 address
-        server_addr =  '[%s]:%s' % (grpc_ip, grpc_port)
+        server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s' % grpc_ip)
