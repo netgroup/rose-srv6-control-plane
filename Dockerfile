@@ -1,5 +1,5 @@
 FROM python:3.6-slim-buster
-A
+
 
 # Preparing working environment.
 RUN mkdir -p /root/workspace/srv6_controller
