@@ -1,3 +1,6 @@
+docs/
+.gitgub
+
 .DS_Store
 .idea/
 .vscode
@@ -16,4 +19,3 @@ htmlcov/
 dist/
 build/
 *.egg-info/
-
