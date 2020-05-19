@@ -74,9 +74,8 @@ PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
 # Environment variables have priority over hardcoded paths
 # If an environment variable is set, we must use it instead of
 # the hardcoded constant
-print(PROTO_PATH)
 if os.getenv('PROTO_PATH') is not None:
-    print("porcoddio")
+    PROTO_PATH = os.getenv('PROTO_PATH')
     # Check if the PROTO_PATH variable is set
     if os.getenv('PROTO_PATH') == '':
         print('Error : Set PROTO_PATH variable in .env\n')
@@ -87,10 +86,7 @@ if os.getenv('PROTO_PATH') is not None:
               '.env points to a non existing folder')
         sys.exit(-2)
     # PROTO_PATH in .env is correct. We use it.
-    PROTO_PATH = os.getenv('PROTO_PATH')
-    print(PROTO_PATH)
 else:
-    print("porcamadonna")
     # PROTO_PATH in .env is not set, we use the hardcoded path
     #
     # Check if the PROTO_PATH variable is set
@@ -106,7 +102,6 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
-print(PROTO_PATH)
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
