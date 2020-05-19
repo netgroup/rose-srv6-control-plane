@@ -8,6 +8,7 @@ docs/
 venv/
 env/
 
+**/*.pyc
 *.pyc
 *pb2*
 __pycache__/
@@ -21,4 +22,7 @@ build/
 *.egg-info/
 
 # in Docker environment we do not need virtual env
-*.venv
+# srv6_controller/controller/.venv
+# srv6_controller/examples/.venv
+# srv6_controller/node-manager/.venv
+**/.venv

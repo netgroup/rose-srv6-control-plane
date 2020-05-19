@@ -23,10 +23,28 @@
 #
 
 
+from ti_extraction import dump_topo_yaml
+from ti_extraction import connect_and_extract_topology_isis
+import srv6_manager_pb2_grpc
+import srv6_manager_pb2
+from utils import get_address_family
+import sys
+import json
+import time
+import logging
+import grpc
+from dotenv import load_dotenv
+from ipaddress import AddressValueError
+from ipaddress import IPv4Interface, IPv6Interface
+from six import text_type
+from socket import AF_INET, AF_INET6
+from threading import Thread
+from concurrent import futures
+from argparse import ArgumentParser
 import os
 
 # Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
+# This must be executed only if this file has been executed as a
 # script (instead of a module)
 if __name__ == '__main__':
     # Check if .venv file exists
@@ -47,21 +65,6 @@ if __name__ == '__main__':
             exec(code, {'__file__': venv_path})
 
 # General imports
-from __future__ import absolute_import, division, print_function
-from argparse import ArgumentParser
-from concurrent import futures
-from threading import Thread
-from socket import AF_INET, AF_INET6
-from six import text_type
-from ipaddress import IPv4Interface, IPv6Interface
-from ipaddress import AddressValueError
-from dotenv import load_dotenv
-import grpc
-import logging
-import time
-import json
-import sys
-from utils import get_address_family
 
 # Load environment variables from .env file
 load_dotenv()
@@ -103,12 +106,8 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
-import srv6_manager_pb2
-import srv6_manager_pb2_grpc
 
 # Import topology extraction utility functions
-from ti_extraction import connect_and_extract_topology_isis
-from ti_extraction import dump_topo_yaml
 
 
 # Global variables definition
@@ -149,7 +148,7 @@ def get_grpc_session(server_ip, server_port):
         server_ip = 'ipv4:%s:%s' % (server_ip, server_port)
     elif addr_family == AF_INET6:
         # IPv6 address
-        server_ip =  'ipv6:[%s]:%s' % (server_ip, server_port)
+        server_ip = 'ipv6:[%s]:%s' % (server_ip, server_port)
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s' % server_ip)
