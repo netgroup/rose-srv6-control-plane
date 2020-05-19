@@ -46,7 +46,6 @@ if __name__ == '__main__':
             # Execute the activation script to activate the venv
             exec(code, {'__file__': venv_path})
 
-from __future__ import absolute_import, division, print_function
 
 # General imports
 import sys
@@ -76,6 +75,7 @@ PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
 # If an environment variable is set, we must use it instead of
 # the hardcoded constant
 if os.getenv('PROTO_PATH') is not None:
+    PROTO_PATH = os.getenv('PROTO_PATH')
     # Check if the PROTO_PATH variable is set
     if os.getenv('PROTO_PATH') == '':
         print('Error : Set PROTO_PATH variable in .env\n')
@@ -86,7 +86,6 @@ if os.getenv('PROTO_PATH') is not None:
               '.env points to a non existing folder')
         sys.exit(-2)
     # PROTO_PATH in .env is correct. We use it.
-    PROTO_PATH = os.getenv('PROTO_PATH')
 else:
     # PROTO_PATH in .env is not set, we use the hardcoded path
     #
