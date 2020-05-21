@@ -350,8 +350,8 @@ class SessionSender(Thread):
 
 
             ipv6_packet = IPv6()
-            ipv6_packet.src = "fcff:1::1" #TODO me li da il controller?
-            ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
+            #ipv6_packet.src = "fcff:1::1" #TODO me li da il controller?
+            #ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
 
             mod_sidlist = self.set_punt(list(self.monitored_path["sidlistrev"]))
 
@@ -361,12 +361,13 @@ class SessionSender(Thread):
             srv6_header.lastentry = len(mod_sidlist)-1 #TODO vedere se funziona con NS variabile
 
             ipv6_packet_inside = IPv6()
-            ipv6_packet_inside.src = "fd00:0:13::1" #TODO  me li da il controller?
-            ipv6_packet_inside.dst = "fd00:0:83::2" #TODO  me li da il controller?
+            #ipv6_packet_inside.src = "fd00:0:13::1" #TODO  me li da il controller?
+            #ipv6_packet_inside.dst = "fd00:0:83::2" #TODO  me li da il controller?
+            ipv6_packet_inside.dst = self.monitored_path["sidlist"][-1]
 
             udp_packet = UDP()
-            udp_packet.dport = refl_udp_port
-            udp_packet.sport = ss_udp_port
+            udp_packet.dport = self.refl_udp_port
+            udp_packet.sport = self.ss_udp_port
 
             #in band response TODO gestire out band nel controller
             senderControlCode = 1
@@ -559,8 +560,8 @@ class SessionReflector(Thread):
         rfTransmitCounter = self.hwadapter.read_tx_counter(rfBlockNumber,self.monitored_path["returnsidlist"])
 
         ipv6_packet = IPv6()
-        ipv6_packet.src = "fcff:5::1" #TODO  me li da il controller?
-        ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
+        #ipv6_packet.src = "fcff:5::1" #TODO  me li da il controller?
+        #ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
 
         mod_sidlist = self.set_punt(list(self.monitored_path["returnsidlistrev"]))
         srv6_header = IPv6ExtHdrSegmentRouting()
@@ -569,8 +570,9 @@ class SessionReflector(Thread):
         srv6_header.lastentry = len(mod_sidlist)-1 #TODO vedere se funziona con NS variabile
 
         ipv6_packet_inside = IPv6()
-        ipv6_packet_inside.src = "fcff:5::1" #TODO  me li da il controller?
-        ipv6_packet_inside.dst = "fcff:2::1" #TODO  me li da il controller?
+        #ipv6_packet_inside.src = "fcff:5::1" #TODO  me li da il controller?
+        #ipv6_packet_inside.dst = "fcff:2::1" #TODO  me li da il controller?
+        ipv6_packet_inside.dst = self.monitored_path["returnsidlist"][-1]
 
         udp_packet = UDP()
         udp_packet.dport = self.ss_udp_port
@@ -832,6 +834,22 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         else:
             status = srv6pmCommons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR')
         return srv6pmSender_pb2.StartExperimentSenderReply(status=status)
+
+
+def add_pm_manager_to_server(server):
+    recvInterf = 'punt0'
+
+    driver = EbpfInterf()
+    #driver = IpSetInterf()
+
+    sessionsender = SessionSender(driver)
+    sessionreflector = SessionReflector(driver)
+    packetRecv = TestPacketReceiver(recvInterf,sessionsender,sessionreflector)
+    sessionreflector.start()
+    sessionsender.start()
+    packetRecv.start()
+
+    srv6pmService_pb2_grpc.add_SRv6PMServicer_to_server(TWAMPController(sessionsender,sessionreflector, packetRecv), server)
 
 
 def serve(ipaddr,gprcPort,recvInterf,epbfOutInterf,epbfInInterf):

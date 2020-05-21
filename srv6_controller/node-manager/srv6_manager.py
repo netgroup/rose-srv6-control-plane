@@ -117,7 +117,7 @@ NETLINK_ERROR_OPERATION_NOT_SUPPORTED = 95
 # Logger reference
 logger = logging.getLogger(__name__)
 #
-# Default parameters for SRv6 controller
+# Default parameters for SRv6 manager
 #
 # Server ip and port
 DEFAULT_GRPC_IP = '::'

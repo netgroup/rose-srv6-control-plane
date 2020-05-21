@@ -1,0 +1,16 @@
+syntax = "proto3";
+package srv6pm;
+import "srv6pmCommons.proto";
+
+service SRv6PMController {
+    // send data of an experiment
+    rpc SendMeasurementData (SendMeasurementDataRequest) returns (SendMeasurementDataResponse) {}
+}
+
+message SendMeasurementDataRequest {
+    repeated MeasurementData measurement_data = 1;
+}
+
+message SendMeasurementDataResponse {
+    StatusCode status = 1;
+}
