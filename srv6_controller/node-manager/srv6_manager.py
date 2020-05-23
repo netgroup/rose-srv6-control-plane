@@ -80,7 +80,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -102,6 +102,7 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
+import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
@@ -166,16 +167,16 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
     def parse_netlink_error(self, e):
         if e.code == NETLINK_ERROR_FILE_EXISTS:
             logger.warning('Netlink error: File exists')
-            return srv6_manager_pb2.STATUS_FILE_EXISTS
+            return commons_pb2.STATUS_FILE_EXISTS
         elif e.code == NETLINK_ERROR_NO_SUCH_PROCESS:
             logger.warning('Netlink error: No such process')
-            return srv6_manager_pb2.STATUS_NO_SUCH_PROCESS
+            return commons_pb2.STATUS_NO_SUCH_PROCESS
         elif e.code == NETLINK_ERROR_NO_SUCH_DEVICE:
             logger.warning('Netlink error: No such device')
-            return srv6_manager_pb2.STATUS_NO_SUCH_DEVICE
+            return commons_pb2.STATUS_NO_SUCH_DEVICE
         elif e.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
             logger.warning('Netlink error: Operation not supported')
-            return srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED
+            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         else:
             logger.warning('Generic internal error: %s' % e)
             srv6_manager_pb2.STATUS_INTERNAL_ERROR
@@ -213,7 +214,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                'segs': segments})
             elif op == 'get':
                 return srv6_manager_pb2.SRv6ManagerReply(
-                    status=srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+                    status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
             else:
                 # Operation unknown: this is a bug
                 logger.error('Unrecognized operation: %s' % op)
@@ -221,7 +222,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=srv6_manager_pb2.STATUS_SUCCESS)
+                status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as e:
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=self.parse_netlink_error(e))
@@ -255,7 +256,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                         table=table, priority=metric)
                 elif op == 'get':
                     return srv6_manager_pb2.SRv6ManagerReply(
-                        status=srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+                        status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
                 elif op == 'add' or op == 'change':
                     # Add a new route
                     # Fill encap dict with the parameters of the behavior
@@ -296,7 +297,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     else:
                         logger.debug('Error: Unrecognized action')
                         return srv6_manager_pb2.SRv6ManagerReply(
-                            status=srv6_manager_pb2.STATUS_INVALID_ACTION)
+                            status=commons_pb2.STATUS_INVALID_ACTION)
                     # Finalize encap dict
                     encap['type'] = 'seg6local'
                     encap['action'] = action
@@ -313,7 +314,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=srv6_manager_pb2.STATUS_SUCCESS)
+                status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as e:
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=self.parse_netlink_error(e))
@@ -324,7 +325,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # the entity carried by the request message
         res = self.HandleSRv6PathRequest(
             op, request.srv6_path_request, context)
-        if res.status == srv6_manager_pb2.STATUS_SUCCESS:
+        if res.status == commons_pb2.STATUS_SUCCESS:
             res = self.HandleSRv6BehaviorRequest(
                 op, request.srv6_behavior_request, context)
         return res

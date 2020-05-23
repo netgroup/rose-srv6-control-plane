@@ -1,5 +1,6 @@
 syntax = "proto3";
 package srv6pm;
+import "commons.proto";
 
 message ColorOptions {
     uint32 interval_duration = 1;
@@ -32,31 +33,17 @@ message MeasurementData {
 }
 
 message ExperimentDataResponse {
-    StatusCode status = 1;
+    srv6_services.StatusCode status = 1;
     repeated MeasurementData measurement_data = 2;
 }
 
 message StopExperimentReply {
-    StatusCode status = 1;
+    srv6_services.StatusCode status = 1;
 }
 
 enum MeasurementProtocol {
     TWAMP = 0;
     STAMP = 1;
-}
-
-enum StatusCode {
-  STATUS_SUCCESS = 0;
-  STATUS_OPERATION_NOT_SUPPORTED = 1;
-  STATUS_BAD_REQUEST = 2;
-  STATUS_INTERNAL_ERROR = 3;
-  STATUS_INVALID_GRPC_REQUEST = 4;
-  STATUS_FILE_EXISTS = 5;
-  STATUS_NO_SUCH_PROCESS = 6;
-  STATUS_INVALID_ACTION = 7;
-  STATUS_GRPC_SERVICE_UNAVAILABLE = 8;
-  STATUS_GRPC_UNAUTHORIZED = 9;
-  STATUS_NOT_CONFIGURED = 10;
 }
 
 enum AuthenticationMode {
@@ -89,7 +76,7 @@ enum PMDriver {
     IPSet = 1;
 }
 
-enum Configuration {
+message Configuration {
     uint32 ss_udp_port = 1;
     uint32 refl_udp_port = 2;
     ColorOptions color_options = 3;
@@ -97,5 +84,5 @@ enum Configuration {
 }
 
 message SetConfigurationReply {
-    StatusCode status = 1;
+    srv6_services.StatusCode status = 1;
 }

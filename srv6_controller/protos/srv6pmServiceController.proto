@@ -1,10 +1,13 @@
 syntax = "proto3";
 package srv6pm;
 import "srv6pmCommons.proto";
+import "commons.proto";
 
 service SRv6PMController {
     // send data of an experiment
     rpc SendMeasurementData (SendMeasurementDataRequest) returns (SendMeasurementDataResponse) {}
+    // send Iperf data
+    rpc SendIperfData (SendIperfDataRequest) returns (SendIperfDataResponse) {}
 }
 
 message SendMeasurementDataRequest {
@@ -12,5 +15,47 @@ message SendMeasurementDataRequest {
 }
 
 message SendMeasurementDataResponse {
-    StatusCode status = 1;
+    srv6_services.StatusCode status = 1;
+}
+
+message Interval {
+	string val = 1;
+}
+
+message Bitrate {
+	float val = 1;
+	string dim = 2;
+}
+
+message Transfer {
+	float val = 1;
+	string dim = 2;
+}
+
+message Retr {
+	uint32 val = 1;
+}
+
+message Cwnd {
+	float val = 1;
+	string dim = 2;
+}
+
+message IperfData {
+    string _from = 1;
+	uint32 measure_id = 2;
+	uint32 generator_id = 3;
+	Interval interval = 4;
+	Bitrate bitrate = 5;
+	Transfer transfer = 6;
+	Retr retr = 7;
+	Cwnd cwnd = 8;
+}
+
+message SendIperfDataRequest {
+    repeated IperfData iperf_data = 1;
+}
+
+message SendIperfDataResponse {
+    srv6_services.StatusCode status = 1;
 }

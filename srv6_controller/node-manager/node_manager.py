@@ -74,7 +74,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -96,12 +96,12 @@ else:
 
 # Node manager dependencies
 from srv6_manager import SRv6Manager
-from pm_manager import TWAMPController
 # Proto dependencies
 sys.path.append(PROTO_PATH)
-import srv6_manager_pb2
 import srv6_manager_pb2_grpc
+import srv6pmService_pb2_grpc
 
+import pm_manager
 
 # Logger reference
 logger = logging.getLogger(__name__)
@@ -142,10 +142,11 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         exit(-2)
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
-    (srv6_manager_pb2_grpc
-        .add_SRv6ManagerServicer_to_server(
+    # SRv6 Manager
+    srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
             SRv6Manager(), grpc_server)
-     )
+    # PM Manager
+    pm_manager.add_pm_manager_to_server(grpc_server)
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate

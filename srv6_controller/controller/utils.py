@@ -22,11 +22,55 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-
+from dotenv import load_dotenv
+import os
+import sys
 import grpc
 import logging
 from socket import AF_INET, AF_INET6
 from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Folder containing this script
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+# Folder containing the files auto-generated from proto files
+PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
+
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+if os.getenv('PROTO_PATH') is not None:
+    # Check if the PROTO_PATH variable is set
+    if os.getenv('PROTO_PATH') == '':
+        print('Error : Set PROTO_PATH variable in .env\n')
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(os.getenv('PROTO_PATH')):
+        print('Error : PROTO_PATH variable in '
+              '.env points to a non existing folder')
+        sys.exit(-2)
+    # PROTO_PATH in .env is correct. We use it.
+    PROTO_PATH = os.getenv('PROTO_PATH')
+else:
+    # PROTO_PATH in .env is not set, we use the hardcoded path
+    #
+    # Check if the PROTO_PATH variable is set
+    if PROTO_PATH == '':
+        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
+        sys.exit(-2)
+    # Check if the PROTO_PATH variable points to an existing folder
+    if not os.path.exists(PROTO_PATH):
+        print('Error : PROTO_PATH variable in '
+              '%s points to a non existing folder' % sys.argv[0])
+        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
+        sys.exit(-2)
+
+# Proto dependencies
+sys.path.append(PROTO_PATH)
+import commons_pb2
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -116,3 +160,47 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
         channel = grpc.insecure_channel(server_ip)
     # Return the channel
     return channel
+
+
+# Human-readable gRPC return status
+status_code_to_str = {
+    commons_pb2.STATUS_SUCCESS: 'Success',
+    commons_pb2.STATUS_OPERATION_NOT_SUPPORTED: ('Operation '
+                                                 'not supported'),
+    commons_pb2.STATUS_BAD_REQUEST: 'Bad request',
+    commons_pb2.STATUS_INTERNAL_ERROR: 'Internal error',
+    commons_pb2.STATUS_INVALID_GRPC_REQUEST: 'Invalid gRPC request',
+    commons_pb2.STATUS_FILE_EXISTS: 'An entity already exists',
+    commons_pb2.STATUS_NO_SUCH_PROCESS: 'Entity not found',
+    commons_pb2.STATUS_INVALID_ACTION: 'Invalid seg6local action',
+    commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE: ('gRPC service not '
+                                                  'available'),
+    commons_pb2.STATUS_GRPC_UNAUTHORIZED: 'Unauthorized',
+    commons_pb2.STATUS_NOT_CONFIGURED: 'Node not configured'
+}
+
+
+def __print_status_message(status_code, success_msg, failure_msg):
+    """Print success or failure message depending of the status code
+        returned by a gRPC operation.
+
+    Parameters
+    ----------
+    status_code : int
+        The status code returned by the gRPC operation
+    success_msg : str
+        The message to print in case of success
+    failure_msg : str
+        The message to print in case of error
+    """
+
+    if status_code == commons_pb2.STATUS_SUCCESS:
+        # Success
+        print('%s (status code %s - %s)'
+              % (success_msg, status_code,
+                 status_code_to_str.get(status_code, 'Unknown')))
+    else:
+        # Error
+        print('%s (status code %s - %s)'
+              % (failure_msg, status_code,
+                 status_code_to_str.get(status_code, 'Unknown')))

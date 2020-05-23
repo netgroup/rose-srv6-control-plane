@@ -71,7 +71,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -93,9 +93,11 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
+import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
+import utils
 
 # Global variables definition
 #
@@ -132,11 +134,11 @@ def parse_grpc_error(e):
     logger.error('gRPC client reported an error: %s, %s'
                  % (status_code, details))
     if grpc.StatusCode.UNAVAILABLE == status_code:
-        code = srv6_manager_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
+        code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
     elif grpc.StatusCode.UNAUTHENTICATED == status_code:
-        code = srv6_manager_pb2.STATUS_GRPC_UNAUTHORIZED
+        code = commons_pb2.STATUS_GRPC_UNAUTHORIZED
     else:
-        code = srv6_manager_pb2.STATUS_INTERNAL_ERROR
+        code = commons_pb2.STATUS_INTERNAL_ERROR
     # Return an error message
     return code
 
@@ -173,7 +175,7 @@ def handle_srv6_path(op, channel, destination, segments=[],
             path.encapmode = text_type(encapmode)
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return srv6_manager_pb2.STATUS_INTERNAL_ERROR
+                return commons_pb2.STATUS_INTERNAL_ERROR
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
@@ -242,7 +244,7 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
         if op == 'add':
             if action == '':
                 logger.error('*** Missing action for seg6local route')
-                return srv6_manager_pb2.STATUS_INTERNAL_ERROR
+                return commons_pb2.STATUS_INTERNAL_ERROR
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -336,13 +338,13 @@ def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
         segments=segments
     )
     # Pretty print status code
-    __print_status_message(
+    utils.__print_status_message(
         status_code=res,
         success_msg='Added SRv6 Path',
         failure_msg='Error in add_srv6_path()'
     )
     # If an error occurred, abort the operation
-    if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Perform "Decapsulaton and Specific IPv6 Table Lookup" function
     # on the egress node <egress>
@@ -359,19 +361,19 @@ def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
             channel=egress_channel,
             segment=localseg,
             action='End.DT6',
-            table=254
+            lookup_table=254
         )
         # Pretty print status code
-        __print_status_message(
+        utils.__print_status_message(
             status_code=res,
             success_msg='Added SRv6 Behavior',
             failure_msg='Error in add_srv6_behavior()'
         )
         # If an error occurred, abort the operation
-        if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+        if res != commons_pb2.STATUS_SUCCESS:
             return res
     # Success
-    return srv6pmCommons_pb2.STATUS_SUCCESS
+    return commons_pb2.STATUS_SUCCESS
 
 
 def __create_srv6_tunnel(node_l_channel, node_r_channel,
@@ -411,28 +413,28 @@ def __create_srv6_tunnel(node_l_channel, node_r_channel,
 
     # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
     res = __create_uni_srv6_tunnel(
-        ingress=node_l_channel,
-        egress=node_r_channel,
+        ingress_channel=node_l_channel,
+        egress_channel=node_r_channel,
         destination=dest_lr,
         segments=sidlist_lr,
         localseg=localseg_lr
     )
     # If an error occurred, abort the operation
-    if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
     res = __create_uni_srv6_tunnel(
-        ingress=node_r_channel,
-        egress=node_l_channel,
+        ingress_channel=node_r_channel,
+        egress_channel=node_l_channel,
         destination=dest_rl,
         segments=sidlist_rl,
         localseg=localseg_rl
     )
     # If an error occurred, abort the operation
-    if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Success
-    return srv6pmCommons_pb2.STATUS_SUCCESS
+    return commons_pb2.STATUS_SUCCESS
 
 
 def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
@@ -469,17 +471,17 @@ def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         destination=destination
     )
     # Pretty print status code
-    __print_status_message(
+    utils.__print_status_message(
         status_code=res,
         success_msg='Removed SRv6 Path',
         failure_msg='Error in remove_srv6_path()'
     )
     # If an error occurred, abort the operation
-    if res == srv6pmCommons_pb2.STATUS_NO_SUCH_PROCESS:
+    if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
         # If the 'ignore_errors' flag is set, continue
         if not ignore_errors:
             return res
-    elif res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    elif res != commons_pb2.STATUS_SUCCESS:
         return res
     # Remove "Decapsulaton and Specific IPv6 Table Lookup" function
     # from the egress node <egress>
@@ -497,23 +499,23 @@ def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             segment=localseg
         )
         # Pretty print status code
-        __print_status_message(
+        utils.__print_status_message(
             status_code=res,
             success_msg='Removed SRv6 behavior',
             failure_msg='Error in remove_srv6_behavior()'
         )
         # If an error occurred, abort the operation
-        if res == srv6pmCommons_pb2.STATUS_NO_SUCH_PROCESS:
+        if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
             # If the 'ignore_errors' flag is set, continue
             if not ignore_errors:
                 return res
-        elif res != srv6pmCommons_pb2.STATUS_SUCCESS:
+        elif res != commons_pb2.STATUS_SUCCESS:
             return res
     # Success
-    return srv6pmCommons_pb2.STATUS_SUCCESS
+    return commons_pb2.STATUS_SUCCESS
 
 
-def __destroy_srv6_tunnel(self, node_l_channel, node_r_channel,
+def __destroy_srv6_tunnel(node_l_channel, node_r_channel,
                           dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
                           ignore_errors=False):
     """Destroy a bidirectional SRv6 tunnel
@@ -549,26 +551,26 @@ def __destroy_srv6_tunnel(self, node_l_channel, node_r_channel,
     """
 
     # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
-    res = self.__destroy_uni_srv6_tunnel(
-        ingress=node_l_channel,
-        egress=node_r_channel,
+    res = __destroy_uni_srv6_tunnel(
+        ingress_channel=node_l_channel,
+        egress_channel=node_r_channel,
         destination=dest_lr,
         localseg=localseg_lr,
         ignore_errors=ignore_errors
     )
     # If an error occurred, abort the operation
-    if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
-    res = self.__destroy_uni_srv6_tunnel(
-        ingress=node_r_channel,
-        egress=node_l_channel,
+    res = __destroy_uni_srv6_tunnel(
+        ingress_channel=node_r_channel,
+        egress_channel=node_l_channel,
         destination=dest_rl,
         localseg=localseg_rl,
         ignore_errors=ignore_errors
     )
     # If an error occurred, abort the operation
-    if res != srv6pmCommons_pb2.STATUS_SUCCESS:
+    if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Success
-    return srv6pmCommons_pb2.STATUS_SUCCESS
+    return commons_pb2.STATUS_SUCCESS

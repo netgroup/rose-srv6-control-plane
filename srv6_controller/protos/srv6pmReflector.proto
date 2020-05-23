@@ -1,6 +1,7 @@
 syntax = "proto3";
 package srv6pm;
 import "srv6pmCommons.proto";
+import "commons.proto";
 
 service SRv6PMReflector {
     // start an experiment
@@ -24,7 +25,7 @@ message SRv6EPRequestReflector {
 
 // The SRv6EPReply message containing a simple status message
 message SRv6EPReplyReflector {
-    StatusCode status = 200;
+    srv6_services.StatusCode status = 200;
 }
 
 message StartExperimentReflectorRequest {
@@ -37,7 +38,7 @@ message StartExperimentReflectorRequest {
 }
 
 message StartExperimentReflectorReply {
-    StatusCode status = 1;
+    srv6_services.StatusCode status = 1;
 }
 
 message ReflectorOptions {
