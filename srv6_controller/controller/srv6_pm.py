@@ -561,7 +561,10 @@ def __get_measurement_results(sender_channel, reflector_channel,
                 'measure_id': data.meas_id,
                 'interval': data.interval,
                 'timestamp': data.timestamp,
-                'color': data.fwColor,
+                'fw_color': data.fwColor,
+                'rv_color': data.rvColor,
+                'sender_seq_num': data.ssSeqNum,
+                'reflector_seq_num': data.rfSeqNum,
                 'sender_tx_counter': data.ssTxCounter,
                 'sender_rx_counter': data.ssRxCounter,
                 'reflector_tx_counter': data.rfTxCounter,
@@ -817,12 +820,47 @@ def get_experiment_results(sender_channel, reflector_channel,
     """
 
     # Get the results
-    return __get_measurement_results(
+    results = __get_measurement_results(
         sender_channel=sender_channel,
         reflector_channel=reflector_channel,
         send_refl_sidlist=send_refl_sidlist,
         refl_send_sidlist=refl_send_sidlist
     )
+    if results is None:
+        print('No measurement data available')
+        return
+    # Publish results to Kafka
+    if KAFKA_SERVERS is not None:
+        for res in results:
+            measure_id = res['measure_id']
+            interval = res['interval']
+            timestamp = res['timestamp']
+            fw_color = res['fw_color']
+            rv_color = res['rv_color']
+            sender_seq_num = res['sender_seq_num']
+            reflector_seq_num = res['reflector_seq_num']
+            sender_tx_counter = res['sender_tx_counter']
+            sender_rx_counter = res['sender_rx_counter']
+            reflector_tx_counter = res['reflector_tx_counter']
+            reflector_rx_counter = res['reflector_rx_counter']
+            # Publish data to Kafka
+            publish_to_kafka(
+                bootstrap_servers=KAFKA_SERVERS,
+                topic='ktig',
+                measure_id=measure_id,
+                interval=interval,
+                timestamp=timestamp,
+                fw_color=fw_color,
+                rv_color=rv_color,
+                sender_seq_num=sender_seq_num,
+                reflector_seq_num=reflector_seq_num,
+                sender_tx_counter=sender_tx_counter,
+                sender_rx_counter=sender_rx_counter,
+                reflector_tx_counter=reflector_tx_counter,
+                reflector_rx_counter=reflector_rx_counter
+            )
+    # Return the results
+    return results
 
 
 def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
