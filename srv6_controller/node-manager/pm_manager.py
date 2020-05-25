@@ -476,6 +476,8 @@ class SessionSender(Thread):
             ipv6_packet = IPv6()
             # ipv6_packet.src = "fcff:1::1" #TODO me li da il controller?
             # ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
+            ipv6_packet.src = "fcf0:0:1:2::1"
+            ipv6_packet.dst = self.monitored_path["sidlist"][0]
 
             mod_sidlist = self.set_punt(
                 list(self.monitored_path["sidlistrev"]))
@@ -492,6 +494,7 @@ class SessionSender(Thread):
             # controller?
             # ipv6_packet_inside.dst = "fd00:0:83::2" #TODO  me li da il
             # controller?
+            ipv6_packet_inside.src = "fcff:1::1"
             ipv6_packet_inside.dst = self.monitored_path["sidlist"][-1]
 
             udp_packet = UDP()
@@ -698,6 +701,9 @@ class SessionReflector(Thread):
         ipv6_packet = IPv6()
         # ipv6_packet.src = "fcff:5::1" #TODO  me li da il controller?
         # ipv6_packet.dst = "fcff:4::1" #TODO  me li da il controller?
+        ipv6_packet.src = "fcff:8::1"
+        ipv6_packet.dst = self.monitored_path["returnsidlist"][0]
+
 
         mod_sidlist = self.set_punt(
             list(self.monitored_path["returnsidlistrev"]))
@@ -711,6 +717,7 @@ class SessionReflector(Thread):
         ipv6_packet_inside = IPv6()
         # ipv6_packet_inside.src = "fcff:5::1" #TODO  me li da il controller?
         # ipv6_packet_inside.dst = "fcff:2::1" #TODO  me li da il controller?
+        ipv6_packet_inside.src = "fcff:8::1"
         ipv6_packet_inside.dst = self.monitored_path["returnsidlist"][-1]
 
         udp_packet = UDP()
