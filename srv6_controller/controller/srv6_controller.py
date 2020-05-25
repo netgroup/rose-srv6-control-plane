@@ -134,9 +134,13 @@ else:
         sys.exit(-2)
 
 # Proto dependencies
-sys.path.append(ARANGODB_UTILS_PATH)
+sys.path.append(PROTO_PATH)
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
+
+# ArangoDB dependencies
+sys.path.append(ARANGODB_UTILS_PATH)
+import arango_db
 
 # Import topology extraction utility functions
 from ti_extraction import connect_and_extract_topology_isis
@@ -402,7 +406,7 @@ def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
 
 
 def load_topo_on_arango(arango_url, user, password,
-                        nodes_yaml, edges_yaml, verbose=False):
+                        nodes, edges, verbose=False):
     # Initialize database
     nodes_collection, edges_collection = arango_db.initialize_db(
         arango_url=arango_url,
@@ -413,8 +417,8 @@ def load_topo_on_arango(arango_url, user, password,
     arango_db.populate(
         nodes=nodes_collection,
         edges=edges_collection,
-        nodes_dict=nodes_yaml,
-        edges_dict=edges_yaml
+        nodes_dict=nodes,
+        edges_dict=edges
     )
 
 
@@ -458,8 +462,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                     arango_url=arango_url,
                     user=arango_user,
                     password=arango_password,
-                    nodes_yaml=nodes,
-                    edges_yaml=edges,
+                    nodes=nodes,
+                    edges=edges,
                     verbose=verbose
                 )
             # Period = 0 means a single extraction
