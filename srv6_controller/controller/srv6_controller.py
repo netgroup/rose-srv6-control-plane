@@ -405,14 +405,8 @@ def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
     )
 
 
-def load_topo_on_arango(arango_url, user, password,
-                        nodes, edges, verbose=False):
-    # Initialize database
-    nodes_collection, edges_collection = arango_db.initialize_db(
-        arango_url=arango_url,
-        arango_user=user,
-        arango_password=password
-    )
+def load_topo_on_arango(nodes, edges, nodes_collection,
+                        edges_collection, verbose=False):
     # Load the topology on Arango DB
     arango_db.populate(
         nodes=nodes_collection,
@@ -431,6 +425,15 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
     # (e.g. [2000::1-2608,2000::2-2608])
     #
     # Topology Information Extraction
+    #
+    # Initialize database
+    if arango_url is not None and arango_user is not None and \
+            arango_password is not None:
+        nodes_collection, edges_collection = arango_db.initialize_db(
+            arango_url=arango_url,
+            arango_user=arango_user,
+            arango_password=arango_password
+        )
     while (True):
         # Connect to a node and extract the topology
         nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
@@ -441,29 +444,27 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
             logger.error('Cannot extract topology')
         else:
             logger.info('Topology extracted')
-            if nodes_yaml is not None and edges_yaml is not None:
-                # Export the topology in YAML format
-                # This function returns a representation of nodes and
-                # edges ready to get uploaded on ArangoDB.
-                # Optionally, the nodes and the edges are exported in
-                # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
-                # are not None
-                nodes, edges = dump_topo_yaml(
-                    nodes=nodes,
-                    edges=edges,
-                    node_to_systemid=node_to_systemid,
-                    nodes_file_yaml=nodes_yaml,
-                    edges_file_yaml=edges_yaml
-                )
+            # Export the topology in YAML format
+            # This function returns a representation of nodes and
+            # edges ready to get uploaded on ArangoDB.
+            # Optionally, the nodes and the edges are exported in
+            # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
+            # are not None
+            nodes, edges = dump_topo_yaml(
+                nodes=nodes,
+                edges=edges,
+                node_to_systemid=node_to_systemid,
+                nodes_file_yaml=nodes_yaml,
+                edges_file_yaml=edges_yaml
+            )
             if arango_url is not None and \
                     arango_user is not None and arango_password is not None:
                 # Load the topology on Arango DB
                 load_topo_on_arango(
-                    arango_url=arango_url,
-                    user=arango_user,
-                    password=arango_password,
                     nodes=nodes,
                     edges=edges,
+                    nodes_collection=nodes_collection,
+                    edges_collection=edges_collection,
                     verbose=verbose
                 )
             # Period = 0 means a single extraction
