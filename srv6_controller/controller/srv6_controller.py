@@ -62,6 +62,7 @@ import time
 import json
 import sys
 from utils import get_address_family
+from pyaml import yaml
 
 # Load environment variables from .env file
 load_dotenv()
@@ -405,6 +406,61 @@ def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
     )
 
 
+def fill_ip_addresses(nodes, addresses_yaml):
+    # Read IP addresses information from a YAML file and
+    # add addresses to the nodes
+    logger.info('*** Filling nodes YAML file with IP addresses')
+    # Open hosts file
+    with open(addresses_yaml, 'r') as infile:
+        addresses = yaml.safe_load(infile.read())
+    # Parse addresses
+    node_to_addr = dict()
+    for addr in addresses:
+        node_to_addr[addr['node']] = addr['ip_address']
+    # Fill addresses
+    for node in nodes:
+        # Update the dict
+        node['ip_address'] = node_to_addr[node['_key']]
+    logger.info('*** Nodes YAML updated\n')
+    # Return the updated nodes list
+    return nodes
+
+
+def add_hosts(nodes, edges, hosts_yaml):
+    # Read hosts information from a YAML file and
+    # add hosts to the nodes and edges lists
+    logger.info('*** Adding hosts to the topology')
+    # Open hosts file
+    with open(hosts_yaml, 'r') as infile:
+        hosts = yaml.safe_load(infile.read())
+    # Add hosts and links
+    for host in hosts:
+        # Add host
+        nodes.append({
+            '_key': host['name'],
+            'type': 'host',
+            'ip_address': host['ip_address']
+        })
+        # Add edge (host to router)
+        edges.append({
+            '_from': 'nodes/%s' % host['name'],
+            '_to': 'nodes/%s' % host['gw'],
+            'type': 'edge'
+        })
+        # Add edge (router to host)
+        # This is required because we work with
+        # unidirectional edges
+        edges.append({
+            '_to': 'nodes/%s' % host['gw'],
+            '_from': 'nodes/%s' % host['name'],
+            'type': 'edge'
+        })
+    logger.info('*** Nodes YAML updated\n')
+    logger.info('*** Edges YAML updated\n')
+    # Return the updated nodes and edges lists
+    return nodes, edges
+
+
 def load_topo_on_arango(nodes, edges, nodes_collection,
                         edges_collection, verbose=False):
     # Load the topology on Arango DB
@@ -416,10 +472,18 @@ def load_topo_on_arango(nodes, edges, nodes_collection,
     )
 
 
+def save_yaml_dump(obj, filename):
+    # Save file
+    with open(filename, 'w') as outfile:
+        yaml.dump(obj, outfile)
+
+
 def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                                               arango_user=None,
                                               arango_password=None,
                                               nodes_yaml=None, edges_yaml=None,
+                                              addrs_yaml=None,
+                                              hosts_yaml=None,
                                               period=0, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
@@ -457,9 +521,19 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                 nodes_file_yaml=nodes_yaml,
                 edges_file_yaml=edges_yaml
             )
+            # Add IP addresses information
+            if addrs_yaml is not None:
+                fill_ip_addresses(nodes, addrs_yaml)
+            # Add hosts information
+            if hosts_yaml is not None:
+                add_hosts(nodes, edges, hosts_yaml)
+            # Save nodes YAML file
+            save_yaml_dump(nodes, nodes_yaml)
+            # Save edges YAML file
+            save_yaml_dump(edges, edges_yaml)
+            # Load the topology on Arango DB
             if arango_url is not None and \
                     arango_user is not None and arango_password is not None:
-                # Load the topology on Arango DB
                 load_topo_on_arango(
                     nodes=nodes,
                     edges=edges,
@@ -481,7 +555,7 @@ def parse_arguments():
         description='SRv6 Controller'
     )
     parser.add_argument(
-        '--yaml-output', dest='yaml_output', action='store_true',
+        '--yaml-output', dest='yaml_output', action='store',
         default=None,
         help='Path where the topology has to be exported in YAML format'
     )
@@ -505,6 +579,16 @@ def parse_arguments():
         '--isis-port', dest='isis_port', action='store', type=int,
         default=DEFAULT_ISIS_PORT,
         help='Port on which the ISIS daemon is listening'
+    )
+    parser.add_argument(
+        '--hosts-yaml', dest='hosts_yaml', action='store', type=str,
+        default=None,
+        help='YAML file containing the hosts'
+    )
+    parser.add_argument(
+        '--addrs-yaml', dest='addrs_yaml', action='store', type=str,
+        default=None,
+        help='YAML file containing the IP addresses'
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
@@ -532,6 +616,10 @@ if __name__ == "__main__":
     router_list = args.router_list
     # Port on which the ISIS daemon is listening
     isis_port = args.isis_port
+    # Hosts YAML filename
+    hosts_yaml = args.hosts_yaml
+    # IP addresses YAML filename
+    addrs_yaml = args.addrs_yaml
     # Define whether enable the verbose mode or not
     verbose = args.verbose
     # Setup properly the logger
@@ -584,5 +672,7 @@ if __name__ == "__main__":
         nodes_yaml=nodes_yaml,
         edges_yaml=edges_yaml,
         period=loop_update,
+        hosts_yaml=hosts_yaml,
+        addrs_yaml=addrs_yaml,
         verbose=verbose
     )
