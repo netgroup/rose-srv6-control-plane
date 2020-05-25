@@ -101,8 +101,40 @@ else:
         print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
         sys.exit(-2)
 
+# Folder containing the files auto-generated from proto files
+ARANGODB_UTILS_PATH = os.path.join(BASE_PATH, '../../db_update')
+
+# Environment variables have priority over hardcoded paths
+# If an environment variable is set, we must use it instead of
+# the hardcoded constant
+if os.getenv('ARANGODB_UTILS_PATH') is not None:
+    # Check if the ARANGODB_UTILS_PATH variable is set
+    if os.getenv('ARANGODB_UTILS_PATH') == '':
+        print('Error : Set ARANGODB_UTILS_PATH variable in .env\n')
+        sys.exit(-2)
+    # Check if the ARANGODB_UTILS_PATH variable points to an existing folder
+    if not os.path.exists(ARANGODB_UTILS_PATH):
+        print('Error : ARANGODB_UTILS_PATH variable in '
+              '.env points to a non existing folder')
+        sys.exit(-2)
+    # ARANGODB_UTILS_PATH in .env is correct. We use it.
+    ARANGODB_UTILS_PATH = os.getenv('ARANGODB_UTILS_PATH')
+else:
+    # ARANGODB_UTILS_PATH in .env is not set, we use the hardcoded path
+    #
+    # Check if the ARANGODB_UTILS_PATH variable is set
+    if ARANGODB_UTILS_PATH == '':
+        print('Error : Set ARANGODB_UTILS_PATH variable in .env or %s' % sys.argv[0])
+        sys.exit(-2)
+    # Check if the ARANGODB_UTILS_PATH variable points to an existing folder
+    if not os.path.exists(ARANGODB_UTILS_PATH):
+        print('Error : ARANGODB_UTILS_PATH variable in '
+              '%s points to a non existing folder' % sys.argv[0])
+        print('Error : Set ARANGODB_UTILS_PATH variable in .env or %s\n' % sys.argv[0])
+        sys.exit(-2)
+
 # Proto dependencies
-sys.path.append(PROTO_PATH)
+sys.path.append(ARANGODB_UTILS_PATH)
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
@@ -371,9 +403,19 @@ def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
 
 def load_topo_on_arango(arango_url, user, password,
                         nodes_yaml, edges_yaml, verbose=False):
+    # Initialize database
+    nodes_collection, edges_collection = arango_db.initialize_db(
+        arango_url=arango_url,
+        arango_user=user,
+        arango_password=password
+    )
     # Load the topology on Arango DB
-    # TODO... load_arango(arango_url, user, password, nodes_yaml, edges_yaml)
-    pass
+    arango_db.populate(
+        nodes=nodes_collection,
+        edges=edges_collection,
+        nodes_dict=nodes_yaml,
+        edges_dict=edges_yaml
+    )
 
 
 def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
@@ -382,7 +424,7 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                                               nodes_yaml=None, edges_yaml=None,
                                               period=0, verbose=False):
     # Param isis_nodes: list of ip-port
-    # (e.g. [2000::1-2608,2000::2-2608])7
+    # (e.g. [2000::1-2608,2000::2-2608])
     #
     # Topology Information Extraction
     while (True):
