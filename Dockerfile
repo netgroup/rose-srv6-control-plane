@@ -23,6 +23,7 @@ RUN ls -la -R
 CMD ["tail", "-f", "/dev/null"]
 
 FROM builder as node-manager
+WORKDIR /root/workspace/rose-srv6-control-plane/srv6_controller/
 # Install python requirements node-manager
 RUN pip3 install -r node-manager/requirements.txt
 # Build GRPC protos

@@ -15,7 +15,6 @@ inorder to build the node-manager image:
 
 ### Run the controller container
 
-
     docker run --name rose-srv6-controller  -it rose-srv6-controller:latest bash
 
 ### Run the node-manager container
