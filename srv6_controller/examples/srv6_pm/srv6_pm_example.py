@@ -60,7 +60,7 @@ load_dotenv()
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Folder containing the controller
-CONTROLLER_PATH = os.path.join(BASE_PATH, '../controller/')
+CONTROLLER_PATH = os.path.join(BASE_PATH, '../../controller/')
 
 # Environment variables have priority over hardcoded paths
 # If an environment variable is set, we must use it instead of
@@ -106,7 +106,7 @@ import utils
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Folder containing the files auto-generated from proto files
-PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
+PROTO_PATH = os.path.join(BASE_PATH, '../../protos/gen-py/')
 
 # Environment variables have priority over hardcoded paths
 # If an environment variable is set, we must use it instead of
