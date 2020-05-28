@@ -23,6 +23,18 @@
 #
 
 
+from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
+from pyroute2.netlink.exceptions import NetlinkError
+from dotenv import load_dotenv
+from utils import get_address_family
+from socket import AF_INET, AF_INET6
+from pyroute2 import IPRoute
+from concurrent import futures
+import grpc
+import time
+import logging
+from argparse import ArgumentParser
+import sys
 import os
 
 # Activate virtual environment if a venv path has been specified in .venv
@@ -48,19 +60,7 @@ if __name__ == '__main__':
 
 
 # General imports
-import sys
-from argparse import ArgumentParser
-import logging
-import time
-import grpc
-from concurrent import futures
-from pyroute2 import IPRoute
-from socket import AF_INET, AF_INET6
-from utils import get_address_family
-from dotenv import load_dotenv
 # pyroute2 dependencies
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # Load environment variables from .env file
 load_dotenv()

@@ -1,0 +1,21 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Controller Docker image
+      run: docker build --target controller -t rose-srv6-controller:$(date +%s) . --no-cache
+    - name: Build the Node manager Docker image
+      run: docker build --target node-manager -t rose-srv6-node-manager:$(date +%s) . --no-cache
+

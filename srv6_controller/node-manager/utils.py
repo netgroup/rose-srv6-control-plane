@@ -29,6 +29,8 @@ from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
 
 # Utiliy function to check if the IP
 # is a valid IPv6 address
+
+
 def validate_ipv6_address(ip):
     if ip is None:
         return False

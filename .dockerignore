@@ -1,0 +1,28 @@
+docs/
+.gitgub
+
+.DS_Store
+.idea/
+.vscode
+
+venv/
+env/
+
+**/*.pyc
+*.pyc
+*pb2*
+__pycache__/
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/
+
+# in Docker environment we do not need virtual env
+# srv6_controller/controller/.venv
+# srv6_controller/examples/.venv
+# srv6_controller/node-manager/.venv
+**/.venv
