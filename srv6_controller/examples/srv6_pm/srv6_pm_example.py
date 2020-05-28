@@ -152,14 +152,17 @@ logger = logging.getLogger(__name__)
 # Port of the gRPC server
 GRPC_PORT = 12345
 
+SENDER = 'fcfd:0:0:1::1'
+REFLECTOR = 'fcfd:0:0:8::1'
+
 
 def set_configuration():
     """Start a new experiment"""
 
     logger.info('*** Set experiment configuration')
     # IP addresses
-    sender = 'fcfd:0:0:1::1'
-    reflector = 'fcfd:0:0:8::1'
+    sender = SENDER
+    reflector = REFLECTOR
     logger.info('Sender: %s' % sender)
     logger.info('Reflector: %s' % reflector)
     # Open gRPC channels
@@ -183,8 +186,8 @@ def start_experiment():
 
     logger.info('*** Starting a new experiment')
     # IP addresses
-    sender = 'fcfd:0:0:1::1'
-    reflector = 'fcfd:0:0:8::1'
+    sender = SENDER
+    reflector = REFLECTOR
     logger.info('Sender: %s' % sender)
     logger.info('Reflector: %s' % reflector)
     # Open gRPC channels
@@ -221,8 +224,8 @@ def start_experiment():
 
 #     logger.info('*** Starting a new experiment')
 #     # IP addresses
-#     sender = 'fcfd:0:0:1::1'
-#     reflector = 'fcfd:0:0:8::1'
+#     sender = SENDER
+#     reflector = REFLECTOR
 #     logger.info('Sender: %s' % sender)
 #     logger.info('Reflector: %s' % reflector)
 #     # Open gRPC channels
@@ -259,8 +262,8 @@ def get_experiment_results():
 
     logger.info('*** Get experiment results')
     # IP addresses
-    sender = 'fcfd:0:0:1::1'
-    reflector = 'fcfd:0:0:8::1'
+    sender = SENDER
+    reflector = REFLECTOR
     logger.info('Sender: %s' % sender)
     logger.info('Reflector: %s' % reflector)
     # Open gRPC channels
@@ -302,8 +305,8 @@ def stop_experiment():
 
     logger.info('*** Stopping experiment')
     # IP addresses
-    sender = 'fcfd:0:0:1::1'
-    reflector = 'fcfd:0:0:8::1'
+    sender = SENDER
+    reflector = REFLECTOR
     logger.info('Sender: %s' % sender)
     logger.info('Reflector: %s' % reflector)
     # Open gRPC channels
