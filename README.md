@@ -21,7 +21,7 @@ inorder to build the node-manager image:
 
 Currently the exposed port is 12345
 
-    docker run --name rose-srv6-node-manager -p HOST_PORT:12345 rose-srv6-node-manager:latest
+    docker run --name rose-srv6-node-manager -p 12345:12345 rose-srv6-node-manager:latest
 
 ### Access to the Docker container
 

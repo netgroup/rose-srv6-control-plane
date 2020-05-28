@@ -4,7 +4,7 @@ RUN mkdir -p /root/workspace/rose-srv6-control-plane/srv6_controller
 WORKDIR /root/workspace/rose-srv6-control-plane
 COPY ./srv6_controller ./srv6_controller
 # Add generated grcp pyhton to PYTHONPATH
-ENV PYTHONPATH "${PYTHONPATH}:/root/workspace/srv6_controller/protos/gen-py"
+ENV PYTHONPATH "/root/workspace/rose-srv6-control-plane/srv6_controller/protos/gen-py"
 RUN mkdir -p /root/workspace/rose-srv6-control-plane/srv6_controller/protos/gen-py
 # Build GRPC protos
 RUN pip3 install grpcio grpcio-tools
@@ -31,6 +31,7 @@ WORKDIR /root/workspace/rose-srv6-control-plane/srv6_controller
 RUN pip3 install -r node-manager/requirements.txt
 # Move to node-manager directory and start node-manger
 WORKDIR /root/workspace/rose-srv6-control-plane/srv6_controller/node-manager
+RUN echo $PYTHONPATH
 SHELL ["/bin/bash", "-c", "source .env"]
 EXPOSE 12345
 CMD [ "python", "srv6_manager.py" ]
