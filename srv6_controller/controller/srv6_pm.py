@@ -24,6 +24,7 @@
 
 
 # General imports
+import os
 from concurrent import futures
 import grpc
 import logging
@@ -79,7 +80,9 @@ TOPIC_TWAMP = 'twamp'
 TOPIC_IPERF = 'iperf'
 
 # Kafka servers
-KAFKA_SERVERS = ['kafka:9092']
+KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', None)
+if KAFKA_SERVERS is not None:
+    KAFKA_SERVERS = KAFKA_SERVERS.split(',')
 
 
 """
@@ -846,7 +849,7 @@ def get_experiment_results(sender_channel, reflector_channel,
             # Publish data to Kafka
             publish_to_kafka(
                 bootstrap_servers=KAFKA_SERVERS,
-                topic='ktig',
+                topic=TOPIC_TWAMP,
                 measure_id=measure_id,
                 interval=interval,
                 timestamp=timestamp,
