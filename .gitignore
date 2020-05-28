@@ -7,6 +7,7 @@ env/
 
 *.pyc
 *pb2*
+*.swp
 __pycache__/
 
 .pytest_cache/

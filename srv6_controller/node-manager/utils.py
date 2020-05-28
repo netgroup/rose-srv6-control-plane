@@ -26,6 +26,7 @@
 from socket import AF_INET, AF_INET6
 from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
 
+
 # Utiliy function to check if the IP
 # is a valid IPv6 address
 

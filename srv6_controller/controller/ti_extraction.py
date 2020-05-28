@@ -29,12 +29,10 @@ import logging
 import json
 import os
 import time
-import threading
 import telnetlib
 import re
 import socket
 import sys
-from optparse import OptionParser
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -110,7 +108,8 @@ def dump_topo_json(G, topo_file):
     logger.info('Topology exported\n')
 
 
-def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml=None, edges_file_yaml=None):
+def dump_topo_yaml(nodes, edges, node_to_systemid,
+                   nodes_file_yaml=None, edges_file_yaml=None):
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
@@ -302,7 +301,7 @@ def connect_and_extract_topology_isis(ips_ports,
         hostname = None
         for line in database_details.splitlines():
             # Get hostname
-            m = re.search('Hostname: (\S+)', line)
+            m = re.search('Hostname: (\\S+)', line)
             if (m):
                 # Extract hostname
                 hostname = m.group(1)
@@ -338,8 +337,11 @@ def connect_and_extract_topology_isis(ips_ports,
 
 
 def topology_information_extraction_isis(routers, period, isisd_pwd,
-                                         topo_file_json=None, nodes_file_yaml=None, edges_file_yaml=None,
-                                         topo_graph=None, verbose=DEFAULT_VERBOSE):
+                                         topo_file_json=None,
+                                         nodes_file_yaml=None,
+                                         edges_file_yaml=None,
+                                         topo_graph=None,
+                                         verbose=DEFAULT_VERBOSE):
     # Topology Information Extraction
     while (True):
         # Extract the topology information
@@ -375,8 +377,8 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
 # Parse command line options and dump results
 def parseArguments():
     parser = ArgumentParser(
-        description='Topology Information Ex+traction (from ISIS) module for SRv6 '
-        'Controller'
+        description='Topology Information Ex+traction (from ISIS) '
+        'module for SRv6 Controller'
     )
     # ip:port of the routers
     parser.add_argument(
@@ -388,8 +390,8 @@ def parseArguments():
     # Topology Information Extraction period
     parser.add_argument(
         '-p', '--period', dest='period', type=int,
-        default=DEFAULT_TOPO_EXTRACTION_PERIOD,
-        help='Polling period (in seconds); a zero value means a single extraction'
+        default=DEFAULT_TOPO_EXTRACTION_PERIOD, help='Polling period '
+        '(in seconds); a zero value means a single extraction'
     )
     # Path of topology file (JSON)
     parser.add_argument(
@@ -400,14 +402,14 @@ def parseArguments():
     # Path of nodes file (YAML)
     parser.add_argument(
         '-r', '--nodes-yaml', dest='nodes_file_yaml', action='store',
-        default=DEFAULT_NODES_YAML_FILE, help='YAML file of the nodes extracted '
-        'from the topology'
+        default=DEFAULT_NODES_YAML_FILE,
+        help='YAML file of the nodes extracted from the topology'
     )
     # Path of edges file (YAML)
     parser.add_argument(
         '-e', '--edges-yaml', dest='edges_file_yaml', action='store',
-        default=DEFAULT_EDGES_YAML_FILE, help='JSON file of the edges extracted '
-        'from the topology'
+        default=DEFAULT_EDGES_YAML_FILE,
+        help='JSON file of the edges extracted from the topology'
     )
     # Path of topology graph
     parser.add_argument(

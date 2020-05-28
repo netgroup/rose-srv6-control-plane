@@ -52,6 +52,7 @@ import fire
 import utils
 import srv6_controller
 import ti_extraction
+import srv6_pm
 
 
 def handle_srv6_path(op, grpc_address, grpc_port, destination, segments="",
@@ -150,6 +151,73 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
     )
 
 
+def start_experiment(sender, reflector, grpc_port, send_refl_dest,
+                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
+                     send_in_interfaces, refl_in_interfaces,
+                     send_out_interfaces, refl_out_interfaces,
+                     measurement_protocol, measurement_type,
+                     authentication_mode, authentication_key,
+                     timestamp_format, delay_measurement_mode,
+                     padding_mbz, loss_measurement_mode, measure_id=None,
+                     send_refl_localseg=None, refl_send_localseg=None,
+                     force=False):
+    with srv6_controller.get_grpc_session(sender, grpc_port) as sender_channel, \
+            srv6_controller.get_grpc_session(reflector, grpc_port) as reflector_channel:
+        srv6_pm.start_experiment(
+            sender_channel=sender,
+            reflector_channel=reflector,
+            send_refl_dest=send_refl_dest,
+            refl_send_dest=refl_send_dest,
+            send_refl_sidlist=send_refl_sidlist,
+            refl_send_sidlist=refl_send_sidlist,
+            send_in_interfaces=send_in_interfaces,
+            refl_in_interfaces=refl_in_interfaces,
+            send_out_interfaces=send_out_interfaces,
+            refl_out_interfaces=refl_out_interfaces,
+            measurement_protocol=measurement_protocol,
+            measurement_type=measurement_type,
+            authentication_mode=authentication_mode,
+            authentication_key=authentication_key,
+            timestamp_format=timestamp_format,
+            delay_measurement_mode=delay_measurement_mode,
+            padding_mbz=padding_mbz,
+            loss_measurement_mode=loss_measurement_mode,
+            measure_id=measure_id,
+            send_refl_localseg=send_refl_localseg,
+            refl_send_localseg=refl_send_localseg,
+            force=force
+        )
+
+
+def get_experiment_results(sender, reflector, grpc_port,
+                           send_refl_sidlist, refl_send_sidlist):
+    with srv6_controller.get_grpc_session(sender, grpc_port) as sender_channel, \
+            srv6_controller.get_grpc_session(reflector, grpc_port) as reflector_channel:
+        srv6_pm.get_experiment_results(
+            sender_channel=sender_channel,
+            reflector_channel=reflector_channel,
+            send_refl_sidlist=send_refl_sidlist,
+            refl_send_sidlist=refl_send_sidlist
+        )
+
+
+def stop_experiment(sender, reflector, grpc_port, send_refl_dest,
+                    refl_send_dest, send_refl_sidlist, refl_send_sidlist,
+                    send_refl_localseg=None, refl_send_localseg=None):
+    with srv6_controller.get_grpc_session(sender, grpc_port) as sender_channel, \
+            srv6_controller.get_grpc_session(reflector, grpc_port) as reflector_channel:
+        srv6_pm.stop_experiment(
+            sender_channel=sender_channel,
+            reflector_channel=reflector_channel,
+            send_refl_dest=send_refl_dest,
+            refl_send_dest=refl_send_dest,
+            send_refl_sidlist=send_refl_sidlist,
+            refl_send_sidlist=refl_send_sidlist,
+            send_refl_localseg=send_refl_localseg,
+            refl_send_localseg=refl_send_localseg
+        )
+
+
 if __name__ == '__main__':
     srv6 = {
         'path': handle_srv6_path,
@@ -161,7 +229,14 @@ if __name__ == '__main__':
         'load_on_arango': load_topo_on_arango
     }
 
+    srv6_pm = {
+        'start_experiment': start_experiment,
+        'get_experiment_results': get_experiment_results,
+        'stop_experiment': stop_experiment
+    }
+
     fire.Fire({
         'srv6': srv6,
-        'topo_utils': topo_utils
+        'topo_utils': topo_utils,
+        'srv6_pm': srv6_pm
     })

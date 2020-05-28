@@ -1,5 +1,6 @@
 syntax = "proto3";
 package srv6_manager;
+import "commons.proto";
 
 service SRv6Manager {
   // Create operation
@@ -21,7 +22,7 @@ message SRv6ManagerRequest {
 // The SRv6ManagerReply message containing a simple status message
 // and some optional fields
 message SRv6ManagerReply {
-  StatusCode status = 1;
+  srv6_services.StatusCode status = 1;
   repeated SRv6Path paths = 2;
   repeated SRv6Behavior behaviors = 3;
 }
@@ -81,17 +82,4 @@ message SRv6Behavior {
   int32 table = 8;
   // Metric (i.e. the preference value of the route)
   int32 metric = 9;
-}
-
-enum StatusCode {
-  STATUS_SUCCESS = 0;
-  STATUS_OPERATION_NOT_SUPPORTED = 1;
-  STATUS_BAD_REQUEST = 2;
-  STATUS_INTERNAL_ERROR = 3;
-  STATUS_INVALID_GRPC_REQUEST = 4;
-  STATUS_FILE_EXISTS = 5;
-  STATUS_NO_SUCH_PROCESS = 6;
-  STATUS_INVALID_ACTION = 7;
-  STATUS_GRPC_SERVICE_UNAVAILABLE = 8;
-  STATUS_GRPC_UNAUTHORIZED = 9;
 }

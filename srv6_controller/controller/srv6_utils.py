@@ -65,21 +65,11 @@ if __name__ == '__main__':
             exec(code, {'__file__': venv_path})
 
 # General imports
-# from __future__ import absolute_import, division, print_function
-from argparse import ArgumentParser
-from concurrent import futures
-from threading import Thread
-from socket import AF_INET, AF_INET6
 from six import text_type
-from ipaddress import IPv4Interface, IPv6Interface
-from ipaddress import AddressValueError
 from dotenv import load_dotenv
 import grpc
 import logging
-import time
-import json
 import sys
-from utils import get_address_family
 
 # Load environment variables from .env file
 load_dotenv()
@@ -99,7 +89,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -121,9 +111,11 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
+import commons_pb2
+import srv6_manager_pb2
+import srv6_manager_pb2_grpc
 
-# Import topology extraction utility functions
-
+import utils
 
 # Global variables definition
 #
@@ -153,38 +145,6 @@ CERTIFICATE = 'client_cert.pem'
 DEFAULT_ISIS_PORT = 2608
 
 
-# Build a grpc stub
-def get_grpc_session(server_ip, server_port):
-    # Get family of the gRPC IP
-    addr_family = get_address_family(server_ip)
-    # Build address depending on the family
-    if addr_family == AF_INET:
-        # IPv4 address
-        server_ip = 'ipv4:%s:%s' % (server_ip, server_port)
-    elif addr_family == AF_INET6:
-        # IPv6 address
-        server_ip = 'ipv6:[%s]:%s' % (server_ip, server_port)
-    else:
-        # Invalid address
-        logger.fatal('Invalid gRPC address: %s' % server_ip)
-        return None
-    # If secure we need to establish a channel with the secure endpoint
-    if SECURE:
-        if CERTIFICATE is None:
-            logger.fatal('Certificate required for gRPC secure mode')
-            return None
-        # Open the certificate file
-        with open(CERTIFICATE, 'rb') as f:
-            certificate = f.read()
-        # Then create the SSL credentials and establish the channel
-        grpc_client_credentials = grpc.ssl_channel_credentials(certificate)
-        channel = grpc.secure_channel(server_ip, grpc_client_credentials)
-    else:
-        channel = grpc.insecure_channel(server_ip)
-    # Return the channel
-    return channel
-
-
 # Parser for gRPC errors
 def parse_grpc_error(e):
     status_code = e.code()
@@ -192,11 +152,11 @@ def parse_grpc_error(e):
     logger.error('gRPC client reported an error: %s, %s'
                  % (status_code, details))
     if grpc.StatusCode.UNAVAILABLE == status_code:
-        code = srv6_manager_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
+        code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
     elif grpc.StatusCode.UNAUTHENTICATED == status_code:
-        code = srv6_manager_pb2.STATUS_GRPC_UNAUTHORIZED
+        code = commons_pb2.STATUS_GRPC_UNAUTHORIZED
     else:
-        code = srv6_manager_pb2.STATUS_INTERNAL_ERROR
+        code = commons_pb2.STATUS_INTERNAL_ERROR
     # Return an error message
     return code
 
@@ -233,7 +193,7 @@ def handle_srv6_path(op, channel, destination, segments=[],
             path.encapmode = text_type(encapmode)
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return srv6_manager_pb2.STATUS_INTERNAL_ERROR
+                return commons_pb2.STATUS_INTERNAL_ERROR
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
@@ -302,7 +262,7 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
         if op == 'add':
             if action == '':
                 logger.error('*** Missing action for seg6local route')
-                return srv6_manager_pb2.STATUS_INTERNAL_ERROR
+                return commons_pb2.STATUS_INTERNAL_ERROR
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -361,195 +321,274 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
     return response
 
 
-def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
-    # Param isis_nodes: list of ip-port
-    # (e.g. [2000::1-2608,2000::2-2608])
+def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
+                             destination, segments, localseg=None):
+    """Create a unidirectional SRv6 tunnel from <ingress> to <egress>
+
+    Parameters
+    ----------
+    ingress_channel : <gRPC Channel>
+        The gRPC Channel to the ingress node
+    egress_channel : <gRPC Channel>
+        The gRPC Channel to the egress node
+    destination : str
+        The destination prefix of the SRv6 path.
+        It can be a IP address or a subnet.
+    segments : list
+        The SID list to be applied to the packets going to the destination
+    localseg : str, optional
+        The local segment to be associated to the End.DT6 seg6local
+        function on the egress node.
+        If the argument 'localseg' isn't passed in, the End.DT6 function
+        is not created.
+    """
+
+    # Add seg6 route to <ingress> to steer the packets sent to the
+    # <destination> through the SID list <segments>
     #
-    # Connect to a node and extract the topology
-    nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
-        ips_ports=isis_nodes,
-        verbose=verbose
+    # Equivalent to the command:
+    #    ingress: ip -6 route add <destination> encap seg6 mode encap \
+    #            segs <segments> dev <device>
+    res = handle_srv6_path(
+        op='add',
+        channel=ingress_channel,
+        destination=destination,
+        segments=segments
     )
-    if nodes is None or edges is None or node_to_systemid is None:
-        logger.error('Cannot extract topology')
-        return
-    # Export the topology in YAML format
-    dump_topo_yaml(
-        nodes=nodes,
-        edges=edges,
-        node_to_systemid=node_to_systemid,
-        nodes_file_yaml=nodes_yaml,
-        edges_file_yaml=edges_yaml
+    # Pretty print status code
+    utils.__print_status_message(
+        status_code=res,
+        success_msg='Added SRv6 Path',
+        failure_msg='Error in add_srv6_path()'
     )
-
-
-def load_topo_on_arango(arango_url, user, password,
-                        nodes_yaml, edges_yaml, verbose=False):
-    # Load the topology on Arango DB
-    # TODO... load_arango(arango_url, user, password, nodes_yaml, edges_yaml)
-    pass
-
-
-def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
-                                              arango_user=None,
-                                              arango_password=None,
-                                              nodes_yaml=None, edges_yaml=None,
-                                              period=0, verbose=False):
-    # Param isis_nodes: list of ip-port
-    # (e.g. [2000::1-2608,2000::2-2608])7
+    # If an error occurred, abort the operation
+    if res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Perform "Decapsulaton and Specific IPv6 Table Lookup" function
+    # on the egress node <egress>
+    # The decap function is associated to the <localseg> passed in
+    # as argument. If argument 'localseg' isn't passed in, the behavior
+    # is not added
     #
-    # Topology Information Extraction
-    while (True):
-        # Connect to a node and extract the topology
-        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
-            ips_ports=isis_nodes,
-            verbose=verbose
+    # Equivalent to the command:
+    #    egress: ip -6 route add <localseg> encap seg6local action \
+    #            End.DT6 table 254 dev <device>
+    if localseg is not None:
+        res = handle_srv6_behavior(
+            op='add',
+            channel=egress_channel,
+            segment=localseg,
+            action='End.DT6',
+            lookup_table=254
         )
-        if nodes is None or edges is None or node_to_systemid is None:
-            logger.error('Cannot extract topology')
-        else:
-            logger.info('Topology extracted')
-            if nodes_yaml is not None and edges_yaml is not None:
-                # Export the topology in YAML format
-                # This function returns a representation of nodes and
-                # edges ready to get uploaded on ArangoDB.
-                # Optionally, the nodes and the edges are exported in
-                # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
-                # are not None
-                nodes, edges = dump_topo_yaml(
-                    nodes=nodes,
-                    edges=edges,
-                    node_to_systemid=node_to_systemid,
-                    nodes_file_yaml=nodes_yaml,
-                    edges_file_yaml=edges_yaml
-                )
-            if arango_url is not None and \
-                    arango_user is not None and arango_password is not None:
-                # Load the topology on Arango DB
-                load_topo_on_arango(
-                    arango_url=arango_url,
-                    user=arango_user,
-                    password=arango_password,
-                    nodes_yaml=nodes,
-                    edges_yaml=edges,
-                    verbose=verbose
-                )
-            # Period = 0 means a single extraction
-            if period == 0:
-                break
-        # Wait 'period' seconds between two extractions
-        time.sleep(period)
+        # Pretty print status code
+        utils.__print_status_message(
+            status_code=res,
+            success_msg='Added SRv6 Behavior',
+            failure_msg='Error in add_srv6_behavior()'
+        )
+        # If an error occurred, abort the operation
+        if res != commons_pb2.STATUS_SUCCESS:
+            return res
+    # Success
+    return commons_pb2.STATUS_SUCCESS
 
 
-# Parse options
-def parse_arguments():
-    # Get parser
-    parser = ArgumentParser(
-        description='SRv6 Controller'
+def __create_srv6_tunnel(node_l_channel, node_r_channel,
+                         sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                         localseg_lr=None, localseg_rl=None):
+    """Create a bidirectional SRv6 tunnel.
+
+    Parameters
+    ----------
+    node_l_channel : str
+        The gRPC Channel to the left endpoint of the SRv6 tunnel
+    node_r : str
+        The gRPC Channel to the right endpoint of the SRv6 tunnel
+    sidlist_lr : list
+        The SID list to be installed on the packets going
+        from <node_l> to <node_r>
+    sidlist_rl : list
+        SID list to be installed on the packets going
+        from <node_r> to <node_l>
+    dest_lr : str
+        The destination prefix of the SRv6 path from <node_l> to <node_r>.
+        It can be a IP address or a subnet.
+    dest_rl : str
+        The destination prefix of the SRv6 path from <node_r> to <node_l>.
+        It can be a IP address or a subnet.
+    localseg_lr : str, optional
+        The local segment to be associated to the End.DT6 seg6local
+        function for the SRv6 path from <node_l> to <node_r>.
+        If the argument 'localseg_l' isn't passed in, the End.DT6 function
+        is not created.
+    localseg_rl : str, optional
+        The local segment to be associated to the End.DT6 seg6local
+        function for the SRv6 path from <node_r> to <node_l>.
+        If the argument 'localseg_r' isn't passed in, the End.DT6 function
+        is not created.
+    """
+
+    # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
+    res = __create_uni_srv6_tunnel(
+        ingress_channel=node_l_channel,
+        egress_channel=node_r_channel,
+        destination=dest_lr,
+        segments=sidlist_lr,
+        localseg=localseg_lr
     )
-    parser.add_argument(
-        '--yaml-output', dest='yaml_output', action='store_true',
-        default=None,
-        help='Path where the topology has to be exported in YAML format'
+    # If an error occurred, abort the operation
+    if res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
+    res = __create_uni_srv6_tunnel(
+        ingress_channel=node_r_channel,
+        egress_channel=node_l_channel,
+        destination=dest_rl,
+        segments=sidlist_rl,
+        localseg=localseg_rl
     )
-    parser.add_argument(
-        '--update-arango', dest='update_arango', action='store_true',
-        default=False,
-        help='Define whether to load the topology on ArangoDB or not'
-    )
-    parser.add_argument(
-        '--loop-update', dest='loop_update', action='store', type=int,
-        default=0, help='The interval between two consecutive topology '
-        'extractions (in seconds)'
-    )
-    parser.add_argument(
-        '--router-list', dest='router_list', action='store', type=str,
-        required=True,
-        help='Comma-separated list of '
-             'routers from which the topology has been extracted'
-    )
-    parser.add_argument(
-        '--isis-port', dest='isis_port', action='store', type=int,
-        default=DEFAULT_ISIS_PORT,
-        help='Port on which the ISIS daemon is listening'
-    )
-    parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
-    )
-    parser.add_argument(
-        '-v', '--verbose', action='store_true', help='Enable verbose mode'
-    )
-    # Parse input parameters
-    args = parser.parse_args()
-    # Return the arguments
-    return args
+    # If an error occurred, abort the operation
+    if res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Success
+    return commons_pb2.STATUS_SUCCESS
 
 
-if __name__ == "__main__":
-    # Parse command-line arguments
-    args = parse_arguments()
-    # Path where the YAML files have to be stored
-    yaml_output = args.yaml_output
-    # Define whether to load the topology on ArangoDB or not
-    update_arango = args.update_arango
-    # Interval between two consecutive topology extractions
-    loop_update = args.loop_update
-    # Comma-separated list of routers from which the topology
-    # has been extracted
-    router_list = args.router_list
-    # Port on which the ISIS daemon is listening
-    isis_port = args.isis_port
-    # Define whether enable the verbose mode or not
-    verbose = args.verbose
-    # Setup properly the logger
-    if args.debug:
-        logger.setLevel(level=logging.DEBUG)
-    else:
-        logger.setLevel(level=logging.INFO)
-    # Debug settings
-    server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logging.info('SERVER_DEBUG:' + str(server_debug))
-    # Print configuration
-    logger.debug('\n\n****** Controller Configuration ******\n'
-                 '  YAML output: %s\n'
-                 '  Update Arango: %s\n'
-                 '  Loop update: %s\n'
-                 '  Router list: %s\n'
-                 '  ISIS port: %s\n'
-                 '**************************************\n'
-                 % (yaml_output, update_arango, loop_update,
-                    router_list, isis_port))
-    # Parameters
+def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
+                              localseg=None, ignore_errors=False):
+    """Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>
+
+    Parameters
+    ----------
+    ingress_channel : <gRPC Channel>
+        The gRPC Channel to the ingress node
+    egress_channel : <gRPC Channel>
+        The gRPC Channel to the egress node
+    destination : str
+        The destination prefix of the SRv6 path.
+        It can be a IP address or a subnet.
+    localseg : str, optional
+        The local segment associated to the End.DT6 seg6local
+        function on the egress node.
+        If the argument 'localseg' isn't passed in, the End.DT6 function
+        is not removed.
+    ignore_errors : bool, optional
+        Whether to ignore "No such process" errors or not (default is False)
+    """
+
+    # Remove seg6 route from <ingress> to steer the packets sent to
+    # <destination> through the SID list <segments>
     #
-    # IS-IS nodes (e.g. [2000::1-2608,2000::2-2608])
-    isis_nodes = list()
-    for ip in router_list.split(','):
-        isis_nodes.append('%s-%s' % (ip, isis_port))
-    # Nodes YAML filename
-    nodes_yaml = None
-    if yaml_output is not None:
-        nodes_yaml = os.path.join(yaml_output, 'nodes.yaml')
-    # Edges YAML filename
-    edges_yaml = None
-    if yaml_output is not None:
-        edges_yaml = os.path.join(yaml_output, 'edges.yaml')
-    # ArangoDB params
-    arango_url = None
-    arango_user = None
-    arango_password = None
-    if update_arango:
-        arango_url = ARANGO_URL
-        arango_user = ARANGO_USER
-        arango_password = ARANGO_PASSWORD
-    # Extract topology from ISIS, (optionally) export it in YAML format
-    # and (optionally) upload it on ArangoDB
-    extract_topo_from_isis_and_load_on_arango(
-        isis_nodes=isis_nodes,
-        arango_url=arango_url,
-        arango_user=arango_user,
-        arango_password=arango_password,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        period=loop_update,
-        verbose=verbose
+    # Equivalent to the command:
+    #    ingress: ip -6 route del <destination> encap seg6 mode encap \
+    #             segs <segments> dev <device>
+    res = handle_srv6_path(
+        op='del',
+        channel=ingress_channel,
+        destination=destination
     )
+    # Pretty print status code
+    utils.__print_status_message(
+        status_code=res,
+        success_msg='Removed SRv6 Path',
+        failure_msg='Error in remove_srv6_path()'
+    )
+    # If an error occurred, abort the operation
+    if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
+        # If the 'ignore_errors' flag is set, continue
+        if not ignore_errors:
+            return res
+    elif res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Remove "Decapsulaton and Specific IPv6 Table Lookup" function
+    # from the egress node <egress>
+    # The decap function associated to the <localseg> passed in
+    # as argument. If argument 'localseg' isn't passed in, the behavior
+    # is not removed
+    #
+    # Equivalent to the command:
+    #    egress: ip -6 route del <localseg> encap seg6local action \
+    #            End.DT6 table 254 dev <device>
+    if localseg is not None:
+        res = handle_srv6_behavior(
+            op='del',
+            channel=egress_channel,
+            segment=localseg
+        )
+        # Pretty print status code
+        utils.__print_status_message(
+            status_code=res,
+            success_msg='Removed SRv6 behavior',
+            failure_msg='Error in remove_srv6_behavior()'
+        )
+        # If an error occurred, abort the operation
+        if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
+            # If the 'ignore_errors' flag is set, continue
+            if not ignore_errors:
+                return res
+        elif res != commons_pb2.STATUS_SUCCESS:
+            return res
+    # Success
+    return commons_pb2.STATUS_SUCCESS
+
+
+def __destroy_srv6_tunnel(node_l_channel, node_r_channel,
+                          dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
+                          ignore_errors=False):
+    """Destroy a bidirectional SRv6 tunnel
+
+    Parameters
+    ----------
+    node_l_channel : <gRPC channel>
+        The gRPC channel to the left endpoint of the SRv6 tunnel
+    node_r_channel : <gRPC channel>
+        The gRPC channel to the right endpoint of the SRv6 tunnel
+    node_l : str
+        The IP address of the left endpoint of the SRv6 tunnel
+    node_r : str
+        The IP address of the right endpoint of the SRv6 tunnel
+    dest_lr : str
+        The destination prefix of the SRv6 path from <node_l> to <node_r>.
+        It can be a IP address or a subnet.
+    dest_rl : str
+        The destination prefix of the SRv6 path from <node_r> to <node_l>.
+        It can be a IP address or a subnet.
+    localseg_lr : str, optional
+        The local segment associated to the End.DT6 seg6local
+        function for the SRv6 path from <node_l> to <node_r>.
+        If the argument 'localseg_l' isn't passed in, the End.DT6 function
+        is not removed.
+    localseg_rl : str, optional
+        The local segment associated to the End.DT6 seg6local
+        function for the SRv6 path from <node_r> to <node_l>.
+        If the argument 'localseg_r' isn't passed in, the End.DT6 function
+        is not removed.
+    ignore_errors : bool, optional
+        Whether to ignore "No such process" errors or not (default is False)
+    """
+
+    # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
+    res = __destroy_uni_srv6_tunnel(
+        ingress_channel=node_l_channel,
+        egress_channel=node_r_channel,
+        destination=dest_lr,
+        localseg=localseg_lr,
+        ignore_errors=ignore_errors
+    )
+    # If an error occurred, abort the operation
+    if res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
+    res = __destroy_uni_srv6_tunnel(
+        ingress_channel=node_r_channel,
+        egress_channel=node_l_channel,
+        destination=dest_rl,
+        localseg=localseg_rl,
+        ignore_errors=ignore_errors
+    )
+    # If an error occurred, abort the operation
+    if res != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Success
+    return commons_pb2.STATUS_SUCCESS

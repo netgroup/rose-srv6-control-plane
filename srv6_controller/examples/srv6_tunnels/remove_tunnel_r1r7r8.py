@@ -26,7 +26,7 @@
 import os
 
 # Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
+# This must be executed only if this file has been executed as a
 # script (instead of a module)
 if __name__ == '__main__':
     # Check if .venv file exists
@@ -74,7 +74,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -101,7 +101,7 @@ if os.getenv('CONTROLLER_PATH') is not None:
         print('Error : Set CONTROLLER_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(CONTROLLER_PATH):
+    if not os.path.exists(os.getenv('CONTROLLER_PATH')):
         print('Error : CONTROLLER_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -112,13 +112,15 @@ else:
     #
     # Check if the CONTROLLER_PATH variable is set
     if CONTROLLER_PATH == '':
-        print('Error : Set CONTROLLER_PATH variable in .env or %s' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s' %
+              sys.argv[0])
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
     if not os.path.exists(CONTROLLER_PATH):
         print('Error : CONTROLLER_PATH variable in '
               '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' %
+              sys.argv[0])
         sys.exit(-2)
 
 # Proto dependencies
@@ -127,8 +129,8 @@ import srv6_manager_pb2
 
 # Controller dependencies
 sys.path.append(CONTROLLER_PATH)
-from srv6_controller import handle_srv6_path, handle_srv6_behavior
-from srv6_controller import get_grpc_session
+from controller import handle_srv6_path, handle_srv6_behavior
+from controller import get_grpc_session
 
 
 # Global variables definition
