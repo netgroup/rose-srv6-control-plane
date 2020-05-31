@@ -119,7 +119,8 @@ DEFAULT_SECURE = False
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
-
+# Default path to the .env file
+DEFAULT_ENV_FILE_PATH = os.path.join(BASE_PATH, '.env')
 
 # Start gRPC server
 def start_server(grpc_ip=DEFAULT_GRPC_IP,
@@ -181,6 +182,11 @@ def parse_arguments():
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
+    )
+    parser.add_argument(
+        '-e', '--env-file', dest='env_file', action='store',
+        default=DEFAULT_ENV_FILE_PATH, help='Path to the .env file '
+        'containing the parameters for the node manager'
     )
     parser.add_argument(
         '-g', '--grpc-ip', dest='grpc_ip', action='store',
