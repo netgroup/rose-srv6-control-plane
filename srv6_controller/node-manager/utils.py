@@ -64,3 +64,9 @@ def get_address_family(ip):
     else:
         # Invalid address
         return None
+
+
+# Utiliy function to check if the IP
+# is a valid IP address
+def validate_ip_address(ip):
+    return validate_ipv4_address(ip) or validate_ipv6_address

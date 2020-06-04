@@ -63,7 +63,7 @@ if __name__ == '__main__':
 # pyroute2 dependencies
 
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv()
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

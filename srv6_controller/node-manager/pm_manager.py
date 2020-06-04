@@ -25,7 +25,6 @@ if __name__ == '__main__':
             exec(code, {'__file__': venv_path})
 
 from concurrent import futures
-from dotenv import load_dotenv
 import sys
 import grpc
 import logging
@@ -42,119 +41,30 @@ from scapy.all import send, sniff
 from scapy.layers.inet import UDP
 from scapy.layers.inet6 import IPv6, IPv6ExtHdrSegmentRouting
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
-# Folder containing the files auto-generated from proto files
-PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-if os.getenv('PROTO_PATH') is not None:
-    # Check if the PROTO_PATH variable is set
-    if os.getenv('PROTO_PATH') == '':
-        print('Error : Set PROTO_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('PROTO_PATH')):
-        print('Error : PROTO_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # PROTO_PATH in .env is correct. We use it.
-    PROTO_PATH = os.getenv('PROTO_PATH')
-else:
-    # PROTO_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the PROTO_PATH variable is set
-    if PROTO_PATH == '':
-        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
-        print('Error : PROTO_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
-        sys.exit(-2)
-
 # Add PROTO folder
+PROTO_PATH = os.getenv('PROTO_PATH', None)
+if PROTO_PATH is None:
+    print('PROTO_PATH environment variable not set')
+    exit(-2)
 sys.path.append(PROTO_PATH)
 
-# Folder containing the SRV6_PFPLM files
-SRV6_PFPLM_PATH = '/home/rose/workspace/srv6_pfplm'
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-if os.getenv('SRV6_PFPLM_PATH') is not None:
-    # Check if the SRV6_PFPLM_PATH variable is set
-    if os.getenv('SRV6_PFPLM_PATH') == '':
-        print('Error : Set SRV6_PFPLM_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the SRV6_PFPLM_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('SRV6_PFPLM_PATH')):
-        print('Error : SRV6_PFPLM_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # SRV6_PFPLM_PATH in .env is correct. We use it.
-    SRV6_PFPLM_PATH = os.getenv('SRV6_PFPLM_PATH')
-else:
-    # SRV6_PFPLM_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the SRV6_PFPLM_PATH variable is set
-    if SRV6_PFPLM_PATH == '':
-        print('Error : Set SRV6_PFPLM_PATH variable in .env or %s' %
-              sys.argv[0])
-        sys.exit(-2)
-    # Check if the SRV6_PFPLM_PATH variable points to an existing folder
-    if not os.path.exists(SRV6_PFPLM_PATH):
-        print('Error : SRV6_PFPLM_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set SRV6_PFPLM_PATH variable in .env or %s\n' %
-              sys.argv[0])
-        sys.exit(-2)
-
 # SRv6 PFPLM dependencies
+SRV6_PM_XDP_EBPF_PATH = os.getenv('SRV6_PM_XDP_EBPF_PATH', None)
+if SRV6_PM_XDP_EBPF_PATH is None:
+    print('SRV6_PM_XDP_EBPF_PATH environment variable not set')
+    exit(-2)
+SRV6_PFPLM_PATH = os.path.join(SRV6_PM_XDP_EBPF_PATH, 'srv6-pfplm/')
 sys.path.append(SRV6_PFPLM_PATH)
 
-# Folder containing the TWAMP_PATH files
-TWAMP_PATH = '/home/rose/workspace/srv6-pm-xdp-ebpf/srv6-pfplm/'
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-if os.getenv('TWAMP_PATH') is not None:
-    # Check if the TWAMP_PATH variable is set
-    if os.getenv('TWAMP_PATH') == '':
-        print('Error : Set TWAMP_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the TWAMP_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('TWAMP_PATH')):
-        print('Error : TWAMP_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # TWAMP_PATH in .env is correct. We use it.
-    TWAMP_PATH = os.getenv('TWAMP_PATH')
-else:
-    # TWAMP_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the TWAMP_PATH variable is set
-    if TWAMP_PATH == '':
-        print('Error : Set TWAMP_PATH variable in .env or %s' %
-              sys.argv[0])
-        sys.exit(-2)
-    # Check if the TWAMP_PATH variable points to an existing folder
-    if not os.path.exists(TWAMP_PATH):
-        print('Error : TWAMP_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set TWAMP_PATH variable in .env or %s\n' %
-              sys.argv[0])
-        sys.exit(-2)
-
 # SRv6 PFPLM dependencies
+ROSE_SRV6_DATA_PLANE_PATH = os.getenv('ROSE_SRV6_DATA_PLANE_PATH', None)
+if ROSE_SRV6_DATA_PLANE_PATH is None:
+    print('ROSE_SRV6_DATA_PLANE_PATH environment variable not set')
+    exit(-2)
+TWAMP_PATH = os.path.join(ROSE_SRV6_DATA_PLANE_PATH, 'twamp/')
 sys.path.append(TWAMP_PATH)
 import twamp
 from twamp_demon import SessionSender

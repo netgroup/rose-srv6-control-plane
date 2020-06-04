@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Implementation of SRv6 Manager
+# Implementation of Node Manager
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
@@ -25,21 +25,17 @@
 
 import os
 
-# Activate virtual environment if a venv path has been specified in .venv
+# Folder containing this script
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+# Activate virtual environment if a .venv exists under the node-manager folder
 # This must be executed only if this file has been executed as a
 # script (instead of a module)
 if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read().rstrip()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
+    # Get path of the activation script
+    venv_path = os.path.join(BASE_PATH, '.venv/bin/activate_this.py')
+    # If activation script exists, we activate the virtual environment
+    if os.path.exists(venv_path):
         with open(venv_path) as f:
             # Read the activation script
             code = compile(f.read(), venv_path, 'exec')
@@ -55,53 +51,9 @@ from concurrent import futures
 from socket import AF_INET, AF_INET6
 from utils import get_address_family
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Folder containing this script
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-# Folder containing the files auto-generated from proto files
-PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-if os.getenv('PROTO_PATH') is not None:
-    # Check if the PROTO_PATH variable is set
-    if os.getenv('PROTO_PATH') == '':
-        print('Error : Set PROTO_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('PROTO_PATH')):
-        print('Error : PROTO_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # PROTO_PATH in .env is correct. We use it.
-    PROTO_PATH = os.getenv('PROTO_PATH')
-else:
-    # PROTO_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the PROTO_PATH variable is set
-    if PROTO_PATH == '':
-        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
-        print('Error : PROTO_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
-        sys.exit(-2)
-
-# Node manager dependencies
-from srv6_manager import SRv6Manager
-# Proto dependencies
-sys.path.append(PROTO_PATH)
-import srv6_manager_pb2_grpc
-import srv6pmService_pb2_grpc
-
-import pm_manager
+import utils
 
 # Logger reference
 logger = logging.getLogger(__name__)
@@ -121,6 +73,9 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 DEFAULT_KEY = 'key_server.pem'
 # Default path to the .env file
 DEFAULT_ENV_FILE_PATH = os.path.join(BASE_PATH, '.env')
+# Define whether to enable the debug mode or not
+DEFAULT_DEBUG = False
+
 
 # Start gRPC server
 def start_server(grpc_ip=DEFAULT_GRPC_IP,
@@ -147,7 +102,10 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
             SRv6Manager(), grpc_server)
     # PM Manager
-    pm_manager.add_pm_manager_to_server(grpc_server)
+    try:
+        pm_manager.add_pm_manager_to_server(grpc_server)
+    except NameError:
+        pass
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate
@@ -177,6 +135,207 @@ def check_root():
     return os.getuid() == 0
 
 
+# Class representing the configuration
+class Config:
+    # Folder containing the files auto-generated from proto files
+    PROTO_PATH = None
+    # Flag indicating whether to enable the SRv6 capabilities or not
+    ENABLE_SRV6_MANAGER = True
+    # IP address of the gRPC server (:: means any)
+    GRPC_IP = DEFAULT_GRPC_IP
+    # Port of the gRPC server
+    GRPC_PORT = DEFAULT_GRPC_PORT
+    # Define whether to enable gRPC secure mode or not
+    GRPC_SECURE = DEFAULT_SECURE
+    # Path to the certificate of the gRPC server required for the secure mode
+    GRPC_SERVER_CERTIFICATE_PATH = DEFAULT_CERTIFICATE
+    # Path to the key of the gRPC server required for the secure mode
+    GRPC_SERVER_KEY_PATH = DEFAULT_KEY
+    # Define whether to enable the debug mode or not
+    DEBUG = DEFAULT_DEBUG
+    # Define whether to enable SRv6 PM functionalities or not
+    ENABLE_SRV6_PM_MANAGER = False
+    # Path to the 'srv6-pm-xdp-ebpf' repository
+    SRV6_PM_XDP_EBPF_PATH = None
+    # Path to the 'rose-srv6-data-plane' repository
+    ROSE_SRV6_DATA_PLANE_PATH = None
+
+    # Load configuration from .env file
+    def load_config(self, env_file):
+        logger.info('*** Loading configuration from %s' % env_file)
+        # Path to the .env file
+        env_path = Path(env_file)
+        # Load environment variables from .env file
+        load_dotenv(dotenv_path=env_path)
+        # Folder containing the files auto-generated from proto files
+        if os.getenv('PROTO_PATH') is not None:
+            self.PROTO_PATH = os.getenv('PROTO_PATH')
+        # Flag indicating whether to enable the SRv6 capabilities or not
+        if os.getenv('ENABLE_SRV6_MANAGER') is not None:
+            self.ENABLE_SRV6_MANAGER = os.getenv('ENABLE_SRV6_MANAGER')
+            # Values provided in .env files are returned as strings
+            # We need to convert them to bool
+            if self.ENABLE_SRV6_MANAGER.lower() == 'true':
+                self.ENABLE_SRV6_MANAGER = True
+            elif self.ENABLE_SRV6_MANAGER.lower() == 'false':
+                self.ENABLE_SRV6_MANAGER = False
+            else:
+                # Invalid value for this parameter
+                self.ENABLE_SRV6_MANAGER = None
+        # IP address of the gRPC server (:: means any)
+        if os.getenv('GRPC_IP') is not None:
+            self.GRPC_IP = os.getenv('GRPC_IP')
+        # Port of the gRPC server
+        if os.getenv('GRPC_PORT') is not None:
+            self.GRPC_PORT = int(os.getenv('GRPC_PORT'))
+        # Define whether to enable gRPC secure mode or not
+        if os.getenv('GRPC_SECURE') is not None:
+            self.GRPC_SECURE = os.getenv('GRPC_SECURE')
+            # Values provided in .env files are returned as strings
+            # We need to convert them to bool
+            if self.GRPC_SECURE.lower() == 'true':
+                self.GRPC_SECURE = True
+            elif self.GRPC_SECURE.lower() == 'false':
+                self.GRPC_SECURE = False
+            else:
+                # Invalid value for this parameter
+                self.GRPC_SECURE = None
+        # Path to the certificate of the gRPC server required
+        # for the secure mode
+        if os.getenv('GRPC_SERVER_CERTIFICATE_PATH') is not None:
+            self.GRPC_SERVER_CERTIFICATE_PATH = \
+                os.getenv('GRPC_SERVER_CERTIFICATE_PATH')
+        # Path to the key of the gRPC server required for the secure mode
+        if os.getenv('GRPC_SERVER_KEY_PATH') is not None:
+            self.GRPC_SERVER_KEY_PATH = os.getenv('GRPC_SERVER_KEY_PATH')
+        # Define whether to enable the debug mode or not
+        if os.getenv('DEBUG') is not None:
+            self.DEBUG = os.getenv('DEBUG')
+            # Values provided in .env files are returned as strings
+            # We need to convert them to bool
+            if self.DEBUG.lower() == 'true':
+                self.DEBUG = True
+            elif self.DEBUG.lower() == 'false':
+                self.DEBUG = False
+            else:
+                # Invalid value for this parameter
+                self.DEBUG = None
+        # Define whether to enable SRv6 PM functionalities or not
+        if os.getenv('ENABLE_SRV6_PM_MANAGER') is not None:
+            self.ENABLE_SRV6_PM_MANAGER = os.getenv('ENABLE_SRV6_PM_MANAGER')
+            # Values provided in .env files are returned as strings
+            # We need to convert them to bool
+            if self.ENABLE_SRV6_PM_MANAGER.lower() == 'true':
+                self.ENABLE_SRV6_PM_MANAGER = True
+            elif self.ENABLE_SRV6_PM_MANAGER.lower() == 'false':
+                self.ENABLE_SRV6_PM_MANAGER = False
+            else:
+                # Invalid value for this parameter
+                self.ENABLE_SRV6_PM_MANAGER = None
+        # Path to the 'srv6-pm-xdp-ebpf' repository
+        if os.getenv('SRV6_PM_XDP_EBPF_PATH') is not None:
+            self.SRV6_PM_XDP_EBPF_PATH = os.getenv('SRV6_PM_XDP_EBPF_PATH')
+        # Path to the 'rose-srv6-data-plane' repository
+        if os.getenv('ROSE_SRV6_DATA_PLANE_PATH') is not None:
+            self.ROSE_SRV6_DATA_PLANE_PATH = \
+                os.getenv('ROSE_SRV6_DATA_PLANE_PATH')
+
+    def validate_config(self):
+        logger.info('*** Validating configuration')
+        success = True
+        # Validate PROTO_PATH
+        if self.PROTO_PATH is None:
+            logger.critical('Set PROTO_PATH variable in configuration file '
+                            '(.env file)')
+            success = False
+        if self.PROTO_PATH is not None and \
+                not os.path.exists(self.PROTO_PATH):
+            logger.critical('PROTO_PATH variable in .env points '
+                            'to a non existing folder: %s' % self.PROTO_PATH)
+            success = False
+        # Validate gRPC IP address
+        if not utils.validate_ip_address(self.GRPC_IP):
+            logger.critical('GRPC_IP is an invalid IP address: %s'
+                            % self.GRPC_IP)
+            success = False
+        # Validate gRPC port
+        if self.GRPC_PORT <= 0 or self.GRPC_PORT >= 65536:
+            logger.critical('GRPC_PORT out of range: %s' % self.GRPC_PORT)
+            success = False
+        # Validate SRv6 PFPLM configuration parameters
+        if self.ENABLE_SRV6_PM_MANAGER:
+            # SRv6 PM functionalities depends on SRv6 features
+            if not self.ENABLE_SRV6_MANAGER:
+                logger.critical('SRv6 PM Manager depends on SRv6 Manager.\n'
+                                'To use SRv6 PM functionalities you must set '
+                                'ENABLE_SRV6_MANAGER in your configuration')
+                success = False
+            # Validate SRV6_PM_XDP_EBPF_PATH
+            if self.SRV6_PM_XDP_EBPF_PATH is None:
+                logger.critical('SRv6 PM Manager requires '
+                                'SRV6_PM_XDP_EBPF_PATH. '
+                                'Set SRV6_PM_XDP_EBPF_PATH variable in '
+                                'configuration file (.env file)')
+                success = False
+            if self.SRV6_PM_XDP_EBPF_PATH is not None and \
+                    not os.path.exists(self.SRV6_PM_XDP_EBPF_PATH):
+                logger.critical('SRV6_PM_XDP_EBPF_PATH variable in .env '
+                                'points to a non existing folder: %s'
+                                % self.SRV6_PM_XDP_EBPF_PATH)
+                success = False
+            # Validate ROSE_SRV6_DATA_PLANE_PATH
+            if self.ROSE_SRV6_DATA_PLANE_PATH is None:
+                logger.critical('SRv6 PM Manager requires '
+                                'ROSE_SRV6_DATA_PLANE_PATH. '
+                                'Set ROSE_SRV6_DATA_PLANE_PATH variable '
+                                'in configuration file (.env file)')
+                success = False
+            if self.ROSE_SRV6_DATA_PLANE_PATH is not None and \
+                    not os.path.exists(self.ROSE_SRV6_DATA_PLANE_PATH):
+                logger.critical('ROSE_SRV6_DATA_PLANE_PATH variable in '
+                                '.env points to a non existing folder: %s'
+                                % self.ROSE_SRV6_DATA_PLANE_PATH)
+                success = False
+        # Validate gRPC secure mode parameters
+        if self.GRPC_SECURE:
+            # Validate GRPC_SERVER_CERTIFICATE_PATH
+            if self.GRPC_SERVER_CERTIFICATE_PATH is None:
+                logger.critical('Set GRPC_SERVER_CERTIFICATE_PATH variable '
+                                'in configuration file (.env file)')
+                success = False
+            if not os.path.exists(self.GRPC_SERVER_CERTIFICATE_PATH):
+                logger.critical('GRPC_SERVER_CERTIFICATE_PATH variable '
+                                'in .env points to a non existing folder: %s'
+                                % self.GRPC_SERVER_CERTIFICATE_PATH)
+                success = False
+            # Validate GRPC_SERVER_KEY_PATH
+            if self.GRPC_SERVER_KEY_PATH is None:
+                logger.critical('Set GRPC_SERVER_KEY_PATH variable in '
+                                'configuration file (.env file)')
+                success = False
+            if not os.path.exists(self.GRPC_SERVER_KEY_PATH):
+                logger.critical('GRPC_SERVER_KEY_PATH variable in .env '
+                                'points to a non existing folder: %s'
+                                % self.GRPC_SERVER_KEY_PATH)
+                success = False
+        # Return result
+        return success
+
+    def import_dependencies(self):
+        global SRv6Manager, srv6_manager_pb2_grpc
+        global srv6pmService_pb2_grpc, pm_manager
+        # Append proto path
+        sys.path.append(self.PROTO_PATH)
+        # SRv6 Manager dependencies
+        if self.ENABLE_SRV6_MANAGER:
+            from srv6_manager import SRv6Manager
+            import srv6_manager_pb2_grpc
+        # SRv6 PM dependencies
+        if self.ENABLE_SRV6_PM_MANAGER:
+            import srv6pmService_pb2_grpc
+            import pm_manager
+
+
 # Parse options
 def parse_arguments():
     # Get parser
@@ -190,22 +349,22 @@ def parse_arguments():
     )
     parser.add_argument(
         '-g', '--grpc-ip', dest='grpc_ip', action='store',
-        default=DEFAULT_GRPC_IP, help='IP of the gRPC server'
+        default=None, help='IP of the gRPC server'
     )
     parser.add_argument(
         '-r', '--grpc-port', dest='grpc_port', action='store',
-        default=DEFAULT_GRPC_PORT, help='Port of the gRPC server'
+        default=None, help='Port of the gRPC server'
     )
     parser.add_argument(
         '-s', '--secure', action='store_true', help='Activate secure mode'
     )
     parser.add_argument(
         '-c', '--server-cert', dest='server_cert', action='store',
-        default=DEFAULT_CERTIFICATE, help='Server certificate file'
+        default=None, help='Server certificate file'
     )
     parser.add_argument(
         '-k', '--server-key', dest='server_key',
-        action='store', default=DEFAULT_KEY, help='Server key file'
+        action='store', default=None, help='Server key file'
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
@@ -217,20 +376,46 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
+    # Parse command-line arguments
     args = parse_arguments()
+    # Path to the .env file containing the parameters for the node manager'
+    env_file = args.env_file
+    # Create a new configuration object
+    config = Config()
+    # Load configuration from .env file
+    if env_file is not None and os.path.exists(env_file):
+        config.load_config(env_file)
+    else:
+        logger.warning('Configuration file not found. '
+                       'Using default configuration.')
+    # Process other command-line arguments
+    # and replace the parameters defined in .env file
+    # (command-line args have priority over environment variables)
+    #
     # Setup properly the secure mode
     secure = args.secure
+    if secure:
+        config.GRPC_SECURE = secure
     # gRPC server IP
     grpc_ip = args.grpc_ip
+    if grpc_ip is not None:
+        config.GRPC_IP = grpc_ip
     # gRPC server port
     grpc_port = args.grpc_port
+    if grpc_port is not None:
+        config.GRPC_PORT = grpc_port
     # Server certificate
     certificate = args.server_cert
+    if certificate is not None:
+        config.GRPC_SERVER_CERTIFICATE_PATH = certificate
     # Server key
     key = args.server_key
+    if key is not None:
+        config.GRPC_SERVER_KEY_PATH = key
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
+        config.DEBUG = args.debug
     else:
         logger.setLevel(level=logging.INFO)
     # Debug settings
@@ -240,5 +425,17 @@ if __name__ == '__main__':
     if not check_root():
         print('*** %s must be run as root.\n' % sys.argv[0])
         exit(1)
+    # Validate configuration
+    if not config.validate_config():
+        logger.critical('Invalid configuration\n')
+        exit(-2)
+    # Import dependencies
+    config.import_dependencies()
+    # Extract parameters from the configuration
+    grpc_ip = config.GRPC_IP
+    grpc_port = config.GRPC_PORT
+    secure = config.GRPC_SECURE
+    certificate = config.GRPC_SERVER_CERTIFICATE_PATH
+    key = config.GRPC_SERVER_KEY_PATH
     # Start the server
     start_server(grpc_ip, grpc_port, secure, certificate, key)
