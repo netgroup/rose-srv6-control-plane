@@ -37,27 +37,6 @@ from argparse import ArgumentParser
 import sys
 import os
 
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read().rstrip()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 
 # General imports
 # pyroute2 dependencies
@@ -201,9 +180,10 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         metric = None
                     if segments == []:
                         segments = ['::']
+                    oif = None
                     if path.device != '':
                         oif = self.interface_to_idx[path.device]
-                    else:
+                    elif op == 'add':
                         oif = self.interface_to_idx[
                             self.non_loopback_interfaces[0]]
                     self.ip_route.route(op, dst=path.destination, oif=oif,

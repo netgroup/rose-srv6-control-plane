@@ -43,27 +43,6 @@ from concurrent import futures
 from argparse import ArgumentParser
 import os
 
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 # General imports
 from six import text_type
 from dotenv import load_dotenv
@@ -120,29 +99,9 @@ import utils
 # Global variables definition
 #
 #
-# ArangoDB default parameters
-ARANGO_USER = 'root'
-ARANGO_PASSWORD = '12345678'
-ARANGO_URL = 'http://localhost:8529'
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-ARANGO_USER = os.getenv('ARANGO_USER', default=ARANGO_USER)
-ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', default=ARANGO_PASSWORD)
-ARANGO_URL = os.getenv('ARANGO_URL', default=ARANGO_URL)
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
-# Default parameters for SRv6 controller
-#
-# Port of the gRPC server
-GRPC_PORT = 12345
-# Define whether to use SSL or not for the gRPC client
-SECURE = False
-# SSL certificate of the root CA
-CERTIFICATE = 'client_cert.pem'
-# Default ISIS port
-DEFAULT_ISIS_PORT = 2608
 
 
 # Parser for gRPC errors

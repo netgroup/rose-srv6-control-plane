@@ -23,25 +23,11 @@
 #
 
 
+# General imports
 import os
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-# Activate virtual environment if a .venv exists under the node-manager folder
-# This must be executed only if this file has been executed as a
-# script (instead of a module)
-if __name__ == '__main__':
-    # Get path of the activation script
-    venv_path = os.path.join(BASE_PATH, '.venv/bin/activate_this.py')
-    # If activation script exists, we activate the virtual environment
-    if os.path.exists(venv_path):
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 import sys
 from argparse import ArgumentParser
 import logging

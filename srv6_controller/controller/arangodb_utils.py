@@ -23,36 +23,9 @@
 #
 
 
-import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 # General imports
-from dotenv import load_dotenv
 import logging
 import time
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Import topology extraction utility functions
 from ti_extraction import connect_and_extract_topology_isis
@@ -61,39 +34,20 @@ from ti_extraction import dump_topo_yaml
 
 # Global variables definition
 #
-#
-# ArangoDB default parameters
-ARANGO_USER = 'root'
-ARANGO_PASSWORD = '12345678'
-ARANGO_URL = 'http://localhost:8529'
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-ARANGO_USER = os.getenv('ARANGO_USER', default=ARANGO_USER)
-ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', default=ARANGO_PASSWORD)
-ARANGO_URL = os.getenv('ARANGO_URL', default=ARANGO_URL)
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
-# Default parameters for SRv6 controller
-#
-# Port of the gRPC server
-GRPC_PORT = 12345
-# Define whether to use SSL or not for the gRPC client
-SECURE = False
-# SSL certificate of the root CA
-CERTIFICATE = 'client_cert.pem'
-# Default ISIS port
-DEFAULT_ISIS_PORT = 2608
 
 
-def extract_topo_from_isis(isis_nodes, nodes_yaml, edges_yaml, verbose=False):
+def extract_topo_from_isis(isis_nodes, isisd_pwd,
+                           nodes_yaml, edges_yaml, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
     #
     # Connect to a node and extract the topology
     nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
         ips_ports=isis_nodes,
+        isisd_pwd=isisd_pwd,
         verbose=verbose
     )
     if nodes is None or edges is None or node_to_systemid is None:
@@ -116,19 +70,21 @@ def load_topo_on_arango(arango_url, user, password,
     pass
 
 
-def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
+def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
+                                              arango_url=None,
                                               arango_user=None,
                                               arango_password=None,
                                               nodes_yaml=None, edges_yaml=None,
                                               period=0, verbose=False):
     # Param isis_nodes: list of ip-port
-    # (e.g. [2000::1-2608,2000::2-2608])7
+    # (e.g. [2000::1-2608,2000::2-2608])
     #
     # Topology Information Extraction
     while (True):
         # Connect to a node and extract the topology
         nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
             ips_ports=isis_nodes,
+            isisd_pwd=isisd_pwd,
             verbose=verbose
         )
         if nodes is None or edges is None or node_to_systemid is None:
