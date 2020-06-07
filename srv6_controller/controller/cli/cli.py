@@ -106,6 +106,8 @@ class ControllerCLITopology(CustomCmd):
             topo_file_json=args.topo_file_json,
             nodes_file_yaml=args.nodes_file_yaml,
             edges_file_yaml=args.edges_file_yaml,
+            addrs_yaml=args.addrs_yaml,
+            hosts_yaml=args.hosts_yaml,
             topo_graph=args.topo_graph,
             verbose=args.verbose
         )
@@ -143,6 +145,8 @@ class ControllerCLITopology(CustomCmd):
             arango_password=args.arango_password,
             nodes_yaml=args.nodes_yaml,
             edges_yaml=args.edges_yaml,
+            addrs_yaml=args.addrs_yaml,
+            hosts_yaml=args.hosts_yaml,
             period=args.period,
             verbose=args.verbose
         )

@@ -39,25 +39,43 @@ import ti_extraction
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
-                           nodes_yaml, edges_yaml, verbose=False):
+                           nodes_yaml, edges_yaml,
+                           addrs_yaml=None, hosts_yaml=None,
+                           verbose=False):
     arangodb_utils.extract_topo_from_isis(
         isis_nodes=isis_nodes.split(','),
         isisd_pwd=isisd_pwd,
         nodes_yaml=nodes_yaml,
         edges_yaml=edges_yaml,
+        addrs_yaml=addrs_yaml,
+        hosts_yaml=hosts_yaml,
         verbose=verbose
     )
 
 
 def load_topo_on_arango(arango_url, arango_user, arango_password,
                         nodes_yaml, edges_yaml, verbose=False):
+    # Init database
+    nodes_collection, edges_collection = arangodb_utils.initialize_db(
+        arango_url=arango_url,
+        arango_user=arango_user,
+        arango_password=arango_password
+    )
+    # Read nodes YAML
+    nodes = arangodb_utils.load_yaml_dump(nodes_yaml)
+    # Read edges YAML
+    edges = arangodb_utils.load_yaml_dump(edges_yaml)
+    # Load nodes and edges on ArangoDB
     arangodb_utils.load_topo_on_arango(
         arango_url=arango_url,
         user=arango_user,
         password=arango_password,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        verbose=verbose)
+        nodes=nodes,
+        edges=edges,
+        nodes_collection=nodes_collection,
+        edges_collection=edges_collection,
+        verbose=verbose
+    )
 
 
 def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
@@ -65,6 +83,7 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               arango_user=None,
                                               arango_password=None,
                                               nodes_yaml=None, edges_yaml=None,
+                                              addrs_yaml=None, hosts_yaml=None,
                                               period=0, verbose=False):
     arangodb_utils.extract_topo_from_isis_and_load_on_arango(
         isis_nodes=isis_nodes,
@@ -74,6 +93,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
         arango_password=arango_password,
         nodes_yaml=nodes_yaml,
         edges_yaml=edges_yaml,
+        addrs_yaml=addrs_yaml,
+        hosts_yaml=hosts_yaml,
         period=period,
         verbose=verbose
     )
@@ -83,15 +104,16 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          topo_file_json=None,
                                          nodes_file_yaml=None,
                                          edges_file_yaml=None,
+                                         addrs_yaml=None, hosts_yaml=None,
                                          topo_graph=None, verbose=False):
-    ti_extraction.topology_information_extraction_isis(
-        routers=routers,
-        period=period,
+    arangodb_utils.extract_topo_from_isis_and_load_on_arango(
+        isis_nodes=routers,
         isisd_pwd=isisd_pwd,
-        topo_file_json=topo_file_json,
-        nodes_file_yaml=nodes_file_yaml,
-        edges_file_yaml=edges_file_yaml,
-        topo_graph=topo_graph,
+        nodes_yaml=nodes_file_yaml,
+        edges_yaml=edges_file_yaml,
+        addrs_yaml=addrs_yaml,
+        hosts_yaml=hosts_yaml,
+        period=period,
         verbose=verbose
     )
 
@@ -117,6 +139,14 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
     parser.add_argument(
         '--edges-yaml', dest='edges_yaml', action='store',
         help='edges_yaml'
+    )
+    parser.add_argument(
+        '--addrs-yaml', dest='addrs_yaml', action='store',
+        help='addrs_yaml', default=None
+    )
+    parser.add_argument(
+        '--hosts-yaml', dest='hosts_yaml', action='store',
+        help='hosts_yaml', default=None
     )
     parser.add_argument(
         '-v', '--verbose', action='store_true', help='Enable verbose mode'
@@ -208,6 +238,14 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
         help='edges_yaml'
     )
     parser.add_argument(
+        '--addrs-yaml', dest='addrs_yaml', action='store',
+        help='addrs_yaml', default=None
+    )
+    parser.add_argument(
+        '--hosts-yaml', dest='hosts_yaml', action='store',
+        help='hosts_yaml', default=None
+    )
+    parser.add_argument(
         '-v', '--verbose', action='store_true', help='Enable verbose mode'
     )
     parser.add_argument(
@@ -249,6 +287,14 @@ def parse_arguments_topology_information_extraction_isis(
     parser.add_argument(
         '--edges-file-yaml', dest='edges_file_yaml', action='store',
         help='edges_file_yaml'
+    )
+    parser.add_argument(
+        '--addrs-yaml', dest='addrs_yaml', action='store',
+        help='addrs_yaml', default=None
+    )
+    parser.add_argument(
+        '--hosts-yaml', dest='hosts_yaml', action='store',
+        help='hosts_yaml', default=None
     )
     parser.add_argument(
         '--topo-graph', dest='topo_graph', action='store',

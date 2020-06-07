@@ -141,9 +141,8 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         '_from': 'nodes/%s' % edge[0],
         '_to': 'nodes/%s' % edge[1],
         'type': 'core'
-    } for edge in edges]
-    edges_yaml = [{
-        '_key': '%s-dir1' % edge[2],
+    } for edge in edges] + [{
+        '_key': '%s-dir2' % edge[2],
         '_from': 'nodes/%s' % edge[1],
         '_to': 'nodes/%s' % edge[0],
         'type': 'core'
@@ -194,7 +193,7 @@ def build_topo_graph(nodes, edges):
         G.add_node(node)
     # Add edges to the graph
     for edge in edges:
-        G.add_edge(*edge)
+        G.add_edge(edge[0], edge[1])
     # Return the networkx graph
     logger.info('Graph builded successfully\n')
     return G

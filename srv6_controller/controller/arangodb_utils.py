@@ -24,8 +24,10 @@
 
 
 # General imports
+import sys
 import logging
 import time
+from pyaml import yaml
 
 # Import topology extraction utility functions
 from ti_extraction import connect_and_extract_topology_isis
@@ -37,6 +39,21 @@ from ti_extraction import dump_topo_yaml
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
+
+sys.path.append('../../db_update')
+import arango_db
+
+
+def save_yaml_dump(obj, filename):
+    # Save file
+    with open(filename, 'w') as outfile:
+        yaml.dump(obj, outfile)
+
+
+def load_yaml_dump(filename):
+    # Load YAML file
+    with open(filename, 'r') as infile:
+        return yaml.safe_load(infile)
 
 
 def fill_ip_addresses(nodes, addresses_yaml):
@@ -94,8 +111,18 @@ def add_hosts(nodes, edges, hosts_yaml):
     return nodes, edges
 
 
+def initialize_db(arango_url, arango_user, arango_password, verbose=False):
+    # Wrapper function
+    return arango_db.initialize_db(
+        arango_url=arango_url,
+        arango_user=arango_user,
+        arango_password=arango_password
+    )
+
+
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
-                           nodes_yaml, edges_yaml, verbose=False):
+                           nodes_yaml, edges_yaml, 
+                           addrs_yaml=None, hosts_yaml=None, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
     #
@@ -109,13 +136,24 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
         logger.error('Cannot extract topology')
         return
     # Export the topology in YAML format
-    dump_topo_yaml(
+    nodes, edges = dump_topo_yaml(
         nodes=nodes,
         edges=edges,
-        node_to_systemid=node_to_systemid,
-        nodes_file_yaml=nodes_yaml,
-        edges_file_yaml=edges_yaml
+        node_to_systemid=node_to_systemid
     )
+    # Add IP addresses information
+    if addrs_yaml is not None:
+        fill_ip_addresses(nodes, addrs_yaml)
+    # Add hosts information
+    if hosts_yaml is not None:
+        # add_hosts(nodes, edges, hosts_yaml)
+        add_hosts(nodes, edges, hosts_yaml)
+    # Save nodes YAML file
+    if nodes_yaml is not None:
+        save_yaml_dump(nodes, nodes_yaml)
+    # Save edges YAML file
+    if edges_yaml is not None:
+        save_yaml_dump(edges, edges_yaml)
 
 
 def load_topo_on_arango(arango_url, user, password,
@@ -129,12 +167,6 @@ def load_topo_on_arango(arango_url, user, password,
         nodes_dict=nodes,
         edges_dict=edges
     )
-
-
-def save_yaml_dump(obj, filename):
-    # Save file
-    with open(filename, 'w') as outfile:
-        yaml.dump(obj, outfile)
 
 
 def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
@@ -186,6 +218,12 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
             if hosts_yaml is not None:
                 # add_hosts(nodes, edges, hosts_yaml)
                 add_hosts(nodes, edges, hosts_yaml)
+            # Save nodes YAML file
+            if nodes_yaml is not None:
+                save_yaml_dump(nodes, nodes_yaml)
+            # Save edges YAML file
+            if edges_yaml is not None:
+                save_yaml_dump(edges, edges_yaml)
             # Load the topology on Arango DB
             if arango_url is not None and \
                     arango_user is not None and arango_password is not None:
