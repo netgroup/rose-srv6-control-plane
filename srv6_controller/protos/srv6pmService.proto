@@ -8,6 +8,8 @@ import "srv6pmReflector.proto";
 service SRv6PM {
     // Set configuration
     rpc setConfiguration (Configuration) returns (SetConfigurationReply) {}
+    // Reset configuration
+    rpc resetConfiguration (Configuration) returns (SetConfigurationReply) {}
     // start an experiment Sender
     rpc startExperimentSender (StartExperimentSenderRequest) returns (StartExperimentSenderReply) {}
     // start an experiment Reflector

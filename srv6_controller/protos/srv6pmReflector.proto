@@ -32,9 +32,7 @@ message StartExperimentReflectorRequest {
     uint32 measure_id = 1;
     string sdlist = 2;
     string sdlistreverse = 3;
-    repeated string in_interfaces = 4;
-    repeated string out_interfaces = 5;
-    ReflectorOptions reflector_options = 6;
+    ReflectorOptions reflector_options = 4;
 }
 
 message StartExperimentReflectorReply {

@@ -35,9 +35,27 @@ import json
 import utils
 import srv6_utils
 
+# Configuration parameters
+#
+# Kafka support
+ENABLE_KAFKA_INTEGRATION = os.getenv('ENABLE_KAFKA_INTEGRATION', 'false')
+if ENABLE_KAFKA_INTEGRATION.lower() == 'true':
+    ENABLE_KAFKA_INTEGRATION = True
+else:
+    ENABLE_KAFKA_INTEGRATION = False
+# gRPC sserver
+ENABLE_GRPC_SERVER = os.getenv('ENABLE_GRPC_SERVER', 'false')
+if ENABLE_GRPC_SERVER.lower() == 'true':
+    ENABLE_GRPC_SERVER = True
+else:
+    ENABLE_GRPC_SERVER = False
+# Kafka server
+KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', 'kafka:9092')
+
 # Kafka depedencies
-from kafka import KafkaProducer
-from kafka.errors import KafkaError
+if ENABLE_KAFKA_INTEGRATION:
+    from kafka import KafkaProducer
+    from kafka.errors import KafkaError
 
 # SRv6PM dependencies
 import commons_pb2
@@ -80,7 +98,6 @@ TOPIC_TWAMP = 'twamp'
 TOPIC_IPERF = 'iperf'
 
 # Kafka servers
-KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', None)
 if KAFKA_SERVERS is not None:
     KAFKA_SERVERS = KAFKA_SERVERS.split(',')
 
@@ -280,12 +297,68 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
 
 
 def start_experiment_sender(channel, sidlist, rev_sidlist,
-                            in_interfaces, out_interfaces,
+                            # in_interfaces, out_interfaces,
                             measurement_protocol,
                             measurement_type, authentication_mode,
                             authentication_key, timestamp_format,
                             delay_measurement_mode, padding_mbz,
                             loss_measurement_mode):
+    # Convert string args to int
+    #
+    # Measurement Protocol
+    try:
+        if type(measurement_protocol) == str:
+            measurement_protocol = \
+                srv6pmCommons_pb2.MeasurementProtocol.Value(
+                    measurement_protocol)
+    except ValueError:
+        logger.error('Invalid Measurement protocol: %s' % measurement_protocol)
+        return None
+    # Measurement Type
+    try:
+        if type(measurement_type) == str:
+            measurement_type = \
+                srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
+    except ValueError:
+        logger.error('Invalid Measurement Type: %s' % measurement_type)
+        return None
+    # Authentication Mode
+    try:
+        if type(authentication_mode) == str:
+            authentication_mode = \
+                srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
+    except ValueError:
+        logger.error('Invalid  Authentication Mode: %s' % authentication_mode)
+        return None
+    # Timestamp Format
+    try:
+        if type(timestamp_format) == str:
+            timestamp_format = \
+                srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
+    except ValueError:
+        logger.error('Invalid Timestamp Format: %s' % timestamp_format)
+        return None
+    # Delay Measurement Mode
+    try:
+        if type(delay_measurement_mode) == str:
+            delay_measurement_mode = \
+                srv6pmCommons_pb2.MeasurementDelayMode.Value(
+                    delay_measurement_mode)
+    except ValueError:
+        logger.error('Invalid Delay Measurement Mode: %s'
+                     % delay_measurement_mode)
+        return None
+    # Loss Measurement Mode
+    try:
+        if type(loss_measurement_mode) == str:
+            loss_measurement_mode = \
+                srv6pmCommons_pb2.MeasurementLossMode.Value(
+                    loss_measurement_mode)
+    except ValueError:
+        logger.error('Invalid Loss Measurement Mode: %s'
+                     % loss_measurement_mode)
+        return None
+    #
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request
@@ -295,34 +368,28 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     # Set the reverse SID list
     request.sdlistreverse = '/'.join(rev_sidlist)
     # Set the incoming interfaces
-    request.in_interfaces.extend(in_interfaces)
-    # Set the outgoing interfaces
-    request.out_interfaces.extend(out_interfaces)
+    # request.in_interfaces.extend(in_interfaces)
+    # # Set the outgoing interfaces
+    # request.out_interfaces.extend(out_interfaces)
     #
     # Set the sender options
     #
     # Set the measureemnt protocol
-    request.sender_options.measurement_protocol = \
-        srv6pmCommons_pb2.MeasurementProtocol.Value(measurement_protocol)
+    request.sender_options.measurement_protocol = measurement_protocol
     # Set the authentication mode
-    request.sender_options.authentication_mode = \
-        srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
+    request.sender_options.authentication_mode = authentication_mode
     # Set the authentication key
     request.sender_options.authentication_key = str(authentication_key)
     # Set the measurement type
-    request.sender_options.measurement_type = \
-        srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
+    request.sender_options.measurement_type = measurement_type
     # Set the timestamp format
-    request.sender_options.timestamp_format = \
-        srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
+    request.sender_options.timestamp_format = timestamp_format
     # Set the measurement delay mode
-    request.sender_options.measurement_delay_mode = \
-        srv6pmCommons_pb2.MeasurementDelayMode.Value(delay_measurement_mode)
+    request.sender_options.measurement_delay_mode = delay_measurement_mode
     # Set the padding
     request.sender_options.padding_mbz = int(padding_mbz)
     # Set the measurement loss mode
-    request.sender_options.measurement_loss_mode = \
-        srv6pmCommons_pb2.MeasurementLossMode.Value(loss_measurement_mode)
+    request.sender_options.measurement_loss_mode = loss_measurement_mode
     #
     # Start the experiment on the sender and return the response
     return stub.startExperimentSender(request=request)
@@ -353,6 +420,16 @@ def retrieve_experiment_results_sender(channel, sidlist):
 def set_node_configuration(channel, send_udp_port, refl_udp_port,
                            interval_duration, delay_margin,
                            number_of_color, pm_driver):
+    # Convert string args to int
+    #
+    # PM Driver
+    try:
+        if type(pm_driver) == str:
+            pm_driver = srv6pmCommons_pb2.PMDriver.Value(pm_driver)
+    except ValueError:
+        logger.error('Invalid PM Driver: %s' % pm_driver)
+        return None
+    #
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -377,11 +454,58 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     return stub.setConfiguration(request=request)
 
 
+def reset_node_configuration(channel):
+    # Get the reference of the stub
+    stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
+    # Create the request message
+    request = srv6pmCommons_pb2.Configuration()
+    # Start the experiment on the reflector and return the response
+    return stub.resetConfiguration(request=request)
+
+
 def start_experiment_reflector(channel, sidlist, rev_sidlist,
-                               in_interfaces, out_interfaces,
+                               # in_interfaces, out_interfaces,
                                measurement_protocol, measurement_type,
                                authentication_mode, authentication_key,
                                loss_measurement_mode):
+    # Convert string args to int
+    #
+    # Measurement Protocol
+    try:
+        if type(measurement_protocol) == str:
+            measurement_protocol = \
+                srv6pmCommons_pb2.MeasurementProtocol.Value(
+                    measurement_protocol)
+    except ValueError:
+        logger.error('Invalid Measurement protocol: %s' % measurement_protocol)
+        return None
+    # Measurement Type
+    try:
+        if type(measurement_type) == str:
+            measurement_type = \
+                srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
+    except ValueError:
+        logger.error('Invalid Measurement Type: %s' % measurement_type)
+        return None
+    # Authentication Mode
+    try:
+        if type(authentication_mode) == str:
+            authentication_mode = \
+                srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
+    except ValueError:
+        logger.error('Invalid  Authentication Mode: %s' % authentication_mode)
+        return None
+    # Loss Measurement Mode
+    try:
+        if type(loss_measurement_mode) == str:
+            loss_measurement_mode = \
+                srv6pmCommons_pb2.MeasurementLossMode.Value(
+                    loss_measurement_mode)
+    except ValueError:
+        logger.error('Invalid Loss Measurement Mode: %s'
+                     % loss_measurement_mode)
+        return None
+    #
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -391,26 +515,22 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     # Set the reverse SID list
     request.sdlistreverse = '/'.join(rev_sidlist)
     # Set the incoming interfaces
-    request.in_interfaces.extend(in_interfaces)
-    # Set the outgoing interfaces
-    request.out_interfaces.extend(out_interfaces)
+    # request.in_interfaces.extend(in_interfaces)
+    # # Set the outgoing interfaces
+    # request.out_interfaces.extend(out_interfaces)
     #
     # Set the reflector options
     #
-    # Set the measureemnt protocol
-    request.reflector_options.measurement_protocol = \
-        srv6pmCommons_pb2.MeasurementProtocol.Value(measurement_protocol)
+    # Set the measurement protocol
+    request.reflector_options.measurement_protocol = measurement_protocol
     # Set the authentication mode
-    request.reflector_options.authentication_mode = \
-        srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
+    request.reflector_options.authentication_mode = authentication_mode
     # Set the authentication key
     request.reflector_options.authentication_key = str(authentication_key)
     # Set the measurement type
-    request.reflector_options.measurement_type = \
-        srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
+    request.reflector_options.measurement_type = measurement_type
     # Set the measurement loss mode
-    request.reflector_options.measurement_loss_mode = \
-        srv6pmCommons_pb2.MeasurementLossMode.Value(loss_measurement_mode)
+    request.reflector_options.measurement_loss_mode = loss_measurement_mode
     # Start the experiment on the reflector and return the response
     return stub.startExperimentReflector(request=request)
 
@@ -428,8 +548,8 @@ def stop_experiment_reflector(channel, sidlist):
 
 def __start_measurement(measure_id, sender_channel, reflector_channel,
                         send_refl_sidlist, refl_send_sidlist,
-                        send_in_interfaces, refl_in_interfaces,
-                        send_out_interfaces, refl_out_interfaces,
+                        # send_in_interfaces, refl_in_interfaces,
+                        # send_out_interfaces, refl_out_interfaces,
                         measurement_protocol, measurement_type,
                         authentication_mode, authentication_key,
                         timestamp_format, delay_measurement_mode,
@@ -480,8 +600,8 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         channel=reflector_channel,
         sidlist=send_refl_sidlist,
         rev_sidlist=refl_send_sidlist,
-        in_interfaces=refl_in_interfaces,
-        out_interfaces=refl_out_interfaces,
+        # in_interfaces=refl_in_interfaces,
+        # out_interfaces=refl_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -495,15 +615,17 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         failure_msg='Error in start_experiment_reflector()'
     )
     # Check for errors
-    if refl_res.status != commons_pb2.STATUS_SUCCESS:
+    if refl_res is None:
+        return commons_pb2.STATUS_INTERNAL_ERROR
+    elif refl_res.status != commons_pb2.STATUS_SUCCESS:
         return refl_res.status
     # Start the experiment on the sender
     sender_res = start_experiment_sender(
         channel=sender_channel,
         sidlist=send_refl_sidlist,
         rev_sidlist=refl_send_sidlist,
-        in_interfaces=send_in_interfaces,
-        out_interfaces=send_out_interfaces,
+        # in_interfaces=send_in_interfaces,
+        # out_interfaces=send_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -520,7 +642,9 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         failure_msg='Error in start_experiment_sender()'
     )
     # Check for errors
-    if sender_res.status != commons_pb2.STATUS_SUCCESS:
+    if sender_res is None:
+        return commons_pb2.STATUS_INTERNAL_ERROR
+    elif sender_res.status != commons_pb2.STATUS_SUCCESS:
         return sender_res.status
     # Success
     return commons_pb2.STATUS_SUCCESS
@@ -680,10 +804,49 @@ def set_configuration(sender_channel, reflector_channel,
     return commons_pb2.STATUS_SUCCESS
 
 
+def reset_configuration(sender_channel, reflector_channel):
+    """Reset the configuration
+
+    Parameters
+    ----------
+    sender_channel : <gRPC Channel>
+        The gRPC Channel to the sender node
+    reflector_channel : <gRPC Channel>
+        The gRPC Channel to the reflector node
+    send_dst_udp_port : int
+        The destination UDP port used by the sender
+    refl_dst_udp_port : int
+        The destination UDP port used by the reflector
+    interval_duration : int
+        The duration of the interval
+    delay_margin : int
+        The delay margin
+    number_of_color : int
+        The number of the color
+    """
+
+    # Reset configuration on the sender
+    res = reset_node_configuration(
+        channel=sender_channel
+    )
+    # Check for errors
+    if res.status != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Reset configuration on the reflector
+    res = reset_node_configuration(
+        channel=reflector_channel
+    )
+    # Check for errors
+    if res.status != commons_pb2.STATUS_SUCCESS:
+        return res
+    # Success
+    return commons_pb2.STATUS_SUCCESS
+
+
 def start_experiment(sender_channel, reflector_channel, send_refl_dest,
                      refl_send_dest, send_refl_sidlist, refl_send_sidlist,
-                     send_in_interfaces, refl_in_interfaces,
-                     send_out_interfaces, refl_out_interfaces,
+                    #  send_in_interfaces, refl_in_interfaces,
+                    #  send_out_interfaces, refl_out_interfaces,
                      measurement_protocol, measurement_type,
                      authentication_mode, authentication_key,
                      timestamp_format, delay_measurement_mode,
@@ -786,10 +949,10 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
         reflector_channel=reflector_channel,
         send_refl_sidlist=send_refl_sidlist,
         refl_send_sidlist=refl_send_sidlist,
-        send_in_interfaces=send_in_interfaces,
-        send_out_interfaces=send_out_interfaces,
-        refl_in_interfaces=refl_in_interfaces,
-        refl_out_interfaces=refl_out_interfaces,
+        # send_in_interfaces=send_in_interfaces,
+        # send_out_interfaces=send_out_interfaces,
+        # refl_in_interfaces=refl_in_interfaces,
+        # refl_out_interfaces=refl_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -807,7 +970,8 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
 
 
 def get_experiment_results(sender_channel, reflector_channel,
-                           send_refl_sidlist, refl_send_sidlist):
+                           send_refl_sidlist, refl_send_sidlist,
+                           kafka_servers=KAFKA_SERVERS):
     """Get the results of an experiment.
 
     Parameters
@@ -820,6 +984,8 @@ def get_experiment_results(sender_channel, reflector_channel,
         The SID list to be used for the path sender->reflector
     refl_send_sidlist : list
         The SID list to be used for the path reflector->sender
+    kafka_servers : str
+        IP:port of Kafka server
     """
 
     # Get the results
@@ -833,7 +999,7 @@ def get_experiment_results(sender_channel, reflector_channel,
         print('No measurement data available')
         return
     # Publish results to Kafka
-    if KAFKA_SERVERS is not None:
+    if ENABLE_KAFKA_INTEGRATION:
         for res in results:
             measure_id = res['measure_id']
             interval = res['interval']
@@ -848,7 +1014,7 @@ def get_experiment_results(sender_channel, reflector_channel,
             reflector_rx_counter = res['reflector_rx_counter']
             # Publish data to Kafka
             publish_to_kafka(
-                bootstrap_servers=KAFKA_SERVERS,
+                bootstrap_servers=kafka_servers,
                 topic=TOPIC_TWAMP,
                 measure_id=measure_id,
                 interval=interval,
@@ -909,7 +1075,7 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
     if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Remove the SRv6 path
-    res = srv6_utils.srv6__destroy_srv6_tunnel(
+    res = srv6_utils.__destroy_srv6_tunnel(
         node_l_channel=sender_channel,
         node_r_channel=reflector_channel,
         dest_lr=send_refl_dest,
@@ -924,148 +1090,153 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
     return commons_pb2.STATUS_SUCCESS
 
 
-class _SRv6PMService(
-        srv6pmServiceController_pb2_grpc.SRv6PMControllerServicer):
-    """Private class implementing methods exposed by the gRPC server"""
+if ENABLE_GRPC_SERVER:
+    class _SRv6PMService(
+            srv6pmServiceController_pb2_grpc.SRv6PMControllerServicer):
+        """Private class implementing methods exposed by the gRPC server"""
 
-    def SendMeasurementData(self, request, context):
-        """RPC used to send measurement data to the controller"""
+        def __init__(self, kafka_servers=KAFKA_SERVERS):
+            self.kafka_servers = kafka_servers
 
-        logger.debug('Measurement data received: %s' % request)
-        # Extract data from the request
-        for data in request.measurement_data:
-            measure_id = data.meas_id
-            interval = data.interval
-            timestamp = data.timestamp
-            fw_color = data.fwColor
-            rv_color = data.rvColor
-            sender_seq_num = data.ssSeqNum
-            reflector_seq_num = data.rfSeqNum
-            sender_tx_counter = data.ssTxCounter
-            sender_rx_counter = data.ssRxCounter
-            reflector_tx_counter = data.rfTxCounter
-            reflector_rx_counter = data.rfRxCounter
-            # Publish data to Kafka
-            if KAFKA_SERVERS is not None:
-                publish_to_kafka(
-                    bootstrap_servers=KAFKA_SERVERS,
-                    topic=TOPIC_TWAMP,
-                    measure_id=measure_id,
-                    interval=interval,
-                    timestamp=timestamp,
-                    fw_color=fw_color,
-                    rv_color=rv_color,
-                    sender_seq_num=sender_seq_num,
-                    reflector_seq_num=reflector_seq_num,
-                    sender_tx_counter=sender_tx_counter,
-                    sender_rx_counter=sender_rx_counter,
-                    reflector_tx_counter=reflector_tx_counter,
-                    reflector_rx_counter=reflector_rx_counter
-                )
-        status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
-        return srv6pmServiceController_pb2.SendMeasurementDataResponse(
-            status=status)
+        def SendMeasurementData(self, request, context):
+            """RPC used to send measurement data to the controller"""
 
-    def SendIperfData(self, request, context):
-        """RPC used to send iperf data to the controller"""
+            logger.debug('Measurement data received: %s' % request)
+            # Extract data from the request
+            for data in request.measurement_data:
+                measure_id = data.meas_id
+                interval = data.interval
+                timestamp = data.timestamp
+                fw_color = data.fwColor
+                rv_color = data.rvColor
+                sender_seq_num = data.ssSeqNum
+                reflector_seq_num = data.rfSeqNum
+                sender_tx_counter = data.ssTxCounter
+                sender_rx_counter = data.ssRxCounter
+                reflector_tx_counter = data.rfTxCounter
+                reflector_rx_counter = data.rfRxCounter
+                # Publish data to Kafka
+                if ENABLE_KAFKA_INTEGRATION:
+                    publish_to_kafka(
+                        bootstrap_servers=self.kafka_servers,
+                        topic=TOPIC_TWAMP,
+                        measure_id=measure_id,
+                        interval=interval,
+                        timestamp=timestamp,
+                        fw_color=fw_color,
+                        rv_color=rv_color,
+                        sender_seq_num=sender_seq_num,
+                        reflector_seq_num=reflector_seq_num,
+                        sender_tx_counter=sender_tx_counter,
+                        sender_rx_counter=sender_rx_counter,
+                        reflector_tx_counter=reflector_tx_counter,
+                        reflector_rx_counter=reflector_rx_counter
+                    )
+            status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
+            return srv6pmServiceController_pb2.SendMeasurementDataResponse(
+                status=status)
 
-        logger.debug('Iperf data received: %s' % request)
-        # Extract data from the request
-        for data in request.iperf_data:
-            # From client/server
-            _from = data._from
-            # Measure ID
-            measure_id = data.measure_id
-            # Generator ID
-            generator_id = data.generator_id
-            # Interval
-            interval = data.interval.val
-            # Transfer
-            transfer = data.transfer.val
-            transfer_dim = data.transfer.dim
-            # Bitrate
-            bitrate = data.bitrate.val
-            bitrate_dim = data.bitrate.dim
-            # Retr
-            retr = data.retr.val
-            # Cwnd
-            cwnd = data.cwnd.val
-            cwnd_dim = data.cwnd.dim
-            # Publish data to Kafka
-            if KAFKA_SERVERS is not None:
-                publish_iperf_data_to_kafka(
-                    bootstrap_servers=KAFKA_SERVERS,
-                    topic=TOPIC_IPERF,
-                    _from=_from,
-                    measure_id=measure_id,
-                    generator_id=generator_id,
-                    interval=interval,
-                    transfer=transfer,
-                    transfer_dim=transfer_dim,
-                    bitrate=bitrate,
-                    bitrate_dim=bitrate_dim,
-                    retr=retr,
-                    cwnd=cwnd,
-                    cwnd_dim=cwnd_dim,
-                )
-        status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
-        return srv6pmServiceController_pb2.SendIperfDataResponse(
-            status=status)
+        def SendIperfData(self, request, context):
+            """RPC used to send iperf data to the controller"""
+
+            logger.debug('Iperf data received: %s' % request)
+            # Extract data from the request
+            for data in request.iperf_data:
+                # From client/server
+                _from = data._from
+                # Measure ID
+                measure_id = data.measure_id
+                # Generator ID
+                generator_id = data.generator_id
+                # Interval
+                interval = data.interval.val
+                # Transfer
+                transfer = data.transfer.val
+                transfer_dim = data.transfer.dim
+                # Bitrate
+                bitrate = data.bitrate.val
+                bitrate_dim = data.bitrate.dim
+                # Retr
+                retr = data.retr.val
+                # Cwnd
+                cwnd = data.cwnd.val
+                cwnd_dim = data.cwnd.dim
+                # Publish data to Kafka
+                if ENABLE_KAFKA_INTEGRATION:
+                    publish_iperf_data_to_kafka(
+                        bootstrap_servers=self.kafka_servers,
+                        topic=TOPIC_IPERF,
+                        _from=_from,
+                        measure_id=measure_id,
+                        generator_id=generator_id,
+                        interval=interval,
+                        transfer=transfer,
+                        transfer_dim=transfer_dim,
+                        bitrate=bitrate,
+                        bitrate_dim=bitrate_dim,
+                        retr=retr,
+                        cwnd=cwnd,
+                        cwnd_dim=cwnd_dim,
+                    )
+            status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
+            return srv6pmServiceController_pb2.SendIperfDataResponse(
+                status=status)
 
 
-def __start_grpc_server(grpc_ip=DEFAULT_GRPC_SERVER_IP,
-                        grpc_port=DEFAULT_GRPC_SERVER_PORT,
-                        secure=DEFAULT_SERVER_SECURE,
-                        key=DEFAULT_SERVER_KEY,
-                        certificate=DEFAULT_SERVER_CERTIFICATE):
-    """Start gRPC on the controller
+if ENABLE_GRPC_SERVER:
+    def __start_grpc_server(grpc_ip=DEFAULT_GRPC_SERVER_IP,
+                            grpc_port=DEFAULT_GRPC_SERVER_PORT,
+                            secure=DEFAULT_SERVER_SECURE,
+                            key=DEFAULT_SERVER_KEY,
+                            certificate=DEFAULT_SERVER_CERTIFICATE):
+        """Start gRPC on the controller
 
-    Parameters
-    ----------
-    grpc_ip : str
-        the IP address of the gRPC server
-    grpc_port : int
-        the port of the gRPC server
-    secure : bool
-        define whether to use SSL or not for the gRPC server
-        (default is False)
-    certificate : str
-        the path of the server certificate required for the SSL
-        (default is None)
-    key : str
-        the path of the server key required for the SSL
-        (default is None)
-    """
+        Parameters
+        ----------
+        grpc_ip : str
+            the IP address of the gRPC server
+        grpc_port : int
+            the port of the gRPC server
+        secure : bool
+            define whether to use SSL or not for the gRPC server
+            (default is False)
+        certificate : str
+            the path of the server certificate required for the SSL
+            (default is None)
+        key : str
+            the path of the server key required for the SSL
+            (default is None)
+        """
 
-    # Setup gRPC server
-    #
-    # Create the server and add the handler
-    grpc_server = grpc.server(futures.ThreadPoolExecutor())
-    srv6pmServiceController_pb2_grpc \
-        .add_SRv6PMControllerServicer_to_server(_SRv6PMService(), grpc_server)
-    # If secure mode is enabled, we need to create a secure endpoint
-    if secure:
-        # Read key and certificate
-        with open(key) as f:
-            key = f.read()
-        with open(certificate) as f:
-            certificate = f.read()
-        # Create server SSL credentials
-        grpc_server_credentials = grpc.ssl_server_credentials(
-            ((key, certificate,),)
-        )
-        # Create a secure endpoint
-        grpc_server.add_secure_port(
-            '[%s]:%s' % (grpc_ip, grpc_port),
-            grpc_server_credentials
-        )
-    else:
-        # Create an insecure endpoint
-        grpc_server.add_insecure_port(
-            '[%s]:%s' % (grpc_ip, grpc_port)
-        )
-    # Start the loop for gRPC
-    logger.info('Listening gRPC')
-    grpc_server.start()
-    while True:
-        time.sleep(5)
+        # Setup gRPC server
+        #
+        # Create the server and add the handler
+        grpc_server = grpc.server(futures.ThreadPoolExecutor())
+        srv6pmServiceController_pb2_grpc \
+            .add_SRv6PMControllerServicer_to_server(_SRv6PMService(), grpc_server)
+        # If secure mode is enabled, we need to create a secure endpoint
+        if secure:
+            # Read key and certificate
+            with open(key) as f:
+                key = f.read()
+            with open(certificate) as f:
+                certificate = f.read()
+            # Create server SSL credentials
+            grpc_server_credentials = grpc.ssl_server_credentials(
+                ((key, certificate,),)
+            )
+            # Create a secure endpoint
+            grpc_server.add_secure_port(
+                '[%s]:%s' % (grpc_ip, grpc_port),
+                grpc_server_credentials
+            )
+        else:
+            # Create an insecure endpoint
+            grpc_server.add_insecure_port(
+                '[%s]:%s' % (grpc_ip, grpc_port)
+            )
+        # Start the loop for gRPC
+        logger.info('Listening gRPC')
+        grpc_server.start()
+        while True:
+            time.sleep(5)
