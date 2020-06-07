@@ -52,6 +52,10 @@ try:
     from pyaml import yaml
 except ImportError:
     logger.warning('pyaml library is not installed')
+try:
+    import pygraphviz
+except ImportError:
+    logger.warning('pygraphviz library is not installed')
 
 
 # Global variables definition
@@ -80,7 +84,7 @@ def dump_topo_json(G, topo_file):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by dump_topo_json()'
+        logger.critical('NetworkX library required by dump_topo_json() '
                         'has not been imported. Is it installed?')
         return
     # Export NetworkX object into a json file
@@ -115,7 +119,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
     #
     # Check if the pyaml library has been imported
     if 'pyaml' not in sys.modules:
-        logger.critical('pyaml library required by dump_topo_yaml()'
+        logger.critical('pyaml library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
         return None, None
     # Export nodes in YAML format
@@ -171,7 +175,7 @@ def build_topo_graph(nodes, edges):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by build_topo_graph()'
+        logger.critical('NetworkX library required by build_topo_graph() '
                         'has not been imported. Is it installed?')
         return
     logger.info('*** Building topology graph')
@@ -195,7 +199,11 @@ def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by draw_topo()'
+        logger.critical('NetworkX library required by draw_topo() '
+                        'has not been imported. Is it installed?')
+        return
+    if 'pygraphviz' not in sys.modules:
+        logger.critical('pygraphviz library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
         return
     # Create dot topology file, an intermediate representation
@@ -237,16 +245,21 @@ def connect_and_extract_topology_isis(ips_ports,
         if password:
             tn.read_until(b"Password: ")
             tn.write(password.encode('ascii') + b"\r\n")
-        # terminal length set to 0 to not have interruptions
-        tn.write(b"terminal length 0" + b"\r\n")
-        # Get routing info from isisd database
-        tn.write(b"show isis hostname" + b"\r\n")
-        # Close
-        tn.write(b"q" + b"\r\n")
-        # Get results
-        hostname_details = tn.read_all().decode('ascii')
-        # Close telnet
-        tn.close()
+        try:
+            # terminal length set to 0 to not have interruptions
+            tn.write(b"terminal length 0" + b"\r\n")
+            # Get routing info from isisd database
+            tn.write(b"show isis hostname" + b"\r\n")
+            # Close
+            tn.write(b"q" + b"\r\n")
+            # Get results
+            hostname_details = tn.read_all().decode('ascii')
+        except BrokenPipeError:
+            logger.error('Broken pipe. Is the password correct?')
+            continue
+        finally:
+            # Close telnet
+            tn.close()
         #
         # Extract router database
         #
@@ -347,7 +360,7 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
         # Extract the topology information
         nodes, edges, node_to_systemid = \
             connect_and_extract_topology_isis(
-                routers, isisd_pwd, period, verbose)
+                routers, isisd_pwd, verbose)
         # Build and export the topology graph
         if topo_file_json is not None or topo_graph is not None:
             # Builg topology graph
