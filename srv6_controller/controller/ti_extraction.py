@@ -146,6 +146,51 @@ def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml=None, edges_f
     return nodes_yaml, edges_yaml
 
 
+# to be used with edges collection containing ip addresses
+def dump_topo_yaml_edges_ip(nodes, edges, node_to_systemid, nodes_file_yaml=None, edges_file_yaml=None):
+    # This function depends on the pyaml library, which is a
+    # optional dependency for this script
+    #
+    # Check if the pyaml library has been imported
+    if 'pyaml' not in sys.modules:
+        logger.critical('pyaml library required by dump_topo_yaml()'
+                        'has not been imported. Is it installed?')
+        return None, None
+    # Export nodes in YAML format
+    nodes_yaml = [{
+        '_key': node,
+        'type': 'router',
+        'ip_address': None,
+        'ext_reachability': node_to_systemid[node]
+    } for node in nodes]
+    # Write nodes to file
+    if nodes_file_yaml is not None:
+        logger.info('*** Exporting topology nodes to %s' % nodes_file_yaml)
+        with open(nodes_file_yaml, 'w') as outfile:
+            yaml.dump(nodes_yaml, outfile)
+    # Export edges in YAML format
+    edges_yaml = list()
+    for edge in edges:
+        edges_yaml.append({
+                '_key': '%s-dir1' % edge[0],
+                '_from': 'nodes/%s' % edge[1],
+                '_to': 'nodes/%s' % edge[2],
+                'type': 'core'
+            })
+        edges_yaml.append({
+                '_key': '%s-dir2' % edge[0],
+                '_from': 'nodes/%s' % edge[2],
+                '_to': 'nodes/%s' % edge[1],
+                'type': 'core'
+            })
+    if edges_file_yaml is not None:
+        logger.info('*** Exporting topology edges to %s' % edges_file_yaml)
+        with open(edges_file_yaml, 'w') as outfile:
+            yaml.dump(edges_yaml, outfile)
+    logger.info('Topology exported\n')
+    return nodes_yaml, edges_yaml
+
+
 def connect_telnet(router, port):
     # Establish a telnet connection to the router
     try:
@@ -300,6 +345,8 @@ def connect_and_extract_topology_isis(ips_ports,
         reachability_info = dict()
         # Process isis database
         hostname = None
+        # IPv6 subnet addresses of edges
+        ipv6_reachability = dict()
         for line in database_details.splitlines():
             # Get hostname
             m = re.search('Hostname: (\S+)', line)
@@ -316,23 +363,43 @@ def connect_and_extract_topology_isis(ips_ports,
                 # Update reachability info dict
                 if reachability != hostname_to_system_id[hostname]:
                     reachability_info[hostname].add(reachability)
+
+            #   IPv6 Reachability: fcf0:0:6:8::/64 (Metric: 10)
+            m = re.search('IPv6 Reachability: (.+/\\d{1,3})', line)
+            if(m):
+                ip_add = m.group(1)
+                if ip_add not in ipv6_reachability:
+                    # Update IPv6 reachability dict
+                    ipv6_reachability[ip_add] = list()
+                # add hostname to hosts list of the ip address in the ipv6 reachability dict
+                ipv6_reachability[ip_add].append(hostname)
+
         # Build the topology graph
         #
         # Nodes
         nodes = hostnames
         # Edges
         edges = set()
+        # Edges with subnet IP address
+        edges_ip = set()
         for hostname, system_ids in reachability_info.items():
             for system_id in system_ids:
                 edges.add((hostname, system_id_to_hostname[system_id]))
+        for ip_add in ipv6_reachability:
+            # Edge link is bidirectional in this case
+            if len(ipv6_reachability[ip_add]) == 2:     # Only take IP addresses of links between 2 nodes
+                (node1, node2) = ipv6_reachability[ip_add]
+                ip_add_key = ip_add.replace('/','-')    # Character '/' is not accepted in key strign in arango, using '-' instead
+                edges_ip.add((ip_add_key, node1, node2))
         # Print nodes and edges
         if verbose:
             print('Topology extraction completed\n')
             print("Nodes:", nodes)
             print("Edges:", edges)
+            print("Edges with IP address:", edges_ip)
             print("***************************************")
         # Return topology information
-        return nodes, edges, hostname_to_system_id
+        return nodes, edges, hostname_to_system_id, edges_ip
     # No router available to extract the topology
     return None, None, None
 
@@ -343,7 +410,7 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
     # Topology Information Extraction
     while (True):
         # Extract the topology information
-        nodes, edges, node_to_systemid = \
+        nodes, edges, node_to_systemid, edges_ip = \
             connect_and_extract_topology_isis(
                 routers, isisd_pwd, period, verbose)
         # Build and export the topology graph

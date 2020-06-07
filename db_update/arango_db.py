@@ -86,3 +86,40 @@ def populate(nodes, edges, nodes_dict, edges_dict):
     # edges
     for edge in edges_dict:
         edges.insert(edge)      # no control on key
+
+
+def populate2(nodes, edges, nodes_dict, edges_dict):
+    # nodes
+    for node in nodes_dict:
+        if not nodes.has(node["_key"]):
+            nodes.insert(node)
+        else:  # only specified fields are changed
+            nodes.update(node)
+
+    # edges
+    for edge in edges_dict:
+        # Cannot work now, because edge links do not have a key
+        if not edges.has(edge["_key"]): # key is ip address of subnet
+            edges.insert(edge)
+        else:  # only specified fields are changed
+            edges.update(edge)
+
+
+def populate_yaml2(nodes, edges, nodes_file = NODES_FILE, edges_file = EDGES_FILE):
+    # nodes
+    with open(nodes_file) as f:
+        nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
+        for node in nodes_dict:
+            if not nodes.has(node["_key"]):
+                nodes.insert(node)
+            else:  # only specified fields are changed
+                nodes.update(node)
+
+    # edges
+    with open(edges_file) as f:
+        edges_dict = yaml.load(f, Loader=yaml.FullLoader)
+        for edge in edges_dict:
+            if not edges.has(edge["_key"]): # key is ip address of subnet
+                edges.insert(edge)
+            else:  # only specified fields are changed
+                edges.update(edge)

@@ -146,6 +146,7 @@ import arango_db
 # Import topology extraction utility functions
 from ti_extraction import connect_and_extract_topology_isis
 from ti_extraction import dump_topo_yaml
+from ti_extraction import dump_topo_yaml_edges_ip
 
 
 # Global variables definition
@@ -224,8 +225,7 @@ def parse_grpc_error(e):
     return code
 
 
-def handle_srv6_path(op, channel, destination, segments=[],
-                     device='', encapmode="encap", table=-1, metric=-1):
+def handle_srv6_path(op, channel, destination, segments=[], device='', encapmode="encap", table=-1, metric=-1):
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 path request
@@ -290,9 +290,7 @@ def handle_srv6_path(op, channel, destination, segments=[],
     return response
 
 
-def handle_srv6_behavior(op, channel, segment, action='', device='',
-                         table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments=[], metric=-1):
+def handle_srv6_behavior(op, channel, segment, action='', device='', table=-1, nexthop="", lookup_table=-1, interface="", segments=[], metric=-1):
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 behavior request
@@ -465,6 +463,7 @@ def load_topo_on_arango(nodes, edges, nodes_collection,
                         edges_collection, verbose=False):
     # Load the topology on Arango DB
     arango_db.populate(
+    # arango_db.populate2(
         nodes=nodes_collection,
         edges=edges_collection,
         nodes_dict=nodes,
@@ -500,7 +499,7 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
         )
     while (True):
         # Connect to a node and extract the topology
-        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
+        nodes, edges, node_to_systemid, edges_ip = connect_and_extract_topology_isis(
             ips_ports=isis_nodes,
             verbose=verbose
         )
@@ -514,9 +513,11 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
             # Optionally, the nodes and the edges are exported in
             # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
             # are not None
-            nodes, edges = dump_topo_yaml(
+            # nodes, edges = dump_topo_yaml(
+            nodes, edges_ip = dump_topo_yaml_edges_ip(
                 nodes=nodes,
-                edges=edges,
+                edges=edges_ip,
+                # edges=edges,
                 node_to_systemid=node_to_systemid,
                 nodes_file_yaml=nodes_yaml,
                 edges_file_yaml=edges_yaml
@@ -526,17 +527,20 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
                 fill_ip_addresses(nodes, addrs_yaml)
             # Add hosts information
             if hosts_yaml is not None:
-                add_hosts(nodes, edges, hosts_yaml)
+                # add_hosts(nodes, edges, hosts_yaml)
+                add_hosts(nodes, edges_ip, hosts_yaml)
             # Save nodes YAML file
             save_yaml_dump(nodes, nodes_yaml)
             # Save edges YAML file
-            save_yaml_dump(edges, edges_yaml)
+            # save_yaml_dump(edges, edges_yaml)
+            save_yaml_dump(edges_ip, edges_yaml)
             # Load the topology on Arango DB
             if arango_url is not None and \
                     arango_user is not None and arango_password is not None:
                 load_topo_on_arango(
                     nodes=nodes,
-                    edges=edges,
+                    # edges=edges,
+                    edges=edges_ip,
                     nodes_collection=nodes_collection,
                     edges_collection=edges_collection,
                     verbose=verbose
