@@ -81,6 +81,8 @@ message Configuration {
     uint32 refl_udp_port = 2;
     ColorOptions color_options = 3;
     PMDriver pm_driver = 4;
+    repeated string in_interfaces = 5;
+    repeated string out_interfaces = 6;
 }
 
 message SetConfigurationReply {

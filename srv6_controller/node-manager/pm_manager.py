@@ -1,34 +1,13 @@
 #!/usr/bin/python
 
+
+import atexit
 import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            # and remove trailing newline chars
-            venv_path = venv_file.read().rstrip()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 from concurrent import futures
 import sys
 import grpc
 import logging
-from threading import Thread
+from threading import Thread, Event
 import sched
 import time
 from datetime import datetime, timedelta
@@ -88,7 +67,7 @@ import srv6pmServiceController_pb2_grpc
 
 
 class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
-    def __init__(self, SessionSender, SessionReflector, packetReceiver):
+    def __init__(self, SessionSender=None, SessionReflector=None, packetReceiver=None):
         self.port_server = 20000
         self.sender = SessionSender
         self.reflector = SessionReflector
@@ -107,20 +86,20 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node configured
             #
             # Extract incoming interfaces from the gRPC message
-            in_interfaces = list()
-            for interface in request.in_interfaces:
-                in_interfaces.append(interface)
-            # Extract outgoing interfaces from the gRPC message
-            out_interfaces = list()
-            for interface in request.out_interfaces:
-                out_interfaces.append(interface)
+            # in_interfaces = list()
+            # for interface in request.in_interfaces:
+            #     in_interfaces.append(interface)
+            # # Extract outgoing interfaces from the gRPC message
+            # out_interfaces = list()
+            # for interface in request.out_interfaces:
+            #     out_interfaces.append(interface)
             # Start measurement process
             res = self.sender.startMeas(
                 meas_id=request.measure_id,
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
-                inInterface=in_interfaces[0],   # Currently we support 1 intf
-                outInterface=out_interfaces[0]   # Currently we support 1 intf
+                # inInterface=in_interfaces[0],   # Currently we support 1 intf
+                # outInterface=out_interfaces[0]   # Currently we support 1 intf
             )
             if res == 1:
                 status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
@@ -155,19 +134,19 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node configured
             #
             # Extract incoming interfaces from the gRPC message
-            in_interfaces = list()
-            for interface in request.in_interfaces:
-                in_interfaces.append(interface)
-            # Extract outgoing interfaces from the gRPC message
-            out_interfaces = list()
-            for interface in request.out_interfaces:
-                out_interfaces.append(interface)
+            # in_interfaces = list()
+            # for interface in request.in_interfaces:
+            #     in_interfaces.append(interface)
+            # # Extract outgoing interfaces from the gRPC message
+            # out_interfaces = list()
+            # for interface in request.out_interfaces:
+            #     out_interfaces.append(interface)
             # Start measurement process
             self.reflector.startMeas(
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
-                inInterface=request.in_interfaces[0],   # Currently we support 1 intf
-                outInterface=request.out_interfaces[0]   # Currently we support 1 intf
+                # inInterface=request.in_interfaces[0],   # Currently we support 1 intf
+                # outInterface=request.out_interfaces[0]   # Currently we support 1 intf
             )
             status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
         return srv6pmReflector_pb2.StartExperimentReflectorReply(status=status)
@@ -194,6 +173,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node not configured
             status = commons_pb2.StatusCode.Value(
                 'STATUS_NOT_CONFIGURED')
+            response = srv6pmCommons_pb2.ExperimentDataResponse(
+                status=status)
         else:
             # Node configured
             #
@@ -225,16 +206,60 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
 
     def setConfiguration(self, request, context):
         print("GRPC CONTROLLER: setConfiguration")
+        # Check if this node is already configured
+        if self.configured:
+            status = commons_pb2.StatusCode.Value('STATUS_ALREADY_CONFIGURED')
+            return srv6pmCommons_pb2.SetConfigurationReply(status=status)
         # Extract parameters from the gRPC request
         interval = request.color_options.interval_duration
         margin = request.color_options.delay_margin
         number_of_color = request.color_options.numbers_of_color
         ss_udp_port = request.ss_udp_port
+        if ss_udp_port is None:
+            ss_udp_port = 1206
         refl_udp_port = request.refl_udp_port
-        # pm_driver = request.pm_driver  # eBPF or IPSET TODO Currently unused
+        if refl_udp_port is None:
+            refl_udp_port = 1205
+        pm_driver = request.pm_driver  # eBPF or IPSET
+        in_interfaces = request.in_interfaces
+        out_interfaces = request.out_interfaces
+        self.pm_driver = pm_driver
+        # Initialize driver eBPF/IPSET
+        if self.pm_driver == srv6pmCommons_pb2.eBPF:
+            self.driver = EbpfInterf(
+                in_interfaces=in_interfaces,
+                out_interfaces=out_interfaces
+            )
+            atexit.register(self.driver.stop)
+        elif self.pm_driver == srv6pmCommons_pb2.IPSet:
+            self.driver = IpSetInterf()
+        else:
+            print('Invalid PM Driver: %s' % self.pm_driver)
+            status = commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR')
+            return srv6pmCommons_pb2.SetConfigurationReply(status=status)
+        # Init stop events
+        session_sender_stop_event = Event()
+        session_reflector_stop_event = Event()
+        packet_receiver_stop_event = Event()
+        # PUNT interface
+        recvInterf = 'punt0'
+        # Initialize sender
+        self.sender = SessionSender(self.driver, session_sender_stop_event)
+        # Initialize reflector
+        self.reflector = SessionReflector(self.driver,
+                                                 session_reflector_stop_event)
+        # Initialize packet receiver
+        self.packetRecv = TestPacketReceiver(
+            interface=recvInterf,
+            sender=self.sender,
+            reflector=self.reflector,
+            ss_udp_port=ss_udp_port,
+            refl_udp_port=refl_udp_port,
+            stop_event=packet_receiver_stop_event
+        )
         # Set sender and reflector params
-        self.packetReceiver.ss_udp_port = ss_udp_port
-        self.packetReceiver.refl_udp_port = refl_udp_port
+        self.packetRecv.ss_udp_port = ss_udp_port
+        self.packetRecv.refl_udp_port = refl_udp_port
         self.reflector.ss_udp_port = ss_udp_port
         self.reflector.refl_udp_port = refl_udp_port
         self.sender.ss_udp_port = ss_udp_port
@@ -242,29 +267,67 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         self.sender.interval = int(interval)
         self.sender.margin = timedelta(milliseconds=int(margin))
         self.sender.numColor = int(number_of_color)
+        # Start reflector thread
+        self.reflector.start()
+        # Start sender thread
+        self.sender.start()
+        # Start packet receiver thread
+        self.packetRecv.start()
         # Set 'configured' flag
         self.configured = True
         # Create the response
         status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
         return srv6pmCommons_pb2.SetConfigurationReply(status=status)
 
+    def resetConfiguration(self, request, context):
+        print("GRPC CONTROLLER: resetConfiguration")
+        # Check if this node is not configured:
+        if not self.configured:
+            status = commons_pb2.StatusCode.Value('STATUS_NOT_CONFIGURED')
+            return srv6pmCommons_pb2.SetConfigurationReply(status=status)
+        if self.reflector.startedMeas or \
+                self.sender.startedMeas:
+            print('Sender / Reflector running. Cannot reset configuration')
+            status = commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR')
+            return srv6pmCommons_pb2.SetConfigurationReply(status=status)
+        # Stop reflector thread
+        self.reflector.stop_event.set()
+        self.reflector = None
+        # Stop sender thread
+        self.sender.stop_event.set()
+        self.sender = None
+        # Stop packet receiver thread
+        self.packetRecv.stop_event.set()
+        self.packetRecv = None
+        # Unload eBPF program
+        if self.pm_driver == srv6pmCommons_pb2.eBPF:
+            atexit.unregister(self.driver.stop)
+        self.driver.stop()
+        # Set 'configured' flag
+        self.configured = False
+        # Create the response
+        status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
+        return srv6pmCommons_pb2.SetConfigurationReply(status=status)
+
+
+# def add_pm_manager_to_server(server):
+#     recvInterf = 'punt0'
+
+#     driver = EbpfInterf()
+#     # driver = IpSetInterf()
+
+#     sessionsender = SessionSender(driver)
+#     sessionreflector = SessionReflector(driver)
+#     packetRecv = TestPacketReceiver(
+#         recvInterf, sessionsender, sessionreflector)
+#     sessionreflector.start()
+#     sessionsender.start()
+#     packetRecv.start()
+
 
 def add_pm_manager_to_server(server):
-    recvInterf = 'punt0'
-
-    driver = EbpfInterf()
-    # driver = IpSetInterf()
-
-    sessionsender = SessionSender(driver)
-    sessionreflector = SessionReflector(driver)
-    packetRecv = TestPacketReceiver(
-        recvInterf, sessionsender, sessionreflector)
-    sessionreflector.start()
-    sessionsender.start()
-    packetRecv.start()
-
     srv6pmService_pb2_grpc.add_SRv6PMServicer_to_server(
-        TWAMPController(sessionsender, sessionreflector, packetRecv), server)
+        TWAMPController(), server)
 
 
 def serve(ipaddr, gprcPort, recvInterf, epbfOutInterf, epbfInInterf):

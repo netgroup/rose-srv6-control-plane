@@ -31,9 +31,7 @@ message StartExperimentSenderRequest {
     uint32 measure_id = 1;
     string sdlist = 2;
     string sdlistreverse = 3;
-    repeated string in_interfaces = 4;
-    repeated string out_interfaces = 5;
-    SenderOptions sender_options = 6;
+    SenderOptions sender_options = 4;
 }
 
 message StartExperimentSenderReply {
