@@ -29,12 +29,10 @@ import logging
 import json
 import os
 import time
-import threading
 import telnetlib
 import re
 import socket
 import sys
-from optparse import OptionParser
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -54,6 +52,10 @@ try:
     from pyaml import yaml
 except ImportError:
     logger.warning('pyaml library is not installed')
+try:
+    import pygraphviz
+except ImportError:
+    logger.warning('pygraphviz library is not installed')
 
 
 # Global variables definition
@@ -82,7 +84,7 @@ def dump_topo_json(G, topo_file):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by dump_topo_json()'
+        logger.critical('NetworkX library required by dump_topo_json() '
                         'has not been imported. Is it installed?')
         return
     # Export NetworkX object into a json file
@@ -110,13 +112,14 @@ def dump_topo_json(G, topo_file):
     logger.info('Topology exported\n')
 
 
-def dump_topo_yaml(nodes, edges, node_to_systemid, nodes_file_yaml=None, edges_file_yaml=None):
+def dump_topo_yaml(nodes, edges, node_to_systemid,
+                   nodes_file_yaml=None, edges_file_yaml=None):
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
     # Check if the pyaml library has been imported
     if 'pyaml' not in sys.modules:
-        logger.critical('pyaml library required by dump_topo_yaml()'
+        logger.critical('pyaml library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
         return None, None
     # Export nodes in YAML format
@@ -217,7 +220,7 @@ def build_topo_graph(nodes, edges):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by build_topo_graph()'
+        logger.critical('NetworkX library required by build_topo_graph() '
                         'has not been imported. Is it installed?')
         return
     logger.info('*** Building topology graph')
@@ -241,7 +244,11 @@ def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
-        logger.critical('NetworkX library required by draw_topo()'
+        logger.critical('NetworkX library required by draw_topo() '
+                        'has not been imported. Is it installed?')
+        return
+    if 'pygraphviz' not in sys.modules:
+        logger.critical('pygraphviz library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
         return
     # Create dot topology file, an intermediate representation
@@ -283,16 +290,21 @@ def connect_and_extract_topology_isis(ips_ports,
         if password:
             tn.read_until(b"Password: ")
             tn.write(password.encode('ascii') + b"\r\n")
-        # terminal length set to 0 to not have interruptions
-        tn.write(b"terminal length 0" + b"\r\n")
-        # Get routing info from isisd database
-        tn.write(b"show isis hostname" + b"\r\n")
-        # Close
-        tn.write(b"q" + b"\r\n")
-        # Get results
-        hostname_details = tn.read_all().decode('ascii')
-        # Close telnet
-        tn.close()
+        try:
+            # terminal length set to 0 to not have interruptions
+            tn.write(b"terminal length 0" + b"\r\n")
+            # Get routing info from isisd database
+            tn.write(b"show isis hostname" + b"\r\n")
+            # Close
+            tn.write(b"q" + b"\r\n")
+            # Get results
+            hostname_details = tn.read_all().decode('ascii')
+        except BrokenPipeError:
+            logger.error('Broken pipe. Is the password correct?')
+            continue
+        finally:
+            # Close telnet
+            tn.close()
         #
         # Extract router database
         #
@@ -349,7 +361,7 @@ def connect_and_extract_topology_isis(ips_ports,
         ipv6_reachability = dict()
         for line in database_details.splitlines():
             # Get hostname
-            m = re.search('Hostname: (\S+)', line)
+            m = re.search('Hostname: (\\S+)', line)
             if (m):
                 # Extract hostname
                 hostname = m.group(1)
@@ -405,14 +417,17 @@ def connect_and_extract_topology_isis(ips_ports,
 
 
 def topology_information_extraction_isis(routers, period, isisd_pwd,
-                                         topo_file_json=None, nodes_file_yaml=None, edges_file_yaml=None,
-                                         topo_graph=None, verbose=DEFAULT_VERBOSE):
+                                         topo_file_json=None,
+                                         nodes_file_yaml=None,
+                                         edges_file_yaml=None,
+                                         topo_graph=None,
+                                         verbose=DEFAULT_VERBOSE):
     # Topology Information Extraction
     while (True):
         # Extract the topology information
         nodes, edges, node_to_systemid, edges_ip = \
             connect_and_extract_topology_isis(
-                routers, isisd_pwd, period, verbose)
+                routers, isisd_pwd, verbose)
         # Build and export the topology graph
         if topo_file_json is not None or topo_graph is not None:
             # Builg topology graph
@@ -442,8 +457,8 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
 # Parse command line options and dump results
 def parseArguments():
     parser = ArgumentParser(
-        description='Topology Information Ex+traction (from ISIS) module for SRv6 '
-        'Controller'
+        description='Topology Information Ex+traction (from ISIS) '
+        'module for SRv6 Controller'
     )
     # ip:port of the routers
     parser.add_argument(
@@ -455,8 +470,8 @@ def parseArguments():
     # Topology Information Extraction period
     parser.add_argument(
         '-p', '--period', dest='period', type=int,
-        default=DEFAULT_TOPO_EXTRACTION_PERIOD,
-        help='Polling period (in seconds); a zero value means a single extraction'
+        default=DEFAULT_TOPO_EXTRACTION_PERIOD, help='Polling period '
+        '(in seconds); a zero value means a single extraction'
     )
     # Path of topology file (JSON)
     parser.add_argument(
@@ -467,14 +482,14 @@ def parseArguments():
     # Path of nodes file (YAML)
     parser.add_argument(
         '-r', '--nodes-yaml', dest='nodes_file_yaml', action='store',
-        default=DEFAULT_NODES_YAML_FILE, help='YAML file of the nodes extracted '
-        'from the topology'
+        default=DEFAULT_NODES_YAML_FILE,
+        help='YAML file of the nodes extracted from the topology'
     )
     # Path of edges file (YAML)
     parser.add_argument(
         '-e', '--edges-yaml', dest='edges_file_yaml', action='store',
-        default=DEFAULT_EDGES_YAML_FILE, help='JSON file of the edges extracted '
-        'from the topology'
+        default=DEFAULT_EDGES_YAML_FILE,
+        help='JSON file of the edges extracted from the topology'
     )
     # Path of topology graph
     parser.add_argument(

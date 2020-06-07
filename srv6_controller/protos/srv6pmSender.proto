@@ -1,0 +1,54 @@
+syntax = "proto3";
+package srv6pm;
+import "srv6pmCommons.proto";
+import "commons.proto";
+
+service SRv6PMSender {
+    // start an experiment
+    rpc startExperiment (StartExperimentSenderRequest) returns (StartExperimentSenderReply) {}
+    // stop am experiment
+    rpc stopExperiment (StopExperimentRequest) returns (StopExperimentReply) {}
+    // retrive data of an experiment
+    rpc retriveExperimentResults (RetriveExperimentDataRequest) returns (ExperimentDataResponse) {}
+
+}
+
+// The SRv6EPRequest message containing a number of paths.
+message SRv6EPRequestSender {
+    string prefix= 1;
+    string encapmode = 2;
+    string segments = 3;
+    string device = 4;
+
+}
+
+// The SRv6EPReply message containing a simple status message
+message SRv6EPReplySender{
+    srv6_services.StatusCode status = 250;
+}
+
+message StartExperimentSenderRequest {
+    uint32 measure_id = 1;
+    string sdlist = 2;
+    string sdlistreverse = 3;
+    repeated string in_interfaces = 4;
+    repeated string out_interfaces = 5;
+    SenderOptions sender_options = 6;
+}
+
+message StartExperimentSenderReply {
+    srv6_services.StatusCode status = 1;
+}
+
+message SenderOptions {
+    //uint32 ss_udp_port = 1;
+    //uint32 refl_udp_port = 2;
+    MeasurementProtocol measurement_protocol = 3;
+    AuthenticationMode authentication_mode = 4;
+    MeasurementType measurement_type = 5;
+    TimestampFormat timestamp_format = 6;
+    MeasurementDelayMode measurement_delay_mode = 7;
+    uint32 padding_mbz = 8;
+    MeasurementLossMode measurement_loss_mode = 9;
+    string authentication_key = 10;
+}

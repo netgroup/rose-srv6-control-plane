@@ -17,36 +17,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Example showing how it is possible to switch from a SRv6 
+# Example showing how it is possible to switch from a SRv6
 # tunnel to another by acting on the metric parameter
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
 
 # Imports
+import os
 import sys
 import logging
 from dotenv import load_dotenv
@@ -74,7 +53,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -101,7 +80,7 @@ if os.getenv('CONTROLLER_PATH') is not None:
         print('Error : Set CONTROLLER_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(CONTROLLER_PATH):
+    if not os.path.exists(os.getenv('CONTROLLER_PATH')):
         print('Error : CONTROLLER_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -112,13 +91,15 @@ else:
     #
     # Check if the CONTROLLER_PATH variable is set
     if CONTROLLER_PATH == '':
-        print('Error : Set CONTROLLER_PATH variable in .env or %s' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s' %
+              sys.argv[0])
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
     if not os.path.exists(CONTROLLER_PATH):
         print('Error : CONTROLLER_PATH variable in '
               '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' %
+              sys.argv[0])
         sys.exit(-2)
 
 # Proto dependencies
@@ -127,8 +108,8 @@ import srv6_manager_pb2
 
 # Controller dependencies
 sys.path.append(CONTROLLER_PATH)
-from srv6_controller import handle_srv6_path, handle_srv6_behavior
-from srv6_controller import get_grpc_session
+from controller import handle_srv6_path, handle_srv6_behavior
+from controller import get_grpc_session
 
 
 # Global variables definition
@@ -147,7 +128,8 @@ def shift_path():
     # |         Switch from r1---r7---r8 path to r1---r4---r8 path         |
     # |                     by exchanging the metrics                      |
     # +--------------------------------------------------------------------+
-    logger.info('*** Attempting to change path from r1---r7---r8 to r1---r4---r8')
+    logger.info(
+        '*** Attempting to change path from r1---r7---r8 to r1---r4---r8')
     # IP addresses
     r1 = 'fcff:1::1'
     r8 = 'fcff:8::1'
@@ -159,7 +141,7 @@ def shift_path():
         # |               r4 route to an intermediate value               |
         # +---------------------------------------------------------------+
         logger.info('******* Decreasing the metric value of '
-        'the r4 route to an intermediate value')
+                    'the r4 route to an intermediate value')
         #
         # Encap route on r1
         # on r1: ip -6 route add fd00:0:83::/64 encap seg6 mode encap segs
@@ -254,7 +236,7 @@ def shift_path():
             logger.error('*********** Error while removing encap route')
         #
         # Decap route on r8
-        # on r8: ip -6 route del fcff:8::100 encap seg6local action End.DT6 
+        # on r8: ip -6 route del fcff:8::100 encap seg6local action End.DT6
         #        table 254 dev r8-h83 metric 200
         logger.info('*********** Removing decap route on r8')
         res = handle_srv6_behavior(
@@ -305,7 +287,8 @@ def shift_path():
         # +----------------------------------------------------------------+
         # |           Increasing the metric value of the r7 path           |
         # +----------------------------------------------------------------+
-        logger.info('*** Increasing the metric value of the tunnel r1---r7---r8')
+        logger.info(
+            '*** Increasing the metric value of the tunnel r1---r7---r8')
         #
         # Encap route on r1
         # on r1: ip -6 route add fd00:0:83::/64 encap seg6 mode encap segs

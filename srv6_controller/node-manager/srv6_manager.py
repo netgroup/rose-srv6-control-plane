@@ -23,47 +23,26 @@
 #
 
 
+from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
+from pyroute2.netlink.exceptions import NetlinkError
+from dotenv import load_dotenv
+from utils import get_address_family
+from socket import AF_INET, AF_INET6
+from pyroute2 import IPRoute
+from concurrent import futures
+import grpc
+import time
+import logging
+from argparse import ArgumentParser
+import sys
 import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
 
 
 # General imports
-import sys
-from argparse import ArgumentParser
-import logging
-import time
-import grpc
-from concurrent import futures
-from pyroute2 import IPRoute
-from socket import AF_INET, AF_INET6
-from utils import get_address_family
-from dotenv import load_dotenv
 # pyroute2 dependencies
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # Load environment variables from .env file
-load_dotenv()
+# load_dotenv()
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -81,7 +60,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -102,6 +81,7 @@ else:
 
 # Proto dependencies
 sys.path.append(PROTO_PATH)
+import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
@@ -117,7 +97,7 @@ NETLINK_ERROR_OPERATION_NOT_SUPPORTED = 95
 # Logger reference
 logger = logging.getLogger(__name__)
 #
-# Default parameters for SRv6 controller
+# Default parameters for SRv6 manager
 #
 # Server ip and port
 DEFAULT_GRPC_IP = '::'
@@ -153,7 +133,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 self.loopback_interfaces.append(
                     link.get_attr('IFLA_IFNAME'))
             else:
-                self.non_loopback_interfaces.append(link.get_attr('IFLA_IFNAME'))        
+                self.non_loopback_interfaces.append(
+                    link.get_attr('IFLA_IFNAME'))
         # Build mapping interface to index
         interfaces = self.loopback_interfaces + self.non_loopback_interfaces
         # Iterate on the interfaces
@@ -165,16 +146,16 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
     def parse_netlink_error(self, e):
         if e.code == NETLINK_ERROR_FILE_EXISTS:
             logger.warning('Netlink error: File exists')
-            return srv6_manager_pb2.STATUS_FILE_EXISTS
+            return commons_pb2.STATUS_FILE_EXISTS
         elif e.code == NETLINK_ERROR_NO_SUCH_PROCESS:
             logger.warning('Netlink error: No such process')
-            return srv6_manager_pb2.STATUS_NO_SUCH_PROCESS
+            return commons_pb2.STATUS_NO_SUCH_PROCESS
         elif e.code == NETLINK_ERROR_NO_SUCH_DEVICE:
             logger.warning('Netlink error: No such device')
-            return srv6_manager_pb2.STATUS_NO_SUCH_DEVICE
+            return commons_pb2.STATUS_NO_SUCH_DEVICE
         elif e.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
             logger.warning('Netlink error: Operation not supported')
-            return srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED
+            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         else:
             logger.warning('Generic internal error: %s' % e)
             srv6_manager_pb2.STATUS_INTERNAL_ERROR
@@ -199,10 +180,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         metric = None
                     if segments == []:
                         segments = ['::']
+                    oif = None
                     if path.device != '':
                         oif = self.interface_to_idx[path.device]
-                    else:
-                        oif = self.interface_to_idx[self.non_loopback_interfaces[0]]
+                    elif op == 'add':
+                        oif = self.interface_to_idx[
+                            self.non_loopback_interfaces[0]]
                     self.ip_route.route(op, dst=path.destination, oif=oif,
                                         table=table,
                                         priority=metric,
@@ -211,7 +194,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                'segs': segments})
             elif op == 'get':
                 return srv6_manager_pb2.SRv6ManagerReply(
-                    status=srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+                    status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
             else:
                 # Operation unknown: this is a bug
                 logger.error('Unrecognized operation: %s' % op)
@@ -219,7 +202,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=srv6_manager_pb2.STATUS_SUCCESS)
+                status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as e:
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=self.parse_netlink_error(e))
@@ -242,7 +225,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 nexthop = nexthop if nexthop != '' else None
                 lookup_table = lookup_table if lookup_table != -1 else None
                 interface = interface if interface != '' else None
-                device = device if device != '' else self.non_loopback_interfaces[0]
+                device = device if device != '' \
+                    else self.non_loopback_interfaces[0]
                 table = table if table != -1 else None
                 metric = metric if metric != -1 else None
                 # Perform operation
@@ -252,7 +236,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                         table=table, priority=metric)
                 elif op == 'get':
                     return srv6_manager_pb2.SRv6ManagerReply(
-                        status=srv6_manager_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+                        status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
                 elif op == 'add' or op == 'change':
                     # Add a new route
                     # Fill encap dict with the parameters of the behavior
@@ -293,7 +277,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     else:
                         logger.debug('Error: Unrecognized action')
                         return srv6_manager_pb2.SRv6ManagerReply(
-                            status=srv6_manager_pb2.STATUS_INVALID_ACTION)
+                            status=commons_pb2.STATUS_INVALID_ACTION)
                     # Finalize encap dict
                     encap['type'] = 'seg6local'
                     encap['action'] = action
@@ -310,7 +294,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=srv6_manager_pb2.STATUS_SUCCESS)
+                status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as e:
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=self.parse_netlink_error(e))
@@ -321,7 +305,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # the entity carried by the request message
         res = self.HandleSRv6PathRequest(
             op, request.srv6_path_request, context)
-        if res.status == srv6_manager_pb2.STATUS_SUCCESS:
+        if res.status == commons_pb2.STATUS_SUCCESS:
             res = self.HandleSRv6BehaviorRequest(
                 op, request.srv6_behavior_request, context)
         return res
@@ -357,7 +341,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '%s:%s' % (grpc_ip, grpc_port)
     elif addr_family == AF_INET6:
         # IPv6 address
-        server_addr =  '[%s]:%s' % (grpc_ip, grpc_port)
+        server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s' % grpc_ip)

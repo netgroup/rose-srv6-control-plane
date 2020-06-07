@@ -23,30 +23,8 @@
 #
 
 
-import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 # Imports
+import os
 import sys
 import logging
 from dotenv import load_dotenv
@@ -74,7 +52,7 @@ if os.getenv('PROTO_PATH') is not None:
         print('Error : Set PROTO_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
+    if not os.path.exists(os.getenv('PROTO_PATH')):
         print('Error : PROTO_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -101,7 +79,7 @@ if os.getenv('CONTROLLER_PATH') is not None:
         print('Error : Set CONTROLLER_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(CONTROLLER_PATH):
+    if not os.path.exists(os.getenv('CONTROLLER_PATH')):
         print('Error : CONTROLLER_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -112,13 +90,15 @@ else:
     #
     # Check if the CONTROLLER_PATH variable is set
     if CONTROLLER_PATH == '':
-        print('Error : Set CONTROLLER_PATH variable in .env or %s' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s' %
+              sys.argv[0])
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
     if not os.path.exists(CONTROLLER_PATH):
         print('Error : CONTROLLER_PATH variable in '
               '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' %
+              sys.argv[0])
         sys.exit(-2)
 
 # Proto dependencies
@@ -127,8 +107,8 @@ import srv6_manager_pb2
 
 # Controller dependencies
 sys.path.append(CONTROLLER_PATH)
-from srv6_controller import handle_srv6_path, handle_srv6_behavior
-from srv6_controller import get_grpc_session
+from controller import handle_srv6_path, handle_srv6_behavior
+from controller import get_grpc_session
 
 
 # Global variables definition
@@ -142,12 +122,12 @@ logger = logging.getLogger(__name__)
 GRPC_PORT = 12345
 
 
-def create_tunnel_r1r4r8():
+def create_tunnel_r1r7r8():
     # +--------------------------------------------------------------------+
     # |          Create a bidirectional tunnel between h11 and h83         |
-    # |              passing through router r4 (r1---r4---r8)              |
+    # |              passing through router r7 (r1---r7---r8)              |
     # +--------------------------------------------------------------------+
-    logger.info('*** Attempting to create tunnel r1---r4---r8')
+    logger.info('*** Attempting to create tunnel r1---r7---r8')
     # IP addresses
     r1 = 'fcff:1::1'
     r8 = 'fcff:8::1'
@@ -161,15 +141,15 @@ def create_tunnel_r1r4r8():
         #
         # Encap route on r1
         # on r1: ip -6 route add fd00:0:83::/64 encap seg6 mode encap segs
-        #        fcff:4::1,fcff:8::100 dev r1-h11 metric 200
+        #        fcff:7::1,fcff:8::100 dev r1-h11 metric 100
         logger.info('*********** Creating encap route')
         res = handle_srv6_path(
             op='add',
             channel=r1_chan,
             destination='fd00:0:83::/64',
-            segments=['fcff:4::1', 'fcff:8::100'],
+            segments=['fcff:7::1', 'fcff:8::100'],
             device='r1-h11',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Encap route created successfully')
@@ -178,7 +158,7 @@ def create_tunnel_r1r4r8():
         #
         # Decap route on r8
         # on r8: ip -6 route add fcff:8::100 encap seg6local action End.DT6
-        #        table 254 dev r8-h83 metric 200
+        #        table 254 dev r8-h83 metric 100
         logger.info('*********** Creating decap route')
         res = handle_srv6_behavior(
             op='add',
@@ -187,7 +167,7 @@ def create_tunnel_r1r4r8():
             action='End.DT6',
             lookup_table=254,
             device='r8-h83',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Decap route created successfully')
@@ -202,15 +182,15 @@ def create_tunnel_r1r4r8():
         #
         # Encap route on r8
         # on r8: ip -6 route add fd00:0:11::/64 encap seg6 mode encap segs
-        #        fcff:4::1,fcff:1::100 dev r8-h83 metric 200
+        #        fcff:7::1,fcff:1::100 dev r8-h83 metric 100
         logger.info('*********** Creating encap route')
         res = handle_srv6_path(
             op='add',
             channel=r8_chan,
             destination='fd00:0:11::/64',
-            segments=['fcff:4::1', 'fcff:1::100'],
+            segments=['fcff:7::1', 'fcff:1::100'],
             device='r8-h83',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Encap route created successfully')
@@ -219,7 +199,7 @@ def create_tunnel_r1r4r8():
         #
         # Decap route on r1
         # on r1: ip -6 route add fcff:1::100 encap seg6local action End.DT6
-        #        table 254 dev r1-h11 metric 200
+        #        table 254 dev r1-h11 metric 100
         logger.info('*********** Creating decap route')
         res = handle_srv6_behavior(
             op='add',
@@ -228,7 +208,7 @@ def create_tunnel_r1r4r8():
             action='End.DT6',
             lookup_table=254,
             device='r1-h11',
-            metric=200
+            metric=100
         )
         if res == srv6_manager_pb2.StatusCode.STATUS_SUCCESS:
             logger.info('*********** Decap route created successfully')
@@ -244,4 +224,4 @@ def create_tunnel_r1r4r8():
 
 if __name__ == '__main__':
     # Run example
-    create_tunnel_r1r4r8()
+    create_tunnel_r1r7r8()

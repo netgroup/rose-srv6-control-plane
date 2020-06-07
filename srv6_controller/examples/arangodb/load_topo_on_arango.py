@@ -24,30 +24,8 @@
 #
 
 
-import os
-
-# Activate virtual environment if a venv path has been specified in .venv
-# This must be executed only if this file has been executed as a 
-# script (instead of a module)
-if __name__ == '__main__':
-    # Check if .venv file exists
-    if os.path.exists('.venv'):
-        with open('.venv', 'r') as venv_file:
-            # Get virtualenv path from .venv file
-            venv_path = venv_file.read()
-        # Get path of the activation script
-        venv_path = os.path.join(venv_path, 'bin/activate_this.py')
-        if not os.path.exists(venv_path):
-            print('Virtual environment path specified in .venv '
-                  'points to an invalid path\n')
-            exit(-2)
-        with open(venv_path) as f:
-            # Read the activation script
-            code = compile(f.read(), venv_path, 'exec')
-            # Execute the activation script to activate the venv
-            exec(code, {'__file__': venv_path})
-
 # Imports
+import os
 import sys
 from ipaddress import IPv6Interface
 from pyaml import yaml
@@ -75,7 +53,7 @@ if os.getenv('CONTROLLER_PATH') is not None:
         print('Error : Set CONTROLLER_PATH variable in .env\n')
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(CONTROLLER_PATH):
+    if not os.path.exists(os.getenv('CONTROLLER_PATH')):
         print('Error : CONTROLLER_PATH variable in '
               '.env points to a non existing folder')
         sys.exit(-2)
@@ -86,18 +64,22 @@ else:
     #
     # Check if the CONTROLLER_PATH variable is set
     if CONTROLLER_PATH == '':
-        print('Error : Set CONTROLLER_PATH variable in .env or %s' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s' %
+              sys.argv[0])
         sys.exit(-2)
     # Check if the CONTROLLER_PATH variable points to an existing folder
     if not os.path.exists(CONTROLLER_PATH):
         print('Error : CONTROLLER_PATH variable in '
               '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' % sys.argv[0])
+        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' %
+              sys.argv[0])
         sys.exit(-2)
 
 # Controller dependencies
 sys.path.append(CONTROLLER_PATH)
-from srv6_controller import extract_topo_from_isis_and_load_on_arango
+from arangodb_utils import extract_topo_from_isis_and_load_on_arango
+from arangodb_utils import extract_topo_from_isis
+from arangodb_utils import load_topo_on_arango
 
 
 # Global variables definition
