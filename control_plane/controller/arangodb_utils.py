@@ -24,7 +24,6 @@
 
 
 # General imports
-import sys
 import logging
 import time
 from pyaml import yaml
