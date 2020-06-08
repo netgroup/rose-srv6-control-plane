@@ -30,8 +30,10 @@ import time
 from pyaml import yaml
 
 # Import topology extraction utility functions
-from ti_extraction import connect_and_extract_topology_isis
-from ti_extraction import dump_topo_yaml
+from control_plane.controller.ti_extraction import connect_and_extract_topology_isis
+from control_plane.controller.ti_extraction import dump_topo_yaml
+# DB update modules
+from db_update import arango_db
 
 
 # Global variables definition
@@ -39,9 +41,6 @@ from ti_extraction import dump_topo_yaml
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
-
-sys.path.append('../../db_update')
-import arango_db
 
 
 def save_yaml_dump(obj, filename):
@@ -93,6 +92,7 @@ def add_hosts(nodes, edges, hosts_yaml):
         })
         # Add edge (host to router)
         edges.append({
+            '_key': '%s-dir1' % host['ip_address'].replace('/', '-'),
             '_from': 'nodes/%s' % host['name'],
             '_to': 'nodes/%s' % host['gw'],
             'type': 'edge'
@@ -101,6 +101,7 @@ def add_hosts(nodes, edges, hosts_yaml):
         # This is required because we work with
         # unidirectional edges
         edges.append({
+            '_key': '%s-dir2' % host['ip_address'].replace('/', '-'),
             '_to': 'nodes/%s' % host['gw'],
             '_from': 'nodes/%s' % host['name'],
             'type': 'edge'

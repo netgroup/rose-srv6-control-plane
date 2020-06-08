@@ -29,13 +29,9 @@ import sys
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
 
-# Path of the controller
-CONTROLLER_PATH = '../'
-
 # Controller dependencies
-sys.path.append(CONTROLLER_PATH)
-import arangodb_utils
-import ti_extraction
+from control_plane.controller import arangodb_utils
+from control_plane.controller import ti_extraction
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,

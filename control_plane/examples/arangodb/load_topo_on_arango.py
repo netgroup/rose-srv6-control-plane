@@ -26,60 +26,15 @@
 
 # Imports
 import os
-import sys
-from ipaddress import IPv6Interface
-from pyaml import yaml
-import re
 import logging
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Controller dependencies
+from control_plane.controller.arangodb_utils import extract_topo_from_isis_and_load_on_arango
+# from control_plane.controller.arangodb_utils import extract_topo_from_isis
+# from control_plane.controller.arangodb_utils import load_topo_on_arango
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-# Folder containing the controller
-CONTROLLER_PATH = os.path.join(BASE_PATH, '../controller/')
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-
-# CONTROLLER_PATH
-if os.getenv('CONTROLLER_PATH') is not None:
-    # Check if the CONTROLLER_PATH variable is set
-    if os.getenv('CONTROLLER_PATH') == '':
-        print('Error : Set CONTROLLER_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('CONTROLLER_PATH')):
-        print('Error : CONTROLLER_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # CONTROLLER_PATH in .env is correct. We use it.
-    CONTROLLER_PATH = os.getenv('CONTROLLER_PATH')
-else:
-    # CONTROLLER_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the CONTROLLER_PATH variable is set
-    if CONTROLLER_PATH == '':
-        print('Error : Set CONTROLLER_PATH variable in .env or %s' %
-              sys.argv[0])
-        sys.exit(-2)
-    # Check if the CONTROLLER_PATH variable points to an existing folder
-    if not os.path.exists(CONTROLLER_PATH):
-        print('Error : CONTROLLER_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set CONTROLLER_PATH variable in .env or %s\n' %
-              sys.argv[0])
-        sys.exit(-2)
-
-# Controller dependencies
-sys.path.append(CONTROLLER_PATH)
-from arangodb_utils import extract_topo_from_isis_and_load_on_arango
-from arangodb_utils import extract_topo_from_isis
-from arangodb_utils import load_topo_on_arango
 
 
 # Global variables definition

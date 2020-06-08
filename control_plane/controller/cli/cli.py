@@ -23,9 +23,9 @@
 #
 
 
-from . import topo_cli
-from . import srv6pm_cli
-from . import srv6_cli
+from control_plane.controller.cli import topo_cli
+from control_plane.controller.cli import srv6pm_cli
+from control_plane.controller.cli import srv6_cli
 from dotenv import load_dotenv
 from pathlib import Path
 import logging
@@ -427,8 +427,6 @@ class ControllerCLI(CustomCmd):
 
 # Class representing the configuration
 class Config:
-    # Folder containing the files auto-generated from proto files
-    PROTO_PATH = None
     # ArangoDB username
     ARANGO_USER = None
     # ArangoDB password
@@ -447,9 +445,6 @@ class Config:
         env_path = Path(env_file)
         # Load environment variables from .env file
         load_dotenv(dotenv_path=env_path)
-        # Folder containing the files auto-generated from proto files
-        if os.getenv('PROTO_PATH') is not None:
-            self.PROTO_PATH = os.getenv('PROTO_PATH')
         # ArangoDB username
         if os.getenv('ARANGO_USER') is not None:
             self.ARANGO_USER = os.getenv('ARANGO_USER')
@@ -478,22 +473,11 @@ class Config:
     def validate_config(self):
         logger.info('*** Validating configuration')
         success = True
-        # Validate PROTO_PATH
-        if self.PROTO_PATH is None:
-            logger.critical('Set PROTO_PATH variable in configuration file '
-                            '(.env file)')
-            success = False
-        if self.PROTO_PATH is not None and \
-                not os.path.exists(self.PROTO_PATH):
-            logger.critical('PROTO_PATH variable in .env points '
-                            'to a non existing folder: %s' % self.PROTO_PATH)
-            success = False
         # Return result
         return success
 
     def import_dependencies(self):
-        # Append proto path
-        sys.path.append(self.PROTO_PATH)
+        pass
 
 
 # Parse options

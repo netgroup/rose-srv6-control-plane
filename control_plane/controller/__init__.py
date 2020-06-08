@@ -28,9 +28,9 @@
 # This module contains all public symbols from the library
 #
 
-from utils import get_grpc_session
-from srv6_utils import (handle_srv6_path,
+from control_plane.controller.utils import get_grpc_session
+from control_plane.controller.srv6_utils import (handle_srv6_path,
                         handle_srv6_behavior)
-from arangodb_utils import (extract_topo_from_isis,
+from control_plane.controller.arangodb_utils import (extract_topo_from_isis,
                             load_topo_on_arango,
                             extract_topo_from_isis_and_load_on_arango)

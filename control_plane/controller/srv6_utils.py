@@ -23,78 +23,16 @@
 #
 
 
-from ti_extraction import dump_topo_yaml
-from ti_extraction import connect_and_extract_topology_isis
-import srv6_manager_pb2_grpc
-import srv6_manager_pb2
-from utils import get_address_family
-import sys
-import json
-import time
-import logging
-import grpc
-from dotenv import load_dotenv
-from ipaddress import AddressValueError
-from ipaddress import IPv4Interface, IPv6Interface
-from six import text_type
-from socket import AF_INET, AF_INET6
-from threading import Thread
-from concurrent import futures
-from argparse import ArgumentParser
-import os
-
 # General imports
-from six import text_type
-from dotenv import load_dotenv
-import grpc
 import logging
-import sys
+import grpc
+from six import text_type
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Folder containing this script
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-# Folder containing the files auto-generated from proto files
-PROTO_PATH = os.path.join(BASE_PATH, '../protos/gen-py/')
-
-# Environment variables have priority over hardcoded paths
-# If an environment variable is set, we must use it instead of
-# the hardcoded constant
-if os.getenv('PROTO_PATH') is not None:
-    # Check if the PROTO_PATH variable is set
-    if os.getenv('PROTO_PATH') == '':
-        print('Error : Set PROTO_PATH variable in .env\n')
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(os.getenv('PROTO_PATH')):
-        print('Error : PROTO_PATH variable in '
-              '.env points to a non existing folder')
-        sys.exit(-2)
-    # PROTO_PATH in .env is correct. We use it.
-    PROTO_PATH = os.getenv('PROTO_PATH')
-else:
-    # PROTO_PATH in .env is not set, we use the hardcoded path
-    #
-    # Check if the PROTO_PATH variable is set
-    if PROTO_PATH == '':
-        print('Error : Set PROTO_PATH variable in .env or %s' % sys.argv[0])
-        sys.exit(-2)
-    # Check if the PROTO_PATH variable points to an existing folder
-    if not os.path.exists(PROTO_PATH):
-        print('Error : PROTO_PATH variable in '
-              '%s points to a non existing folder' % sys.argv[0])
-        print('Error : Set PROTO_PATH variable in .env or %s\n' % sys.argv[0])
-        sys.exit(-2)
-
-# Proto dependencies
-sys.path.append(PROTO_PATH)
-import commons_pb2
-import srv6_manager_pb2
+# Controller dependencies
 import srv6_manager_pb2_grpc
-
-import utils
+import srv6_manager_pb2
+import commons_pb2
+from control_plane.controller import utils
 
 # Global variables definition
 #

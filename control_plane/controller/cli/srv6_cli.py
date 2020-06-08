@@ -26,13 +26,9 @@
 from argparse import ArgumentParser
 import sys
 
-# Path of the controller
-CONTROLLER_PATH = '../'
-
 # Controller dependencies
-sys.path.append(CONTROLLER_PATH)
-import srv6_utils
-import utils
+from control_plane.controller import srv6_utils
+from control_plane.controller import utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'

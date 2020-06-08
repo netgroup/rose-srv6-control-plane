@@ -25,9 +25,6 @@
 
 # General imports
 import os
-
-# Folder containing this script
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 import sys
 from argparse import ArgumentParser
 import logging
@@ -35,11 +32,16 @@ import time
 import grpc
 from concurrent import futures
 from socket import AF_INET, AF_INET6
-from utils import get_address_family
 from dotenv import load_dotenv
 from pathlib import Path
 
-import utils
+# Node Manager dependencies
+from control_plane.node_manager import utils
+from control_plane.node_manager.utils import get_address_family
+
+# Folder containing this script
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 
 # Logger reference
 logger = logging.getLogger(__name__)
@@ -86,7 +88,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     # SRv6 Manager
     srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
-            SRv6Manager(), grpc_server)
+            srv6_manager.SRv6Manager(), grpc_server)
     # PM Manager
     try:
         pm_manager.add_pm_manager_to_server(grpc_server)
@@ -123,8 +125,6 @@ def check_root():
 
 # Class representing the configuration
 class Config:
-    # Folder containing the files auto-generated from proto files
-    PROTO_PATH = None
     # Flag indicating whether to enable the SRv6 capabilities or not
     ENABLE_SRV6_MANAGER = True
     # IP address of the gRPC server (:: means any)
@@ -153,9 +153,6 @@ class Config:
         env_path = Path(env_file)
         # Load environment variables from .env file
         load_dotenv(dotenv_path=env_path)
-        # Folder containing the files auto-generated from proto files
-        if os.getenv('PROTO_PATH') is not None:
-            self.PROTO_PATH = os.getenv('PROTO_PATH')
         # Flag indicating whether to enable the SRv6 capabilities or not
         if os.getenv('ENABLE_SRV6_MANAGER') is not None:
             self.ENABLE_SRV6_MANAGER = os.getenv('ENABLE_SRV6_MANAGER')
@@ -229,16 +226,6 @@ class Config:
     def validate_config(self):
         logger.info('*** Validating configuration')
         success = True
-        # Validate PROTO_PATH
-        if self.PROTO_PATH is None:
-            logger.critical('Set PROTO_PATH variable in configuration file '
-                            '(.env file)')
-            success = False
-        if self.PROTO_PATH is not None and \
-                not os.path.exists(self.PROTO_PATH):
-            logger.critical('PROTO_PATH variable in .env points '
-                            'to a non existing folder: %s' % self.PROTO_PATH)
-            success = False
         # Validate gRPC IP address
         if not utils.validate_ip_address(self.GRPC_IP):
             logger.critical('GRPC_IP is an invalid IP address: %s'
@@ -308,18 +295,16 @@ class Config:
         return success
 
     def import_dependencies(self):
-        global SRv6Manager, srv6_manager_pb2_grpc
+        global srv6_manager, srv6_manager_pb2_grpc
         global srv6pmService_pb2_grpc, pm_manager
-        # Append proto path
-        sys.path.append(self.PROTO_PATH)
         # SRv6 Manager dependencies
         if self.ENABLE_SRV6_MANAGER:
-            from srv6_manager import SRv6Manager
+            from control_plane.node_manager import srv6_manager
             import srv6_manager_pb2_grpc
         # SRv6 PM dependencies
         if self.ENABLE_SRV6_PM_MANAGER:
+            from control_plane.node_manager import pm_manager
             import srv6pmService_pb2_grpc
-            import pm_manager
 
 
 # Parse options
@@ -361,7 +346,7 @@ def parse_arguments():
     return args
 
 
-if __name__ == '__main__':
+def __main():
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
@@ -425,3 +410,7 @@ if __name__ == '__main__':
     key = config.GRPC_SERVER_KEY_PATH
     # Start the server
     start_server(grpc_ip, grpc_port, secure, certificate, key)
+
+
+if __name__ == '__main__':
+    __main()

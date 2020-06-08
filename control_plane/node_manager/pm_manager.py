@@ -7,28 +7,26 @@ from concurrent import futures
 import sys
 import grpc
 import logging
-from threading import Thread, Event
-import sched
-import time
-from datetime import datetime, timedelta
-import math
 
-import subprocess
-import shlex
+# Proto dependencies
+import commons_pb2
+import srv6pmCommons_pb2
+import srv6pmReflector_pb2
+import srv6pmSender_pb2
+import srv6pmService_pb2_grpc
+# import srv6pmServiceController_pb2
+# import srv6pmServiceController_pb2_grpc
 
-from scapy.all import send, sniff
-from scapy.layers.inet import UDP
-from scapy.layers.inet6 import IPv6, IPv6ExtHdrSegmentRouting
+# SRv6 data-plane dependencies
+from data_plane.twamp.twamp_demon import SessionSender
+from data_plane.twamp.twamp_demon import SessionReflector
+from data_plane.twamp.twamp_demon import TestPacketReceiver
+from data_plane.twamp.twamp_demon import EbpfInterf
+from data_plane.twamp.twamp_demon import IpSetInterf
+
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-# Add PROTO folder
-PROTO_PATH = os.getenv('PROTO_PATH', None)
-if PROTO_PATH is None:
-    print('PROTO_PATH environment variable not set')
-    exit(-2)
-sys.path.append(PROTO_PATH)
 
 # SRv6 PFPLM dependencies
 SRV6_PM_XDP_EBPF_PATH = os.getenv('SRV6_PM_XDP_EBPF_PATH', None)
@@ -37,30 +35,6 @@ if SRV6_PM_XDP_EBPF_PATH is None:
     exit(-2)
 SRV6_PFPLM_PATH = os.path.join(SRV6_PM_XDP_EBPF_PATH, 'srv6-pfplm/')
 sys.path.append(SRV6_PFPLM_PATH)
-
-# SRv6 PFPLM dependencies
-ROSE_SRV6_DATA_PLANE_PATH = os.getenv('ROSE_SRV6_DATA_PLANE_PATH', None)
-if ROSE_SRV6_DATA_PLANE_PATH is None:
-    print('ROSE_SRV6_DATA_PLANE_PATH environment variable not set')
-    exit(-2)
-TWAMP_PATH = os.path.join(ROSE_SRV6_DATA_PLANE_PATH, 'twamp/')
-sys.path.append(TWAMP_PATH)
-import twamp
-from twamp_demon import SessionSender
-from twamp_demon import SessionReflector
-from twamp_demon import TestPacketReceiver
-from twamp_demon import EbpfInterf
-from twamp_demon import IpSetInterf
-
-
-# FRPC protocol
-import commons_pb2
-import srv6pmCommons_pb2
-import srv6pmReflector_pb2
-import srv6pmSender_pb2
-import srv6pmService_pb2_grpc
-import srv6pmServiceController_pb2
-import srv6pmServiceController_pb2_grpc
 
 
 '''##################################### GRPC CONTROLLER'''

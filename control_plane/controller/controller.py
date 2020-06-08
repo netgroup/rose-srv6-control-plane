@@ -23,8 +23,13 @@
 #
 
 
-from cli import cli
+from control_plane.controller.cli import cli
+
+
+def __main():
+    cli.__main()
+
 
 if __name__ == '__main__':
     # Start the interactive CLI
-    cli.__main()
+    __main()
