@@ -7,7 +7,6 @@ import subprocess
 import setuptools
 from pathlib import Path
 import shutil
-from setuptools import Command
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 
@@ -19,16 +18,16 @@ with open("README.md", "r") as fh:
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        develop.run(self)
         build_protos()
+        develop.run(self)
 
 
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
 
     def run(self):
-        install.run(self)
         build_protos()
+        install.run(self)
 
 
 proj_dir = os.path.dirname(os.path.realpath(__file__))
@@ -61,14 +60,7 @@ def build_protos():
 
 
 packages = [
-    'db_update',
-    'control_plane.controller',
-    'control_plane.controller.cli',
-    'control_plane.examples',
-    'control_plane.examples.arangodb',
-    'control_plane.examples.srv6_pm',
-    'control_plane.examples.srv6_tunnels',
-    '.'
+    '',
 ]
 
 setuptools.setup(
@@ -76,15 +68,13 @@ setuptools.setup(
     version="0.0.1",
     author="Carmine Scarpitta",
     author_email="carmine.scarpitta@uniroma2.it",
-    description="Collection of control-plane modules for a Controller",
+    description="Proto files collection for control-plane modules",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     package_dir={
-        '': 'control_plane/protos/gen_py',
-        'control_plane': 'control_plane',
-        'db_update': 'db_update'
+        '': 'gen_py',
     },
     install_requires=install_requires,
     classifiers=[
