@@ -18,7 +18,7 @@ if os.path.isfile(requirements_path):
 
 
 packages = [
-    '.'
+    'db_update'
 ]
 
 setuptools.setup(
