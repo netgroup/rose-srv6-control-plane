@@ -17,12 +17,6 @@ if os.path.isfile(requirements_path):
         install_requires = f.read().splitlines()
 
 
-dependency_links = [
-    'https://github.com/netgroup/rose-srv6-control-plane#subdirectory=control_plane/protos',
-    'https://github.com/netgroup/rose-srv6-data-plane'
-]
-
-
 packages = [
     ''
 ]
@@ -38,8 +32,7 @@ setuptools.setup(
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     install_requires=install_requires,
-    dependency_links=dependency_links,
-    entry_points={'console_scripts': ['node_manager = control_plane.node_manager.node_manager:__main']},
+    entry_points={'console_scripts': ['node_manager = node_manager.node_manager:__main']},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
