@@ -29,9 +29,9 @@ import os
 import logging
 
 # Controller dependencies
-from control_plane.controller.arangodb_utils import extract_topo_from_isis_and_load_on_arango
-# from control_plane.controller.arangodb_utils import extract_topo_from_isis
-# from control_plane.controller.arangodb_utils import load_topo_on_arango
+from controller.arangodb_utils import extract_topo_from_isis_and_load_on_arango
+# from controller.arangodb_utils import extract_topo_from_isis
+# from controller.arangodb_utils import load_topo_on_arango
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

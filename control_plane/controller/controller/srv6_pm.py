@@ -32,8 +32,8 @@ import time
 import json
 
 # Controller dependencies
-from control_plane.controller import utils
-from control_plane.controller import srv6_utils
+from controller import utils
+from controller import srv6_utils
 
 # Configuration parameters
 #

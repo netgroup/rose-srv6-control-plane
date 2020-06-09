@@ -23,7 +23,7 @@
 #
 
 
-from control_plane.controller.cli import cli
+from controller.cli import cli
 
 
 def __main():

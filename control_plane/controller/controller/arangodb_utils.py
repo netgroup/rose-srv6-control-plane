@@ -29,8 +29,8 @@ import time
 from pyaml import yaml
 
 # Import topology extraction utility functions
-from control_plane.controller.ti_extraction import connect_and_extract_topology_isis
-from control_plane.controller.ti_extraction import dump_topo_yaml
+from controller.ti_extraction import connect_and_extract_topology_isis
+from controller.ti_extraction import dump_topo_yaml
 # DB update modules
 from db_update import arango_db
 

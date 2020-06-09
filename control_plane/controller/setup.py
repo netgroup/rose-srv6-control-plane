@@ -33,8 +33,8 @@ dependency_links = [
 ]
 
 packages = [
-    '',
-    'cli'
+    'controller',
+    'controller/cli'
 ]
 
 setuptools.setup(
@@ -50,7 +50,7 @@ setuptools.setup(
     install_requires=install_requires,
     setup_requires=setup_requires,
     dependency_links=dependency_links,
-    entry_points={'console_scripts': ['controller = controller:__main']},
+    entry_points={'console_scripts': ['controller = controller.controller:__main']},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License',

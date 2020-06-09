@@ -31,8 +31,8 @@ import time
 from threading import Thread
 
 # SRv6PM dependencies
-from control_plane.controller import srv6_pm
-from control_plane.controller import utils
+from controller import srv6_pm
+from controller import utils
 
 # Proto dependencies
 import srv6pmCommons_pb2

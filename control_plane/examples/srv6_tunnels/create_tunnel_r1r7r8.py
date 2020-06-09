@@ -31,9 +31,9 @@ import logging
 import srv6_manager_pb2
 
 # Controller dependencies
-from control_plane.controller.srv6_utils import handle_srv6_path
-from control_plane.controller.srv6_utils import handle_srv6_behavior
-from control_plane.controller.utils import get_grpc_session
+from controller.srv6_utils import handle_srv6_path
+from controller.srv6_utils import handle_srv6_behavior
+from controller.utils import get_grpc_session
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

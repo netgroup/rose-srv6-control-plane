@@ -32,7 +32,7 @@ from six import text_type
 import srv6_manager_pb2_grpc
 import srv6_manager_pb2
 import commons_pb2
-from control_plane.controller import utils
+from controller import utils
 
 # Global variables definition
 #

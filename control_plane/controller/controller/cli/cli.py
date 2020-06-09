@@ -23,9 +23,9 @@
 #
 
 
-from control_plane.controller.cli import topo_cli
-from control_plane.controller.cli import srv6pm_cli
-from control_plane.controller.cli import srv6_cli
+from controller.cli import topo_cli
+from controller.cli import srv6pm_cli
+from controller.cli import srv6_cli
 from dotenv import load_dotenv
 from pathlib import Path
 import logging
