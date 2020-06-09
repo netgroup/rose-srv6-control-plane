@@ -16,16 +16,21 @@ if os.path.isfile(requirements_path):
     with open(requirements_path) as f:
         install_requires = f.read().splitlines()
 
-# install_requires += [
-#     'db_update@git+https://github.com/netgroup/rose-srv6-control-plane@add-setup#"subdirectory=db_update-0.0.1/db_update&egg=db_update-0.0.1"',
-#     # 'rose-srv6-control-plane-protos@git+https://github.com/netgroup/rose-srv6-control-plane@add-setup#egg=rose-srv6-control-plane-protos-0.0.1&subdirectory=control_plane/protos',
-#     #'db_update==0.0.1'
-# ]
+setup_requires = [
+    'db_update@git+https://github.com/netgroup/rose-srv6-control-plane#subdirectory=db_update',
+    'rose-srv6-control-plane-protos@git+https://github.com/netgroup/rose-srv6-control-plane#subdirectory=control_plane/protos',
+]
 
-# dependency_links = [
-#     # 'https://github.com/netgroup/rose-srv6-control-plane/tarball/add-setup#egg=rose-srv6-control-plane-protos&subdirectory=control_plane/protos',
-#     'https://github.com/netgroup/rose-srv6-control-plane/tarball/add-setup#"subdirectory=db_update&egg=db_update-0.0.1"',
-# ]
+install_requires = [
+
+    'db_update@git+https://github.com/netgroup/rose-srv6-control-plane#subdirectory=db_update',
+    'rose-srv6-control-plane-protos@git+https://github.com/netgroup/rose-srv6-control-plane#subdirectory=control_plane/protos',
+]
+
+dependency_links = [
+    'https://github.com/netgroup/rose-srv6-control-plane#subdirectory=db_update',
+    'https://github.com/netgroup/rose-srv6-control-plane#subdirectory=control_plane/protos',
+]
 
 packages = [
     '',
@@ -43,7 +48,8 @@ setuptools.setup(
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     install_requires=install_requires,
-    # dependency_links=dependency_links,
+    setup_requires=setup_requires,
+    dependency_links=dependency_links,
     entry_points={'console_scripts': ['controller = controller:__main']},
     classifiers=[
         'Programming Language :: Python :: 3',

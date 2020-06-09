@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 from setuptools.command.develop import develop
 from setuptools.command.install import install
+from setuptools.command.egg_info import egg_info
 
 
 with open("README.md", "r") as fh:
@@ -28,6 +29,14 @@ class PostInstallCommand(install):
     def run(self):
         build_protos()
         install.run(self)
+
+
+class PostEggInfoCommand(egg_info):
+    """Post-installation for installation mode."""
+
+    def run(self):
+        build_protos()
+        egg_info.run(self)
 
 
 proj_dir = os.path.dirname(os.path.realpath(__file__))
@@ -87,5 +96,6 @@ setuptools.setup(
     cmdclass={
         'develop': PostDevelopCommand,
         'install': PostInstallCommand,
+        'egg_info': PostEggInfoCommand,
     }
 )
