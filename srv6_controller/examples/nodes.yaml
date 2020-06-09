@@ -1,22 +1,14 @@
-- _key: r4
-  ext_reachability: 4444.4444.4444
-  ip_address: fcff:4::1/32
-  type: router
-- _key: r6
-  ext_reachability: 6666.6666.6666
-  ip_address: fcff:6::1/32
-  type: router
-- _key: r8
-  ext_reachability: 8888.8888.8888
-  ip_address: fcff:8::1/32
-  type: router
 - _key: r2
   ext_reachability: 2222.2222.2222
   ip_address: fcff:2::1/32
   type: router
-- _key: r3
-  ext_reachability: 3333.3333.3333
-  ip_address: fcff:3::1/32
+- _key: r5
+  ext_reachability: 5555.5555.5555
+  ip_address: fcff:5::1/32
+  type: router
+- _key: r4
+  ext_reachability: 4444.4444.4444
+  ip_address: fcff:4::1/32
   type: router
 - _key: r7
   ext_reachability: 7777.7777.7777
@@ -26,9 +18,17 @@
   ext_reachability: 1111.1111.1111
   ip_address: fcff:1::1/32
   type: router
-- _key: r5
-  ext_reachability: 5555.5555.5555
-  ip_address: fcff:5::1/32
+- _key: r3
+  ext_reachability: 3333.3333.3333
+  ip_address: fcff:3::1/32
+  type: router
+- _key: r8
+  ext_reachability: 8888.8888.8888
+  ip_address: fcff:8::1/32
+  type: router
+- _key: r6
+  ext_reachability: 6666.6666.6666
+  ip_address: fcff:6::1/32
   type: router
 - _key: hdc1
   ip_address: fcff:2:1::2/48

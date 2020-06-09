@@ -440,19 +440,19 @@ def add_hosts(nodes, edges, hosts_yaml):
             'ip_address': host['ip_address']
         })
         # Add edge (host to router)
-        edges.append({
-            '_from': 'nodes/%s' % host['name'],
-            '_to': 'nodes/%s' % host['gw'],
-            'type': 'edge'
-        })
-        # Add edge (router to host)
-        # This is required because we work with
-        # unidirectional edges
-        edges.append({
-            '_to': 'nodes/%s' % host['gw'],
-            '_from': 'nodes/%s' % host['name'],
-            'type': 'edge'
-        })
+        # edges.append({
+        #     '_from': 'nodes/%s' % host['name'],
+        #     '_to': 'nodes/%s' % host['gw'],
+        #     'type': 'edge'
+        # })
+        # # Add edge (router to host)
+        # # This is required because we work with
+        # # unidirectional edges
+        # edges.append({
+        #     '_to': 'nodes/%s' % host['gw'],
+        #     '_from': 'nodes/%s' % host['name'],
+        #     'type': 'edge'
+        # })
     logger.info('*** Nodes YAML updated\n')
     logger.info('*** Edges YAML updated\n')
     # Return the updated nodes and edges lists
@@ -462,8 +462,8 @@ def add_hosts(nodes, edges, hosts_yaml):
 def load_topo_on_arango(nodes, edges, nodes_collection,
                         edges_collection, verbose=False):
     # Load the topology on Arango DB
-    arango_db.populate(
-    # arango_db.populate2(
+    # arango_db.populate(
+    arango_db.populate2(
         nodes=nodes_collection,
         edges=edges_collection,
         nodes_dict=nodes,
@@ -501,7 +501,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, arango_url=None,
         # Connect to a node and extract the topology
         nodes, edges, node_to_systemid, edges_ip = connect_and_extract_topology_isis(
             ips_ports=isis_nodes,
-            verbose=verbose
+            verbose=verbose,
+            hosts_yaml=hosts_yaml
         )
         if nodes is None or edges is None or node_to_systemid is None:
             logger.error('Cannot extract topology')

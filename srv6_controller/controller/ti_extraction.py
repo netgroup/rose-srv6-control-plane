@@ -35,6 +35,7 @@ import re
 import socket
 import sys
 from optparse import OptionParser
+import ipaddress
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -171,17 +172,20 @@ def dump_topo_yaml_edges_ip(nodes, edges, node_to_systemid, nodes_file_yaml=None
     # Export edges in YAML format
     edges_yaml = list()
     for edge in edges:
+        edge_type = "core"  # default
+        if len(edge) == 4:  # type is set as another (for now it can only be edge)
+            edge_type = edge[3]
         edges_yaml.append({
                 '_key': '%s-dir1' % edge[0],
                 '_from': 'nodes/%s' % edge[1],
                 '_to': 'nodes/%s' % edge[2],
-                'type': 'core'
+                'type': edge_type
             })
         edges_yaml.append({
                 '_key': '%s-dir2' % edge[0],
                 '_from': 'nodes/%s' % edge[2],
                 '_to': 'nodes/%s' % edge[1],
-                'type': 'core'
+                'type': edge_type
             })
     if edges_file_yaml is not None:
         logger.info('*** Exporting topology edges to %s' % edges_file_yaml)
@@ -254,7 +258,8 @@ def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
 
 def connect_and_extract_topology_isis(ips_ports,
                                       isisd_pwd=DEFAULT_ISISD_PASSWORD,
-                                      verbose=DEFAULT_VERBOSE):
+                                      verbose=DEFAULT_VERBOSE,
+                                      hosts_yaml=None):
     # ISIS password
     password = isisd_pwd
     # Let's parse the input
@@ -374,6 +379,18 @@ def connect_and_extract_topology_isis(ips_ports,
                 # add hostname to hosts list of the ip address in the ipv6 reachability dict
                 ipv6_reachability[ip_add].append(hostname)
 
+#TODO   add hosts to ipv6_reachability[ip_add] read ip_add from yaml file
+        if hosts_yaml is not None:
+            with open(hosts_yaml) as f:
+                hosts_dict = yaml.load(f, Loader=yaml.FullLoader)
+                for host in hosts_dict:
+                    ip = host["ip_address"]
+                    ip_add = ipaddress.ip_network(ip, strict=False)     # ip address of the subnet
+                    ip_add = str(ip_add)
+                    hostname = host["name"]
+                    ipv6_reachability[ip_add].append(hostname)
+                    ipv6_reachability[ip_add].append("edge")
+
         # Build the topology graph
         #
         # Nodes
@@ -387,10 +404,14 @@ def connect_and_extract_topology_isis(ips_ports,
                 edges.add((hostname, system_id_to_hostname[system_id]))
         for ip_add in ipv6_reachability:
             # Edge link is bidirectional in this case
-            if len(ipv6_reachability[ip_add]) == 2:     # Only take IP addresses of links between 2 nodes
-                (node1, node2) = ipv6_reachability[ip_add]
+            if len(ipv6_reachability[ip_add]) > 1:     # Exclude ip addresses of subnets with no link to other node
+                node1 = ipv6_reachability[ip_add][0]
+                node2 = ipv6_reachability[ip_add][1]
+                edge_type = "core"  # default
+                if len(ipv6_reachability[ip_add]) > 2:
+                    edge_type = ipv6_reachability[ip_add][2]
                 ip_add_key = ip_add.replace('/','-')    # Character '/' is not accepted in key strign in arango, using '-' instead
-                edges_ip.add((ip_add_key, node1, node2))
+                edges_ip.add((ip_add_key, node1, node2, edge_type))
         # Print nodes and edges
         if verbose:
             print('Topology extraction completed\n')

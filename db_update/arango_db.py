@@ -17,8 +17,9 @@ def initialize_db(arango_url=ARANGO_URL, arango_user=USER, arango_password=PASSW
 
     # Reset database if already existing
     if sys_db.has_database('srv6_pm'):
-        sys_db.delete_database('srv6_pm')
-        sys_db.create_database('srv6_pm')
+        # sys_db.delete_database('srv6_pm')
+        # sys_db.create_database('srv6_pm')
+        pass
     else:
         sys_db.create_database('srv6_pm')
 
