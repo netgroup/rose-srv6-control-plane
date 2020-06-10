@@ -63,11 +63,14 @@ jobs:
     - name: Build
       run: |
         cd db_update
-        python setup.py sdist bdist_wheel install
+        python setup.py sdist bdist_wheel
+        python setup.py install
         cd ../control_plane/protos
-        python setup.py sdist bdist_wheel install
+        python setup.py sdist bdist_wheel
+        python setup.py install
         cd ../../control_plane/controller
-        python setup.py sdist bdist_wheel install
+        python setup.py sdist bdist_wheel
+        python setup.py install
         
   build_node_manager:
 
@@ -89,15 +92,27 @@ jobs:
     #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
+        # control_plane/node-manager
+        #
         # stop the build if there are Python syntax errors or undefined names
         flake8 control_plane/node-manager --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 control_plane/node-manager --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        #
+        # control_plane/protos
+        #
+        flake8 control_plane/protos --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 control_plane/protos --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     #- name: Test with pytest
     #  run: |
     #    pytest
     - name: Build
       run: |
-        cd control_plane/node-manager
-        python setup.py sdist bdist_wheel install
+        cd control_plane/protos
+        python setup.py sdist bdist_wheel
+        python setup.py install
+        cd ../../control_plane/node-manager
+        python setup.py sdist bdist_wheel
+        python setup.py install
 
