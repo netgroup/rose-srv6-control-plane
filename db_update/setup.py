@@ -24,8 +24,6 @@ packages = [
 setuptools.setup(
     name="db_update",
     version="0.0.1",
-    author="Carmine Scarpitta",
-    author_email="carmine.scarpitta@uniroma2.it",
     description="Collection of control-plane modules for a Controller",
     long_description=long_description,
     long_description_content_type="text/markdown",
