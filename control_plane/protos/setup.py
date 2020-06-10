@@ -112,5 +112,8 @@ setuptools.setup(
     cmdclass={
         'build_py': PostBuildPyCommand,
         'install': PostInstallCommand,
+        'develop': PostDevelopCommand,
+        'sdist': PostSdistCommand,
+        'egg_info': PostEggInfoCommand,
     }
 )
