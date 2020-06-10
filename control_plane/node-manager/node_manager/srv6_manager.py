@@ -41,7 +41,7 @@ import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
 # Node manager dependencies
-from control_plane.node_manager.utils import get_address_family
+from node_manager.utils import get_address_family
 
 
 # General imports

@@ -36,8 +36,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 # Node Manager dependencies
-from control_plane.node_manager import utils
-from control_plane.node_manager.utils import get_address_family
+from node_manager import utils
+from node_manager.utils import get_address_family
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -299,11 +299,11 @@ class Config:
         global srv6pmService_pb2_grpc, pm_manager
         # SRv6 Manager dependencies
         if self.ENABLE_SRV6_MANAGER:
-            from control_plane.node_manager import srv6_manager
+            from node_manager import srv6_manager
             import srv6_manager_pb2_grpc
         # SRv6 PM dependencies
         if self.ENABLE_SRV6_PM_MANAGER:
-            from control_plane.node_manager import pm_manager
+            from node_manager import pm_manager
             import srv6pmService_pb2_grpc
 
 
