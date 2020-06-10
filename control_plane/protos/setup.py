@@ -10,10 +10,26 @@ import shutil
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.egg_info import egg_info
+from setuptools.command.sdist import sdist
+from setuptools.command.build_py import build_py
 
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+
+
+class PostBuildPyCommand(build_py):
+    """Post-installation for development mode."""
+    def run(self):
+        build_protos()
+        build_py.run(self)
+
+
+class PostSdistCommand(sdist):
+    """Post-installation for development mode."""
+    def run(self):
+        build_protos()
+        sdist.run(self)
 
 
 class PostDevelopCommand(develop):
@@ -94,8 +110,7 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     cmdclass={
-        'develop': PostDevelopCommand,
+        'build_py': PostBuildPyCommand,
         'install': PostInstallCommand,
-        'egg_info': PostEggInfoCommand,
     }
 )
