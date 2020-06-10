@@ -64,7 +64,7 @@ jobs:
       run: |
         python db_update/setup.py sdist bdist_wheel develop install
         python control_plane/protos/setup.py sdist bdist_wheel develop install
-        python control_plane/controller/setup.py sdist bdist_wheel develop install
+        python control_plane/controller/setup.py sdist develop install
         
   build_node_manager:
 
@@ -95,5 +95,5 @@ jobs:
     #    pytest
     - name: Build
       run: |
-        python control_plane/node-manager/setup.py sdist bdist_wheel develop install
+        python control_plane/node-manager/setup.py sdist develop install
 
