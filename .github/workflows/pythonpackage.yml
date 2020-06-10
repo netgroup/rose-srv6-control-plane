@@ -62,9 +62,12 @@ jobs:
     #    pytest
     - name: Build
       run: |
-        python db_update/setup.py sdist bdist_wheel install
-        python control_plane/protos/setup.py sdist bdist_wheel install
-        python control_plane/controller/setup.py sdist bdist_wheel install
+        cd db_update
+        python setup.py sdist bdist_wheel install
+        cd ../control_plane/protos
+        python setup.py sdist bdist_wheel install
+        cd ../../control_plane/controller
+        python setup.py sdist bdist_wheel install
         
   build_node_manager:
 
@@ -95,5 +98,6 @@ jobs:
     #    pytest
     - name: Build
       run: |
-        python control_plane/node-manager/setup.py sdist bdist_wheel install
+        cd control_plane/node-manager
+        python setup.py sdist bdist_wheel install
 
