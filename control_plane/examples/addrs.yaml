@@ -1,0 +1,17 @@
+---
+- node: r1
+  ip_address: fcff:1::1/32
+- node: r2
+  ip_address: fcff:2::1/32
+- node: r3
+  ip_address: fcff:3::1/32
+- node: r4
+  ip_address: fcff:4::1/32
+- node: r5
+  ip_address: fcff:5::1/32
+- node: r6
+  ip_address: fcff:6::1/32
+- node: r7
+  ip_address: fcff:7::1/32
+- node: r8
+  ip_address: fcff:8::1/32
