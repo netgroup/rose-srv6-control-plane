@@ -295,6 +295,32 @@ class Config:
         # Return result
         return success
 
+    def print_config(self):
+        print()
+        print('****************** CONFIGURATION ******************')
+        print()
+        print('Enable SRv6 Manager support: %s' % self.ENABLE_SRV6_MANAGER)
+        print('IP address of the gRPC server: %s' % self.GRPC_IP)
+        print('Port of the gRPC server: %s' % self.GRPC_PORT)
+        print('Enable secure mode for gRPC server: %s' % self.GRPC_SECURE)
+        if self.GRPC_SECURE:
+            print('Path of the certificate for the gRPC server: %s'
+                  % self.GRPC_SERVER_CERTIFICATE_PATH)
+            print('Path of the private key for the gRPC server: %s'
+                  % self.GRPC_SERVER_KEY_PATH)
+        print('Enable debug: %s' % self.DEBUG)
+        print('Enable SRv6 PM Manager support: %s'
+              % self.ENABLE_SRV6_PM_MANAGER)
+        if self.ENABLE_SRV6_PM_MANAGER:
+            print('Path of the srv6-pm-xdp-ebpf repository: %s'
+                  % self.SRV6_PM_XDP_EBPF_PATH)
+            print('Path of the rose-srv6-data-plane repository: %s'
+                  % self.ROSE_SRV6_DATA_PLANE_PATH)
+        print()
+        print('***************************************************')
+        print()
+        print()
+
     def import_dependencies(self):
         global srv6_manager, srv6_manager_pb2_grpc
         global srv6pmService_pb2_grpc, pm_manager
@@ -401,6 +427,8 @@ def __main():
     if not config.validate_config():
         logger.critical('Invalid configuration\n')
         exit(-2)
+    # Print configuration
+    config.print_config()
     # Import dependencies
     config.import_dependencies()
     # Extract parameters from the configuration

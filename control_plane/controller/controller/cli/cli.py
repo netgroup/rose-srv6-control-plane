@@ -470,6 +470,20 @@ class Config:
         # Return result
         return success
 
+    def print_config(self):
+        print()
+        print('****************** CONFIGURATION ******************')
+        print()
+        print('ArangoDB URL: %s' % self.ARANGO_URL)
+        print('ArangoDB username: %s' % self.ARANGO_USER)
+        print('ArangoDB password: %s' % '************')
+        print('Kafka servers: %s' % self.KAFKA_SERVERS)
+        print('Enable debug: %s' % self.DEBUG)
+        print()
+        print('***************************************************')
+        print()
+        print()
+
     def import_dependencies(self):
         pass
 
@@ -526,6 +540,8 @@ def __main():
         exit(-2)
     # Import dependencies
     config.import_dependencies()
+    # Print configuration
+    config.print_config()
     # Start the CLI
     ControllerCLI().cmdloop()
 
