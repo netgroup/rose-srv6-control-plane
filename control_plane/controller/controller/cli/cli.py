@@ -30,9 +30,9 @@ from dotenv import load_dotenv
 from pathlib import Path
 import logging
 from cmd import Cmd
-import sys
 from argparse import ArgumentParser
 import os
+from pkg_resources import resource_filename
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -53,7 +53,7 @@ ARANGO_URL = None
 # Kafka params
 KAFKA_SERVERS = None
 # Default path to the .env file
-DEFAULT_ENV_FILE_PATH = os.path.join(BASE_PATH, '../.env')
+DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
 

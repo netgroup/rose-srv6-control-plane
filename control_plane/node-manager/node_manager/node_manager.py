@@ -34,6 +34,7 @@ from concurrent import futures
 from socket import AF_INET, AF_INET6
 from dotenv import load_dotenv
 from pathlib import Path
+from pkg_resources import resource_filename
 
 # Node Manager dependencies
 from node_manager import utils
@@ -60,7 +61,7 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
 # Default path to the .env file
-DEFAULT_ENV_FILE_PATH = os.path.join(BASE_PATH, '.env')
+DEFAULT_ENV_FILE_PATH = resource_filename(__name__, 'config/controller.env')
 # Define whether to enable the debug mode or not
 DEFAULT_DEBUG = False
 
