@@ -71,13 +71,13 @@ jobs:
       - name: Install controller modules
         run: |
           cd db_update
-          python setup.py sdist bdist_wheel install
+          python setup.py install
           cd ../control_plane/protos
-          python setup.py sdist bdist_wheel install
+          python setup.py install
           cd ../controller
-          python setup.py sdist bdist_wheel install
+          python setup.py install
           cd ../node-manager
-          python setup.py sdist bdist_wheel install
+          python setup.py install
           cd ..
 
       ################################
