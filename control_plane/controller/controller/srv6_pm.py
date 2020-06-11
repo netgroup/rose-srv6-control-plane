@@ -24,13 +24,6 @@
 
 
 # General imports
-import srv6pmServiceController_pb2
-import srv6pmServiceController_pb2_grpc
-import srv6pmService_pb2_grpc
-import srv6pmReflector_pb2
-import srv6pmSender_pb2
-import srv6pmCommons_pb2
-import commons_pb2
 import os
 from concurrent import futures
 import grpc
@@ -41,6 +34,15 @@ import json
 # Controller dependencies
 from controller import utils
 from controller import srv6_utils
+
+# SRv6PM dependencies
+import srv6pmServiceController_pb2
+import srv6pmServiceController_pb2_grpc
+import srv6pmService_pb2_grpc
+import srv6pmReflector_pb2
+import srv6pmSender_pb2
+import srv6pmCommons_pb2
+import commons_pb2
 
 # Configuration parameters
 #
@@ -63,8 +65,6 @@ KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', 'kafka:9092')
 if ENABLE_KAFKA_INTEGRATION:
     from kafka import KafkaProducer
     from kafka.errors import KafkaError
-
-# SRv6PM dependencies
 
 
 # Global variables definition

@@ -22,16 +22,15 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-
+# Controller dependencies
 from controller import ti_extraction
 from controller import arangodb_utils
+
 from argparse import ArgumentParser
 import sys
 
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
-
-# Controller dependencies
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
