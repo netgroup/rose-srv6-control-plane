@@ -20,4 +20,3 @@ build/
 .eggs/
 
 .venv/
-.env
