@@ -46,12 +46,6 @@ logger = logging.getLogger(__name__)
 # import ti_extraction
 # import srv6_pm
 
-# ArangoDB params
-ARANGO_USER = None
-ARANGO_PASSWORD = None
-ARANGO_URL = None
-# Kafka params
-KAFKA_SERVERS = None
 # Default path to the .env file
 DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
@@ -501,7 +495,6 @@ def parse_arguments():
 
 
 def __main():
-    global ARANGO_USER, ARANGO_PASSWORD, ARANGO_URL, KAFKA_SERVERS
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
@@ -533,11 +526,6 @@ def __main():
         exit(-2)
     # Import dependencies
     config.import_dependencies()
-    # Extract parameters from the configuration
-    ARANGO_USER = config.ARANGO_USER
-    ARANGO_PASSWORD = config.ARANGO_PASSWORD
-    ARANGO_URL = config.ARANGO_URL
-    KAFKA_SERVERS = config.KAFKA_SERVERS
     # Start the CLI
     ControllerCLI().cmdloop()
 
