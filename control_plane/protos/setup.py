@@ -18,43 +18,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 
-class PostBuildPyCommand(build_py):
-    """Post-installation for development mode."""
-    def run(self):
-        build_protos()
-        build_py.run(self)
-
-
-class PostSdistCommand(sdist):
-    """Post-installation for development mode."""
-    def run(self):
-        build_protos()
-        sdist.run(self)
-
-
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        build_protos()
-        develop.run(self)
-
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-
-    def run(self):
-        build_protos()
-        install.run(self)
-
-
-class PostEggInfoCommand(egg_info):
-    """Post-installation for installation mode."""
-
-    def run(self):
-        build_protos()
-        egg_info.run(self)
-
-
+# Read dependencies from requirements.txt
 proj_dir = os.path.dirname(os.path.realpath(__file__))
 requirements_path = os.path.join(proj_dir, 'requirements.txt')
 install_requires = []
@@ -84,8 +48,12 @@ def build_protos():
         exit(-1)
 
 
+# Compile the proto files before running the setup
+build_protos()
+
+
 packages = [
-    '',
+    '.',
 ]
 
 setuptools.setup(
@@ -109,11 +77,4 @@ setuptools.setup(
         'Programming Language :: Python',
     ],
     python_requires='>=3.6',
-    cmdclass={
-        'build_py': PostBuildPyCommand,
-        'install': PostInstallCommand,
-        'develop': PostDevelopCommand,
-        'sdist': PostSdistCommand,
-        'egg_info': PostEggInfoCommand,
-    }
 )
