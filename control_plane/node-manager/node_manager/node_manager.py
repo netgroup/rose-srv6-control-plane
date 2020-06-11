@@ -61,7 +61,7 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
 # Default path to the .env file
-DEFAULT_ENV_FILE_PATH = resource_filename(__name__, 'config/controller.env')
+DEFAULT_ENV_FILE_PATH = resource_filename(__name__, 'config/node_manager.env')
 # Define whether to enable the debug mode or not
 DEFAULT_DEBUG = False
 
