@@ -1,0 +1,10 @@
+---
+- name:  hdc1
+  ip_address: fcff:2:1::2/48
+  gw: r2
+- name:  hdc2
+  ip_address: fcff:8:1::2/48
+  gw: r8
+- name:  hdc3
+  ip_address: fcff:5:1::2/48
+  gw: r5
