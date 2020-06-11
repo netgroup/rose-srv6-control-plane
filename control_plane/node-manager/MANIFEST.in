@@ -1,0 +1,1 @@
+recursive-include node_manager/config *.env

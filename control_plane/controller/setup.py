@@ -33,6 +33,7 @@ setuptools.setup(
     packages=packages,
     install_requires=install_requires,
     entry_points={'console_scripts': ['controller = controller.controller:__main']},
+    include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License',
