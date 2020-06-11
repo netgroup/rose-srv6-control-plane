@@ -9,3 +9,4 @@ pyaml==20.4.0
 python-arango==5.4.0
 python-dotenv==0.13.0
 PyYAML==5.3.1
+requests-toolbelt==0.9.1
