@@ -32,7 +32,8 @@ setuptools.setup(
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     install_requires=install_requires,
-    entry_points={'console_scripts': ['controller = controller.controller:__main']},
+    entry_points={'console_scripts': [
+        'controller = controller.controller:__main']},
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',

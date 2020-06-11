@@ -24,6 +24,13 @@
 
 
 # General imports
+import srv6pmServiceController_pb2
+import srv6pmServiceController_pb2_grpc
+import srv6pmService_pb2_grpc
+import srv6pmReflector_pb2
+import srv6pmSender_pb2
+import srv6pmCommons_pb2
+import commons_pb2
 import os
 from concurrent import futures
 import grpc
@@ -58,13 +65,6 @@ if ENABLE_KAFKA_INTEGRATION:
     from kafka.errors import KafkaError
 
 # SRv6PM dependencies
-import commons_pb2
-import srv6pmCommons_pb2
-import srv6pmSender_pb2
-import srv6pmReflector_pb2
-import srv6pmService_pb2_grpc
-import srv6pmServiceController_pb2_grpc
-import srv6pmServiceController_pb2
 
 
 # Global variables definition
@@ -239,13 +239,13 @@ def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
         result = producer.send(
             topic=topic,
             value={'measure_id': measure_id, 'interval': interval,
-                'timestamp': timestamp, 'fw_color': fw_color,
-                'rv_color': rv_color, 'sender_seq_num': sender_seq_num,
-                'reflector_seq_num': reflector_seq_num,
-                'sender_tx_counter': sender_tx_counter,
-                'sender_rx_counter': sender_rx_counter,
-                'reflector_tx_counter': reflector_tx_counter,
-                'reflector_rx_counter': reflector_rx_counter}
+                   'timestamp': timestamp, 'fw_color': fw_color,
+                   'rv_color': rv_color, 'sender_seq_num': sender_seq_num,
+                   'reflector_seq_num': reflector_seq_num,
+                   'sender_tx_counter': sender_tx_counter,
+                   'sender_rx_counter': sender_rx_counter,
+                   'reflector_tx_counter': reflector_tx_counter,
+                   'reflector_rx_counter': reflector_rx_counter}
         )
     except KafkaError as e:
         logger.error('Cannot publish data to Kafka: %s' % e)
@@ -274,17 +274,17 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
         result = producer.send(
             topic=topic,
             value={'from': _from,
-                'measure_id': measure_id,
-                'generator_id': generator_id,
-                'interval': interval,
-                'transfer': transfer,
-                'transfer_dim': transfer_dim,
-                'bitrate': bitrate,
-                'bitrate_dim': bitrate_dim,
-                'retr': retr,
-                'cwnd': cwnd,
-                'cwnd_dim': cwnd_dim
-                }
+                   'measure_id': measure_id,
+                   'generator_id': generator_id,
+                   'interval': interval,
+                   'transfer': transfer,
+                   'transfer_dim': transfer_dim,
+                   'bitrate': bitrate,
+                   'bitrate_dim': bitrate_dim,
+                   'retr': retr,
+                   'cwnd': cwnd,
+                   'cwnd_dim': cwnd_dim
+                   }
         )
     except KafkaError as e:
         logger.error('Cannot publish data to Kafka: %s' % e)
@@ -845,8 +845,8 @@ def reset_configuration(sender_channel, reflector_channel):
 
 def start_experiment(sender_channel, reflector_channel, send_refl_dest,
                      refl_send_dest, send_refl_sidlist, refl_send_sidlist,
-                    #  send_in_interfaces, refl_in_interfaces,
-                    #  send_out_interfaces, refl_out_interfaces,
+                     #  send_in_interfaces, refl_in_interfaces,
+                     #  send_out_interfaces, refl_out_interfaces,
                      measurement_protocol, measurement_type,
                      authentication_mode, authentication_key,
                      timestamp_format, delay_measurement_mode,

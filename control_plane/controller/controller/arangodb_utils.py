@@ -121,7 +121,7 @@ def initialize_db(arango_url, arango_user, arango_password, verbose=False):
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
-                           nodes_yaml, edges_yaml, 
+                           nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None, verbose=False):
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])

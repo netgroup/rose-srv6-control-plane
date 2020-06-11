@@ -23,6 +23,8 @@
 #
 
 
+from controller import ti_extraction
+from controller import arangodb_utils
 from argparse import ArgumentParser
 import sys
 
@@ -30,8 +32,6 @@ import sys
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
 
 # Controller dependencies
-from controller import arangodb_utils
-from controller import ti_extraction
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
