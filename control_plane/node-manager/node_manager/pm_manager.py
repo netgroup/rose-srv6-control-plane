@@ -71,7 +71,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # for interface in request.out_interfaces:
             #     out_interfaces.append(interface)
             # Start measurement process
-            res = self.sender.startMeas(
+            res = self.sender.start_meas(
                 meas_id=request.measure_id,
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
@@ -96,7 +96,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node configured
             #
             # Stop measurement process
-            self.sender.stopMeas(request.sdlist)
+            self.sender.stop_meas(request.sdlist)
             status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
@@ -119,7 +119,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # for interface in request.out_interfaces:
             #     out_interfaces.append(interface)
             # Start measurement process
-            self.reflector.startMeas(
+            self.reflector.start_meas(
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
                 # inInterface=request.in_interfaces[0],   # Currently we support 1 intf
@@ -139,7 +139,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node configured
             #
             # Stop measurement process
-            self.reflector.stopMeas(request.sdlist)
+            self.reflector.stop_meas(request.sdlist)
             status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
@@ -156,7 +156,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             # Node configured
             #
             # Retrieve experiment results
-            lastMeas, meas_id = self.sender.getMeas(request.sdlist)
+            lastMeas, meas_id = self.sender.get_meas(request.sdlist)
 
             if bool(lastMeas):
                 response = srv6pmCommons_pb2.ExperimentDataResponse()
@@ -209,7 +209,11 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             )
             atexit.register(self.driver.stop)
         elif self.pm_driver == srv6pmCommons_pb2.IPSet:
-            self.driver = IpSetInterf()
+            # self.driver = IpSetInterf()
+            # IPSET driver not yet implemented
+            status = commons_pb2.StatusCode.Value(
+                'STATUS_OPERATION_NOT_SUPPORTED')
+            return srv6pmCommons_pb2.SetConfigurationReply(status=status)
         else:
             print('Invalid PM Driver: %s' % self.pm_driver)
             status = commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR')
@@ -228,8 +232,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         # Initialize packet receiver
         self.packetRecv = TestPacketReceiver(
             interface=recvInterf,
-            sender=self.sender,
-            reflector=self.reflector,
+            session_sender=self.sender,
+            session_reflector=self.reflector,
             ss_udp_port=ss_udp_port,
             refl_udp_port=refl_udp_port,
             stop_event=packet_receiver_stop_event
@@ -243,7 +247,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         self.sender.refl_udp_port = refl_udp_port
         self.sender.interval = int(interval)
         self.sender.margin = timedelta(milliseconds=int(margin))
-        self.sender.numColor = int(number_of_color)
+        self.sender.num_color = int(number_of_color)
         # Start reflector thread
         self.reflector.start()
         # Start sender thread
@@ -262,8 +266,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         if not self.configured:
             status = commons_pb2.StatusCode.Value('STATUS_NOT_CONFIGURED')
             return srv6pmCommons_pb2.SetConfigurationReply(status=status)
-        if self.reflector.startedMeas or \
-                self.sender.startedMeas:
+        if self.reflector.started_meas or \
+                self.sender.started_meas:
             print('Sender / Reflector running. Cannot reset configuration')
             status = commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR')
             return srv6pmCommons_pb2.SetConfigurationReply(status=status)
