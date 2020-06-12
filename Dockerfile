@@ -21,4 +21,4 @@ WORKDIR $SRV6_HOME/control_plane/node-manager
 RUN python setup.py install
 WORKDIR $SRV6_HOME/control_plane/node-manager/node_manager
 EXPOSE 12345
-CMD [ "python", "srv6_manager.py" ]
+CMD [ "python", "node_manager.py" ]
