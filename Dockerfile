@@ -5,6 +5,7 @@ COPY . /root/workspace/rose-srv6-control-plane/
 ENV SRV6_HOME "/root/workspace/rose-srv6-control-plane/"
 WORKDIR /root/workspace/rose-srv6-control-plane/control_plane/protos
 RUN python setup.py install
+RUN apt-get update && apt-get install -y iputils-ping vim net-tools iproute2
 
 
 FROM builder as controller
