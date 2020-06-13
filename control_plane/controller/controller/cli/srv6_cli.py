@@ -34,11 +34,11 @@ from controller import utils
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def handle_srv6_path(op, grpc_address, grpc_port, destination, segments="",
+def handle_srv6_path(operation, grpc_address, grpc_port, destination, segments="",
                      device='', encapmode="encap", table=-1, metric=-1):
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_path(
-            op=op,
+            op=operation,
             channel=channel,
             destination=destination,
             segments=segments.split(','),
@@ -53,12 +53,12 @@ def handle_srv6_path(op, grpc_address, grpc_port, destination, segments="",
             print('Error')
 
 
-def handle_srv6_behavior(op, grpc_address, grpc_port, segment, action='',
+def handle_srv6_behavior(operation, grpc_address, grpc_port, segment, action='',
                          device='', table=-1, nexthop="", lookup_table=-1,
                          interface="", segments="", metric=-1):
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_behavior(
-            op=op,
+            op=operation,
             channel=channel,
             segment=segment,
             action=action,
@@ -76,12 +76,12 @@ def handle_srv6_behavior(op, grpc_address, grpc_port, segment, action='',
             print('Error')
 
 
-def handle_srv6_unitunnel(op, ingress_ip, ingress_port,
+def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                           egress_ip, egress_port,
                           destination, segments, localseg=None):
     with utils.get_grpc_session(ingress_ip, ingress_port) as ingress_channel, \
             utils.get_grpc_session(egress_ip, egress_port) as egress_channel:
-        if op == 'add':
+        if operation == 'add':
             res = srv6_utils.__create_uni_srv6_tunnel(
                 ingress_channel=ingress_channel,
                 egress_channel=egress_channel,
@@ -93,9 +93,9 @@ def handle_srv6_unitunnel(op, ingress_ip, ingress_port,
                 print('OK')
             else:
                 print('Error')
-        elif op == 'del':
+        elif operation == 'del':
             res = srv6_utils.__destroy_uni_srv6_tunnel(
-                op=op,
+                op=operation,
                 ingress_channel=ingress_channel,
                 egress_channel=egress_channel,
                 destination=destination,
@@ -106,16 +106,16 @@ def handle_srv6_unitunnel(op, ingress_ip, ingress_port,
             else:
                 print('Error')
         else:
-            print('Invalid op %s' % op)
+            print('Invalid operation %s' % operation)
 
 
-def handle_srv6_biditunnel(op, node_l_ip, node_l_port,
+def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None):
     with utils.get_grpc_session(node_l_ip, node_l_port) as node_l_channel, \
             utils.get_grpc_session(node_r_ip, node_r_port) as node_r_channel:
-        if op == 'add':
+        if operation == 'add':
             res = srv6_utils.__create_srv6_tunnel(
                 node_l_channel=node_l_channel,
                 node_r_channel=node_r_channel,
@@ -130,7 +130,7 @@ def handle_srv6_biditunnel(op, node_l_ip, node_l_port,
                 print('OK')
             else:
                 print('Error')
-        elif op == 'del':
+        elif operation == 'del':
             res = srv6_utils.__destroy_srv6_tunnel(
                 node_l_channel=node_l_channel,
                 node_r_channel=node_r_channel,
@@ -144,7 +144,7 @@ def handle_srv6_biditunnel(op, node_l_ip, node_l_port,
             else:
                 print('Error')
         else:
-            print('Invalid op %s' % op)
+            print('Invalid operation %s' % operation)
 
 
 # Parse options

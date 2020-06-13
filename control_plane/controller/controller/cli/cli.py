@@ -23,16 +23,22 @@
 #
 
 
+# General imports
+from pkg_resources import resource_filename
+import os
+import sys
+from cmd import Cmd
+import logging
+from argparse import ArgumentParser
+from pathlib import Path
+
+# python-dotenv dependencies
+from dotenv import load_dotenv
+
+# Controller dependencies
 from controller.cli import topo_cli
 from controller.cli import srv6pm_cli
 from controller.cli import srv6_cli
-from dotenv import load_dotenv
-from pathlib import Path
-import logging
-from cmd import Cmd
-from argparse import ArgumentParser
-import os
-from pkg_resources import resource_filename
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -145,6 +151,24 @@ class ControllerCLITopology(CustomCmd):
             verbose=args.verbose
         )
 
+    def help_extract(self):
+        topo_cli.parse_arguments_topology_information_extraction_isis(
+            prog='extract',
+            args=['--help']
+        )
+
+    def help_load_on_arango(self):
+        topo_cli.parse_arguments_load_topo_on_arango(
+            prog='load_on_arango',
+            args=['--help']
+        )
+
+    def help_extract_and_load_on_arango(self):
+        topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
+            prog='extract_and_load_on_arango',
+            args=['--help']
+        )
+
 
 class ControllerCLISRv6PMConfiguration(CustomCmd):
     prompt = "controller(srv6pm-configuration)> "
@@ -185,14 +209,17 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             reflector_port=args.reflector_port,
         )
 
-    def help_path(self):
-        srv6_cli.parse_arguments_srv6_path()
+    def help_set(self):
+        srv6pm_cli.set_configuration(
+            prog='start',
+            args=['--help']
+        )
 
-    def help_behavior(self):
-        srv6_cli.parse_arguments_srv6_behavior()
-
-    def help_tunnel(self):
-        srv6_cli.parse_arguments_srv6_tunnel()
+    def help_reset(self):
+        srv6pm_cli.reset_configuration(
+            prog='start',
+            args=['--help']
+        )
 
 
 class ControllerCLISRv6PMExperiment(CustomCmd):
@@ -271,14 +298,23 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_localseg=args.refl_send_localseg
         )
 
-    def help_path(self):
-        srv6_cli.parse_arguments_srv6_path()
+    def help_start(self):
+        srv6pm_cli.parse_arguments_start_experiment(
+            prog='start',
+            args=['--help']
+        )
 
-    def help_behavior(self):
-        srv6_cli.parse_arguments_srv6_behavior()
+    def help_show(self):
+        srv6pm_cli.parse_arguments_get_experiment_results(
+            prog='show',
+            args=['--help']
+        )
 
-    def help_tunnel(self):
-        srv6_cli.parse_arguments_srv6_tunnel()
+    def help_stop(self):
+        srv6pm_cli.parse_arguments_stop_experiment(
+            prog='stop',
+            args=['--help']
+        )
 
 
 class ControllerCLISRv6PM(CustomCmd):
@@ -342,7 +378,7 @@ class ControllerCLISRv6(CustomCmd):
     def do_unitunnel(self, args):
         try:
             args = srv6_cli.parse_arguments_srv6_unitunnel(
-                prog='tunnel',
+                prog='unitunnel',
                 args=args.split(' ')
             )
         except SystemExit:
@@ -361,7 +397,7 @@ class ControllerCLISRv6(CustomCmd):
     def do_biditunnel(self, args):
         try:
             args = srv6_cli.parse_arguments_srv6_biditunnel(
-                prog='tunnel',
+                prog='biditunnel',
                 args=args.split(' ')
             )
         except SystemExit:
@@ -381,13 +417,28 @@ class ControllerCLISRv6(CustomCmd):
         )
 
     def help_path(self):
-        srv6_cli.parse_arguments_srv6_path()
+        srv6_cli.parse_arguments_srv6_path(
+            prog='path',
+            args=['--help']
+        )
 
     def help_behavior(self):
-        srv6_cli.parse_arguments_srv6_behavior()
+        srv6_cli.parse_arguments_srv6_behavior(
+            prog='behavior',
+            args=['--help']
+        )
 
-    def help_tunnel(self):
-        srv6_cli.parse_arguments_srv6_tunnel()
+    def help_unitunnel(self):
+        srv6_cli.parse_arguments_srv6_unitunnel(
+            prog='unitunnel',
+            args=['--help']
+        )
+
+    def help_biditunnel(self):
+        srv6_cli.parse_arguments_srv6_biditunnel(
+            prog='biditunnel',
+            args=['-help']
+        )
 
 
 class ControllerCLI(CustomCmd):
@@ -411,10 +462,11 @@ class ControllerCLI(CustomCmd):
         sub_cmd.cmdloop()
 
     def default(self, inp):
-        if inp == 'x' or inp == 'q':
+        if inp in ['x', 'q']:
             return self.do_exit(inp)
 
         print("Unrecognized command: {}".format(inp))
+        return False
 
     do_EOF = do_exit
 
@@ -422,47 +474,47 @@ class ControllerCLI(CustomCmd):
 # Class representing the configuration
 class Config:
     # ArangoDB username
-    ARANGO_USER = None
+    arango_user = None
     # ArangoDB password
-    ARANGO_PASSWORD = None
+    arango_password = None
     # ArangoDB URL
-    ARANGO_URL = None
+    arango_url = None
     # Configure Kafka servers
-    KAFKA_SERVERS = None
+    kafka_servers = None
     # Define whether to enable the debug mode or not
-    DEBUG = DEFAULT_DEBUG
+    debug = DEFAULT_DEBUG
 
     # Load configuration from .env file
     def load_config(self, env_file):
-        logger.info('*** Loading configuration from %s' % env_file)
+        logger.info(f'*** Loading configuration from {env_file}')
         # Path to the .env file
         env_path = Path(env_file)
         # Load environment variables from .env file
         load_dotenv(dotenv_path=env_path)
         # ArangoDB username
         if os.getenv('ARANGO_USER') is not None:
-            self.ARANGO_USER = os.getenv('ARANGO_USER')
+            self.arango_user = os.getenv('ARANGO_USER')
         # ArangoDB password
         if os.getenv('ARANGO_PASSWORD') is not None:
-            self.ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD')
+            self.arango_password = os.getenv('ARANGO_PASSWORD')
         # ArangoDB URL
         if os.getenv('ARANGO_URL') is not None:
-            self.ARANGO_URL = os.getenv('ARANGO_URL')
+            self.arango_url = os.getenv('ARANGO_URL')
         # Kafka servers
         if os.getenv('KAFKA_SERVERS') is not None:
-            self.KAFKA_SERVERS = os.getenv('KAFKA_SERVERS')
+            self.kafka_servers = os.getenv('KAFKA_SERVERS')
         # Define whether to enable the debug mode or not
         if os.getenv('DEBUG') is not None:
-            self.DEBUG = os.getenv('DEBUG')
+            self.debug = os.getenv('DEBUG')
             # Values provided in .env files are returned as strings
             # We need to convert them to bool
-            if self.DEBUG.lower() == 'true':
-                self.DEBUG = True
-            elif self.DEBUG.lower() == 'false':
-                self.DEBUG = False
+            if self.debug.lower() == 'true':
+                self.debug = True
+            elif self.debug.lower() == 'false':
+                self.debug = False
             else:
                 # Invalid value for this parameter
-                self.DEBUG = None
+                self.debug = None
 
     def validate_config(self):
         logger.info('*** Validating configuration')
@@ -474,11 +526,11 @@ class Config:
         print()
         print('****************** CONFIGURATION ******************')
         print()
-        print('ArangoDB URL: %s' % self.ARANGO_URL)
-        print('ArangoDB username: %s' % self.ARANGO_USER)
+        print('ArangoDB URL: %s' % self.arango_url)
+        print('ArangoDB username: %s' % self.arango_user)
         print('ArangoDB password: %s' % '************')
-        print('Kafka servers: %s' % self.KAFKA_SERVERS)
-        print('Enable debug: %s' % self.DEBUG)
+        print('Kafka servers: %s' % self.kafka_servers)
+        print('Enable debug: %s' % self.debug)
         print()
         print('***************************************************')
         print()
@@ -537,7 +589,7 @@ def __main():
     # Validate configuration
     if not config.validate_config():
         logger.critical('Invalid configuration\n')
-        exit(-2)
+        sys.exit(-2)
     # Import dependencies
     config.import_dependencies()
     # Print configuration

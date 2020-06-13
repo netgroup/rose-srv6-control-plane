@@ -23,7 +23,6 @@
 #
 
 # Controller dependencies
-from controller import ti_extraction
 from controller import arangodb_utils
 
 from argparse import ArgumentParser
