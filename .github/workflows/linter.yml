@@ -108,8 +108,8 @@ jobs:
           # Module to be tested
           module="db_update/db_update control_plane/controller/controller"       # control_plane/protos folder excluded
           # pylint
-          echo Running: pylint $module
-          pylint $module
+          echo Running: pylint $module --disable=similarities
+          pylint $module --disable=similarities
           if [ "$?" = "0" ]; then echo "Pylint ok"; else echo "Pylint error"; exit $exit_code; fi
           # pycodestyle
           echo Running: pycodestyle $module
@@ -122,7 +122,8 @@ jobs:
           # black
           echo Running: black --check $module
           black --check $module
-          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          # if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; fi        # Not exit if error
           # mypy
           # echo Running: mypy $module
           # mypy $module
@@ -211,8 +212,8 @@ jobs:
           # Module to be tested
           module="control_plane/node-manager/node_manager"       # control_plane/protos folder excluded
           # pylint
-          echo Running: pylint $module
-          pylint $module
+          echo Running: pylint $module --disable=similarities
+          pylint $module --disable=similarities
           if [ "$?" = "0" ]; then echo "Pylint ok"; else echo "Pylint error"; exit $exit_code; fi
           # pycodestyle
           echo Running: pycodestyle $module
@@ -225,7 +226,8 @@ jobs:
           # black
           echo Running: black --check $module
           black --check $module
-          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          # if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; fi        # Not exit if error
           # mypy
           # echo Running: mypy $module
           # mypy $module
