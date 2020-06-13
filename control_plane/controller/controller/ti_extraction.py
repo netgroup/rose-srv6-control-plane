@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 ##########################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -56,7 +57,7 @@ try:
 except ImportError:
     logger.warning('pyaml library is not installed')
 try:
-    import pygraphviz  # pylint: disable=unused-import
+    import pygraphviz  # pylint: disable=unused-import # noqa: F401
 except ImportError:
     logger.warning('pygraphviz library is not installed')
 

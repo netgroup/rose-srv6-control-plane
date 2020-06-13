@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 ##########################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -45,10 +46,10 @@ def set_configuration(sender, reflector,
     # pylint: disable=too-many-arguments
 
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
+            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         res = srv6_pm.set_configuration(
             sender_channel=sender_channel,
-            reflector_channel=reflector_channel,
+            reflector_channel=refl_channel,
             send_udp_port=send_udp_port,
             refl_udp_port=refl_udp_port,
             interval_duration=interval_duration,
@@ -67,10 +68,10 @@ def reset_configuration(sender, reflector,
     """Clear node configuration"""
 
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
+            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         res = srv6_pm.reset_configuration(
             sender_channel=sender_channel,
-            reflector_channel=reflector_channel
+            reflector_channel=refl_channel
         )
         if res == 0:
             print('OK')
@@ -94,15 +95,16 @@ def start_experiment(sender, reflector,
     # pylint: disable=too-many-arguments, too-many-locals
 
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
+            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         res = srv6_pm.start_experiment(
             sender_channel=sender_channel,
-            reflector_channel=reflector_channel,
+            reflector_channel=refl_channel,
             send_refl_dest=send_refl_dest,
             refl_send_dest=refl_send_dest,
             send_refl_sidlist=send_refl_sidlist.split(','),
             refl_send_sidlist=refl_send_sidlist.split(','),
-            # send_in_interfaces=send_in_interfaces,        # Moved to set_configuration
+            # Interfaces moved to set_configuration
+            # send_in_interfaces=send_in_interfaces,
             # refl_in_interfaces=refl_in_interfaces,
             # send_out_interfaces=send_out_interfaces,
             # refl_out_interfaces=refl_out_interfaces,
@@ -133,10 +135,10 @@ def get_experiment_results(sender, reflector,
     # pylint: disable=too-many-arguments
 
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
+            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         print(srv6_pm.get_experiment_results(
             sender_channel=sender_channel,
-            reflector_channel=reflector_channel,
+            reflector_channel=refl_channel,
             send_refl_sidlist=send_refl_sidlist.split(','),
             refl_send_sidlist=refl_send_sidlist.split(',')
         ))
@@ -151,10 +153,10 @@ def stop_experiment(sender, reflector,
     # pylint: disable=too-many-arguments
 
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
+            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         srv6_pm.stop_experiment(
             sender_channel=sender_channel,
-            reflector_channel=reflector_channel,
+            reflector_channel=refl_channel,
             send_refl_dest=send_refl_dest,
             refl_send_dest=refl_send_dest,
             send_refl_sidlist=send_refl_sidlist.split(','),

@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 ##########################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -1161,8 +1162,9 @@ if ENABLE_GRPC_SERVER:
         #
         # Create the server and add the handler
         grpc_server = grpc.server(futures.ThreadPoolExecutor())
-        srv6pmServiceController_pb2_grpc .add_SRv6PMControllerServicer_to_server(
-            _SRv6PMService(), grpc_server)
+        (srv6pmServiceController_pb2_grpc
+         .add_SRv6PMControllerServicer_to_server(_SRv6PMService(),
+                                                 grpc_server))
         # If secure mode is enabled, we need to create a secure endpoint
         if secure:
             # Read key and certificate

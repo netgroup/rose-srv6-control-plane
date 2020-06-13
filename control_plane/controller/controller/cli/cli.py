@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 ##########################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -21,6 +22,7 @@
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
+
 
 """Implementation of a CLI for the SRv6 Controller"""
 
@@ -119,8 +121,9 @@ class ControllerCLITopology(CustomCmd):
         # pylint: disable=no-self-use
 
         try:
-            args = topo_cli.parse_arguments_topology_information_extraction_isis(
-                prog='extract', args=args.split(' '))
+            args = (topo_cli
+                    .parse_arguments_topology_information_extraction_isis(
+                        prog='extract', args=args.split(' ')))
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.topology_information_extraction_isis(
@@ -167,22 +170,24 @@ class ControllerCLITopology(CustomCmd):
         # pylint: disable=no-self-use
 
         try:
-            args = topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
-                prog='extract_and_load_on_arango', args=args.split(' '))
+            arg = (topo_cli
+                   .parse_arguments_extract_topo_from_isis_and_load_on_arango(
+                       prog='extract_and_load_on_arango', args=args.split(' '))
+                   )
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.extract_topo_from_isis_and_load_on_arango(
-            isis_nodes=args.isis_nodes.split(','),
-            isisd_pwd=args.isisd_pwd,
-            arango_url=args.arango_url,
-            arango_user=args.arango_user,
-            arango_password=args.arango_password,
-            nodes_yaml=args.nodes_yaml,
-            edges_yaml=args.edges_yaml,
-            addrs_yaml=args.addrs_yaml,
-            hosts_yaml=args.hosts_yaml,
-            period=args.period,
-            verbose=args.verbose
+            isis_nodes=arg.isis_nodes.split(','),
+            isisd_pwd=arg.isisd_pwd,
+            arango_url=arg.arango_url,
+            arango_user=arg.arango_user,
+            arango_password=arg.arango_password,
+            nodes_yaml=arg.nodes_yaml,
+            edges_yaml=arg.edges_yaml,
+            addrs_yaml=arg.addrs_yaml,
+            hosts_yaml=arg.hosts_yaml,
+            period=arg.period,
+            verbose=arg.verbose
         )
         return True
 
@@ -315,7 +320,8 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_dest=args.refl_send_dest,
             send_refl_sidlist=args.send_refl_sidlist,
             refl_send_sidlist=args.refl_send_sidlist,
-            # send_in_interfaces=args.send_in_interfaces,       # Moved to set_configuration
+            # Interfaces moved to set_configuration
+            # send_in_interfaces=args.send_in_interfaces,
             # refl_in_interfaces=args.refl_in_interfaces,
             # send_out_interfaces=args.send_out_interfaces,
             # refl_out_interfaces=args.refl_out_interfaces,
