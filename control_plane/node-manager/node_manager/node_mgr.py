@@ -23,6 +23,8 @@
 #
 
 
+"""Implementation of a Node Manager"""
+
 # General imports
 import os
 import sys
@@ -76,6 +78,8 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  secure=DEFAULT_SECURE,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
+    """Start a gRPC server"""
+
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
     # Build address depending on the family
@@ -102,10 +106,10 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate
-        with open(key, 'rb') as f:
-            key = f.read()
-        with open(certificate, 'rb') as f:
-            certificate = f.read()
+        with open(key, 'rb') as key_file:
+            key = key_file.read()
+        with open(certificate, 'rb') as certificate_file:
+            certificate = certificate_file.read()
         # Create server ssl credentials
         grpc_server_credentials = (grpc
                                    .ssl_server_credentials(((key,
@@ -125,11 +129,17 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
 # Check whether we have root permission or not
 # Return True if we have root permission, False otherwise
 def check_root():
+    """Return True if this program has been executed as root,
+    False otherwise"""
+
     return os.getuid() == 0
 
 
 # Class representing the configuration
 class Config:
+    """Class implementing some configuration parameters and methods
+    for the node manager"""
+
     # Flag indicating whether to enable the SRv6 capabilities or not
     ENABLE_SRV6_MANAGER = True
     # IP address of the gRPC server (:: means any)
@@ -153,6 +163,8 @@ class Config:
 
     # Load configuration from .env file
     def load_config(self, env_file):
+        """Load configuration from a .env file"""
+
         logger.info('*** Loading configuration from %s', env_file)
         # Path to the .env file
         env_path = Path(env_file)
@@ -229,6 +241,8 @@ class Config:
                 os.getenv('ROSE_SRV6_DATA_PLANE_PATH')
 
     def validate_config(self):
+        """Check if the configuration is valid"""
+
         logger.info('*** Validating configuration')
         success = True
         # Validate gRPC IP address
@@ -300,6 +314,8 @@ class Config:
         return success
 
     def print_config(self):
+        """Pretty print the current configuration"""
+
         print()
         print('****************** CONFIGURATION ******************')
         print()
@@ -326,6 +342,9 @@ class Config:
         print()
 
     def import_dependencies(self):
+        """Import dependencies required by the features
+        enabled in the configuration"""
+
         global srv6_manager, srv6_manager_pb2_grpc
         global srv6pmService_pb2_grpc, pm_manager
         # SRv6 Manager dependencies
@@ -340,6 +359,8 @@ class Config:
 
 # Parse options
 def parse_arguments():
+    """Command-line arguments parser"""
+
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -378,6 +399,8 @@ def parse_arguments():
 
 
 def __main():
+    """Entry point for this module"""
+
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'

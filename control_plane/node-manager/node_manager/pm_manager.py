@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+"""Implementation of SRv6 PM Manager"""
+
 
 import atexit
 import os
@@ -26,7 +28,7 @@ from data_plane.twamp.twamp_demon import SessionSender
 from data_plane.twamp.twamp_demon import SessionReflector
 from data_plane.twamp.twamp_demon import TestPacketReceiver
 from data_plane.twamp.twamp_demon import EbpfInterf
-from data_plane.twamp.twamp_demon import IpSetInterf
+# from data_plane.twamp.twamp_demon import IpSetInterf
 
 
 # Folder containing this script
@@ -41,10 +43,12 @@ SRV6_PFPLM_PATH = os.path.join(SRV6_PM_XDP_EBPF_PATH, 'srv6-pfplm/')
 sys.path.append(SRV6_PFPLM_PATH)
 
 
-'''##################################### GRPC CONTROLLER'''
+# '''##################################### GRPC CONTROLLER'''
 
 
 class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
+    """gRPC request handler"""
+
     def __init__(self, session_sender=None,
                  session_reflector=None, packet_receiver=None):
         self.sender = session_sender
@@ -68,6 +72,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             sys.exit(-2)
 
     def startExperimentSender(self, request, context):
+        """Start an experiment as sender"""
+
         print('GRPC CONTROLLER: startExperimentSender')
         # Check if the node has been configured
         if not self.configured:
@@ -102,6 +108,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmSender_pb2.StartExperimentSenderReply(status=status)
 
     def stopExperimentSender(self, request, context):
+        """Stop an experiment running on sender"""
+
         print('GRPC CONTROLLER: stopExperimentSender')
         # Check if the node has been configured
         if not self.configured:
@@ -117,6 +125,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
     def startExperimentReflector(self, request, context):
+        """Start an experiment as reflector"""
+
         print('GRPC CONTROLLER: startExperimentReflector')
         # Check if the node has been configured
         if not self.configured:
@@ -145,6 +155,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmReflector_pb2.StartExperimentReflectorReply(status=status)
 
     def stopExperimentReflector(self, request, context):
+        """Stop an experiment on the reflector"""
+
         print('GRPC CONTROLLER: startExperimentReflector')
         # Check if the node has been configured
         if not self.configured:
@@ -160,6 +172,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
     def retriveExperimentResults(self, request, context):
+        """Retrieve results from the sender"""
+
         print('GRPC CONTROLLER: retriveExperimentResults')
         # Check if the node has been configured
         if not self.configured:
@@ -198,6 +212,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return response
 
     def setConfiguration(self, request, context):
+        """Inject the configuration on the node"""
+
         print('GRPC CONTROLLER: setConfiguration')
         # Check if this node is already configured
         if self.configured:
@@ -277,6 +293,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.SetConfigurationReply(status=status)
 
     def resetConfiguration(self, request, context):
+        """Clear the current configuration"""
+
         print('GRPC CONTROLLER: resetConfiguration')
         # Check if this node is not configured:
         if not self.configured:
@@ -323,11 +341,15 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
 
 
 def add_pm_manager_to_server(server):
+    """Attach PM Manager gRPC server to an existing server"""
+
     srv6pmService_pb2_grpc.add_SRv6PMServicer_to_server(
         TWAMPController(), server)
 
 
 def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
+    """Start gRPC server"""
+
     driver = EbpfInterf(
         in_interfaces=epbf_in_interf,
         out_interfaces=epbf_out_interf
@@ -355,22 +377,24 @@ def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
 
 
 def __main():
+    """Entry point for this module"""
+
     ip_addr = sys.argv[1]
     gprc_port = sys.argv[2]
-    nodeID = sys.argv[3]
-    if nodeID == 'd':
-        RECV_INTERF = 'punt0'
-        EBPF_OUT_INTERF = 'r8-r6_egr'
-        EBPF_IN_INTERF = 'r8-r6'
-    elif nodeID == 'e':
-        RECV_INTERF = 'punt0'
-        EBPF_OUT_INTERF = 'r1-r2_egr'
-        EBPF_IN_INTERF = 'r1-r2'
+    node_id = sys.argv[3]
+    if node_id == 'd':
+        recv_interf = 'punt0'
+        epbf_out_interf = 'r8-r6_egr'
+        ebpf_in_interf = 'r8-r6'
+    elif node_id == 'e':
+        recv_interf = 'punt0'
+        epbf_out_interf = 'r1-r2_egr'
+        ebpf_in_interf = 'r1-r2'
     else:
         sys.exit(-1)
 
     logging.basicConfig()
-    serve(ip_addr, gprc_port, RECV_INTERF, EBPF_OUT_INTERF, EBPF_IN_INTERF)
+    serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, ebpf_in_interf)
 
 
 if __name__ == '__main__':

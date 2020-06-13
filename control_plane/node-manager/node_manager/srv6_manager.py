@@ -22,6 +22,8 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
+"""This module provides an implementation of a SRv6 Manager"""
+
 
 # General imports
 import os
@@ -48,8 +50,6 @@ import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
-# General imports
-# pyroute2 dependencies
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -67,7 +67,7 @@ NETLINK_ERROR_FILE_EXISTS = 17
 NETLINK_ERROR_NO_SUCH_DEVICE = 19
 NETLINK_ERROR_OPERATION_NOT_SUPPORTED = 95
 # Logger reference
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 #
 # Default parameters for SRv6 manager
 #
@@ -84,22 +84,23 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 DEFAULT_KEY = 'key_server.pem'
 
 
-def parse_netlink_error(self, err):
+def parse_netlink_error(err):
+    """Convert the errors returned by Netlink in gRPC status codes"""
+
     if err.code == NETLINK_ERROR_FILE_EXISTS:
-        logger.warning('Netlink error: File exists')
+        LOGGER.warning('Netlink error: File exists')
         return commons_pb2.STATUS_FILE_EXISTS
-    elif err.code == NETLINK_ERROR_NO_SUCH_PROCESS:
-        logger.warning('Netlink error: No such process')
+    if err.code == NETLINK_ERROR_NO_SUCH_PROCESS:
+        LOGGER.warning('Netlink error: No such process')
         return commons_pb2.STATUS_NO_SUCH_PROCESS
-    elif err.code == NETLINK_ERROR_NO_SUCH_DEVICE:
-        logger.warning('Netlink error: No such device')
+    if err.code == NETLINK_ERROR_NO_SUCH_DEVICE:
+        LOGGER.warning('Netlink error: No such device')
         return commons_pb2.STATUS_NO_SUCH_DEVICE
-    elif err.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
-        logger.warning('Netlink error: Operation not supported')
+    if err.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
+        LOGGER.warning('Netlink error: Operation not supported')
         return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-    else:
-        logger.warning(f'Generic internal error: {err}')
-        srv6_manager_pb2.STATUS_INTERNAL_ERROR
+    LOGGER.warning('Generic internal error: %s', err)
+    return commons_pb2.STATUS_INTERNAL_ERROR
 
 
 class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
@@ -133,8 +134,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             self.interface_to_idx[interface] = \
                 self.ip_route.link_lookup(ifname=interface)[0]
 
-    def HandleSRv6PathRequest(self, operation, request, context):
-        logger.debug(f'config received:\n{request}')
+    def handle_srv6_path_request(self, operation, request, context):
+        # pylint: disable=unused-argument
+        """Handler for SRv6 paths"""
+
+        LOGGER.debug('config received:\n%s', request)
         # Perform operation
         try:
             if operation in ['add', 'change', 'del']:
@@ -171,18 +175,21 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
             else:
                 # Operation unknown: this is a bug
-                logger.error(f'Unrecognized operation: {operation}')
+                LOGGER.error('Unrecognized operation: %s', operation)
                 sys.exit(-1)
             # and create the response
-            logger.debug('Send response: OK')
+            LOGGER.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as err:
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=self.parse_netlink_error(err))
+                status=parse_netlink_error(err))
 
-    def HandleSRv6BehaviorRequest(self, operation, request, context):
-        logger.debug(f'config received:\n{request}')
+    def handle_srv6_behavior_request(self, operation, request, context):
+        # pylint: disable=unused-argument
+        """Handler for SRv6 behaviors"""
+
+        LOGGER.debug('config received:\n%s', request)
         # Let's process the request
         try:
             for behavior in request.behaviors:
@@ -250,7 +257,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         # Parameters of End.B6 behavior
                         encap = {'srh': {'segs': segments}}
                     else:
-                        logger.debug('Error: Unrecognized action')
+                        LOGGER.debug('Error: Unrecognized action')
                         return srv6_manager_pb2.SRv6ManagerReply(
                             status=commons_pb2.STATUS_INVALID_ACTION)
                     # Finalize encap dict
@@ -265,42 +272,57 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                         encap=encap)
                 else:
                     # Operation unknown: this is a bug
-                    logger.error(f'BUG - Unrecognized operation: {operation}')
+                    LOGGER.error('BUG - Unrecognized operation: %s', operation)
                     sys.exit(-1)
             # and create the response
-            logger.debug('Send response: OK')
+            LOGGER.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_SUCCESS)
         except NetlinkError as err:
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=self.parse_netlink_error(err))
+                status=parse_netlink_error(err))
 
-    def Execute(self, operation, request, context):
+    def execute(self, operation, request, context):
+        """This function dispatch the gRPC requests based
+        on the entity carried in them"""
+
         # Handle operation
         # The operation to be executed depends on
         # the entity carried by the request message
-        res = self.HandleSRv6PathRequest(
+        res = self.handle_srv6_path_request(
             operation, request.srv6_path_request, context)
         if res.status == commons_pb2.STATUS_SUCCESS:
-            res = self.HandleSRv6BehaviorRequest(
+            res = self.handle_srv6_behavior_request(
                 operation, request.srv6_behavior_request, context)
         return res
 
     def Create(self, request, context):
+        # pylint: disable=invalid-name
+        """RPC used to create a SRv6 entity"""
+
         # Handle Create operation
-        return self.Execute('add', request, context)
+        return self.execute('add', request, context)
 
     def Get(self, request, context):
+        # pylint: disable=invalid-name
+        """RPC used to get a SRv6 entity"""
+
         # Handle Create operation
-        return self.Execute('get', request, context)
+        return self.execute('get', request, context)
 
     def Update(self, request, context):
+        # pylint: disable=invalid-name
+        """RPC used to change a SRv6 entity"""
+
         # Handle Remove operation
-        return self.Execute('change', request, context)
+        return self.execute('change', request, context)
 
     def Remove(self, request, context):
+        # pylint: disable=invalid-name
+        """RPC used to remove a SRv6 entity"""
+
         # Handle Remove operation
-        return self.Execute('del', request, context)
+        return self.execute('del', request, context)
 
 
 # Start gRPC server
@@ -309,6 +331,8 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  secure=DEFAULT_SECURE,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
+    """Start a gRPC server"""
+
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
     # Build address depending on the family
@@ -320,14 +344,12 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
-        logger.fatal(f'Invalid gRPC address: {grpc_ip}')
+        LOGGER.fatal('Invalid gRPC address: %s', grpc_ip)
         sys.exit(-2)
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     (srv6_manager_pb2_grpc
-        .add_SRv6ManagerServicer_to_server(
-            SRv6Manager(), grpc_server)
-     )
+     .add_SRv6ManagerServicer_to_server(SRv6Manager(), grpc_server))
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate
@@ -345,7 +367,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         # Create an insecure endpoint
         grpc_server.add_insecure_port(server_addr)
     # Start the loop for gRPC
-    logger.info(f'*** Listening gRPC on address {server_addr}')
+    LOGGER.info('*** Listening gRPC on address %s', server_addr)
     grpc_server.start()
     while True:
         time.sleep(5)
@@ -354,11 +376,16 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
 # Check whether we have root permission or not
 # Return True if we have root permission, False otherwise
 def check_root():
+    """ Return True if this program is executed as root,
+    False otherwise"""
+
     return os.getuid() == 0
 
 
 # Parse options
 def parse_arguments():
+    """Command-line arguments parser"""
+
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -392,6 +419,8 @@ def parse_arguments():
 
 
 def __main():
+    """Entry point for this script"""
+
     args = parse_arguments()
     # Setup properly the secure mode
     secure = args.secure
@@ -405,15 +434,15 @@ def __main():
     key = args.server_key
     # Setup properly the logger
     if args.debug:
-        logger.setLevel(level=logging.DEBUG)
+        LOGGER.setLevel(level=logging.DEBUG)
     else:
-        logger.setLevel(level=logging.INFO)
+        LOGGER.setLevel(level=logging.INFO)
     # Debug settings
-    server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logging.info('SERVER_DEBUG:', str(server_debug))
+    server_debug = LOGGER.getEffectiveLevel() == logging.DEBUG
+    logging.info('SERVER_DEBUG: %s', str(server_debug))
     # This script must be run as root
     if not check_root():
-        logger.critical(f'*** {sys.argv[0]} must be run as root.\n')
+        LOGGER.critical('*** %s must be run as root.\n', sys.argv[0])
         sys.exit(1)
     # Start the server
     start_server(grpc_ip, grpc_port, secure, certificate, key)
