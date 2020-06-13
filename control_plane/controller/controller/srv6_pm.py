@@ -47,7 +47,6 @@ import srv6pmSender_pb2
 import srv6pmService_pb2_grpc
 import srv6pmServiceController_pb2
 import srv6pmServiceController_pb2_grpc
-
 # Controller dependencies
 from controller import srv6_utils, utils
 
