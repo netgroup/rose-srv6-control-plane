@@ -20,3 +20,4 @@ build/
 .eggs/
 
 .venv/
+control_plane/protos/gen_py/
