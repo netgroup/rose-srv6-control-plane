@@ -2,8 +2,8 @@
 
 """ArangoDB utilities"""
 
-from arango import ArangoClient
 import yaml
+from arango import ArangoClient
 
 USER = "root"
 PASSWORD = "12345678"
