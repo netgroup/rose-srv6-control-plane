@@ -4,10 +4,10 @@
 """Implementation of SRv6 PM Manager"""
 
 import atexit
-import os
-from concurrent import futures
-import sys
 import logging
+import os
+import sys
+from concurrent import futures
 from datetime import timedelta
 from threading import Event
 
@@ -20,6 +20,7 @@ import srv6pmCommons_pb2
 import srv6pmReflector_pb2
 import srv6pmSender_pb2
 import srv6pmService_pb2_grpc
+
 # import srv6pmServiceController_pb2
 # import srv6pmServiceController_pb2_grpc
 

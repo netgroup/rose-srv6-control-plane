@@ -26,8 +26,8 @@
 
 """This module contains several utility functions for node manager"""
 
+from ipaddress import AddressValueError, IPv4Interface, IPv6Interface
 from socket import AF_INET, AF_INET6
-from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
 
 
 # Utiliy function to check if the IP

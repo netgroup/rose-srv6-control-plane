@@ -26,31 +26,28 @@
 """This module provides an implementation of a SRv6 Manager"""
 
 
+import logging
 # General imports
 import os
 import sys
-import logging
 import time
-from concurrent import futures
 from argparse import ArgumentParser
+from concurrent import futures
 from socket import AF_INET, AF_INET6
-
-# pyroute2 dependencies
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2 import IPRoute
 
 # gRPC dependencies
 import grpc
-
-# Node manager dependencies
-from node_manager.utils import get_address_family
+# pyroute2 dependencies
+from pyroute2 import IPRoute
+from pyroute2.netlink.exceptions import NetlinkError
+from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # Proto dependencies
 import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
-
+# Node manager dependencies
+from node_manager.utils import get_address_family
 
 # Load environment variables from .env file
 # load_dotenv()

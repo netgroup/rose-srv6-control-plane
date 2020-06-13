@@ -28,21 +28,20 @@
 
 # General imports
 import importlib
+import logging
 import os
 import sys
-from argparse import ArgumentParser
-import logging
 import time
+from argparse import ArgumentParser
 from concurrent import futures
-from socket import AF_INET, AF_INET6
 from pathlib import Path
-from pkg_resources import resource_filename
-
-# python-dotenv dependencies
-from dotenv import load_dotenv
+from socket import AF_INET, AF_INET6
 
 # gRPC dependencies
 import grpc
+# python-dotenv dependencies
+from dotenv import load_dotenv
+from pkg_resources import resource_filename
 
 # Node Manager dependencies
 from node_manager import utils
