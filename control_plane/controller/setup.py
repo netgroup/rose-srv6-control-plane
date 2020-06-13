@@ -33,7 +33,7 @@ setuptools.setup(
     packages=packages,
     install_requires=install_requires,
     entry_points={'console_scripts': [
-        'controller = controller.controller:__main']},
+        'controller = controller.controller_cli:__main']},
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',
