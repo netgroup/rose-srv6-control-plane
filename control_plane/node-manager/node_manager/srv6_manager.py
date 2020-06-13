@@ -133,6 +133,19 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # Add interface index
             self.interface_to_idx[interface] = \
                 self.ip_route.link_lookup(ifname=interface)[0]
+        # Behavior handlers
+        self.behavior_handlers = {
+            'End': self.handle_end_behavior_request,
+            'End.X': self.handle_end_x_behavior_request,
+            'End.T': self.handle_end_t_behavior_request,
+            'End.DX2': self.handle_end_dx2_behavior_request,
+            'End.DX6': self.handle_end_dx6_behavior_request,
+            'End.DX4': self.handle_end_dx4_behavior_request,
+            'End.DT6': self.handle_end_dt6_behavior_request,
+            'End.DT4': self.handle_end_dt4_behavior_request,
+            'End.B6': self.handle_end_b6_behavior_request,
+            'End.B6.Encaps': self.handle_end_b6_encaps_behavior_request,
+        }
 
     def handle_srv6_path_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -185,6 +198,451 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=parse_netlink_error(err))
 
+    def handle_end_behavior_request(self, operation, behavior):
+        """Handle seg6local End behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End'
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_x_behavior_request(self, operation, behavior):
+        """Handle seg6local End.X behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        nexthop = behavior.nexthop
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.X',
+                'nh4': nexthop
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_t_behavior_request(self, operation, behavior):
+        """Handle seg6local End.T behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        lookup_table = behavior.lookup_table
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.T',
+                'table': lookup_table
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dx2_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DX2 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        interface = behavior.interface
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DX2',
+                'oif': interface
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dx6_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DX6 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        nexthop = behavior.nexthop
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DX6',
+                'nh4': nexthop
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dx4_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DX4 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        nexthop = behavior.nexthop
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DX4',
+                'nh4': nexthop
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dt6_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DT6 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        lookup_table = behavior.lookup_table
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DT6',
+                'table': lookup_table
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dt4_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DT4 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        lookup_table = behavior.lookup_table
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DT4',
+                'table': lookup_table
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_b6_behavior_request(self, operation, behavior):
+        """Handle seg6local End.B6 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Rebuild segments
+            segments = []
+            for srv6_segment in behavior.segs:
+                segments.append(srv6_segment.segment)
+            # pyroute2 requires the segments in reverse order
+            segments.reverse()
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.B6',
+                'srh': {'segs': segments}
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_b6_encaps_behavior_request(self, operation, behavior):
+        """Handle seg6local End.B6.Encaps behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Rebuild segments
+            segments = []
+            for srv6_segment in behavior.segs:
+                segments.append(srv6_segment.segment)
+            # pyroute2 requires the segments in reverse order
+            segments.reverse()
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.B6.Encaps',
+                'srh': {'segs': segments}
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_srv6_behavior_del_request(self, behavior):
+        """Delete a route"""
+
+        # Extract params
+        segment = behavior.segment
+        device = behavior.device if behavior.device != '' \
+            else self.non_loopback_interfaces[0]
+        table = behavior.table if behavior.table != -1 else None
+        metric = behavior.metric if behavior.metric != -1 else None
+        # Remove the route
+        self.ip_route.route('del', family=AF_INET6,
+                            oif=device, dst=segment,
+                            table=table, priority=metric)
+        # Return success
+        return commons_pb2.STATUS_SUCCESS
+
+    def handle_srv6_behavior_get_request(self, behavior):
+        # pylint checks on this method are temporary disabled
+        # pylint: disable=no-self-use, unused-argument
+        """Get a route"""
+
+        LOGGER.info('get opertion not yet implemented\n')
+        return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+
+    def dispatch_srv6_behavior(self, operation, behavior):
+        """Pass the request to the right handler"""
+
+        # Get the handler
+        handler = self.behavior_handlers.get(behavior.action)
+        # Pass the behavior to the handler
+        if handler is not None:
+            return handler(operation, behavior)
+        # Error
+        LOGGER.error('Error: Unrecognized action: %s', behavior.action)
+        return srv6_manager_pb2.SRv6ManagerReply(
+            status=commons_pb2.STATUS_INVALID_ACTION)
+
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
         """Handler for SRv6 behaviors"""
@@ -193,87 +651,10 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Let's process the request
         try:
             for behavior in request.behaviors:
-                # Extract params from request
-                segment = behavior.segment
-                action = behavior.action
-                nexthop = behavior.nexthop
-                lookup_table = behavior.lookup_table
-                interface = behavior.interface
-                device = behavior.device
-                table = behavior.table
-                metric = behavior.metric
-                # Check optional params
-                nexthop = nexthop if nexthop != '' else None
-                lookup_table = lookup_table if lookup_table != -1 else None
-                interface = interface if interface != '' else None
-                device = device if device != '' \
-                    else self.non_loopback_interfaces[0]
-                table = table if table != -1 else None
-                metric = metric if metric != -1 else None
-                # Perform operation
-                if operation == 'del':
-                    # Delete a route
-                    self.ip_route.route(operation, family=AF_INET6,
-                                        dst=segment,
-                                        table=table, priority=metric)
-                elif operation == 'get':
-                    return srv6_manager_pb2.SRv6ManagerReply(
-                        status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-                elif operation in ['add', 'change']:
-                    # Add a new route
-                    # Fill encap dict with the parameters of the behavior
-                    if action == 'End':
-                        encap = {}
-                    elif action == 'End.X':
-                        encap = {'nh6': nexthop}
-                    elif action == 'End.T':
-                        encap = {'table': lookup_table}
-                    elif action == 'End.DX2':
-                        encap = {'oif': interface}
-                    elif action == 'End.DX6':
-                        encap = {'nh6': nexthop}
-                    elif action == 'End.DX4':
-                        encap = {'nh4': nexthop}
-                    elif action == 'End.DT6':
-                        encap = {'table': lookup_table}
-                    elif action == 'End.DT4':
-                        encap = {'table': lookup_table}
-                    elif action == 'End.B6':
-                        # Rebuild segments
-                        segments = []
-                        for srv6_segment in behavior.segs:
-                            segments.append(srv6_segment.segment)
-                        # pyroute2 requires the segments in reverse order
-                        segments.reverse()
-                        # Parameters of End.B6 behavior
-                        encap = {'srh': {'segs': segments}}
-                    elif action == 'End.B6.Encaps':
-                        # Rebuild segments
-                        segments = []
-                        for srv6_segment in behavior.segs:
-                            segments.append(srv6_segment.segment)
-                        # pyroute2 requires the segments in reverse order
-                        segments.reverse()
-                        # Parameters of End.B6 behavior
-                        encap = {'srh': {'segs': segments}}
-                    else:
-                        LOGGER.debug('Error: Unrecognized action')
-                        return srv6_manager_pb2.SRv6ManagerReply(
-                            status=commons_pb2.STATUS_INVALID_ACTION)
-                    # Finalize encap dict
-                    encap['type'] = 'seg6local'
-                    encap['action'] = action
-                    # Create/Change the seg6local route
-                    self.ip_route.route(operation, family=AF_INET6,
-                                        dst=segment,
-                                        oif=self.interface_to_idx[device],
-                                        table=table,
-                                        priority=metric,
-                                        encap=encap)
-                else:
-                    # Operation unknown: this is a bug
-                    LOGGER.error('BUG - Unrecognized operation: %s', operation)
-                    sys.exit(-1)
+                # Pass the request to the right handler
+                res = self.dispatch_srv6_behavior(operation, behavior)
+                if res != commons_pb2.STATUS_SUCCESS:
+                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
             # and create the response
             LOGGER.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
