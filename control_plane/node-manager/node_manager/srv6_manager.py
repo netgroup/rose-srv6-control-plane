@@ -393,20 +393,20 @@ def parse_arguments():
     return args
 
 
-if __name__ == '__main__':
-    _args = parse_arguments()
+def __main():
+    args = parse_arguments()
     # Setup properly the secure mode
-    _secure = _args.secure
+    secure = args.secure
     # gRPC server IP
-    _grpc_ip = _args.grpc_ip
+    grpc_ip = args.grpc_ip
     # gRPC server port
-    _grpc_port = _args.grpc_port
+    grpc_port = args.grpc_port
     # Server certificate
-    _certificate = _args.server_cert
+    certificate = args.server_cert
     # Server key
-    _key = _args.server_key
+    key = args.server_key
     # Setup properly the logger
-    if _args.debug:
+    if args.debug:
         logger.setLevel(level=logging.DEBUG)
     else:
         logger.setLevel(level=logging.INFO)
@@ -418,4 +418,8 @@ if __name__ == '__main__':
         logger.critical(f'*** {sys.argv[0]} must be run as root.\n')
         sys.exit(1)
     # Start the server
-    start_server(_grpc_ip, _grpc_port, _secure, _certificate, _key)
+    start_server(grpc_ip, grpc_port, secure, certificate, key)
+
+
+if __name__ == '__main__':
+    __main()

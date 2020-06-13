@@ -351,9 +351,9 @@ def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
     server.wait_for_termination()
 
 
-if __name__ == '__main__':
-    _ip_addr = sys.argv[1]
-    _gprc_port = sys.argv[2]
+def __main():
+    ip_addr = sys.argv[1]
+    gprc_port = sys.argv[2]
     nodeID = sys.argv[3]
     if nodeID == 'd':
         RECV_INTERF = 'punt0'
@@ -367,4 +367,8 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     logging.basicConfig()
-    serve(_ip_addr, _gprc_port, RECV_INTERF, EBPF_OUT_INTERF, EBPF_IN_INTERF)
+    serve(ip_addr, gprc_port, RECV_INTERF, EBPF_OUT_INTERF, EBPF_IN_INTERF)
+
+
+if __name__ == '__main__':
+    __main()
