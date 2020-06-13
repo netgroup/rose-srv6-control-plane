@@ -58,9 +58,9 @@ else:
         to_vertex_collections=['routers']
     )
 
-# Create an edge definition named "provider_host_links". This creates any missing
-# collections and returns an API wrapper for "provider_host_links" edge
-# collection.
+# Create an edge definition named "provider_host_links". This creates any
+# missing collections and returns an API wrapper for "provider_host_links"
+# edge collection.
 if topo_graph.has_edge_definition('provider_host_links'):
     host_links = topo_graph.edge_collection("provider_host_links")
 else:
@@ -70,9 +70,9 @@ else:
         to_vertex_collections=['provider_hosts', 'routers']
     )
 
-##############################################
-############### populate graph ###############
-##############################################
+# ##############################################
+# ############### populate graph ###############
+# ##############################################
 
 # nodes
 with open('nodes.yaml') as f:

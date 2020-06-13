@@ -67,9 +67,9 @@ def initialize_db(
     return nodes, edges
 
 
-##############################################
-############### populate graph ###############
-##############################################
+# ##############################################
+# ############### populate graph ###############
+# ##############################################
 
 def populate_yaml(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
     """Populate database from YAML files"""
