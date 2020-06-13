@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-##############################################################################################
+##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
@@ -344,7 +344,8 @@ def connect_and_extract_topology_isis(ips_ports,
                 if ip_add not in ipv6_reachability:
                     # Update IPv6 reachability dict
                     ipv6_reachability[ip_add] = list()
-                # add hostname to hosts list of the ip address in the ipv6 reachability dict
+                # add hostname to hosts list of the ip address in the ipv6
+                # reachability dict
                 ipv6_reachability[ip_add].append(hostname)
         # Build the topology graph
         #
@@ -362,7 +363,8 @@ def connect_and_extract_topology_isis(ips_ports,
             # Only take IP addresses of links between 2 nodes
             if len(ipv6_reachability[ip_add]) == 2:
                 (node1, node2) = ipv6_reachability[ip_add]
-                # Character '/' is not accepted in key strign in arango, using '-' instead
+                # Character '/' is not accepted in key strign in arango, using
+                # '-' instead
                 ip_add_key = ip_add.replace('/', '-')
                 edges.add((node1, node2, ip_add_key))
                 _edges.remove((node1, node2))

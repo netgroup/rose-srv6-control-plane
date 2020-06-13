@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-##############################################################################################
+##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
@@ -30,7 +30,8 @@
 
 from controller.utils import get_grpc_session
 from controller.srv6_utils import (handle_srv6_path,
-                        handle_srv6_behavior)
-from controller.arangodb_utils import (extract_topo_from_isis,
-                            load_topo_on_arango,
-                            extract_topo_from_isis_and_load_on_arango)
+                                   handle_srv6_behavior)
+from controller.arangodb_utils import (
+    extract_topo_from_isis,
+    load_topo_on_arango,
+    extract_topo_from_isis_and_load_on_arango)

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-##############################################################################################
+##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
@@ -307,7 +307,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     #
     # Measurement Protocol
     try:
-        if type(measurement_protocol) == str:
+        if isinstance(measurement_protocol, str):
             measurement_protocol = \
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
@@ -316,7 +316,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         return None
     # Measurement Type
     try:
-        if type(measurement_type) == str:
+        if isinstance(measurement_type, str):
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
     except ValueError:
@@ -324,7 +324,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         return None
     # Authentication Mode
     try:
-        if type(authentication_mode) == str:
+        if isinstance(authentication_mode, str):
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
     except ValueError:
@@ -332,7 +332,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         return None
     # Timestamp Format
     try:
-        if type(timestamp_format) == str:
+        if isinstance(timestamp_format, str):
             timestamp_format = \
                 srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
     except ValueError:
@@ -340,7 +340,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         return None
     # Delay Measurement Mode
     try:
-        if type(delay_measurement_mode) == str:
+        if isinstance(delay_measurement_mode, str):
             delay_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementDelayMode.Value(
                     delay_measurement_mode)
@@ -350,7 +350,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         return None
     # Loss Measurement Mode
     try:
-        if type(loss_measurement_mode) == str:
+        if isinstance(loss_measurement_mode, str):
             loss_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
@@ -424,7 +424,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     #
     # PM Driver
     try:
-        if type(pm_driver) == str:
+        if isinstance(pm_driver, str):
             pm_driver = srv6pmCommons_pb2.PMDriver.Value(pm_driver)
     except ValueError:
         logger.error('Invalid PM Driver: %s' % pm_driver)
@@ -472,7 +472,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     #
     # Measurement Protocol
     try:
-        if type(measurement_protocol) == str:
+        if isinstance(measurement_protocol, str):
             measurement_protocol = \
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
@@ -481,7 +481,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         return None
     # Measurement Type
     try:
-        if type(measurement_type) == str:
+        if isinstance(measurement_type, str):
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
     except ValueError:
@@ -489,7 +489,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         return None
     # Authentication Mode
     try:
-        if type(authentication_mode) == str:
+        if isinstance(authentication_mode, str):
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
     except ValueError:
@@ -497,7 +497,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         return None
     # Loss Measurement Mode
     try:
-        if type(loss_measurement_mode) == str:
+        if isinstance(loss_measurement_mode, str):
             loss_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
@@ -1212,8 +1212,8 @@ if ENABLE_GRPC_SERVER:
         #
         # Create the server and add the handler
         grpc_server = grpc.server(futures.ThreadPoolExecutor())
-        srv6pmServiceController_pb2_grpc \
-            .add_SRv6PMControllerServicer_to_server(_SRv6PMService(), grpc_server)
+        srv6pmServiceController_pb2_grpc .add_SRv6PMControllerServicer_to_server(
+            _SRv6PMService(), grpc_server)
         # If secure mode is enabled, we need to create a secure endpoint
         if secure:
             # Read key and certificate
