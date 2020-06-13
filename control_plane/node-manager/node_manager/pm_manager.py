@@ -224,7 +224,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         self.sender = SessionSender(self.driver, session_sender_stop_event)
         # Initialize reflector
         self.reflector = SessionReflector(self.driver,
-                                                 session_reflector_stop_event)
+                                          session_reflector_stop_event)
         # Initialize packet receiver
         self.packetRecv = TestPacketReceiver(
             interface=recvInterf,

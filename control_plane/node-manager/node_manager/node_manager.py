@@ -89,7 +89,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     # SRv6 Manager
     srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
-            srv6_manager.SRv6Manager(), grpc_server)
+        srv6_manager.SRv6Manager(), grpc_server)
     # PM Manager
     try:
         pm_manager.add_pm_manager_to_server(grpc_server)
