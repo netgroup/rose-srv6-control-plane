@@ -359,9 +359,11 @@ def connect_and_extract_topology_isis(ips_ports,
                 _edges.add((hostname, system_id_to_hostname[system_id]))
         for ip_add in ipv6_reachability:
             # Edge link is bidirectional in this case
-            if len(ipv6_reachability[ip_add]) == 2:     # Only take IP addresses of links between 2 nodes
+            # Only take IP addresses of links between 2 nodes
+            if len(ipv6_reachability[ip_add]) == 2:
                 (node1, node2) = ipv6_reachability[ip_add]
-                ip_add_key = ip_add.replace('/', '-')    # Character '/' is not accepted in key strign in arango, using '-' instead
+                # Character '/' is not accepted in key strign in arango, using '-' instead
+                ip_add_key = ip_add.replace('/', '-')
                 edges.add((node1, node2, ip_add_key))
                 _edges.remove((node1, node2))
                 _edges.remove((node2, node1))
