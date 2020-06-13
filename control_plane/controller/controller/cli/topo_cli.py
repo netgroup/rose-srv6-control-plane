@@ -26,9 +26,9 @@
 
 """ArangoDB utilities for Controller CLI"""
 
+import sys
 # General imports
 from argparse import ArgumentParser
-import sys
 
 # Controller dependencies
 from controller import arangodb_utils

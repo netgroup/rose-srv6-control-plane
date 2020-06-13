@@ -26,12 +26,11 @@
 
 """SRv6 utilities for Controller CLI"""
 
-from argparse import ArgumentParser
 import sys
+from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import srv6_utils
-from controller import utils
+from controller import srv6_utils, utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'

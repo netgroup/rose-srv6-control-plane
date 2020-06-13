@@ -26,16 +26,16 @@
 
 """Topology Information Extraction utilities"""
 
-from argparse import ArgumentParser
 import errno
-import logging
 import json
+import logging
 import os
-import time
-import telnetlib
 import re
 import socket
 import sys
+import telnetlib
+import time
+from argparse import ArgumentParser
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)

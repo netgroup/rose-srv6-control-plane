@@ -27,21 +27,19 @@
 """Implementation of a CLI for the SRv6 Controller"""
 
 # General imports
+import logging
 import os
 import sys
-from cmd import Cmd
-import logging
 from argparse import ArgumentParser
+from cmd import Cmd
 from pathlib import Path
-from pkg_resources import resource_filename
 
 # python-dotenv dependencies
 from dotenv import load_dotenv
+from pkg_resources import resource_filename
 
 # Controller dependencies
-from controller.cli import topo_cli
-from controller.cli import srv6pm_cli
-from controller.cli import srv6_cli
+from controller.cli import srv6_cli, srv6pm_cli, topo_cli
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))

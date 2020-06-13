@@ -28,8 +28,8 @@
 
 # General imports
 import logging
+from ipaddress import AddressValueError, IPv4Interface, IPv6Interface
 from socket import AF_INET, AF_INET6
-from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
 
 # gRPC dependencies
 import grpc

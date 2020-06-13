@@ -28,29 +28,28 @@
 
 # pylint: disable=too-many-lines
 
+import json
+import logging
 # General imports
 import os
 import sys
-from concurrent import futures
-import logging
 import time
-import json
+from concurrent import futures
 
 # gRPC dependencies
 import grpc
 
-# Controller dependencies
-from controller import utils
-from controller import srv6_utils
-
 # SRv6PM dependencies
-import srv6pmServiceController_pb2
-import srv6pmServiceController_pb2_grpc
-import srv6pmService_pb2_grpc
+import commons_pb2
+import srv6pmCommons_pb2
 import srv6pmReflector_pb2
 import srv6pmSender_pb2
-import srv6pmCommons_pb2
-import commons_pb2
+import srv6pmService_pb2_grpc
+import srv6pmServiceController_pb2
+import srv6pmServiceController_pb2_grpc
+
+# Controller dependencies
+from controller import srv6_utils, utils
 
 # Configuration parameters
 #

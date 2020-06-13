@@ -28,13 +28,15 @@
 
 # General imports
 import logging
+
 import grpc
 from six import text_type
 
+# Proto dependencies
+import commons_pb2
+import srv6_manager_pb2
 # Controller dependencies
 import srv6_manager_pb2_grpc
-import srv6_manager_pb2
-import commons_pb2
 from controller import utils
 
 # Global variables definition
