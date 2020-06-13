@@ -23,26 +23,32 @@
 #
 
 
+# General imports
+import os
+import sys
+import logging
+import time
+from concurrent import futures
+from argparse import ArgumentParser
+from socket import AF_INET, AF_INET6
+
+# pyroute2 dependencies
 from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 from pyroute2.netlink.exceptions import NetlinkError
-from socket import AF_INET, AF_INET6
 from pyroute2 import IPRoute
-from concurrent import futures
+
+# gRPC dependencies
 import grpc
-import time
-import logging
-from argparse import ArgumentParser
-import sys
-import os
 
 # Proto dependencies
-import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 
 # Node manager dependencies
 from node_manager.utils import get_address_family
 
+# Proto commons dependencies
+import commons_pb2
 
 # General imports
 # pyroute2 dependencies
@@ -80,8 +86,26 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 DEFAULT_KEY = 'key_server.pem'
 
 
+def parse_netlink_error(self, err):
+    if err.code == NETLINK_ERROR_FILE_EXISTS:
+        logger.warning('Netlink error: File exists')
+        return commons_pb2.STATUS_FILE_EXISTS
+    elif err.code == NETLINK_ERROR_NO_SUCH_PROCESS:
+        logger.warning('Netlink error: No such process')
+        return commons_pb2.STATUS_NO_SUCH_PROCESS
+    elif err.code == NETLINK_ERROR_NO_SUCH_DEVICE:
+        logger.warning('Netlink error: No such device')
+        return commons_pb2.STATUS_NO_SUCH_DEVICE
+    elif err.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
+        logger.warning('Netlink error: Operation not supported')
+        return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+    else:
+        logger.warning(f'Generic internal error: {err}')
+        srv6_manager_pb2.STATUS_INTERNAL_ERROR
+
+
 class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
-    '''gRPC request handler'''
+    """gRPC request handler"""
 
     def __init__(self):
         # Setup ip route
@@ -111,28 +135,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             self.interface_to_idx[interface] = \
                 self.ip_route.link_lookup(ifname=interface)[0]
 
-    def parse_netlink_error(self, e):
-        if e.code == NETLINK_ERROR_FILE_EXISTS:
-            logger.warning('Netlink error: File exists')
-            return commons_pb2.STATUS_FILE_EXISTS
-        elif e.code == NETLINK_ERROR_NO_SUCH_PROCESS:
-            logger.warning('Netlink error: No such process')
-            return commons_pb2.STATUS_NO_SUCH_PROCESS
-        elif e.code == NETLINK_ERROR_NO_SUCH_DEVICE:
-            logger.warning('Netlink error: No such device')
-            return commons_pb2.STATUS_NO_SUCH_DEVICE
-        elif e.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
-            logger.warning('Netlink error: Operation not supported')
-            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-        else:
-            logger.warning('Generic internal error: %s' % e)
-            srv6_manager_pb2.STATUS_INTERNAL_ERROR
-
-    def HandleSRv6PathRequest(self, op, request, context):
-        logger.debug('config received:\n%s', request)
+    def HandleSRv6PathRequest(self, operation, request, context):
+        logger.debug(f'config received:\n{request}')
         # Perform operation
         try:
-            if op == 'add' or op == 'change' or op == 'del':
+            if operation in ['add', 'change', 'del']:
                 # Let's push the routes
                 for path in request.paths:
                     # Rebuild segments
@@ -151,32 +158,33 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     oif = None
                     if path.device != '':
                         oif = self.interface_to_idx[path.device]
-                    elif op == 'add':
+                    elif operation == 'add':
                         oif = self.interface_to_idx[
                             self.non_loopback_interfaces[0]]
-                    self.ip_route.route(op, dst=path.destination, oif=oif,
+                    self.ip_route.route(operation, dst=path.destination,
+                                        oif=oif,
                                         table=table,
                                         priority=metric,
                                         encap={'type': 'seg6',
                                                'mode': path.encapmode,
                                                'segs': segments})
-            elif op == 'get':
+            elif operation == 'get':
                 return srv6_manager_pb2.SRv6ManagerReply(
                     status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
             else:
                 # Operation unknown: this is a bug
-                logger.error('Unrecognized operation: %s' % op)
-                exit(-1)
+                logger.error(f'Unrecognized operation: {operation}')
+                sys.exit(-1)
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_SUCCESS)
-        except NetlinkError as e:
+        except NetlinkError as err:
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=self.parse_netlink_error(e))
+                status=self.parse_netlink_error(err))
 
-    def HandleSRv6BehaviorRequest(self, op, request, context):
-        logger.debug('config received:\n%s', request)
+    def HandleSRv6BehaviorRequest(self, operation, request, context):
+        logger.debug(f'config received:\n{request}')
         # Let's process the request
         try:
             for behavior in request.behaviors:
@@ -198,14 +206,15 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 table = table if table != -1 else None
                 metric = metric if metric != -1 else None
                 # Perform operation
-                if op == 'del':
+                if operation == 'del':
                     # Delete a route
-                    self.ip_route.route(op, family=AF_INET6, dst=segment,
+                    self.ip_route.route(operation, family=AF_INET6,
+                                        dst=segment,
                                         table=table, priority=metric)
-                elif op == 'get':
+                elif operation == 'get':
                     return srv6_manager_pb2.SRv6ManagerReply(
                         status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-                elif op == 'add' or op == 'change':
+                elif operation in ['add', 'change']:
                     # Add a new route
                     # Fill encap dict with the parameters of the behavior
                     if action == 'End':
@@ -250,32 +259,33 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     encap['type'] = 'seg6local'
                     encap['action'] = action
                     # Create/Change the seg6local route
-                    self.ip_route.route(op, family=AF_INET6, dst=segment,
+                    self.ip_route.route(operation, family=AF_INET6,
+                                        dst=segment,
                                         oif=self.interface_to_idx[device],
                                         table=table,
                                         priority=metric,
                                         encap=encap)
                 else:
                     # Operation unknown: this is a bug
-                    logger.error('BUG - Unrecognized operation: %s' % op)
-                    exit(-1)
+                    logger.error(f'BUG - Unrecognized operation: {operation}')
+                    sys.exit(-1)
             # and create the response
             logger.debug('Send response: OK')
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_SUCCESS)
-        except NetlinkError as e:
+        except NetlinkError as err:
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=self.parse_netlink_error(e))
+                status=self.parse_netlink_error(err))
 
-    def Execute(self, op, request, context):
+    def Execute(self, operation, request, context):
         # Handle operation
         # The operation to be executed depends on
         # the entity carried by the request message
         res = self.HandleSRv6PathRequest(
-            op, request.srv6_path_request, context)
+            operation, request.srv6_path_request, context)
         if res.status == commons_pb2.STATUS_SUCCESS:
             res = self.HandleSRv6BehaviorRequest(
-                op, request.srv6_behavior_request, context)
+                operation, request.srv6_behavior_request, context)
         return res
 
     def Create(self, request, context):
@@ -312,8 +322,8 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
-        logger.fatal('Invalid gRPC address: %s' % grpc_ip)
-        exit(-2)
+        logger.fatal(f'Invalid gRPC address: {grpc_ip}')
+        sys.exit(-2)
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     (srv6_manager_pb2_grpc
@@ -323,10 +333,10 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate
-        with open(key, 'rb') as f:
-            key = f.read()
-        with open(certificate, 'rb') as f:
-            certificate = f.read()
+        with open(key, 'rb') as key_file:
+            key = key_file.read()
+        with open(certificate, 'rb') as certificate_file:
+            certificate = certificate_file.read()
         # Create server ssl credentials
         grpc_server_credentials = (grpc
                                    .ssl_server_credentials(((key,
@@ -337,7 +347,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         # Create an insecure endpoint
         grpc_server.add_insecure_port(server_addr)
     # Start the loop for gRPC
-    logger.info('*** Listening gRPC on address %s' % server_addr)
+    logger.info(f'*** Listening gRPC on address {server_addr}')
     grpc_server.start()
     while True:
         time.sleep(5)
@@ -384,28 +394,28 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    args = parse_arguments()
+    _args = parse_arguments()
     # Setup properly the secure mode
-    secure = args.secure
+    _secure = _args.secure
     # gRPC server IP
-    grpc_ip = args.grpc_ip
+    _grpc_ip = _args.grpc_ip
     # gRPC server port
-    grpc_port = args.grpc_port
+    _grpc_port = _args.grpc_port
     # Server certificate
-    certificate = args.server_cert
+    _certificate = _args.server_cert
     # Server key
-    key = args.server_key
+    _key = _args.server_key
     # Setup properly the logger
-    if args.debug:
+    if _args.debug:
         logger.setLevel(level=logging.DEBUG)
     else:
         logger.setLevel(level=logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logging.info('SERVER_DEBUG:' + str(server_debug))
+    logging.info('SERVER_DEBUG:', str(server_debug))
     # This script must be run as root
     if not check_root():
-        print('*** %s must be run as root.\n' % sys.argv[0])
-        exit(1)
+        logger.critical(f'*** {sys.argv[0]} must be run as root.\n')
+        sys.exit(1)
     # Start the server
-    start_server(grpc_ip, grpc_port, secure, certificate, key)
+    start_server(_grpc_ip, _grpc_port, _secure, _certificate, _key)
