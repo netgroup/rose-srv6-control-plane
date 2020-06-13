@@ -28,6 +28,8 @@
 # This module contains all public symbols from the library
 #
 
+"""Implementation of Controller"""
+
 from controller.utils import get_grpc_session
 from controller.srv6_utils import (handle_srv6_path,
                                    handle_srv6_behavior)

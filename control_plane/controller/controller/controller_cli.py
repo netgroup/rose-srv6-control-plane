@@ -23,11 +23,13 @@
 #
 
 
+"""Entry point for controller CLI"""
+
 from controller.cli import cli
 
 
 def __main():
-    cli.__main()
+    cli.__main()        # pylint: disable=protected-access
 
 
 if __name__ == '__main__':

@@ -22,11 +22,15 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-# Controller dependencies
-from controller import arangodb_utils
 
+"""ArangoDB utilities for Controller CLI"""
+
+# General imports
 from argparse import ArgumentParser
 import sys
+
+# Controller dependencies
+from controller import arangodb_utils
 
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
@@ -36,6 +40,11 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None,
                            verbose=False):
+    """Extract the network topology from a set of nodes running
+    ISIS protocol"""
+
+    # pylint: disable=too-many-arguments
+
     arangodb_utils.extract_topo_from_isis(
         isis_nodes=isis_nodes.split(','),
         isisd_pwd=isisd_pwd,
@@ -49,6 +58,10 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
 
 def load_topo_on_arango(arango_url, arango_user, arango_password,
                         nodes_yaml, edges_yaml, verbose=False):
+    """Load a network topology on a Arango database"""
+
+    # pylint: disable=too-many-arguments
+
     # Init database
     nodes_collection, edges_collection = arangodb_utils.initialize_db(
         arango_url=arango_url,
@@ -79,6 +92,11 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
                                               period=0, verbose=False):
+    """Extract the topology from a set of nodes running ISIS protocol
+    and load it on a Arango database"""
+
+    # pylint: disable=too-many-arguments
+
     arangodb_utils.extract_topo_from_isis_and_load_on_arango(
         isis_nodes=isis_nodes,
         isisd_pwd=isisd_pwd,
@@ -100,6 +118,10 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          edges_file_yaml=None,
                                          addrs_yaml=None, hosts_yaml=None,
                                          topo_graph=None, verbose=False):
+    """Run periodical topology extraction"""
+
+    # pylint: disable=too-many-arguments, unused-argument
+
     arangodb_utils.extract_topo_from_isis_and_load_on_arango(
         isis_nodes=routers,
         isisd_pwd=isisd_pwd,
@@ -114,6 +136,8 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
 
 # Parse options
 def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for topolgy extraction function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -156,6 +180,8 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for load on Arango function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -195,6 +221,9 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
 # Parse options
 def parse_arguments_extract_topo_from_isis_and_load_on_arango(
         prog=sys.argv[0], args=None):
+    """Command-line arguments parser for
+    extract_topo_from_isis_and_load_on_arango function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -254,6 +283,9 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
 # Parse options
 def parse_arguments_topology_information_extraction_isis(
         prog=sys.argv[0], args=None):
+    """Command-line arguments parser for topology
+    information extraction function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''

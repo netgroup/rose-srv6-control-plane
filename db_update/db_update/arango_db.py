@@ -1,3 +1,7 @@
+#!/usr/bin/python
+
+"""ArangoDB utilities"""
+
 from arango import ArangoClient
 import yaml
 
@@ -12,6 +16,8 @@ def initialize_db(
         arango_url=ARANGO_URL,
         arango_user=USER,
         arango_password=PASSWORD):
+    """Initialize database"""
+
     # Initialize the ArangoDB client.
     client = ArangoClient(hosts=arango_url)
 
@@ -31,13 +37,14 @@ def initialize_db(
 
     # Connect to "srv6_pm" database as root user.
     # This returns an API wrapper for "srv6_pm" database.
-    db = client.db('srv6_pm', username=arango_user, password=arango_password)
+    database = client.db('srv6_pm', username=arango_user,
+                         password=arango_password)
 
     # Get the API wrapper for graph "topology".
-    if db.has_graph('topology'):
-        topo_graph = db.graph('topology')
+    if database.has_graph('topology'):
+        topo_graph = database.graph('topology')
     else:
-        topo_graph = db.create_graph('topology')
+        topo_graph = database.create_graph('topology')
 
     # Create a new vertex collection named "nodes" if it does not exist.
     # This returns an API wrapper for "nodes" vertex collection.
@@ -65,9 +72,11 @@ def initialize_db(
 ##############################################
 
 def populate_yaml(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
+    """Populate database from YAML files"""
+
     # nodes
-    with open(nodes_file) as f:
-        nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
+    with open(nodes_file) as file:
+        nodes_dict = yaml.load(file, Loader=yaml.FullLoader)
         for node in nodes_dict:
             if not nodes.has(node["_key"]):
                 nodes.insert(node)
@@ -75,13 +84,15 @@ def populate_yaml(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
                 nodes.update(node)
 
     # edges
-    with open(edges_file) as f:
-        edges_dict = yaml.load(f, Loader=yaml.FullLoader)
+    with open(edges_file) as file:
+        edges_dict = yaml.load(file, Loader=yaml.FullLoader)
         for edge in edges_dict:
             edges.insert(edge)      # no control on key
 
 
 def populate(nodes, edges, nodes_dict, edges_dict):
+    """Populate database from nodes and edges dicts"""
+
     # nodes
     for node in nodes_dict:
         if not nodes.has(node["_key"]):
@@ -95,6 +106,8 @@ def populate(nodes, edges, nodes_dict, edges_dict):
 
 
 def populate2(nodes, edges, nodes_dict, edges_dict):
+    """Populate database from nodes and edges dicts"""
+
     # nodes
     for node in nodes_dict:
         if not nodes.has(node["_key"]):
@@ -112,9 +125,11 @@ def populate2(nodes, edges, nodes_dict, edges_dict):
 
 
 def populate_yaml2(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
+    """Populate database from YAML"""
+
     # nodes
-    with open(nodes_file) as f:
-        nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
+    with open(nodes_file) as file:
+        nodes_dict = yaml.load(file, Loader=yaml.FullLoader)
         for node in nodes_dict:
             if not nodes.has(node["_key"]):
                 nodes.insert(node)
@@ -122,8 +137,8 @@ def populate_yaml2(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
                 nodes.update(node)
 
     # edges
-    with open(edges_file) as f:
-        edges_dict = yaml.load(f, Loader=yaml.FullLoader)
+    with open(edges_file) as file:
+        edges_dict = yaml.load(file, Loader=yaml.FullLoader)
         for edge in edges_dict:
             if not edges.has(edge["_key"]):  # key is ip address of subnet
                 edges.insert(edge)

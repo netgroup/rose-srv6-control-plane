@@ -22,12 +22,16 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-import os
-import sys
-import grpc
+
+"""This module contains a collection of utilities used by Controller"""
+
+# General imports
 import logging
 from socket import AF_INET, AF_INET6
 from ipaddress import IPv4Interface, IPv6Interface, AddressValueError
+
+# gRPC dependencies
+import grpc
 
 # Proto dependencies
 import commons_pb2
@@ -41,11 +45,13 @@ logger = logging.getLogger(__name__)
 # is a valid IPv6 address
 
 
-def validate_ipv6_address(ip):
-    if ip is None:
+def validate_ipv6_address(ip_address):
+    """Return True if the provided IP address is a valid IPv6 address"""
+
+    if ip_address is None:
         return False
     try:
-        IPv6Interface(ip)
+        IPv6Interface(ip_address)
         return True
     except AddressValueError:
         return False
@@ -53,27 +59,41 @@ def validate_ipv6_address(ip):
 
 # Utiliy function to check if the IP
 # is a valid IPv4 address
-def validate_ipv4_address(ip):
-    if ip is None:
+def validate_ipv4_address(ip_address):
+    """Return True if the provided IP address is a valid IPv4 address"""
+
+    if ip_address is None:
         return False
     try:
-        IPv4Interface(ip)
+        IPv4Interface(ip_address)
         return True
     except AddressValueError:
         return False
 
 
 # Utiliy function to get the IP address family
-def get_address_family(ip):
-    if validate_ipv6_address(ip):
+def get_address_family(ip_address):
+    """Return the family of the provided IP address
+    or None if the IP is invalid"""
+
+    if validate_ipv6_address(ip_address):
         # IPv6 address
         return AF_INET6
-    elif validate_ipv4_address(ip):
+    if validate_ipv4_address(ip_address):
         # IPv4 address
         return AF_INET
-    else:
-        # Invalid address
-        return None
+    # Invalid address
+    return None
+
+
+# Utiliy function to check if the IP
+# is a valid IP address
+def validate_ip_address(ip_address):
+    """Return True if the provided IP address
+    is a valid IPv4 or IPv6 address"""
+
+    return validate_ipv4_address(ip_address) or \
+        validate_ipv6_address(ip_address)
 
 
 # Build a grpc stub
@@ -103,7 +123,7 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
         server_ip = 'ipv6:[%s]:%s' % (server_ip, server_port)
     else:
         # Invalid address
-        logger.fatal('Invalid gRPC address: %s' % server_ip)
+        logger.fatal('Invalid gRPC address: %s', server_ip)
         return None
     # If secure we need to establish a channel with the secure endpoint
     if secure:
@@ -111,8 +131,8 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
             logger.fatal('Certificate required for gRPC secure mode')
             return None
         # Open the certificate file
-        with open(certificate, 'rb') as f:
-            certificate = f.read()
+        with open(certificate, 'rb') as certificate_file:
+            certificate = certificate_file.read()
         # Then create the SSL credentials and establish the channel
         grpc_client_credentials = grpc.ssl_channel_credentials(certificate)
         channel = grpc.secure_channel(server_ip, grpc_client_credentials)
@@ -140,7 +160,7 @@ status_code_to_str = {
 }
 
 
-def __print_status_message(status_code, success_msg, failure_msg):
+def print_status_message(status_code, success_msg, failure_msg):
     """Print success or failure message depending of the status code
         returned by a gRPC operation.
 

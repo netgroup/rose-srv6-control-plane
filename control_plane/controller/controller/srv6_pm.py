@@ -17,19 +17,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Topology information extraction
+# Control-Plane functionalities used for SRv6 PM
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 
+"""This module implements control-plane functionalities for SRv6 PM"""
+
+# pylint: disable=too-many-lines
+
 # General imports
 import os
+import sys
 from concurrent import futures
-import grpc
 import logging
 import time
 import json
+
+# gRPC dependencies
+import grpc
 
 # Controller dependencies
 from controller import utils
@@ -48,23 +55,23 @@ import commons_pb2
 #
 # Kafka support
 ENABLE_KAFKA_INTEGRATION = os.getenv('ENABLE_KAFKA_INTEGRATION', 'false')
-if ENABLE_KAFKA_INTEGRATION.lower() == 'true':
-    ENABLE_KAFKA_INTEGRATION = True
-else:
-    ENABLE_KAFKA_INTEGRATION = False
+ENABLE_KAFKA_INTEGRATION = ENABLE_KAFKA_INTEGRATION.lower() == 'true'
 # gRPC sserver
 ENABLE_GRPC_SERVER = os.getenv('ENABLE_GRPC_SERVER', 'false')
-if ENABLE_GRPC_SERVER.lower() == 'true':
-    ENABLE_GRPC_SERVER = True
-else:
-    ENABLE_GRPC_SERVER = False
+ENABLE_GRPC_SERVER = ENABLE_GRPC_SERVER.lower() == 'true'
 # Kafka server
 KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', 'kafka:9092')
 
 # Kafka depedencies
-if ENABLE_KAFKA_INTEGRATION:
-    from kafka import KafkaProducer
-    from kafka.errors import KafkaError
+try:
+    if ENABLE_KAFKA_INTEGRATION:
+        from kafka import KafkaProducer
+        from kafka.errors import KafkaError
+except ImportError:
+    print('ENABLE_KAFKA_INTEGRATION is set in the configuration.')
+    print('kafka-python is required to run')
+    print('kafka-python not found.')
+    sys.exit(-2)
 
 
 # Global variables definition
@@ -102,130 +109,14 @@ if KAFKA_SERVERS is not None:
     KAFKA_SERVERS = KAFKA_SERVERS.split(',')
 
 
-"""
-A class used to represent a SRv6 Controller
-
-...
-
-Attributes
-----------
-grpc_server_ip : str
-    the IP address of the gRPC server
-grpc_server_port : int
-    the port of the gRPC server
-grpc_client_port : int
-    the port of the gRPC client
-grpc_client_secure : bool
-    define whether to use SSL or not to communicate with the gRPC server
-    (default is False)
-grpc_client_certificate : str
-    the path of the CA root certificate required for the SSL
-    (default is None)
-grpc_server_secure : bool
-    define whether to use SSL or not for the gRPC server
-    (default is False)
-grpc_server_certificate : str
-    the path of the server certificate required for the SSL
-    (default is None)
-grpc_server_key : str
-    the path of the server key required for the SSL
-    (default is None)
-debug : bool
-    Define whether to enable debug mode or not (default is False)
-
-Methods
--------
-start_experiment(send_ip, refl_ip, send_dest, refl_dest, send_sidlist,
-                    refl_sidlist, send_in_interfaces, refl_in_interfaces,
-                    send_out_interfaces, refl_out_interfaces,
-                    measurement_protocol, send_dst_udp_port,
-                    refl_dst_udp_port, measurement_type, authentication_mode,
-                    authentication_key, timestamp_format,
-                    delay_measurement_mode, padding_mbz,
-                    loss_measurement_mode, interval_duration, delay_margin,
-                    number_of_color, measure_id=None, send_localseg=None,
-                    refl_localseg=None)
-    Start an experiment
-
-get_experiment_results(sender, reflector,
-                        send_refl_sidlist, refl_send_sidlist)
-    Get the results of a running experiment
-
-stop_experiment(sender, reflector, send_refl_dest,
-                refl_send_dest, send_refl_sidlist, refl_send_sidlist,
-                send_refl_localseg=None, refl_send_localseg=None)
-    Stop a running experiment
-"""
-
-
-# def __init__(self, grpc_server_ip, grpc_server_port, grpc_client_port,
-#              grpc_client_secure=False, grpc_client_certificate=None,
-#              grpc_server_secure=False, grpc_server_certificate=None,
-#              grpc_server_key=None, debug=False):
-#     """
-#     Parameters
-#     ----------
-#     grpc_server_ip : str
-#         the IP address of the gRPC server
-#     grpc_server_port : int
-#         the port of the gRPC server
-#     grpc_client_port : int
-#         the port of the gRPC client
-#     grpc_client_secure : bool
-#         define whether to use SSL or not to communicate with the gRPC server
-#         (default is False)
-#     grpc_client_certificate : str
-#         the path of the CA root certificate required for the SSL
-#         (default is None)
-#     grpc_server_secure : bool
-#         define whether to use SSL or not for the gRPC server
-#         (default is False)
-#     grpc_server_certificate : str
-#         the path of the server certificate required for the SSL
-#         (default is None)
-#     grpc_server_key : str
-#         the path of the server key required for the SSL
-#         (default is None)
-#     debug : bool
-#         define whether to enable debug mode or not (default is False)
-#     """
-
-#     logger.info('Initializing SRv6 controller')
-#     # Port of the gRPC client
-#     self.grpc_client_port = grpc_client_port
-#     # Measure ID
-#     self.measure_id = -1
-#     # gRPC secure mode
-#     self.grpc_client_secure = grpc_client_secure
-#     # SSL certificate of the root CA required for gRPC secure mode
-#     self.grpc_client_certificate = grpc_client_certificate
-#     # Debug mode
-#     self.debug = debug
-#     # Setup properly the logger
-#     if self.debug:
-#         logger.setLevel(level=logging.DEBUG)
-#     else:
-#         logger.setLevel(level=logging.INFO)
-#     # Mapping IP address to gRPC channels
-#     self.grpc_channels = dict()
-#     # Start the gRPC server
-#     # This is a blocking operation, so we need to execute it
-#     # in a separated thread
-#     kwargs = {
-#         'grpc_ip': grpc_server_ip,
-#         'grpc_port': grpc_server_port,
-#         'secure': grpc_server_secure,
-#         'key': grpc_server_key,
-#         'certificate': grpc_server_certificate
-#     }
-#     Thread(target=self.__start_grpc_server, kwargs=kwargs).start()
-#     time.sleep(1)
-
-
 def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
                      timestamp, fw_color, rv_color, sender_seq_num,
                      reflector_seq_num, sender_tx_counter, sender_rx_counter,
                      reflector_tx_counter, reflector_rx_counter):
+    """Publish the measurement data to Kafka"""
+
+    # pylint: disable=too-many-arguments, too-many-locals
+
     producer = None
     result = None
     try:
@@ -247,8 +138,8 @@ def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
                    'reflector_tx_counter': reflector_tx_counter,
                    'reflector_rx_counter': reflector_rx_counter}
         )
-    except KafkaError as e:
-        logger.error('Cannot publish data to Kafka: %s' % e)
+    except KafkaError as err:
+        logger.error('Cannot publish data to Kafka: %s', err)
     finally:
         # Close the producer
         if producer is not None:
@@ -261,6 +152,10 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
                                 generator_id, interval, transfer,
                                 transfer_dim, bitrate, bitrate_dim,
                                 retr, cwnd, cwnd_dim):
+    """Publish IPERF data to Kafka"""
+
+    # pylint: disable=too-many-arguments
+
     producer = None
     result = None
     try:
@@ -286,8 +181,8 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
                    'cwnd_dim': cwnd_dim
                    }
         )
-    except KafkaError as e:
-        logger.error('Cannot publish data to Kafka: %s' % e)
+    except KafkaError as err:
+        logger.error('Cannot publish data to Kafka: %s', err)
     finally:
         # Close the producer
         if producer is not None:
@@ -303,6 +198,10 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                             authentication_key, timestamp_format,
                             delay_measurement_mode, padding_mbz,
                             loss_measurement_mode):
+    """RPC used to start an experiment on the sender"""
+
+    # pylint: disable=too-many-arguments, too-many-return-statements
+
     # Convert string args to int
     #
     # Measurement Protocol
@@ -312,7 +211,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
     except ValueError:
-        logger.error('Invalid Measurement protocol: %s' % measurement_protocol)
+        logger.error('Invalid Measurement protocol: %s', measurement_protocol)
         return None
     # Measurement Type
     try:
@@ -320,7 +219,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
     except ValueError:
-        logger.error('Invalid Measurement Type: %s' % measurement_type)
+        logger.error('Invalid Measurement Type: %s', measurement_type)
         return None
     # Authentication Mode
     try:
@@ -328,7 +227,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
     except ValueError:
-        logger.error('Invalid  Authentication Mode: %s' % authentication_mode)
+        logger.error('Invalid  Authentication Mode: %s', authentication_mode)
         return None
     # Timestamp Format
     try:
@@ -336,7 +235,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
             timestamp_format = \
                 srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
     except ValueError:
-        logger.error('Invalid Timestamp Format: %s' % timestamp_format)
+        logger.error('Invalid Timestamp Format: %s', timestamp_format)
         return None
     # Delay Measurement Mode
     try:
@@ -345,8 +244,8 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementDelayMode.Value(
                     delay_measurement_mode)
     except ValueError:
-        logger.error('Invalid Delay Measurement Mode: %s'
-                     % delay_measurement_mode)
+        logger.error('Invalid Delay Measurement Mode: %s',
+                     delay_measurement_mode)
         return None
     # Loss Measurement Mode
     try:
@@ -355,8 +254,8 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
     except ValueError:
-        logger.error('Invalid Loss Measurement Mode: %s'
-                     % loss_measurement_mode)
+        logger.error('Invalid Loss Measurement Mode: %s',
+                     loss_measurement_mode)
         return None
     #
     # Get the reference of the stub
@@ -375,27 +274,37 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     # Set the sender options
     #
     # Set the measureemnt protocol
-    request.sender_options.measurement_protocol = measurement_protocol
+    (request.sender_options.measurement_protocol) = \
+        measurement_protocol                # pylint: disable=no-member
     # Set the authentication mode
-    request.sender_options.authentication_mode = authentication_mode
+    request.sender_options.authentication_mode = \
+        authentication_mode                 # pylint: disable=no-member
     # Set the authentication key
-    request.sender_options.authentication_key = str(authentication_key)
+    request.sender_options.authentication_key = \
+        str(authentication_key)             # pylint: disable=no-member
     # Set the measurement type
-    request.sender_options.measurement_type = measurement_type
+    request.sender_options.measurement_type = \
+        measurement_type                    # pylint: disable=no-member
     # Set the timestamp format
-    request.sender_options.timestamp_format = timestamp_format
+    request.sender_options.timestamp_format = \
+        timestamp_format                    # pylint: disable=no-member
     # Set the measurement delay mode
-    request.sender_options.measurement_delay_mode = delay_measurement_mode
+    request.sender_options.measurement_delay_mode = \
+        delay_measurement_mode              # pylint: disable=no-member
     # Set the padding
-    request.sender_options.padding_mbz = int(padding_mbz)
+    request.sender_options.padding_mbz = \
+        int(padding_mbz)                    # pylint: disable=no-member
     # Set the measurement loss mode
-    request.sender_options.measurement_loss_mode = loss_measurement_mode
+    request.sender_options.measurement_loss_mode = \
+        loss_measurement_mode               # pylint: disable=no-member
     #
     # Start the experiment on the sender and return the response
     return stub.startExperimentSender(request=request)
 
 
 def stop_experiment_sender(channel, sidlist):
+    """RPC used to stop an experiment on the sender"""
+
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -407,6 +316,8 @@ def stop_experiment_sender(channel, sidlist):
 
 
 def retrieve_experiment_results_sender(channel, sidlist):
+    """RPC used to get the results of a running experiment"""
+
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -420,6 +331,10 @@ def retrieve_experiment_results_sender(channel, sidlist):
 def set_node_configuration(channel, send_udp_port, refl_udp_port,
                            interval_duration, delay_margin,
                            number_of_color, pm_driver):
+    """RPC used to set the configuration on a sender node"""
+
+    # pylint: disable=too-many-arguments
+
     # Convert string args to int
     #
     # PM Driver
@@ -427,7 +342,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
         if isinstance(pm_driver, str):
             pm_driver = srv6pmCommons_pb2.PMDriver.Value(pm_driver)
     except ValueError:
-        logger.error('Invalid PM Driver: %s' % pm_driver)
+        logger.error('Invalid PM Driver: %s', pm_driver)
         return None
     #
     # Get the reference of the stub
@@ -442,11 +357,14 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     # Set the color options
     #
     # Set the interval duration
-    request.color_options.interval_duration = int(interval_duration)
+    request.color_options.interval_duration = \
+        int(interval_duration)                # pylint: disable=no-member
     # Set the delay margin
-    request.color_options.delay_margin = int(delay_margin)
+    request.color_options.delay_margin = \
+        int(delay_margin)                     # pylint: disable=no-member
     # Set the number of color
-    request.color_options.numbers_of_color = int(number_of_color)
+    request.color_options.numbers_of_color = \
+        int(number_of_color)                  # pylint: disable=no-member
     #
     # Set driver
     request.pm_driver = pm_driver
@@ -455,6 +373,8 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
 
 
 def reset_node_configuration(channel):
+    """RPC used to clear the configuration on a sender node"""
+
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -468,6 +388,10 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
                                measurement_protocol, measurement_type,
                                authentication_mode, authentication_key,
                                loss_measurement_mode):
+    """RPC used to start an experiment on the reflector"""
+
+    # pylint: disable=too-many-arguments
+
     # Convert string args to int
     #
     # Measurement Protocol
@@ -477,7 +401,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
     except ValueError:
-        logger.error('Invalid Measurement protocol: %s' % measurement_protocol)
+        logger.error('Invalid Measurement protocol: %s', measurement_protocol)
         return None
     # Measurement Type
     try:
@@ -485,7 +409,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
     except ValueError:
-        logger.error('Invalid Measurement Type: %s' % measurement_type)
+        logger.error('Invalid Measurement Type: %s', measurement_type)
         return None
     # Authentication Mode
     try:
@@ -493,7 +417,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
     except ValueError:
-        logger.error('Invalid  Authentication Mode: %s' % authentication_mode)
+        logger.error('Invalid  Authentication Mode: %s', authentication_mode)
         return None
     # Loss Measurement Mode
     try:
@@ -502,8 +426,8 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
     except ValueError:
-        logger.error('Invalid Loss Measurement Mode: %s'
-                     % loss_measurement_mode)
+        logger.error('Invalid Loss Measurement Mode: %s',
+                     loss_measurement_mode)
         return None
     #
     # Get the reference of the stub
@@ -522,20 +446,27 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     # Set the reflector options
     #
     # Set the measurement protocol
-    request.reflector_options.measurement_protocol = measurement_protocol
+    request.reflector_options.measurement_protocol = \
+        measurement_protocol                    # pylint: disable=no-member
     # Set the authentication mode
-    request.reflector_options.authentication_mode = authentication_mode
+    request.reflector_options.authentication_mode = \
+        authentication_mode                     # pylint: disable=no-member
     # Set the authentication key
-    request.reflector_options.authentication_key = str(authentication_key)
+    request.reflector_options.authentication_key = \
+        str(authentication_key)                 # pylint: disable=no-member
     # Set the measurement type
-    request.reflector_options.measurement_type = measurement_type
+    request.reflector_options.measurement_type = \
+        measurement_type                        # pylint: disable=no-member
     # Set the measurement loss mode
-    request.reflector_options.measurement_loss_mode = loss_measurement_mode
+    request.reflector_options.measurement_loss_mode = \
+        loss_measurement_mode                   # pylint: disable=no-member
     # Start the experiment on the reflector and return the response
     return stub.startExperimentReflector(request=request)
 
 
 def stop_experiment_reflector(channel, sidlist):
+    """RPC used to stop an experiment on the reflector"""
+
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -594,6 +525,8 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         The loss measurement mode (i.e. Inferred or Direct mode)
     """
 
+    # pylint: disable=too-many-arguments, unused-argument
+
     print("\n************** Start Measurement **************\n")
     # Start the experiment on the reflector
     refl_res = start_experiment_reflector(
@@ -609,7 +542,7 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         loss_measurement_mode=loss_measurement_mode,
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=refl_res.status,
         success_msg='Started Measure Reflector',
         failure_msg='Error in start_experiment_reflector()'
@@ -617,7 +550,7 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
     # Check for errors
     if refl_res is None:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    elif refl_res.status != commons_pb2.STATUS_SUCCESS:
+    if refl_res.status != commons_pb2.STATUS_SUCCESS:
         return refl_res.status
     # Start the experiment on the sender
     sender_res = start_experiment_sender(
@@ -636,7 +569,7 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         loss_measurement_mode=loss_measurement_mode,
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=sender_res.status,
         success_msg='Started Measure Sender',
         failure_msg='Error in start_experiment_sender()'
@@ -644,7 +577,7 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
     # Check for errors
     if sender_res is None:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    elif sender_res.status != commons_pb2.STATUS_SUCCESS:
+    if sender_res.status != commons_pb2.STATUS_SUCCESS:
         return sender_res.status
     # Success
     return commons_pb2.STATUS_SUCCESS
@@ -666,6 +599,8 @@ def __get_measurement_results(sender_channel, reflector_channel,
         The SID list used for reflector->sender path
     """
 
+    # pylint: disable=unused-argument
+
     # Retrieve the results of the experiment
     print("\n************** Get Measurement Data **************\n")
     # Retrieve the results from the sender
@@ -674,7 +609,7 @@ def __get_measurement_results(sender_channel, reflector_channel,
         sidlist=send_refl_sidlist
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=sender_res.status,
         success_msg='Received Data Sender',
         failure_msg='Error in retrieve_experiment_results_sender()'
@@ -724,7 +659,7 @@ def __stop_measurement(sender_channel, reflector_channel,
         sidlist=send_refl_sidlist
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=sender_res.status,
         success_msg='Stopped Measure Sender',
         failure_msg='Error in stop_experiment_sender()'
@@ -738,7 +673,7 @@ def __stop_measurement(sender_channel, reflector_channel,
         sidlist=refl_send_sidlist
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=refl_res.status,
         success_msg='Stopped Measure Reflector',
         failure_msg='Error in stop_experiment_reflector()'
@@ -773,6 +708,8 @@ def set_configuration(sender_channel, reflector_channel,
     number_of_color : int
         The number of the color
     """
+
+    # pylint: disable=too-many-arguments
 
     # Set configuration on the sender
     res = set_node_configuration(
@@ -913,10 +850,12 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
         is replaced with the new one (default is False).
     """
 
+    # pylint: disable=too-many-arguments, too-many-locals
+
     # If the force flag is set and SRv6 path already exists, remove
     # the old path before creating the new one
     if force:
-        res = srv6_utils.__destroy_srv6_tunnel(
+        res = srv6_utils.destroy_srv6_tunnel(
             node_l_channel=sender_channel,
             node_r_channel=reflector_channel,
             dest_lr=send_refl_dest,
@@ -929,7 +868,7 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
             return res
     # Create a bidirectional SRv6 tunnel between the sender and the
     # reflector
-    res = srv6_utils.__create_srv6_tunnel(
+    res = srv6_utils.create_srv6_tunnel(
         node_l_channel=sender_channel,
         node_r_channel=reflector_channel,
         dest_lr=send_refl_dest,
@@ -988,6 +927,8 @@ def get_experiment_results(sender_channel, reflector_channel,
         IP:port of Kafka server
     """
 
+    # pylint: disable=too-many-arguments, too-many-locals
+
     # Get the results
     results = __get_measurement_results(
         sender_channel=sender_channel,
@@ -997,7 +938,7 @@ def get_experiment_results(sender_channel, reflector_channel,
     )
     if results is None:
         print('No measurement data available')
-        return
+        return None
     # Publish results to Kafka
     if ENABLE_KAFKA_INTEGRATION:
         for res in results:
@@ -1064,6 +1005,8 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
         End.DT6 route is not removed.
     """
 
+    # pylint: disable=too-many-arguments
+
     # Stop the experiment
     res = __stop_measurement(
         sender_channel=sender_channel,
@@ -1075,7 +1018,7 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
     if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Remove the SRv6 path
-    res = srv6_utils.__destroy_srv6_tunnel(
+    res = srv6_utils.destroy_srv6_tunnel(
         node_l_channel=sender_channel,
         node_r_channel=reflector_channel,
         dest_lr=send_refl_dest,
@@ -1101,7 +1044,9 @@ if ENABLE_GRPC_SERVER:
         def SendMeasurementData(self, request, context):
             """RPC used to send measurement data to the controller"""
 
-            logger.debug('Measurement data received: %s' % request)
+            # pylint: disable=too-many-locals
+
+            logger.debug('Measurement data received: %s', request)
             # Extract data from the request
             for data in request.measurement_data:
                 measure_id = data.meas_id
@@ -1139,11 +1084,13 @@ if ENABLE_GRPC_SERVER:
         def SendIperfData(self, request, context):
             """RPC used to send iperf data to the controller"""
 
-            logger.debug('Iperf data received: %s' % request)
+            # pylint: disable=too-many-locals
+
+            logger.debug('Iperf data received: %s', request)
             # Extract data from the request
             for data in request.iperf_data:
                 # From client/server
-                _from = data._from
+                _from = data._from      # pylint: disable=protected-access
                 # Measure ID
                 measure_id = data.measure_id
                 # Generator ID
@@ -1208,6 +1155,8 @@ if ENABLE_GRPC_SERVER:
             (default is None)
         """
 
+        # pylint: disable=too-many-arguments
+
         # Setup gRPC server
         #
         # Create the server and add the handler
@@ -1217,10 +1166,10 @@ if ENABLE_GRPC_SERVER:
         # If secure mode is enabled, we need to create a secure endpoint
         if secure:
             # Read key and certificate
-            with open(key) as f:
-                key = f.read()
-            with open(certificate) as f:
-                certificate = f.read()
+            with open(key) as key_file:
+                key = key_file.read()
+            with open(certificate) as certificate_file:
+                certificate = certificate_file.read()
             # Create server SSL credentials
             grpc_server_credentials = grpc.ssl_server_credentials(
                 ((key, certificate,),)

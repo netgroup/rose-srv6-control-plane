@@ -1,3 +1,7 @@
+#!/usr/bin/python
+
+"""ArangoDB utilities"""
+
 from arango import ArangoClient
 import yaml
 

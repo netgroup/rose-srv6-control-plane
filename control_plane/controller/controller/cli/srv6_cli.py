@@ -23,6 +23,8 @@
 #
 
 
+"""SRv6 utilities for Controller CLI"""
+
 from argparse import ArgumentParser
 import sys
 
@@ -44,9 +46,13 @@ def handle_srv6_path(
         encapmode="encap",
         table=-1,
         metric=-1):
+    """Handle a SRv6 path"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_path(
-            op=operation,
+            operation=operation,
             channel=channel,
             destination=destination,
             segments=segments.split(','),
@@ -74,9 +80,13 @@ def handle_srv6_behavior(
         interface="",
         segments="",
         metric=-1):
+    """Handle a SRv6 behavior"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_behavior(
-            op=operation,
+            operation=operation,
             channel=channel,
             segment=segment,
             action=action,
@@ -97,10 +107,14 @@ def handle_srv6_behavior(
 def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                           egress_ip, egress_port,
                           destination, segments, localseg=None):
+    """Handle a SRv6 unidirectional tunnel"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(ingress_ip, ingress_port) as ingress_channel, \
             utils.get_grpc_session(egress_ip, egress_port) as egress_channel:
         if operation == 'add':
-            res = srv6_utils.__create_uni_srv6_tunnel(
+            res = srv6_utils.create_uni_srv6_tunnel(
                 ingress_channel=ingress_channel,
                 egress_channel=egress_channel,
                 destination=destination,
@@ -112,8 +126,7 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
             else:
                 print('Error')
         elif operation == 'del':
-            res = srv6_utils.__destroy_uni_srv6_tunnel(
-                op=operation,
+            res = srv6_utils.destroy_uni_srv6_tunnel(
                 ingress_channel=ingress_channel,
                 egress_channel=egress_channel,
                 destination=destination,
@@ -131,10 +144,14 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None):
+    """Handle SRv6 bidirectional tunnel"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(node_l_ip, node_l_port) as node_l_channel, \
             utils.get_grpc_session(node_r_ip, node_r_port) as node_r_channel:
         if operation == 'add':
-            res = srv6_utils.__create_srv6_tunnel(
+            res = srv6_utils.create_srv6_tunnel(
                 node_l_channel=node_l_channel,
                 node_r_channel=node_r_channel,
                 sidlist_lr=sidlist_lr.split(','),
@@ -149,7 +166,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
             else:
                 print('Error')
         elif operation == 'del':
-            res = srv6_utils.__destroy_srv6_tunnel(
+            res = srv6_utils.destroy_srv6_tunnel(
                 node_l_channel=node_l_channel,
                 node_r_channel=node_r_channel,
                 dest_lr=dest_lr,
@@ -167,6 +184,8 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
 
 # Parse options
 def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_path function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -226,6 +245,8 @@ def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_behavior function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -296,6 +317,8 @@ def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_srv6_unitunnel(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_unitunnel function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -350,6 +373,8 @@ def parse_arguments_srv6_unitunnel(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_srv6_biditunnel(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_biditunnel function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'

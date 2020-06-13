@@ -23,6 +23,8 @@
 #
 
 
+"""SRv6 PM utilities for Controller CLI"""
+
 from argparse import ArgumentParser
 import sys
 
@@ -38,6 +40,10 @@ def set_configuration(sender, reflector,
                       sender_port, reflector_port, send_udp_port,
                       refl_udp_port, interval_duration, delay_margin,
                       number_of_color, pm_driver):
+    """Configure a node"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
         res = srv6_pm.set_configuration(
@@ -58,6 +64,8 @@ def set_configuration(sender, reflector,
 
 def reset_configuration(sender, reflector,
                         sender_port, reflector_port):
+    """Clear node configuration"""
+
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
         res = srv6_pm.reset_configuration(
@@ -81,6 +89,10 @@ def start_experiment(sender, reflector,
                      padding_mbz, loss_measurement_mode, measure_id=None,
                      send_refl_localseg=None, refl_send_localseg=None,
                      force=False):
+    """Start an experiment"""
+
+    # pylint: disable=too-many-arguments, too-many-locals
+
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
         res = srv6_pm.start_experiment(
@@ -116,6 +128,10 @@ def start_experiment(sender, reflector,
 def get_experiment_results(sender, reflector,
                            sender_port, reflector_port,
                            send_refl_sidlist, refl_send_sidlist):
+    """Get the results of a running experiment"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
         print(srv6_pm.get_experiment_results(
@@ -130,6 +146,10 @@ def stop_experiment(sender, reflector,
                     sender_port, reflector_port, send_refl_dest,
                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                     send_refl_localseg=None, refl_send_localseg=None):
+    """Stop a running experiment"""
+
+    # pylint: disable=too-many-arguments
+
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as reflector_channel:
         srv6_pm.stop_experiment(
@@ -146,6 +166,8 @@ def stop_experiment(sender, reflector,
 
 # Parse options
 def parse_arguments_set_configuration(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for set_configuration function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -224,6 +246,8 @@ def parse_arguments_set_configuration(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_reset_configuration(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for reset_configuration function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -262,6 +286,8 @@ def parse_arguments_reset_configuration(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_start_experiment(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for start_experiment function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -380,6 +406,8 @@ def parse_arguments_start_experiment(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_get_experiment_results(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for get_experiments_results function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -426,6 +454,8 @@ def parse_arguments_get_experiment_results(prog=sys.argv[0], args=None):
 
 # Parse options
 def parse_arguments_stop_experiment(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for stop_experiment function"""
+
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''

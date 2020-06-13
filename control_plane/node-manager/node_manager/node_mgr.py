@@ -147,6 +147,8 @@ class Config:
     """Class implementing some configuration parameters and methods
     for the node manager"""
 
+    # pylint: disable=too-many-instance-attributes, too-many-branches
+    # pylint: disable=global-statement
     def __init__(self):
         # Flag indicating whether to enable the SRv6 capabilities or not
         self.enable_srv6_manager = True

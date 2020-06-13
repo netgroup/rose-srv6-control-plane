@@ -22,15 +22,16 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
+"""Implementation of a CLI for the SRv6 Controller"""
 
 # General imports
-from pkg_resources import resource_filename
 import os
 import sys
 from cmd import Cmd
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
+from pkg_resources import resource_filename
 
 # python-dotenv dependencies
 from dotenv import load_dotenv
@@ -59,8 +60,14 @@ DEFAULT_DEBUG = False
 
 
 class CustomCmd(Cmd):
+    """This class extends the python class Cmd and implements a handler
+    for CTRL+C and CTRL+D"""
 
     def cmdloop(self, intro=None):
+        """ Command loop"""
+
+        # pylint: disable=no-self-use
+
         while True:
             try:
                 super(CustomCmd, self).cmdloop(intro=intro)
@@ -69,19 +76,32 @@ class CustomCmd(Cmd):
                 print("^C")
 
     def emptyline(self):
-        pass
+        """Avoid to execute the last command if empty line is entered"""
 
-    def default(self, inp):
-        if inp == 'x' or inp == 'q':
-            return self.do_exit(inp)
+        # pylint: disable=no-self-use
 
-        print("Unrecognized command: {}".format(inp))
+    def default(self, line):
+        """Default behavior"""
+
+        if line in ['x', 'q']:
+            return self.do_exit(line)
+
+        print("Unrecognized command: {}".format(line))
+        return False
 
     def do_exit(self, args):
+        """New line on exit"""
+
+        # pylint: disable=unused-argument, no-self-use
+
         print()     # New line
         return True
 
     def help_exit(self):
+        """Help message for exit callback"""
+
+        # pylint: disable=no-self-use
+
         print('exit the application. Shorthand: x q Ctrl-D.')
 
     do_EOF = do_exit
@@ -89,9 +109,15 @@ class CustomCmd(Cmd):
 
 
 class ControllerCLITopology(CustomCmd):
+    """Topology subsection"""
+
     prompt = "controller(topology)> "
 
     def do_extract(self, args):
+        """Extract the network topology"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = topo_cli.parse_arguments_topology_information_extraction_isis(
                 prog='extract', args=args.split(' '))
@@ -109,8 +135,14 @@ class ControllerCLITopology(CustomCmd):
             topo_graph=args.topo_graph,
             verbose=args.verbose
         )
+        return True
 
     def do_load_on_arango(self, args):
+        """Read nodes and edges YAML files and upload the topology
+        on ArangoDB"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = topo_cli.parse_arguments_load_topo_on_arango(
                 prog='load_on_arango',
@@ -126,8 +158,14 @@ class ControllerCLITopology(CustomCmd):
             edges_yaml=args.edges_yaml,
             verbose=args.verbose
         )
+        return True
 
     def do_extract_and_load_on_arango(self, args):
+        """Extract the network topology from a set of nodes running ISIS
+        and upload it on ArangoDB"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
                 prog='extract_and_load_on_arango', args=args.split(' '))
@@ -146,20 +184,33 @@ class ControllerCLITopology(CustomCmd):
             period=args.period,
             verbose=args.verbose
         )
+        return True
 
     def help_extract(self):
+        """Show help usage for extract command"""
+
+        # pylint: disable=no-self-use
+
         topo_cli.parse_arguments_topology_information_extraction_isis(
             prog='extract',
             args=['--help']
         )
 
     def help_load_on_arango(self):
+        """Show help usage for load_topo_on_arango"""
+
+        # pylint: disable=no-self-use
+
         topo_cli.parse_arguments_load_topo_on_arango(
             prog='load_on_arango',
             args=['--help']
         )
 
     def help_extract_and_load_on_arango(self):
+        """Show help usage for extract_and_load_on_arango"""
+
+        # pylint: disable=no-self-use
+
         topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
             prog='extract_and_load_on_arango',
             args=['--help']
@@ -167,9 +218,15 @@ class ControllerCLITopology(CustomCmd):
 
 
 class ControllerCLISRv6PMConfiguration(CustomCmd):
+    """srv6pm->Configuration subsection"""
+
     prompt = "controller(srv6pm-configuration)> "
 
     def do_set(self, args):
+        """Set configuation"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6pm_cli.parse_arguments_set_configuration(
                 prog='start',
@@ -189,8 +246,13 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             number_of_color=args.number_of_color,
             pm_driver=args.pm_driver
         )
+        return True
 
     def do_reset(self, args):
+        """Clear configuration"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6pm_cli.parse_arguments_reset_configuration(
                 prog='start',
@@ -204,24 +266,39 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             sender_port=args.sender_port,
             reflector_port=args.reflector_port,
         )
+        return True
 
     def help_set(self):
-        srv6pm_cli.set_configuration(
+        """Show help usagte for set operation"""
+
+        # pylint: disable=no-self-use
+
+        srv6pm_cli.parse_arguments_set_configuration(
             prog='start',
             args=['--help']
         )
 
     def help_reset(self):
-        srv6pm_cli.reset_configuration(
+        """Show help usage for reset operation"""
+
+        # pylint: disable=no-self-use
+
+        srv6pm_cli.parse_arguments_reset_configuration(
             prog='start',
             args=['--help']
         )
 
 
 class ControllerCLISRv6PMExperiment(CustomCmd):
+    """srv6pm->experiment subsection"""
+
     prompt = "controller(srv6pm-experiment)> "
 
     def do_start(self, args):
+        """Start an experiment"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6pm_cli.parse_arguments_start_experiment(
                 prog='start',
@@ -255,8 +332,13 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_localseg=args.refl_send_localseg,
             force=args.force
         )
+        return True
 
     def do_show(self, args):
+        """Show results of a running experiment"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6pm_cli.parse_arguments_get_experiment_results(
                 prog='show',
@@ -272,8 +354,13 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_sidlist=args.send_refl_sidlist,
             refl_send_sidlist=args.refl_send_sidlist
         )
+        return True
 
     def do_stop(self, args):
+        """Stop a running experiment"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6pm_cli.parse_arguments_stop_experiment(
                 prog='stop',
@@ -293,20 +380,33 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_localseg=args.send_refl_localseg,
             refl_send_localseg=args.refl_send_localseg
         )
+        return True
 
     def help_start(self):
+        """Show help usage for start operation"""
+
+        # pylint: disable=no-self-use
+
         srv6pm_cli.parse_arguments_start_experiment(
             prog='start',
             args=['--help']
         )
 
     def help_show(self):
+        """Show help usasge for show operation"""
+
+        # pylint: disable=no-self-use
+
         srv6pm_cli.parse_arguments_get_experiment_results(
             prog='show',
             args=['--help']
         )
 
     def help_stop(self):
+        """Show help usage for stop operation"""
+
+        # pylint: disable=no-self-use
+
         srv6pm_cli.parse_arguments_stop_experiment(
             prog='stop',
             args=['--help']
@@ -314,21 +414,37 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
 
 
 class ControllerCLISRv6PM(CustomCmd):
+    """srv6pm subcommmand"""
+
     prompt = "controller(srv6pm)> "
 
     def do_experiment(self, args):
+        """Enter srv6pm-experiment subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         sub_cmd = ControllerCLISRv6PMExperiment()
         sub_cmd.cmdloop()
 
     def do_configuration(self, args):
+        """Enter srv6pm-configuration subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         sub_cmd = ControllerCLISRv6PMConfiguration()
         sub_cmd.cmdloop()
 
 
 class ControllerCLISRv6(CustomCmd):
+    """srv6 subsection"""
+
     prompt = "controller(srv6)> "
 
     def do_path(self, args):
+        """Handle a SRv6 path"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6_cli.parse_arguments_srv6_path(
                 prog='path',
@@ -337,7 +453,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_path(
-            op=args.op,
+            operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
             destination=args.destination,
@@ -347,8 +463,13 @@ class ControllerCLISRv6(CustomCmd):
             table=args.table,
             metric=args.metric
         )
+        return True
 
     def do_behavior(self, args):
+        """Handle a SRv6 behavior"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6_cli.parse_arguments_srv6_behavior(
                 prog='behavior',
@@ -357,7 +478,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_behavior(
-            op=args.op,
+            operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
             segment=args.segment,
@@ -370,8 +491,13 @@ class ControllerCLISRv6(CustomCmd):
             segments=args.segments,
             metric=args.metric
         )
+        return True
 
     def do_unitunnel(self, args):
+        """Handle a SRv6 unidirectional tunnel"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6_cli.parse_arguments_srv6_unitunnel(
                 prog='unitunnel',
@@ -380,7 +506,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_unitunnel(
-            op=args.op,
+            operation=args.op,
             ingress_ip=args.ingress_grpc_ip,
             ingress_port=args.ingress_grpc_port,
             egress_ip=args.egress_grpc_ip,
@@ -389,8 +515,13 @@ class ControllerCLISRv6(CustomCmd):
             segments=args.sidlist,
             localseg=args.localseg
         )
+        return True
 
     def do_biditunnel(self, args):
+        """Handle a SRv6 bidirectional tunnel"""
+
+        # pylint: disable=no-self-use
+
         try:
             args = srv6_cli.parse_arguments_srv6_biditunnel(
                 prog='biditunnel',
@@ -399,7 +530,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_biditunnel(
-            op=args.op,
+            operation=args.op,
             node_l_ip=args.l_grpc_ip,
             node_r_ip=args.r_grpc_ip,
             node_l_port=args.l_grpc_port,
@@ -411,26 +542,43 @@ class ControllerCLISRv6(CustomCmd):
             localseg_lr=args.localseg_lr,
             localseg_rl=args.localseg_rl
         )
+        return True
 
     def help_path(self):
+        """Show help usage for path command"""
+
+        # pylint: disable=no-self-use
+
         srv6_cli.parse_arguments_srv6_path(
             prog='path',
             args=['--help']
         )
 
     def help_behavior(self):
+        """Show help usage for behavior command"""
+
+        # pylint: disable=no-self-use
+
         srv6_cli.parse_arguments_srv6_behavior(
             prog='behavior',
             args=['--help']
         )
 
     def help_unitunnel(self):
+        """Show help usage for unitunnel command"""
+
+        # pylint: disable=no-self-use
+
         srv6_cli.parse_arguments_srv6_unitunnel(
             prog='unitunnel',
             args=['--help']
         )
 
     def help_biditunnel(self):
+        """Show help usage for biditunnel command"""
+
+        # pylint: disable=no-self-use
+
         srv6_cli.parse_arguments_srv6_biditunnel(
             prog='biditunnel',
             args=['-help']
@@ -438,30 +586,50 @@ class ControllerCLISRv6(CustomCmd):
 
 
 class ControllerCLI(CustomCmd):
+    """Controller CLI entry point"""
+
     prompt = 'controller> '
     intro = "Welcome! Type ? to list commands"
 
-    def do_exit(self, inp):
+    def do_exit(self, args):
+        """Exit from the CLI"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         print("Bye")
         return True
 
     def do_srv6(self, args):
+        """Enter srv6 subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         sub_cmd = ControllerCLISRv6()
         sub_cmd.cmdloop()
 
     def do_srv6pm(self, args):
+        """Enter srv6pm subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         sub_cmd = ControllerCLISRv6PM()
         sub_cmd.cmdloop()
 
     def do_topology(self, args):
+        """Enter topology subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
         sub_cmd = ControllerCLITopology()
         sub_cmd.cmdloop()
 
-    def default(self, inp):
-        if inp in ['x', 'q']:
-            return self.do_exit(inp)
+    def default(self, line):
+        """Default behavior"""
 
-        print("Unrecognized command: {}".format(inp))
+        if line in ['x', 'q']:
+            return self.do_exit(line)
+
+        print("Unrecognized command: {}".format(line))
         return False
 
     do_EOF = do_exit
@@ -469,6 +637,8 @@ class ControllerCLI(CustomCmd):
 
 # Class representing the configuration
 class Config:
+    """Class implementing configuration for the Controller"""
+
     # ArangoDB username
     arango_user = None
     # ArangoDB password
@@ -482,7 +652,9 @@ class Config:
 
     # Load configuration from .env file
     def load_config(self, env_file):
-        logger.info(f'*** Loading configuration from {env_file}')
+        """Load configuration from a .env file"""
+
+        logger.info('*** Loading configuration from %s', env_file)
         # Path to the .env file
         env_path = Path(env_file)
         # Load environment variables from .env file
@@ -513,12 +685,18 @@ class Config:
                 self.debug = None
 
     def validate_config(self):
+        """Validate current configuration"""
+
+        # pylint: disable=no-self-use
+
         logger.info('*** Validating configuration')
         success = True
         # Return result
         return success
 
     def print_config(self):
+        """Pretty print current configuration"""
+
         print()
         print('****************** CONFIGURATION ******************')
         print()
@@ -533,11 +711,13 @@ class Config:
         print()
 
     def import_dependencies(self):
-        pass
+        """Import dependencies"""
 
 
 # Parse options
 def parse_arguments():
+    """Command-line arguments parser"""
+
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -557,6 +737,8 @@ def parse_arguments():
 
 
 def __main():
+    """Entry point for this module"""
+
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
@@ -576,12 +758,12 @@ def __main():
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
-        config.DEBUG = args.debug
+        config.debug = args.debug
     else:
         logger.setLevel(level=logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logging.info('SERVER_DEBUG:' + str(server_debug))
+    logging.info('SERVER_DEBUG: %s', str(server_debug))
     # Validate configuration
     if not config.validate_config():
         logger.critical('Invalid configuration\n')
