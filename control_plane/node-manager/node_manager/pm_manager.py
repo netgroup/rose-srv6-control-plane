@@ -55,7 +55,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         # Check if node is already configured
         if self.sender is None and self.reflector is None and \
                 self.packet_receiver is None:
-            # Not yet configured. Configuration should be injected 
+            # Not yet configured. Configuration should be injected
             # by the controller before starting measurement
             self.configured = False
         elif self.sender is not None and self.reflector is not None and \
@@ -91,7 +91,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
                 # inInterface=in_interfaces[0],   # Currently we support 1 intf
-                # outInterface=out_interfaces[0]   # Currently we support 1 intf
+                # outInterface=out_interfaces[0]   # Currently we support 1
+                # intf
             )
             if res == 1:
                 status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
@@ -344,7 +345,9 @@ def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     srv6pmService_pb2_grpc.add_SRv6PMServicer_to_server(
         TWAMPController(sessionsender, sessionreflector, packet_recv), server)
-    server.add_insecure_port('[{ip}]:{port}'.format(ip=ip_addr, port=gprc_port))
+    server.add_insecure_port(
+        '[{ip}]:{port}'.format(
+            ip=ip_addr, port=gprc_port))
     # server.add_insecure_port('{ip}:{port}'.format(ip=ipaddr,port=gprcPort))
     print('\n-------------- Start Demon --------------\n')
     server.start()

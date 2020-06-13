@@ -7,13 +7,20 @@ ARANGO_URL = "http://localhost:8529"
 NODES_FILE = "nodes_hc.yaml"
 EDGES_FILE = "edges_hc.yaml"
 
-def initialize_db(arango_url=ARANGO_URL, arango_user=USER, arango_password=PASSWORD):
+
+def initialize_db(
+        arango_url=ARANGO_URL,
+        arango_user=USER,
+        arango_password=PASSWORD):
     # Initialize the ArangoDB client.
     client = ArangoClient(hosts=arango_url)
 
     # Connect to "_system" database as root user.
     # This returns an API wrapper for "_system" database.
-    sys_db = client.db('_system', username=arango_user, password=arango_password)
+    sys_db = client.db(
+        '_system',
+        username=arango_user,
+        password=arango_password)
 
     # Reset database if already existing
     if sys_db.has_database('srv6_pm'):
@@ -53,12 +60,11 @@ def initialize_db(arango_url=ARANGO_URL, arango_user=USER, arango_password=PASSW
     return nodes, edges
 
 
-
 ##############################################
 ############### populate graph ###############
 ##############################################
 
-def populate_yaml(nodes, edges, nodes_file = NODES_FILE, edges_file = EDGES_FILE):
+def populate_yaml(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
     # nodes
     with open(nodes_file) as f:
         nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
@@ -99,13 +105,13 @@ def populate2(nodes, edges, nodes_dict, edges_dict):
     # edges
     for edge in edges_dict:
         # Cannot work now, because edge links do not have a key
-        if not edges.has(edge["_key"]): # key is ip address of subnet
+        if not edges.has(edge["_key"]):  # key is ip address of subnet
             edges.insert(edge)
         else:  # only specified fields are changed
             edges.update(edge)
 
 
-def populate_yaml2(nodes, edges, nodes_file = NODES_FILE, edges_file = EDGES_FILE):
+def populate_yaml2(nodes, edges, nodes_file=NODES_FILE, edges_file=EDGES_FILE):
     # nodes
     with open(nodes_file) as f:
         nodes_dict = yaml.load(f, Loader=yaml.FullLoader)
@@ -119,7 +125,7 @@ def populate_yaml2(nodes, edges, nodes_file = NODES_FILE, edges_file = EDGES_FIL
     with open(edges_file) as f:
         edges_dict = yaml.load(f, Loader=yaml.FullLoader)
         for edge in edges_dict:
-            if not edges.has(edge["_key"]): # key is ip address of subnet
+            if not edges.has(edge["_key"]):  # key is ip address of subnet
                 edges.insert(edge)
             else:  # only specified fields are changed
                 edges.update(edge)

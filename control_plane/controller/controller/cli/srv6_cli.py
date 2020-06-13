@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-##############################################################################################
+##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
@@ -34,8 +34,16 @@ from controller import utils
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def handle_srv6_path(operation, grpc_address, grpc_port, destination, segments="",
-                     device='', encapmode="encap", table=-1, metric=-1):
+def handle_srv6_path(
+        operation,
+        grpc_address,
+        grpc_port,
+        destination,
+        segments="",
+        device='',
+        encapmode="encap",
+        table=-1,
+        metric=-1):
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_path(
             op=operation,
@@ -53,9 +61,19 @@ def handle_srv6_path(operation, grpc_address, grpc_port, destination, segments="
             print('Error')
 
 
-def handle_srv6_behavior(operation, grpc_address, grpc_port, segment, action='',
-                         device='', table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments="", metric=-1):
+def handle_srv6_behavior(
+        operation,
+        grpc_address,
+        grpc_port,
+        segment,
+        action='',
+        device='',
+        table=-1,
+        nexthop="",
+        lookup_table=-1,
+        interface="",
+        segments="",
+        metric=-1):
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_behavior(
             op=operation,

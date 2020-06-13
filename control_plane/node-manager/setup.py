@@ -32,12 +32,12 @@ setuptools.setup(
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     install_requires=install_requires,
-    entry_points={'console_scripts': ['node_manager = node_manager.node_manager:__main']},
+    entry_points={
+        'console_scripts': ['node_manager = node_manager.node_manager:__main']},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6'
-)
+    python_requires='>=3.6')
