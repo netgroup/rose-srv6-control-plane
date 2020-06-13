@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 ##########################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -158,7 +159,8 @@ class Config:
         self.grpc_port = DEFAULT_GRPC_PORT
         # Define whether to enable gRPC secure mode or not
         self.grpc_secure = DEFAULT_SECURE
-        # Path to the certificate of the gRPC server required for the secure mode
+        # Path to the certificate of the gRPC server required
+        # for the secure mode
         self.grpc_server_certificate_path = DEFAULT_CERTIFICATE
         # Path to the key of the gRPC server required for the secure mode
         self.grpc_server_key_path = DEFAULT_KEY
@@ -296,7 +298,8 @@ class Config:
                     not os.path.exists(self.rose_srv6_data_plane_path):
                 logger.critical(
                     'ROSE_SRV6_DATA_PLANE_PATH variable in .env points to '
-                    'a non existing folder: %s', self.rose_srv6_data_plane_path)
+                    'a non existing folder: %s',
+                    self.rose_srv6_data_plane_path)
                 success = False
         # Validate gRPC secure mode parameters
         if self.grpc_secure:
@@ -359,12 +362,15 @@ class Config:
         global SRV6PMSERVICE_PB2_GRPC, PM_MANAGER
         # SRv6 Manager dependencies
         if self.enable_srv6_manager:
-            SRV6_MANAGER = importlib.import_module('node_manager.srv6_manager')
-            SRV6_MANAGER_PB2_GRPC = importlib.import_module('srv6_manager_pb2_grpc')
+            SRV6_MANAGER = importlib.import_module(
+                'node_manager.srv6_manager')
+            SRV6_MANAGER_PB2_GRPC = importlib.import_module(
+                'srv6_manager_pb2_grpc')
         # SRv6 PM dependencies
         if self.enable_srv6_pm_manager:
             PM_MANAGER = importlib.import_module('node_manager.pm_manager')
-            SRV6PMSERVICE_PB2_GRPC = importlib.import_module('srv6pmService_pb2_grpc')
+            SRV6PMSERVICE_PB2_GRPC = importlib.import_module(
+                'srv6pmService_pb2_grpc')
 
 
 # Parse options

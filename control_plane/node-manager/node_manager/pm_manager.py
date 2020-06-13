@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-"""Implementation of SRv6 PM Manager"""
 
+"""Implementation of SRv6 PM Manager"""
 
 import atexit
 import os
@@ -153,8 +153,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             self.reflector.start_meas(
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
-                # inInterface=request.in_interfaces[0],   # Currently we support 1 intf
-                # outInterface=request.out_interfaces[0]   # Currently we support 1 intf
+                # inInterface=request.in_interfaces[0],
+                # outInterface=request.out_interfaces[0]
             )
             status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
         return srv6pmReflector_pb2.StartExperimentReflectorReply(status=status)
