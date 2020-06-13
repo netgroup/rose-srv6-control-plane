@@ -24,10 +24,15 @@ import srv6pmService_pb2_grpc
 # import srv6pmServiceController_pb2_grpc
 
 # SRv6 data-plane dependencies
-from data_plane.twamp.twamp_demon import SessionSender
-from data_plane.twamp.twamp_demon import SessionReflector
-from data_plane.twamp.twamp_demon import TestPacketReceiver
-from data_plane.twamp.twamp_demon import EbpfInterf
+try:
+    from data_plane.twamp.twamp_demon import SessionSender
+    from data_plane.twamp.twamp_demon import SessionReflector
+    from data_plane.twamp.twamp_demon import TestPacketReceiver
+    from data_plane.twamp.twamp_demon import EbpfInterf
+except ImportError:
+    print('rose-srv6-data-plane is required to run this module'
+          'Is it installed?')
+    sys.exit(-2)
 # from data_plane.twamp.twamp_demon import IpSetInterf
 
 
@@ -192,7 +197,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
                 response = srv6pmCommons_pb2.ExperimentDataResponse()
                 response.status = commons_pb2.StatusCode.Value(
                     'STATUS_SUCCESS')
-                data = response.measurement_data.add()
+                data = (response                # pylint: disable=no-member
+                        .measurement_data.add())
                 data.meas_id = meas_id
                 data.ssSeqNum = last_meas['sssn']
                 data.ssTxCounter = last_meas['ssTXc']
@@ -229,10 +235,9 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         refl_udp_port = request.refl_udp_port
         if refl_udp_port is None:
             refl_udp_port = 1205
-        pm_driver = request.pm_driver  # eBPF or IPSET
         in_interfaces = request.in_interfaces
         out_interfaces = request.out_interfaces
-        self.pm_driver = pm_driver
+        self.pm_driver = request.pm_driver  # eBPF or IPSET
         # Initialize driver eBPF/IPSET
         if self.pm_driver == srv6pmCommons_pb2.eBPF:
             self.driver = EbpfInterf(
