@@ -106,7 +106,7 @@ jobs:
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-controller/bin/activate
           # Module to be tested
-          module="db_update control_plane/controller control_plane/protos"
+          module="db_update control_plane/controller"       # control_plane/protos folder excluded
           # pylint
           echo Running: pylint $module
           pylint $module
@@ -209,7 +209,7 @@ jobs:
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
           # Module to be tested
-          module="control_plane/node-manager control_plane/protos"
+          module="control_plane/node-manager"       # control_plane/protos folder excluded
           # pylint
           echo Running: pylint $module
           pylint $module
