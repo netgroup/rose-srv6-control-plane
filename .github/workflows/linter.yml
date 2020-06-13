@@ -24,9 +24,9 @@ on:
 # Set the Job #
 ###############
 jobs:
-  build:
+  build_controller:
     # Name the Job
-    name: Lint Code Base
+    name: Lint Code Base - Controller
     # Set the agent to run on
     runs-on: ubuntu-latest
 
@@ -46,7 +46,7 @@ jobs:
       # Checkout the code base #
       ##########################
       - name: Checkout Code
-        uses: actions/checkout@master
+        uses: actions/checkout@v2
 
       #########################
       # Pick a Python version #
@@ -56,32 +56,182 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      ##############################
+      # Set up a Python virtualenv #
+      ##############################
+      - name: Set up Python virtual environment
+        run: |
+          # Create a virtualenv
+          python -m venv python${{ matrix.python-version }}-venv-controller
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+
+      ########################
+      # Install dependencies #
+      ########################
+      - name: Install dependencies
+        run: |          
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Install dependencies required by the controller
+          sudo apt-get install graphviz libgraphviz-dev
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          # Install linters and other python modules
+          pip install pylint pycodestyle flake8 black mypy isort setuptools wheel pytest
+
+      ##############################
+      # Install controller modules #
+      ##############################
+      - name: Install controller modules
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Setup db_update library
+          cd db_update
+          python setup.py install
+          # Setup protos
+          cd ../control_plane/protos
+          python setup.py install
+          # Setup controller modules
+          cd ../../control_plane/controller
+          python setup.py install
+          cd ../../
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Python Code Quality and Lint
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Module to be tested
+          module="db_update control_plane/controller control_plane/protos"
+          # pylint
+          echo Running: pylint $module
+          pylint $module
+          if [ "$?" = "0" ]; then echo "Pylint ok"; else echo "Pylint error"; exit $exit_code; fi
+          # pycodestyle
+          echo Running: pycodestyle $module
+          pycodestyle $module
+          if [ "$?" = "0" ]; then echo "pycodestyle ok"; else echo "pycodestyle error"; exit $exit_code; fi
+          # flake8
+          echo Running: flake8 $module
+          flake8 $module
+          if [ "$?" = "0" ]; then echo "Flake8 ok"; else echo "Flake8 error"; exit $exit_code; fi
+          # black
+          echo Running: black --check $module
+          black --check $module
+          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          # mypy
+          # echo Running: mypy $module
+          # mypy $module
+          # if [ "$?" = "0" ]; then echo "mypy ok"; else echo "mypy error"; exit $exit_code; fi
+          # isort
+          echo Running: isort -rc $module -c --diff
+          isort -rc $module -c --diff
+          if [ "$?" = "0" ]; then echo "isort ok"; else echo "isort error"; exit $exit_code; fi
+
+  build_node_manager:
+    # Name the Job
+    name: Lint Code Base - Node Manager
+    # Set the agent to run on
+    runs-on: ubuntu-latest
+
+    ###################
+    # Python versions #
+    ###################
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    ##################
+    # Load all steps #
+    ##################
+    steps:
+
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      #########################
+      # Pick a Python version #
+      #########################
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      ##############################
+      # Set up a Python virtualenv #
+      ##############################
+      - name: Set up Python virtual environment
+        run: |
+          # Create a virtualenv
+          python -m venv python${{ matrix.python-version }}-venv-node-mgr
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+
       ########################
       # Install dependencies #
       ########################
       - name: Install dependencies
         run: |
-          sudo apt-get install graphviz libgraphviz-dev
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Upgrade pip
           python -m pip install --upgrade pip
-          pip install setuptools wheel flake8 pytest
+          # Install linters and other python modules
+          pip install pylint pycodestyle flake8 black mypy isort setuptools wheel pytest
 
-      ###################
-      # Install modules #
-      ###################
-      - name: Install controller modules
+      ################################
+      # Install node manager modules #
+      ################################
+      - name: Install node manager modules
         run: |
-          cd db_update
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Setup protos
+          cd control_plane/protos
           python setup.py install
-          cd ../control_plane/protos
+          # Setup node-manager modules
+          cd ../../control_plane/node-manager
           python setup.py install
-          cd ../controller
-          python setup.py install
-          cd ../node-manager
-          python setup.py install
-          cd ..
+          cd ../../
 
       ################################
       # Run Linter against code base #
       ################################
-      - name: Lint Code Base
-        uses: github/super-linter@v1.0.0
+      - name: Python Code Quality and Lint
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Module to be tested
+          module="control_plane/node-manager control_plane/protos"
+          # pylint
+          echo Running: pylint $module
+          pylint $module
+          if [ "$?" = "0" ]; then echo "Pylint ok"; else echo "Pylint error"; exit $exit_code; fi
+          # pycodestyle
+          echo Running: pycodestyle $module
+          pycodestyle $module
+          if [ "$?" = "0" ]; then echo "pycodestyle ok"; else echo "pycodestyle error"; exit $exit_code; fi
+          # flake8
+          echo Running: flake8 $module
+          flake8 $module
+          if [ "$?" = "0" ]; then echo "Flake8 ok"; else echo "Flake8 error"; exit $exit_code; fi
+          # black
+          echo Running: black --check $module
+          black --check $module
+          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          # mypy
+          # echo Running: mypy $module
+          # mypy $module
+          # if [ "$?" = "0" ]; then echo "mypy ok"; else echo "mypy error"; exit $exit_code; fi
+          # isort
+          echo Running: isort -rc $module -c --diff
+          isort -rc $module -c --diff
+          if [ "$?" = "0" ]; then echo "isort ok"; else echo "isort error"; exit $exit_code; fi
+
