@@ -33,7 +33,7 @@ setuptools.setup(
     packages=packages,
     install_requires=install_requires,
     entry_points={
-        'console_scripts': ['node_manager = node_manager.node_manager:__main']},
+        'console_scripts': ['node_manager = node_manager.node_mgr:__main']},
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
