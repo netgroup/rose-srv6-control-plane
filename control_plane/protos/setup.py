@@ -43,7 +43,9 @@ def build_protos():
     # Generate python grpc stubs from proto files
     print('Generation of python gRPC stubs')
     args = "-I. --proto_path=. --python_out=./gen_py --grpc_python_out=./gen_py ./*.proto"
-    result = subprocess.call("%s -m grpc_tools.protoc %s" % (PYTHON_PATH, args), shell=True)
+    result = subprocess.call(
+        "%s -m grpc_tools.protoc %s" %
+        (PYTHON_PATH, args), shell=True)
     if result != 0:
         exit(-1)
 

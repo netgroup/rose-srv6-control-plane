@@ -44,7 +44,11 @@ sys.path.append(SRV6_PFPLM_PATH)
 
 
 class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
-    def __init__(self, SessionSender=None, SessionReflector=None, packetReceiver=None):
+    def __init__(
+            self,
+            SessionSender=None,
+            SessionReflector=None,
+            packetReceiver=None):
         self.port_server = 20000
         self.sender = SessionSender
         self.reflector = SessionReflector
@@ -76,7 +80,8 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
                 sidList=request.sdlist,
                 revSidList=request.sdlistreverse,
                 # inInterface=in_interfaces[0],   # Currently we support 1 intf
-                # outInterface=out_interfaces[0]   # Currently we support 1 intf
+                # outInterface=out_interfaces[0]   # Currently we support 1
+                # intf
             )
             if res == 1:
                 status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')

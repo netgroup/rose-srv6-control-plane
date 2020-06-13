@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-##############################################################################################
+##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
@@ -88,9 +88,7 @@ class ControllerCLITopology(CustomCmd):
     def do_extract(self, args):
         try:
             args = topo_cli.parse_arguments_topology_information_extraction_isis(
-                prog='extract',
-                args=args.split(' ')
-            )
+                prog='extract', args=args.split(' '))
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.topology_information_extraction_isis(
@@ -126,9 +124,7 @@ class ControllerCLITopology(CustomCmd):
     def do_extract_and_load_on_arango(self, args):
         try:
             args = topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
-                prog='extract_and_load_on_arango',
-                args=args.split(' ')
-            )
+                prog='extract_and_load_on_arango', args=args.split(' '))
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.extract_topo_from_isis_and_load_on_arango(
