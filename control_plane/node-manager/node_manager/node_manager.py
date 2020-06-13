@@ -31,9 +31,12 @@ import logging
 import time
 from concurrent import futures
 from socket import AF_INET, AF_INET6
-from dotenv import load_dotenv
 from pathlib import Path
 from pkg_resources import resource_filename
+
+# python-dotenv dependencies
+from dotenv import load_dotenv
+
 # gRPC dependencies
 import grpc
 
@@ -84,7 +87,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         server_addr = '[%s]:%s' % (grpc_ip, grpc_port)
     else:
         # Invalid address
-        logger.fatal(f'Invalid gRPC address: {grpc_ip}')
+        logger.fatal('Invalid gRPC address: %s', grpc_ip)
         sys.exit(-2)
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
@@ -113,7 +116,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
         # Create an insecure endpoint
         grpc_server.add_insecure_port(server_addr)
     # Start the loop for gRPC
-    logger.info(f'*** Listening gRPC on address {server_addr}')
+    logger.info('*** Listening gRPC on address %s', server_addr)
     grpc_server.start()
     while True:
         time.sleep(5)
@@ -150,7 +153,7 @@ class Config:
 
     # Load configuration from .env file
     def load_config(self, env_file):
-        logger.info(f'*** Loading configuration from {env_file}')
+        logger.info('*** Loading configuration from %s', env_file)
         # Path to the .env file
         env_path = Path(env_file)
         # Load environment variables from .env file
@@ -231,11 +234,11 @@ class Config:
         # Validate gRPC IP address
         if not utils.validate_ip_address(self.GRPC_IP):
             logger.critical(
-                f'GRPC_IP is an invalid IP address: {self.GRPC_IP}')
+                'GRPC_IP is an invalid IP address: %s', self.GRPC_IP)
             success = False
         # Validate gRPC port
         if self.GRPC_PORT <= 0 or self.GRPC_PORT >= 65536:
-            logger.critical(f'GRPC_PORT out of range: {self.GRPC_PORT}')
+            logger.critical('GRPC_PORT out of range: %s', self.GRPC_PORT)
             success = False
         # Validate SRv6 PFPLM configuration parameters
         if self.ENABLE_SRV6_PM_MANAGER:
@@ -256,7 +259,7 @@ class Config:
                     not os.path.exists(self.SRV6_PM_XDP_EBPF_PATH):
                 logger.critical(
                     'SRV6_PM_XDP_EBPF_PATH variable in .env points '
-                    f'to a non existing folder: {self.SRV6_PM_XDP_EBPF_PATH}')
+                    'to a non existing folder: %s', self.SRV6_PM_XDP_EBPF_PATH)
                 success = False
             # Validate ROSE_SRV6_DATA_PLANE_PATH
             if self.ROSE_SRV6_DATA_PLANE_PATH is None:
@@ -269,7 +272,7 @@ class Config:
                     not os.path.exists(self.ROSE_SRV6_DATA_PLANE_PATH):
                 logger.critical(
                     'ROSE_SRV6_DATA_PLANE_PATH variable in .env points to '
-                    f'a non existing folder: {self.ROSE_SRV6_DATA_PLANE_PATH}')
+                    'a non existing folder: %s', self.ROSE_SRV6_DATA_PLANE_PATH)
                 success = False
         # Validate gRPC secure mode parameters
         if self.GRPC_SECURE:
@@ -281,7 +284,7 @@ class Config:
             if not os.path.exists(self.GRPC_SERVER_CERTIFICATE_PATH):
                 logger.critical(
                     'GRPC_SERVER_CERTIFICATE_PATH variable to a non '
-                    f'existing folder: {self.GRPC_SERVER_CERTIFICATE_PATH}')
+                    'existing folder: %s', self.GRPC_SERVER_CERTIFICATE_PATH)
                 success = False
             # Validate GRPC_SERVER_KEY_PATH
             if self.GRPC_SERVER_KEY_PATH is None:
@@ -291,7 +294,7 @@ class Config:
             if not os.path.exists(self.GRPC_SERVER_KEY_PATH):
                 logger.critical(
                     'GRPC_SERVER_KEY_PATH variable in .env points to a '
-                    f'non existing folder: {self.GRPC_SERVER_KEY_PATH}')
+                    'non existing folder: %s', self.GRPC_SERVER_KEY_PATH)
                 success = False
         # Return result
         return success
@@ -419,10 +422,10 @@ def __main():
         logger.setLevel(level=logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logging.info('SERVER_DEBUG:' + str(server_debug))
+    logging.info('SERVER_DEBUG: %s', server_debug)
     # This script must be run as root
     if not check_root():
-        logger.critical(f'*** {sys.argv[0]} must be run as root.\n')
+        logger.critical('*** %s must be run as root.\n', sys.argv[0])
         sys.exit(1)
     # Validate configuration
     if not config.validate_config():

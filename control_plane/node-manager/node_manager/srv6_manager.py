@@ -40,15 +40,13 @@ from pyroute2 import IPRoute
 # gRPC dependencies
 import grpc
 
-# Proto dependencies
-import srv6_manager_pb2
-import srv6_manager_pb2_grpc
-
 # Node manager dependencies
 from node_manager.utils import get_address_family
 
-# Proto commons dependencies
+# Proto dependencies
 import commons_pb2
+import srv6_manager_pb2
+import srv6_manager_pb2_grpc
 
 # General imports
 # pyroute2 dependencies
