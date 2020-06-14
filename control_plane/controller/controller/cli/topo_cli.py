@@ -26,8 +26,9 @@
 
 """ArangoDB utilities for Controller CLI"""
 
-import sys
 # General imports
+import os
+import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
@@ -189,15 +190,15 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
     )
     parser.add_argument(
         '--arango-url', dest='arango_url', action='store',
-        help='arango_url'
+        help='arango_url', default=os.getenv('ARANGO_URL')
     )
     parser.add_argument(
         '--arango-user', dest='arango_user', action='store',
-        help='arango_user'
+        help='arango_user', default=os.getenv('ARANGO_USER')
     )
     parser.add_argument(
         '--arango-password', dest='arango_password', action='store',
-        help='arango_password'
+        help='arango_password', default=os.getenv('ARANGO_PASSWORD')
     )
     parser.add_argument(
         '--nodes-yaml', dest='nodes_yaml', action='store',
@@ -239,15 +240,15 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
     )
     parser.add_argument(
         '--arango-url', dest='arango_url', action='store',
-        help='arango_url'
+        help='arango_url', default=os.getenv('ARANGO_URL')
     )
     parser.add_argument(
         '--arango-user', dest='arango_user', action='store',
-        help='arango_user'
+        help='arango_user', default=os.getenv('ARANGO_USER')
     )
     parser.add_argument(
         '--arango-password', dest='arango_password', action='store',
-        help='arango_password'
+        help='arango_password', default=os.getenv('ARANGO_PASSWORD')
     )
     parser.add_argument(
         '--period', dest='period', action='store',
