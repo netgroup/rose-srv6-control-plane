@@ -1,4 +1,4 @@
-# Node Manager
+# Controller
 
 ## Installation
 
