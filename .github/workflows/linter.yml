@@ -106,7 +106,8 @@ jobs:
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-controller/bin/activate
           # Module to be tested
-          module="db_update/db_update control_plane/controller/controller"       # control_plane/protos folder excluded
+          cd db_update
+          module="db_update"       # control_plane/protos folder excluded
           # pylint
           echo Running: pylint $module --disable=similarities
           pylint $module --disable=similarities
@@ -129,8 +130,38 @@ jobs:
           # if [ "$?" = "0" ]; then echo "mypy ok"; else echo "mypy error"; exit $exit_code; fi
           # isort
           echo Running: isort -rc $module -c --diff
-          isort -rc $module -c --diff
+          isort -rc $module -c --diff --project db_update
           if [ "$?" = "0" ]; then echo "isort ok"; else echo "isort error"; exit $exit_code; fi
+          cd ../
+          #
+          # Module to be tested
+          cd control_plane/controller/
+          module="controller"       # control_plane/protos folder excluded
+          # pylint
+          echo Running: pylint $module --disable=similarities
+          pylint $module --disable=similarities
+          if [ "$?" = "0" ]; then echo "Pylint ok"; else echo "Pylint error"; exit $exit_code; fi
+          # pycodestyle
+          echo Running: pycodestyle $module
+          pycodestyle $module
+          if [ "$?" = "0" ]; then echo "pycodestyle ok"; else echo "pycodestyle error"; exit $exit_code; fi
+          # flake8
+          echo Running: flake8 $module
+          flake8 $module
+          if [ "$?" = "0" ]; then echo "Flake8 ok"; else echo "Flake8 error"; exit $exit_code; fi
+          # black
+          # echo Running: black --check $module
+          # black --check $module
+          # if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
+          # mypy
+          # echo Running: mypy $module
+          # mypy $module
+          # if [ "$?" = "0" ]; then echo "mypy ok"; else echo "mypy error"; exit $exit_code; fi
+          # isort
+          echo Running: isort -rc $module -c --diff
+          isort -rc $module -c --diff --project controller
+          if [ "$?" = "0" ]; then echo "isort ok"; else echo "isort error"; exit $exit_code; fi
+          cd ../../
 
   build_node_manager:
     # Name the Job
@@ -209,7 +240,8 @@ jobs:
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
           # Module to be tested
-          module="control_plane/node-manager/node_manager"       # control_plane/protos folder excluded
+          cd control_plane/node-manager
+          module="node_manager"       # control_plane/protos folder excluded
           # pylint
           echo Running: pylint $module --disable=similarities
           pylint $module --disable=similarities
@@ -232,6 +264,7 @@ jobs:
           # if [ "$?" = "0" ]; then echo "mypy ok"; else echo "mypy error"; exit $exit_code; fi
           # isort
           echo Running: isort -rc $module -c --diff
-          isort -rc $module -c --diff
+          isort -rc $module -c --diff --project node_manager
           if [ "$?" = "0" ]; then echo "isort ok"; else echo "isort error"; exit $exit_code; fi
+          cd ../../
 
