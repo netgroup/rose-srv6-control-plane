@@ -120,10 +120,9 @@ jobs:
           flake8 $module
           if [ "$?" = "0" ]; then echo "Flake8 ok"; else echo "Flake8 error"; exit $exit_code; fi
           # black
-          echo Running: black --check $module
-          black --check $module
+          # echo Running: black --check $module
+          # black --check $module
           # if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
-          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; fi        # Not exit if error
           # mypy
           # echo Running: mypy $module
           # mypy $module
@@ -224,10 +223,9 @@ jobs:
           flake8 $module
           if [ "$?" = "0" ]; then echo "Flake8 ok"; else echo "Flake8 error"; exit $exit_code; fi
           # black
-          echo Running: black --check $module
-          black --check $module
+          # echo Running: black --check $module
+          # black --check $module
           # if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; exit $exit_code; fi
-          if [ "$?" = "0" ]; then echo "Black ok"; else echo "Black error"; fi        # Not exit if error
           # mypy
           # echo Running: mypy $module
           # mypy $module
