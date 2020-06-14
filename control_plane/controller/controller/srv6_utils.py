@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-##############################################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+##########################################################################
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -23,15 +24,19 @@
 #
 
 
+"""Control-Plane functionalities for SRv6 Manager"""
+
 # General imports
 import logging
+
 import grpc
 from six import text_type
 
+# Proto dependencies
+import commons_pb2
+import srv6_manager_pb2
 # Controller dependencies
 import srv6_manager_pb2_grpc
-import srv6_manager_pb2
-import commons_pb2
 from controller import utils
 
 # Global variables definition
@@ -43,11 +48,13 @@ logger = logging.getLogger(__name__)
 
 
 # Parser for gRPC errors
-def parse_grpc_error(e):
-    status_code = e.code()
-    details = e.details()
-    logger.error('gRPC client reported an error: %s, %s'
-                 % (status_code, details))
+def parse_grpc_error(err):
+    """Parse a gRPC error"""
+
+    status_code = err.code()
+    details = err.details()
+    logger.error('gRPC client reported an error: %s, %s',
+                 status_code, details)
     if grpc.StatusCode.UNAVAILABLE == status_code:
         code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
     elif grpc.StatusCode.UNAUTHENTICATED == status_code:
@@ -58,12 +65,18 @@ def parse_grpc_error(e):
     return code
 
 
-def handle_srv6_path(op, channel, destination, segments=[],
+def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1):
+    """Handle a SRv6 Path"""
+
+    # pylint: disable=too-many-locals, too-many-arguments
+
+    if segments is None:
+        segments = []
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 path request
-    path_request = request.srv6_path_request
+    path_request = request.srv6_path_request       # pylint: disable=no-member
     # Create a new path
     path = path_request.paths.add()
     # Set destination
@@ -85,7 +98,7 @@ def handle_srv6_path(op, channel, destination, segments=[],
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
-        if op == 'add':
+        if operation == 'add':
             # Set encapmode
             path.encapmode = text_type(encapmode)
             if len(segments) == 0:
@@ -98,10 +111,10 @@ def handle_srv6_path(op, channel, destination, segments=[],
                 srv6_segment.segment = text_type(segment)
             # Create the SRv6 path
             response = stub.Create(request)
-        elif op == 'get':
+        elif operation == 'get':
             # Get the SRv6 path
             response = stub.Get(request)
-        elif op == 'change':
+        elif operation == 'change':
             # Set encapmode
             path.encapmode = text_type(encapmode)
             # Iterate on the segments and build the SID list
@@ -111,26 +124,33 @@ def handle_srv6_path(op, channel, destination, segments=[],
                 srv6_segment.segment = text_type(segment)
             # Update the SRv6 path
             response = stub.Update(request)
-        elif op == 'del':
+        elif operation == 'del':
             # Remove the SRv6 path
             response = stub.Remove(request)
         # Get the status code of the gRPC operation
         response = response.status
-    except grpc.RpcError as e:
+    except grpc.RpcError as err:
         # An error occurred during the gRPC operation
         # Parse the error and return it
-        response = parse_grpc_error(e)
+        response = parse_grpc_error(err)
     # Return the response
     return response
 
 
-def handle_srv6_behavior(op, channel, segment, action='', device='',
+def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments=[], metric=-1):
+                         interface="", segments=None, metric=-1):
+    """Handle a SRv6 behavior"""
+
+    # pylint: disable=too-many-arguments, too-many-locals
+
+    if segments is None:
+        segments = []
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 behavior request
-    behavior_request = request.srv6_behavior_request
+    behavior_request = (request               # pylint: disable=no-member
+                        .srv6_behavior_request)
     # Create a new SRv6 behavior
     behavior = behavior_request.behaviors.add()
     # Set local segment for the seg6local route
@@ -156,7 +176,7 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
-        if op == 'add':
+        if operation == 'add':
             if action == '':
                 logger.error('*** Missing action for seg6local route')
                 return commons_pb2.STATUS_INTERNAL_ERROR
@@ -173,16 +193,16 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
             behavior.interface = text_type(interface)
             # Set the segments for the binding SID actions
             # (e.g. End.B6, End.B6.Encaps)
-            for segment in segments:
+            for seg in segments:
                 # Create a new segment
                 srv6_segment = behavior.segs.add()
-                srv6_segment.segment = text_type(segment)
+                srv6_segment.segment = text_type(seg)
             # Create the SRv6 behavior
             response = stub.Create(request)
-        elif op == 'get':
+        elif operation == 'get':
             # Get the SRv6 behavior
             response = stub.Get(request)
-        elif op == 'change':
+        elif operation == 'change':
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -196,30 +216,30 @@ def handle_srv6_behavior(op, channel, segment, action='', device='',
             behavior.interface = text_type(interface)
             # Set the segments for the binding SID actions
             # (e.g. End.B6, End.B6.Encaps)
-            for segment in segments:
+            for seg in segments:
                 # Create a new segment
                 srv6_segment = behavior.segs.add()
-                srv6_segment.segment = text_type(segment)
+                srv6_segment.segment = text_type(seg)
             # Update the SRv6 behavior
             response = stub.Update(request)
-        elif op == 'del':
+        elif operation == 'del':
             # Remove the SRv6 behavior
             response = stub.Remove(request)
         else:
-            logger.error('Invalid operation: %s' % op)
+            logger.error('Invalid operation: %s', operation)
             return None
         # Get the status code of the gRPC operation
         response = response.status
-    except grpc.RpcError as e:
+    except grpc.RpcError as err:
         # An error occurred during the gRPC operation
         # Parse the error and return it
-        response = parse_grpc_error(e)
+        response = parse_grpc_error(err)
     # Return the response
     return response
 
 
-def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
-                             destination, segments, localseg=None):
+def create_uni_srv6_tunnel(ingress_channel, egress_channel,
+                           destination, segments, localseg=None):
     """Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
     Parameters
@@ -247,13 +267,13 @@ def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
     #    ingress: ip -6 route add <destination> encap seg6 mode encap \
     #            segs <segments> dev <device>
     res = handle_srv6_path(
-        op='add',
+        operation='add',
         channel=ingress_channel,
         destination=destination,
         segments=segments
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=res,
         success_msg='Added SRv6 Path',
         failure_msg='Error in add_srv6_path()'
@@ -272,14 +292,14 @@ def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
     #            End.DT6 table 254 dev <device>
     if localseg is not None:
         res = handle_srv6_behavior(
-            op='add',
+            operation='add',
             channel=egress_channel,
             segment=localseg,
             action='End.DT6',
             lookup_table=254
         )
         # Pretty print status code
-        utils.__print_status_message(
+        utils.print_status_message(
             status_code=res,
             success_msg='Added SRv6 Behavior',
             failure_msg='Error in add_srv6_behavior()'
@@ -291,9 +311,9 @@ def __create_uni_srv6_tunnel(ingress_channel, egress_channel,
     return commons_pb2.STATUS_SUCCESS
 
 
-def __create_srv6_tunnel(node_l_channel, node_r_channel,
-                         sidlist_lr, sidlist_rl, dest_lr, dest_rl,
-                         localseg_lr=None, localseg_rl=None):
+def create_srv6_tunnel(node_l_channel, node_r_channel,
+                       sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                       localseg_lr=None, localseg_rl=None):
     """Create a bidirectional SRv6 tunnel.
 
     Parameters
@@ -326,8 +346,10 @@ def __create_srv6_tunnel(node_l_channel, node_r_channel,
         is not created.
     """
 
+    # pylint: disable=too-many-arguments
+
     # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
-    res = __create_uni_srv6_tunnel(
+    res = create_uni_srv6_tunnel(
         ingress_channel=node_l_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
@@ -338,7 +360,7 @@ def __create_srv6_tunnel(node_l_channel, node_r_channel,
     if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
-    res = __create_uni_srv6_tunnel(
+    res = create_uni_srv6_tunnel(
         ingress_channel=node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
@@ -352,8 +374,8 @@ def __create_srv6_tunnel(node_l_channel, node_r_channel,
     return commons_pb2.STATUS_SUCCESS
 
 
-def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                              localseg=None, ignore_errors=False):
+def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
+                            localseg=None, ignore_errors=False):
     """Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>
 
     Parameters
@@ -381,12 +403,12 @@ def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     #    ingress: ip -6 route del <destination> encap seg6 mode encap \
     #             segs <segments> dev <device>
     res = handle_srv6_path(
-        op='del',
+        operation='del',
         channel=ingress_channel,
         destination=destination
     )
     # Pretty print status code
-    utils.__print_status_message(
+    utils.print_status_message(
         status_code=res,
         success_msg='Removed SRv6 Path',
         failure_msg='Error in remove_srv6_path()'
@@ -409,12 +431,12 @@ def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     #            End.DT6 table 254 dev <device>
     if localseg is not None:
         res = handle_srv6_behavior(
-            op='del',
+            operation='del',
             channel=egress_channel,
             segment=localseg
         )
         # Pretty print status code
-        utils.__print_status_message(
+        utils.print_status_message(
             status_code=res,
             success_msg='Removed SRv6 behavior',
             failure_msg='Error in remove_srv6_behavior()'
@@ -430,9 +452,9 @@ def __destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     return commons_pb2.STATUS_SUCCESS
 
 
-def __destroy_srv6_tunnel(node_l_channel, node_r_channel,
-                          dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
-                          ignore_errors=False):
+def destroy_srv6_tunnel(node_l_channel, node_r_channel,
+                        dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
+                        ignore_errors=False):
     """Destroy a bidirectional SRv6 tunnel
 
     Parameters
@@ -465,8 +487,10 @@ def __destroy_srv6_tunnel(node_l_channel, node_r_channel,
         Whether to ignore "No such process" errors or not (default is False)
     """
 
+    # pylint: disable=too-many-arguments
+
     # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
-    res = __destroy_uni_srv6_tunnel(
+    res = destroy_uni_srv6_tunnel(
         ingress_channel=node_l_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
@@ -477,7 +501,7 @@ def __destroy_srv6_tunnel(node_l_channel, node_r_channel,
     if res != commons_pb2.STATUS_SUCCESS:
         return res
     # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
-    res = __destroy_uni_srv6_tunnel(
+    res = destroy_uni_srv6_tunnel(
         ingress_channel=node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,

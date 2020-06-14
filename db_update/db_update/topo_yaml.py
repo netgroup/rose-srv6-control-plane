@@ -1,5 +1,9 @@
-from arango import ArangoClient
+#!/usr/bin/python
+
+"""ArangoDB utilities"""
+
 import yaml
+from arango import ArangoClient
 
 USER = "root"
 PASSWORD = "12345678"
@@ -49,9 +53,10 @@ else:
         to_vertex_collections=['nodes']
     )
 
-##############################################
-############### populate graph ###############
-##############################################
+
+# ##############################################
+# ############### populate graph ###############
+# ##############################################
 
 # nodes
 with open(NODES_FILE) as f:

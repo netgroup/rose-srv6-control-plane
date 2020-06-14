@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-##############################################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+##########################################################################
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -23,11 +24,13 @@
 #
 
 
+"""Entry point for controller CLI"""
+
 from controller.cli import cli
 
 
 def __main():
-    cli.__main()
+    cli.__main()        # pylint: disable=protected-access
 
 
 if __name__ == '__main__':

@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
-##############################################################################################
-# Copyright (C) 2020 Carmine Scarpitta - (Consortium GARR and University of Rome "Tor Vergata")
+##########################################################################
+# Copyright (C) 2020 Carmine Scarpitta
+# (Consortium GARR and University of Rome "Tor Vergata")
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -23,16 +24,18 @@
 #
 
 
-from argparse import ArgumentParser
+"""Topology Information Extraction utilities"""
+
 import errno
-import logging
 import json
+import logging
 import os
-import time
-import telnetlib
 import re
 import socket
 import sys
+import telnetlib
+import time
+from argparse import ArgumentParser
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -54,7 +57,7 @@ try:
 except ImportError:
     logger.warning('pyaml library is not installed')
 try:
-    import pygraphviz
+    import pygraphviz  # pylint: disable=unused-import # noqa: F401
 except ImportError:
     logger.warning('pygraphviz library is not installed')
 
@@ -79,7 +82,9 @@ DEFAULT_VERBOSE = False
 
 
 # Utility function to dump relevant information of the topology
-def dump_topo_json(G, topo_file):
+def dump_topo_json(graph, topo_file):
+    """Dump the graph to a JSON file"""
+
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
     #
@@ -92,7 +97,7 @@ def dump_topo_json(G, topo_file):
     # Json dump of the topology
     #
     # Get json topology
-    json_topology = json_graph.node_link_data(G)
+    json_topology = json_graph.node_link_data(graph)
     # Convert links
     json_topology['links'] = [{
         'source': link['source'],
@@ -107,7 +112,7 @@ def dump_topo_json(G, topo_file):
         'ext_reachability': node.get('ext_reachability')
     } for node in json_topology['nodes']]
     # Dump the topology
-    logger.info('*** Exporting topology to %s' % topo_file)
+    logger.info('*** Exporting topology to %s', topo_file)
     with open(topo_file, 'w') as outfile:
         json.dump(json_topology, outfile, sort_keys=True, indent=2)
     logger.info('Topology exported\n')
@@ -115,6 +120,9 @@ def dump_topo_json(G, topo_file):
 
 def dump_topo_yaml(nodes, edges, node_to_systemid,
                    nodes_file_yaml=None, edges_file_yaml=None):
+    """Dump the provided set of nodes and edges to a dict representation.
+    Optionally, nodes and edges are exported as YAML file"""
+
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
@@ -132,7 +140,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
     } for node in nodes]
     # Write nodes to file
     if nodes_file_yaml is not None:
-        logger.info('*** Exporting topology nodes to %s' % nodes_file_yaml)
+        logger.info('*** Exporting topology nodes to %s', nodes_file_yaml)
         with open(nodes_file_yaml, 'w') as outfile:
             yaml.dump(nodes_yaml, outfile)
     # Export edges in YAML format
@@ -149,7 +157,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
     } for edge in edges]
     # Write edges to file
     if edges_file_yaml is not None:
-        logger.info('*** Exporting topology edges to %s' % edges_file_yaml)
+        logger.info('*** Exporting topology edges to %s', edges_file_yaml)
         with open(edges_file_yaml, 'w') as outfile:
             yaml.dump(edges_yaml, outfile)
     logger.info('Topology exported\n')
@@ -157,26 +165,30 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
 
 
 def connect_telnet(router, port):
+    """Establish a telnet connection to a router on a given port"""
+
     # Establish a telnet connection to the router
     try:
         # Init telnet
-        tn = telnetlib.Telnet(router, port, 3)
+        telnet_conn = telnetlib.Telnet(router, port, 3)
         # Connection established
-        return tn
+        return telnet_conn
     except socket.timeout:
         # Timeout expired
         logging.error('Error: cannot establish a connection '
-                      'to %s on port %s\n' % (str(router), str(port)))
-    except socket.error as e:
+                      'to %s on port %s\n', str(router), str(port))
+    except socket.error as err:
         # Socket error
-        if e.errno != errno.EINTR:
+        if err.errno != errno.EINTR:
             logging.error('Error: cannot establish a connection '
-                          'to %s on port %s\n' % (str(router), str(port)))
+                          'to %s on port %s\n', str(router), str(port))
     return None
 
 
 # Build NetworkX Topology graph
 def build_topo_graph(nodes, edges):
+    """Convert nodes and edges to a NetworkX graph"""
+
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
     #
@@ -184,23 +196,25 @@ def build_topo_graph(nodes, edges):
     if 'networkx' not in sys.modules:
         logger.critical('NetworkX library required by build_topo_graph() '
                         'has not been imported. Is it installed?')
-        return
+        return None
     logger.info('*** Building topology graph')
     # Topology graph
-    G = nx.Graph()
+    graph = nx.Graph()
     # Add nodes to the graph
     for node in nodes:
-        G.add_node(node)
+        graph.add_node(node)
     # Add edges to the graph
     for edge in edges:
-        G.add_edge(edge[0], edge[1])
+        graph.add_edge(edge[0], edge[1])
     # Return the networkx graph
     logger.info('Graph builded successfully\n')
-    return G
+    return graph
 
 
 # Utility function to export the network graph as an image file
-def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
+def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
+    """Export the NetworkX graph to a SVG image"""
+
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
     #
@@ -215,8 +229,8 @@ def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
         return
     # Create dot topology file, an intermediate representation
     # of the topology used to export as an image
-    logger.info('*** Saving topology graph image to %s' % svg_topo_file)
-    write_dot(G, dot_topo_file)
+    logger.info('*** Saving topology graph image to %s', svg_topo_file)
+    write_dot(graph, dot_topo_file)
     os.system('dot -Tsvg %s -o %s' % (dot_topo_file, svg_topo_file))
     logger.info('Topology exported\n')
 
@@ -224,6 +238,10 @@ def draw_topo(G, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
 def connect_and_extract_topology_isis(ips_ports,
                                       isisd_pwd=DEFAULT_ISISD_PASSWORD,
                                       verbose=DEFAULT_VERBOSE):
+    """Establish a telnet connection to isisd process running on a router
+    and extract the network topology from the router"""
+
+    # pylint: disable=too-many-branches, too-many-locals, too-many-statements
     # ISIS password
     password = isisd_pwd
     # Let's parse the input
@@ -240,7 +258,7 @@ def connect_and_extract_topology_isis(ips_ports,
         print("\n********* Connecting to %s-%s *********" % (router, port))
         # Init telnet and try to establish a connection to the router
         try:
-            tn = telnetlib.Telnet(router, port)
+            telnet_conn = telnetlib.Telnet(router, port)
         except socket.error:
             print("Error: cannot establish a connection to " +
                   str(router) + " on port " + str(port) + "\n")
@@ -250,47 +268,47 @@ def connect_and_extract_topology_isis(ips_ports,
         #
         # Insert isisd password
         if password:
-            tn.read_until(b"Password: ")
-            tn.write(password.encode('ascii') + b"\r\n")
+            telnet_conn.read_until(b"Password: ")
+            telnet_conn.write(password.encode('ascii') + b"\r\n")
         try:
             # terminal length set to 0 to not have interruptions
-            tn.write(b"terminal length 0" + b"\r\n")
+            telnet_conn.write(b"terminal length 0" + b"\r\n")
             # Get routing info from isisd database
-            tn.write(b"show isis hostname" + b"\r\n")
+            telnet_conn.write(b"show isis hostname" + b"\r\n")
             # Close
-            tn.write(b"q" + b"\r\n")
+            telnet_conn.write(b"q" + b"\r\n")
             # Get results
-            hostname_details = tn.read_all().decode('ascii')
+            hostname_details = telnet_conn.read_all().decode('ascii')
         except BrokenPipeError:
             logger.error('Broken pipe. Is the password correct?')
             continue
         finally:
             # Close telnet
-            tn.close()
+            telnet_conn.close()
         #
         # Extract router database
         #
         # Init telnet and try to establish a connection to the router
         try:
-            tn = telnetlib.Telnet(router, port)
+            telnet_conn = telnetlib.Telnet(router, port)
         except socket.error:
             print("Error: cannot establish a connection to " +
                   str(router) + " on port " + str(port) + "\n")
             continue
         # Insert isisd password
         if password:
-            tn.read_until(b"Password: ")
-            tn.write(password.encode('ascii') + b"\r\n")
+            telnet_conn.read_until(b"Password: ")
+            telnet_conn.write(password.encode('ascii') + b"\r\n")
         # terminal length set to 0 to not have interruptions
-        tn.write(b"terminal length 0" + b"\r\n")
+        telnet_conn.write(b"terminal length 0" + b"\r\n")
         # Get routing info from isisd database
-        tn.write(b"show isis database detail" + b"\r\n")
+        telnet_conn.write(b"show isis database detail" + b"\r\n")
         # Close
-        tn.write(b"q" + b"\r\n")
+        telnet_conn.write(b"q" + b"\r\n")
         # Get results
-        database_details = tn.read_all().decode('ascii')
+        database_details = telnet_conn.read_all().decode('ascii')
         # Close telnet
-        tn.close()
+        telnet_conn.close()
         # Set of System IDs
         system_ids = set()
         # Set of hostnames
@@ -302,12 +320,12 @@ def connect_and_extract_topology_isis(ips_ports,
         # Process hostnames
         for line in hostname_details.splitlines():
             # Get System ID and hostname
-            m = re.search('(\\d+.\\d+.\\d+)\\s+(\\S+)', line)
-            if(m):
+            match = re.search('(\\d+.\\d+.\\d+)\\s+(\\S+)', line)
+            if match:
                 # Extract System ID
-                system_id = m.group(1)
+                system_id = match.group(1)
                 # Extract hostname
-                hostname = m.group(2)
+                hostname = match.group(2)
                 # Update System IDs
                 system_ids.add(system_id)
                 # Update hostnames
@@ -323,28 +341,30 @@ def connect_and_extract_topology_isis(ips_ports,
         ipv6_reachability = dict()
         for line in database_details.splitlines():
             # Get hostname
-            m = re.search('Hostname: (\\S+)', line)
-            if (m):
+            match = re.search('Hostname: (\\S+)', line)
+            if match:
                 # Extract hostname
-                hostname = m.group(1)
+                hostname = match.group(1)
                 # Update reachability info dict
                 reachability_info[hostname] = set()
             # Get extended reachability
-            m = re.search('Extended Reachability: (\\d+.\\d+.\\d+).\\d+', line)
-            if(m):
+            match = re.search(
+                'Extended Reachability: (\\d+.\\d+.\\d+).\\d+', line)
+            if match:
                 # Extract extended reachability info
-                reachability = m.group(1)
+                reachability = match.group(1)
                 # Update reachability info dict
                 if reachability != hostname_to_system_id[hostname]:
                     reachability_info[hostname].add(reachability)
             #   IPv6 Reachability: fcf0:0:6:8::/64 (Metric: 10)
-            m = re.search('IPv6 Reachability: (.+/\\d{1,3})', line)
-            if(m):
-                ip_add = m.group(1)
+            match = re.search('IPv6 Reachability: (.+/\\d{1,3})', line)
+            if match:
+                ip_add = match.group(1)
                 if ip_add not in ipv6_reachability:
                     # Update IPv6 reachability dict
                     ipv6_reachability[ip_add] = list()
-                # add hostname to hosts list of the ip address in the ipv6 reachability dict
+                # add hostname to hosts list of the ip address in the ipv6
+                # reachability dict
                 ipv6_reachability[ip_add].append(hostname)
         # Build the topology graph
         #
@@ -362,7 +382,8 @@ def connect_and_extract_topology_isis(ips_ports,
             # Only take IP addresses of links between 2 nodes
             if len(ipv6_reachability[ip_add]) == 2:
                 (node1, node2) = ipv6_reachability[ip_add]
-                # Character '/' is not accepted in key strign in arango, using '-' instead
+                # Character '/' is not accepted in key strign in arango, using
+                # '-' instead
                 ip_add_key = ip_add.replace('/', '-')
                 edges.add((node1, node2, ip_add_key))
                 _edges.remove((node1, node2))
@@ -389,8 +410,12 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          edges_file_yaml=None,
                                          topo_graph=None,
                                          verbose=DEFAULT_VERBOSE):
+    """Run Topology Information Extraction from a set of routers.
+    Optionally export the topology to a JSON file, YAML file or SVG image"""
+
+    # pylint: disable=too-many-arguments
     # Topology Information Extraction
-    while (True):
+    while True:
         # Extract the topology information
         nodes, edges, node_to_systemid = \
             connect_and_extract_topology_isis(
@@ -398,13 +423,13 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
         # Build and export the topology graph
         if topo_file_json is not None or topo_graph is not None:
             # Builg topology graph
-            G = build_topo_graph(nodes, edges)
+            graph = build_topo_graph(nodes, edges)
             # Dump relevant information of the network graph to a JSON file
             if topo_file_json is not None:
-                dump_topo_json(G, topo_file_json)
+                dump_topo_json(graph, topo_file_json)
             # Export the network graph as an image file
             if topo_graph is not None:
-                draw_topo(G, topo_graph)
+                draw_topo(graph, topo_graph)
         # Dump relevant information of the network graph to a YAML file
         if nodes_file_yaml is not None or edges_file_yaml:
             dump_topo_yaml(
@@ -422,7 +447,9 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
 
 
 # Parse command line options and dump results
-def parseArguments():
+def parse_arguments():
+    """Command-line arguments parser"""
+
     parser = ArgumentParser(
         description='Topology Information Ex+traction (from ISIS) '
         'module for SRv6 Controller'
@@ -483,10 +510,11 @@ def parseArguments():
     return args
 
 
-if __name__ == '__main__':
-    global verbose
+def __main():
+    """Entry point for this module"""
+
     # Let's parse input parameters
-    args = parseArguments()
+    args = parse_arguments()
     # Setup properly the logger
     if args.debug:
         logger.setLevel(logging.INFO)
@@ -494,7 +522,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
-    logger.info('SERVER_DEBUG:' + str(server_debug))
+    logger.info('SERVER_DEBUG: %s', str(server_debug))
     # Get topology filename JSON
     topo_file_json = args.topo_file_json
     # Get nodes filename YAML
@@ -527,3 +555,7 @@ if __name__ == '__main__':
         topo_graph=topo_graph,
         verbose=verbose
     )
+
+
+if __name__ == '__main__':
+    __main()
