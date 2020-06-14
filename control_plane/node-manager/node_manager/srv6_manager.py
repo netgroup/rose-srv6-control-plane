@@ -47,9 +47,7 @@ import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 # Node manager dependencies
-# pylint wrongly gives a wrong-import-order warning (C0411)
-# We put pylint disable statement to disable the check on the line
-from node_manager.utils import get_address_family  # pylint: disable=C0411
+from node_manager.utils import get_address_family
 
 # Load environment variables from .env file
 # load_dotenv()

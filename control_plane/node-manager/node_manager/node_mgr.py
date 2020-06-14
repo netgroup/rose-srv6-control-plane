@@ -41,6 +41,7 @@ from socket import AF_INET, AF_INET6
 import grpc
 # python-dotenv dependencies
 from dotenv import load_dotenv
+# pkg_resources dependencies
 from pkg_resources import resource_filename
 
 # Node Manager dependencies
