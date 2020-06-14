@@ -144,13 +144,15 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         with open(nodes_file_yaml, 'w') as outfile:
             yaml.dump(nodes_yaml, outfile)
     # Export edges in YAML format
+    # Character '/' is not accepted in key strign in arango, using
+    # '-' instead
     edges_yaml = [{
-        '_key': '%s-dir1' % edge[2],
+        '_key': '%s-dir1' % edge[2].replace('/', '-'),
         '_from': 'nodes/%s' % edge[0],
         '_to': 'nodes/%s' % edge[1],
         'type': 'core'
     } for edge in edges] + [{
-        '_key': '%s-dir2' % edge[2],
+        '_key': '%s-dir2' % edge[2].replace('/', '-'),
         '_from': 'nodes/%s' % edge[1],
         '_to': 'nodes/%s' % edge[0],
         'type': 'core'
@@ -359,13 +361,13 @@ def connect_and_extract_topology_isis(ips_ports,
             #   IPv6 Reachability: fcf0:0:6:8::/64 (Metric: 10)
             match = re.search('IPv6 Reachability: (.+/\\d{1,3})', line)
             if match:
-                ip_add = match.group(1)
-                if ip_add not in ipv6_reachability:
+                ip_addr = match.group(1)
+                if ip_addr not in ipv6_reachability:
                     # Update IPv6 reachability dict
-                    ipv6_reachability[ip_add] = list()
+                    ipv6_reachability[ip_addr] = list()
                 # add hostname to hosts list of the ip address in the ipv6
                 # reachability dict
-                ipv6_reachability[ip_add].append(hostname)
+                ipv6_reachability[ip_addr].append(hostname)
         # Build the topology graph
         #
         # Nodes
@@ -377,18 +379,15 @@ def connect_and_extract_topology_isis(ips_ports,
         for hostname, system_ids in reachability_info.items():
             for system_id in system_ids:
                 _edges.add((hostname, system_id_to_hostname[system_id]))
-        for ip_add in ipv6_reachability:
+        for ip_addr in ipv6_reachability:
             # Edge link is bidirectional in this case
             # Only take IP addresses of links between 2 nodes
-            if len(ipv6_reachability[ip_add]) == 2:
-                (node1, node2) = ipv6_reachability[ip_add]
-                # Character '/' is not accepted in key strign in arango, using
-                # '-' instead
-                ip_add_key = ip_add.replace('/', '-')
-                edges.add((node1, node2, ip_add_key))
+            if len(ipv6_reachability[ip_addr]) == 2:
+                (node1, node2) = ipv6_reachability[ip_addr]
+                edges.add((node1, node2, ip_addr))
                 _edges.remove((node1, node2))
                 _edges.remove((node2, node1))
-        for (node1, node2) in _edges:
+        for (node1, node2) in _edges.copy():
             edges.add((node1, node2, None))
             _edges.remove((node1, node2))
             _edges.remove((node2, node1))

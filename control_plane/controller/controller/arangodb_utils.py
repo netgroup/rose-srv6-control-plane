@@ -27,6 +27,7 @@
 """ArangoDB utilities"""
 
 # General imports
+import ipaddress
 import logging
 import time
 
@@ -100,9 +101,13 @@ def add_hosts(nodes, edges, hosts_yaml):
             'type': 'host',
             'ip_address': host['ip_address']
         })
+        # Get the subnet
+        net = str(ipaddress.ip_network(host['ip_address'], strict=False))
         # Add edge (host to router)
+        # Character '/' is not accepted in key strign in arango, using
+        # '-' instead
         edges.append({
-            '_key': '%s-dir1' % host['ip_address'].replace('/', '-'),
+            '_key': '%s-dir1' % net.replace('/', '-'),
             '_from': 'nodes/%s' % host['name'],
             '_to': 'nodes/%s' % host['gw'],
             'type': 'edge'
@@ -111,7 +116,7 @@ def add_hosts(nodes, edges, hosts_yaml):
         # This is required because we work with
         # unidirectional edges
         edges.append({
-            '_key': '%s-dir2' % host['ip_address'].replace('/', '-'),
+            '_key': '%s-dir2' % net.replace('/', '-'),
             '_to': 'nodes/%s' % host['gw'],
             '_from': 'nodes/%s' % host['name'],
             'type': 'edge'
@@ -187,7 +192,7 @@ def load_topo_on_arango(arango_url, user, password,
     # pylint: disable=unused-argument, too-many-arguments
 
     # Load the topology on Arango DB
-    arango_db.populate(
+    arango_db.populate2(
         nodes=nodes_collection,
         edges=edges_collection,
         nodes_dict=nodes,
