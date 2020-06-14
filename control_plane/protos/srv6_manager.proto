@@ -1,0 +1,85 @@
+syntax = "proto3";
+package srv6_manager;
+import "commons.proto";
+
+service SRv6Manager {
+  // Create operation
+  rpc Create (SRv6ManagerRequest) returns (SRv6ManagerReply) {}
+  // Get operation
+  rpc Get (SRv6ManagerRequest) returns (SRv6ManagerReply) {}
+  // Update operation
+  rpc Update (SRv6ManagerRequest) returns (SRv6ManagerReply) {}
+  // Remove operation
+  rpc Remove (SRv6ManagerRequest) returns (SRv6ManagerReply) {}
+}
+
+// The SRv6ManagerRequest message containing entities.
+message SRv6ManagerRequest {
+  SRv6PathRequest srv6_path_request = 1;
+  SRv6BehaviorRequest srv6_behavior_request = 2;
+}
+
+// The SRv6ManagerReply message containing a simple status message
+// and some optional fields
+message SRv6ManagerReply {
+  srv6_services.StatusCode status = 1;
+  repeated SRv6Path paths = 2;
+  repeated SRv6Behavior behaviors = 3;
+}
+
+// The SRv6PathRequest message containing a number of paths.
+message SRv6PathRequest {
+  repeated SRv6Path paths = 1;
+}
+
+// The Path message encodes a path request
+message SRv6Path {
+  // Route of the SRv6 policy
+  string destination = 1;
+  // SRv6 Segment
+  message SRv6Segment {
+    string segment = 1;
+  }
+  // A collection of SRv6 Segments
+  repeated SRv6Segment sr_path = 2;
+  // Encap mode
+  string encapmode = 3;
+  // Device name
+  string device = 4;
+  // Table
+  int32 table = 5;
+  // Metric (i.e. the preference value of the route)
+  int32 metric = 6;
+}
+
+
+// The SRv6BehaviorRequest message containing a number of behaviors.
+message SRv6BehaviorRequest {
+  repeated SRv6Behavior behaviors = 1;
+}
+
+// The SRv6Behavior message encodes a behavior request
+message SRv6Behavior {
+  // Active segment to match
+  string segment = 1;
+  // Action to perform
+  string action = 2;
+   // Nexthop
+  string nexthop = 3;
+  // Lookup table used by some behaviors
+  int32 lookup_table = 4;
+  // Interface
+  string interface = 5;
+  // SRv6 Segment
+  message SRv6Segment {
+    string segment = 1;
+  }
+  // A collection of SRv6 Segments
+  repeated SRv6Segment segs = 6;
+  // Non-loopback device
+  string device = 7;
+  // Table
+  int32 table = 8;
+  // Metric (i.e. the preference value of the route)
+  int32 metric = 9;
+}
