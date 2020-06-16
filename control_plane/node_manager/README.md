@@ -1,5 +1,11 @@
 # Node Manager
 
+## Prerequisites
+
+The following dependencies are necessary:
+
+* Python 3.6 or above
+
 ## Installation
 
 1. Clone this project:
