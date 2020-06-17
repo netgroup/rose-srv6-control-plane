@@ -33,6 +33,7 @@ from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import arangodb_utils
+from controller.cli import utils as cli_utils
 
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
@@ -153,19 +154,23 @@ args_extract_topo_from_isis = [
     }, {
         'args': ['--nodes-yaml'],
         'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'}
+                   'help': 'nodes_yaml'},
+        'is_path': True
     }, {
         'args': ['--edges-yaml'],
         'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'}
+                   'help': 'edges_yaml'},
+        'is_path': True
     }, {
         'args': ['--addrs-yaml'],
         'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None}
+                   'help': 'addrs_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--hosts-yaml'],
         'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None}
+                   'help': 'hosts_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--verbose'],
         'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
@@ -194,10 +199,23 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for extract_topo_from_isis
-def complete_extract_topo_from_isis(text):
+def complete_extract_topo_from_isis(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_extract_topo_from_isis
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg
             for param in args_extract_topo_from_isis
@@ -235,11 +253,13 @@ args_load_topo_on_arango = [
     }, {
         'args': ['--nodes-yaml'],
         'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'}
+                   'help': 'nodes_yaml'},
+        'is_path': True
     }, {
         'args': ['--edges-yaml'],
         'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'}
+                   'help': 'edges_yaml'},
+        'is_path': True
     }, {
         'args': ['--verbose'],
         'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
@@ -268,10 +288,23 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for load_topo_on_arango
-def complete_load_topo_on_arango(text):
+def complete_load_topo_on_arango(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_load_topo_on_arango
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_load_topo_on_arango for arg in param['args']]
     # Return the matching arguments
@@ -321,19 +354,23 @@ args_extract_topo_from_isis_and_load_on_arango = [
     }, {
         'args': ['--nodes-yaml'],
         'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'}
+                   'help': 'nodes_yaml'},
+        'is_path': True
     }, {
         'args': ['--edges-yaml'],
         'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'}
+                   'help': 'edges_yaml'},
+        'is_path': True
     }, {
         'args': ['--addrs-yaml'],
         'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None}
+                   'help': 'addrs_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--hosts-yaml'],
         'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None}
+                   'help': 'hosts_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--verbose'],
         'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
@@ -364,10 +401,24 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
 
 
 # TAB-completion for extract_topo_from_isis_and_load_on_arango
-def complete_extract_topo_from_isis_and_load_on_arango(text):
+def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in
+                     args_extract_topo_from_isis_and_load_on_arango
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_extract_topo_from_isis_and_load_on_arango
             for arg in param['args']]
@@ -403,27 +454,33 @@ args_topology_information_extraction_isis = [
     }, {
         'args': ['--topo-file-json'],
         'kwargs': {'dest': 'topo_file_json', 'action': 'store',
-                   'help': 'topo_file_json'}
+                   'help': 'topo_file_json'},
+        'is_path': True
     }, {
         'args': ['--nodes-file-yaml'],
         'kwargs': {'dest': 'nodes_file_yaml', 'action': 'store',
-                   'help': 'nodes_file_yaml'}
+                   'help': 'nodes_file_yaml'},
+        'is_path': True
     }, {
         'args': ['--edges-file-yaml'],
         'kwargs': {'dest': 'edges_file_yaml', 'action': 'store',
-                   'help': 'edges_file_yaml'}
+                   'help': 'edges_file_yaml'},
+        'is_path': True
     }, {
         'args': ['--addrs-yaml'],
         'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None}
+                   'help': 'addrs_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--hosts-yaml'],
         'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None}
+                   'help': 'hosts_yaml', 'default': None},
+        'is_path': True
     }, {
         'args': ['--topo-graph'],
         'kwargs': {'dest': 'topo_graph', 'action': 'store',
-                   'help': 'topo_graph'}
+                   'help': 'topo_graph'},
+        'is_path': True
     }, {
         'args': ['--verbose'],
         'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
@@ -454,10 +511,23 @@ def parse_arguments_topology_information_extraction_isis(
 
 
 # TAB-completion for topology_information_extraction_isis
-def complete_topology_information_extraction_isis(text):
+def complete_topology_information_extraction_isis(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_topology_information_extraction_isis
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_topology_information_extraction_isis
             for arg in param['args']]

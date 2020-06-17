@@ -31,6 +31,7 @@ from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import srv6_pm, utils
+from controller.cli import utils as cli_utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'
@@ -198,7 +199,8 @@ args_set_configuration = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--send_in_interfaces'],
         'kwargs': {'dest': 'send_in_interfaces', 'action': 'store',
@@ -264,10 +266,23 @@ def parse_arguments_set_configuration(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for set_configuration
-def complete_set_configuration(text):
+def complete_set_configuration(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_set_configuration
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_set_configuration for arg in param['args']]
     # Return the matching arguments
@@ -313,7 +328,8 @@ args_reset_configuration = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--debug'],
         'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -339,10 +355,23 @@ def parse_arguments_reset_configuration(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for reset_configuration
-def complete_reset_configuration(text):
+def complete_reset_configuration(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_reset_configuration
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_reset_configuration for arg in param['args']]
     # Return the matching arguments
@@ -389,7 +418,8 @@ args_start_experiment = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--send_refl_dest'],
         'kwargs': {'dest': 'send_refl_dest', 'action': 'store',
@@ -481,10 +511,23 @@ def parse_arguments_start_experiment(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for start_experiment
-def complete_start_experiment(text):
+def complete_start_experiment(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_start_experiment
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_start_experiment for arg in param['args']]
     # Return the matching arguments
@@ -530,7 +573,8 @@ args_get_experiment_results = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--send_refl_sidlist'],
         'kwargs': {'dest': 'send_refl_sidlist', 'action': 'store',
@@ -564,10 +608,23 @@ def parse_arguments_get_experiment_results(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for get_experiment_results
-def complete_get_experiment_results(text):
+def complete_get_experiment_results(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_get_experiment_results
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_get_experiment_results
             for arg in param['args']]
@@ -614,7 +671,8 @@ args_stop_experiment = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--send_refl_dest'],
         'kwargs': {'dest': 'send_refl_dest', 'action': 'store',
@@ -664,10 +722,23 @@ def parse_arguments_stop_experiment(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for stop_experiment
-def complete_stop_experiment(text):
+def complete_stop_experiment(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_stop_experiment
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_stop_experiment for arg in param['args']]
     # Return the matching arguments

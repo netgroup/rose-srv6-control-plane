@@ -31,6 +31,7 @@ from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import srv6_utils, utils
+from controller.cli import utils as cli_utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'
@@ -187,6 +188,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
 # - args, a list of names for the argument
 # - kwargs, a dict containing the attributes for the argument required by
 #   the argparse library
+# - is_path, a boolean flag indicating whether the argument is a path or not
 args_srv6_path = [
     {
         'args': ['--grpc-ip'],
@@ -203,7 +205,8 @@ args_srv6_path = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--op'],
         'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
@@ -259,10 +262,23 @@ def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for SRv6 Path
-def complete_srv6_path(text):
+def complete_srv6_path(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_srv6_path
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_srv6_path for arg in param['args']]
     # Return the matching arguments
@@ -296,7 +312,8 @@ args_srv6_behavior = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--op'],
         'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
@@ -362,10 +379,23 @@ def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for SRv6 behavior
-def complete_srv6_behavior(text):
+def complete_srv6_behavior(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_srv6_behavior
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_srv6_behavior for arg in param['args']]
     # Return the matching arguments
@@ -411,7 +441,8 @@ args_srv6_unitunnel = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--dest'],
         'kwargs': {'dest': 'dest', 'action': 'store', 'required': True,
@@ -449,10 +480,23 @@ def parse_arguments_srv6_unitunnel(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for SRv6 unidirectional tunnel
-def complete_srv6_unitunnel(text):
+def complete_srv6_unitunnel(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_srv6_unitunnel
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_srv6_unitunnel for arg in param['args']]
     # Return the matching arguments
@@ -498,7 +542,8 @@ args_srv6_biditunnel = [
         'args': ['--server-cert'],
         'kwargs': {'dest': 'server_cert', 'action': 'store',
                    'default': DEFAULT_CERTIFICATE,
-                   'help': 'CA certificate file'}
+                   'help': 'CA certificate file'},
+        'is_path': True
     }, {
         'args': ['--left-right-dest'],
         'kwargs': {'dest': 'dest_lr', 'action': 'store', 'required': True,
@@ -548,10 +593,23 @@ def parse_arguments_srv6_biditunnel(prog=sys.argv[0], args=None):
 
 
 # TAB-completion for SRv6 bi-directional tunnel
-def complete_srv6_biditunnel(text):
+def complete_srv6_biditunnel(text, prev_text=None):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args_srv6_biditunnel
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
     # Get the list of the arguments supported by the command
     args = [arg for param in args_srv6_biditunnel for arg in param['args']]
     # Return the matching arguments

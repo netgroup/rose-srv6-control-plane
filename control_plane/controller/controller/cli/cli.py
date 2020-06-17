@@ -26,6 +26,11 @@
 
 """Implementation of a CLI for the SRv6 Controller"""
 
+# This comment avoids the annoying warning "Too many lines in module"
+# of pylint. Maybe we should split this module in the future.
+#
+# pylint: disable=too-many-lines
+
 # General imports
 import logging
 import os
@@ -199,14 +204,39 @@ class ControllerCLITopology(CustomCmd):
 
         # pylint: disable=no-self-use, unused-argument
 
-        return topo_cli.complete_topology_information_extraction_isis(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return topo_cli.complete_topology_information_extraction_isis(
+            text, prev_text)
 
     def complete_load_on_arango(self, text, line, start_idx, end_idx):
         """Auto-completion for load_on_arango command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return topo_cli.complete_load_topo_on_arango(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return topo_cli.complete_load_topo_on_arango(text, prev_text)
 
     def complete_extract_and_load_on_arango(self, text,
                                             line, start_idx, end_idx):
@@ -214,8 +244,21 @@ class ControllerCLITopology(CustomCmd):
 
         # pylint: disable=no-self-use, unused-argument
 
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
         return (topo_cli
-                .complete_extract_topo_from_isis_and_load_on_arango(text))
+                .complete_extract_topo_from_isis_and_load_on_arango(
+                    text, prev_text))
 
     def help_extract(self):
         """Show help usage for extract command"""
@@ -304,14 +347,38 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6pm_cli.complete_set_configuration(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6pm_cli.complete_set_configuration(text, prev_text)
 
     def complete_reset(self, text, line, start_idx, end_idx):
         """Auto-completion for reset command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6pm_cli.complete_reset_configuration(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6pm_cli.complete_reset_configuration(text, prev_text)
 
     def help_set(self):
         """Show help usagte for set operation"""
@@ -433,21 +500,57 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6pm_cli.complete_start_experiment(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6pm_cli.complete_start_experiment(text, prev_text)
 
     def complete_show(self, text, line, start_idx, end_idx):
         """Auto-completion for show command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6pm_cli.complete_get_experiment_results(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6pm_cli.complete_get_experiment_results(text, prev_text)
 
     def complete_stop(self, text, line, start_idx, end_idx):
         """Auto-completion for stop command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6pm_cli.complete_stop_experiment(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6pm_cli.complete_stop_experiment(text, prev_text)
 
     def help_start(self):
         """Show help usage for start operation"""
@@ -616,28 +719,76 @@ class ControllerCLISRv6(CustomCmd):
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6_cli.complete_srv6_path(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_path(text, prev_text)
 
     def complete_behavior(self, text, line, start_idx, end_idx):
         """Auto-completion for behavior command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6_cli.complete_srv6_behavior(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_behavior(text, prev_text)
 
     def complete_unitunnel(self, text, line, start_idx, end_idx):
         """Auto-completion for unitunnel command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6_cli.complete_srv6_unitunnel(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_unitunnel(text, prev_text)
 
     def complete_biditunnel(self, text, line, start_idx, end_idx):
         """Auto-completion for biditunnel command"""
 
         # pylint: disable=no-self-use, unused-argument
 
-        return srv6_cli.complete_srv6_biditunnel(text)
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_biditunnel(text, prev_text)
 
     def help_path(self):
         """Show help usage for path command"""
