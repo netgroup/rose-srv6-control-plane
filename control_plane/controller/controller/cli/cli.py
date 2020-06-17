@@ -29,6 +29,7 @@
 # General imports
 import logging
 import os
+import readline
 import sys
 from argparse import ArgumentParser
 from cmd import Cmd
@@ -57,6 +58,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
+
+
+# Set line delimiters, required for the auto-completion feature
+readline.set_completer_delims(' \t\n')
 
 
 class CustomCmd(Cmd):
@@ -189,6 +194,29 @@ class ControllerCLITopology(CustomCmd):
         )
         return True
 
+    def complete_extract(self, text, line, start_idx, end_idx):
+        """Auto-completion for extract command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return topo_cli.complete_topology_information_extraction_isis(text)
+
+    def complete_load_on_arango(self, text, line, start_idx, end_idx):
+        """Auto-completion for load_on_arango command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return topo_cli.complete_load_topo_on_arango(text)
+
+    def complete_extract_and_load_on_arango(self, text,
+                                            line, start_idx, end_idx):
+        """Auto-completion for extract_and_load_on_arango command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return (topo_cli
+                .complete_extract_topo_from_isis_and_load_on_arango(text))
+
     def help_extract(self):
         """Show help usage for extract command"""
 
@@ -270,6 +298,20 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             reflector_port=args.reflector_port,
         )
         return True
+
+    def complete_set(self, text, line, start_idx, end_idx):
+        """Auto-completion for set command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6pm_cli.complete_set_configuration(text)
+
+    def complete_reset(self, text, line, start_idx, end_idx):
+        """Auto-completion for reset command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6pm_cli.complete_reset_configuration(text)
 
     def help_set(self):
         """Show help usagte for set operation"""
@@ -385,6 +427,27 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_localseg=args.refl_send_localseg
         )
         return True
+
+    def complete_start(self, text, line, start_idx, end_idx):
+        """Auto-completion for start command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6pm_cli.complete_start_experiment(text)
+
+    def complete_show(self, text, line, start_idx, end_idx):
+        """Auto-completion for show command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6pm_cli.complete_get_experiment_results(text)
+
+    def complete_stop(self, text, line, start_idx, end_idx):
+        """Auto-completion for stop command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6pm_cli.complete_stop_experiment(text)
 
     def help_start(self):
         """Show help usage for start operation"""
@@ -547,6 +610,34 @@ class ControllerCLISRv6(CustomCmd):
             localseg_rl=args.localseg_rl
         )
         return True
+
+    def complete_path(self, text, line, start_idx, end_idx):
+        """Auto-completion for path command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6_cli.complete_srv6_path(text)
+
+    def complete_behavior(self, text, line, start_idx, end_idx):
+        """Auto-completion for behavior command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6_cli.complete_srv6_behavior(text)
+
+    def complete_unitunnel(self, text, line, start_idx, end_idx):
+        """Auto-completion for unitunnel command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6_cli.complete_srv6_unitunnel(text)
+
+    def complete_biditunnel(self, text, line, start_idx, end_idx):
+        """Auto-completion for biditunnel command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        return srv6_cli.complete_srv6_biditunnel(text)
 
     def help_path(self):
         """Show help usage for path command"""
