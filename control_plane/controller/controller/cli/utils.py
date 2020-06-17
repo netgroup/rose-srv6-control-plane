@@ -41,4 +41,4 @@ def complete_path(path):
 
     if op.isdir(path):
         return gb.glob(op.join(path, '*'))
-    return gb.glob(path+'*')
+    return gb.glob(path + '*')
