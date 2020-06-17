@@ -136,7 +136,9 @@ class ControllerCLITopology(CustomCmd):
             topo_graph=args.topo_graph,
             verbose=args.verbose
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_load_on_arango(self, args):
         """Read nodes and edges YAML files and upload the topology
@@ -159,7 +161,9 @@ class ControllerCLITopology(CustomCmd):
             edges_yaml=args.edges_yaml,
             verbose=args.verbose
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_extract_and_load_on_arango(self, args):
         """Extract the network topology from a set of nodes running ISIS
@@ -187,7 +191,9 @@ class ControllerCLITopology(CustomCmd):
             period=arg.period,
             verbose=arg.verbose
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def help_extract(self):
         """Show help usage for extract command"""
@@ -249,7 +255,9 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             number_of_color=args.number_of_color,
             pm_driver=args.pm_driver
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_reset(self, args):
         """Clear configuration"""
@@ -269,7 +277,9 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             sender_port=args.sender_port,
             reflector_port=args.reflector_port,
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def help_set(self):
         """Show help usagte for set operation"""
@@ -336,7 +346,9 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_localseg=args.refl_send_localseg,
             force=args.force
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_show(self, args):
         """Show results of a running experiment"""
@@ -358,7 +370,9 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_sidlist=args.send_refl_sidlist,
             refl_send_sidlist=args.refl_send_sidlist
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_stop(self, args):
         """Stop a running experiment"""
@@ -384,7 +398,9 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_localseg=args.send_refl_localseg,
             refl_send_localseg=args.refl_send_localseg
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def help_start(self):
         """Show help usage for start operation"""
@@ -467,7 +483,9 @@ class ControllerCLISRv6(CustomCmd):
             table=args.table,
             metric=args.metric
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_behavior(self, args):
         """Handle a SRv6 behavior"""
@@ -495,7 +513,9 @@ class ControllerCLISRv6(CustomCmd):
             segments=args.segments,
             metric=args.metric
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""
@@ -519,7 +539,9 @@ class ControllerCLISRv6(CustomCmd):
             segments=args.sidlist,
             localseg=args.localseg
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def do_biditunnel(self, args):
         """Handle a SRv6 bidirectional tunnel"""
@@ -546,7 +568,9 @@ class ControllerCLISRv6(CustomCmd):
             localseg_lr=args.localseg_lr,
             localseg_rl=args.localseg_rl
         )
-        return True
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
 
     def help_path(self):
         """Show help usage for path command"""
