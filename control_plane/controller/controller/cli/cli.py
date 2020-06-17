@@ -28,8 +28,12 @@
 
 # General imports
 try:
+    # Optional dependency, required to support persistency of the command
+    # history
     import readline
 except ImportError:
+    # If 'readline' is not found in the system, history persistency
+    # will be disabled
     readline = None
 import logging
 import os
