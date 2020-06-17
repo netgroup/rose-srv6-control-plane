@@ -74,6 +74,9 @@ class CustomCmd(Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+            except Exception as err:
+                logging.exception(err)
+                print()
 
     def emptyline(self):
         """Avoid to execute the last command if empty line is entered"""
