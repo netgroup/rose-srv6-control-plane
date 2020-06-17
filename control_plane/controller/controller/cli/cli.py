@@ -27,7 +27,10 @@
 """Implementation of a CLI for the SRv6 Controller"""
 
 # General imports
-import readline
+try:
+    import readline
+except ImportError:
+    readline = None
 import logging
 import os
 import sys
