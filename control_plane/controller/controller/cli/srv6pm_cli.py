@@ -463,7 +463,8 @@ def args_start_experiment():
         }, {
             'args': ['--authentication_mode'],
             'kwargs': {'dest': 'authentication_mode', 'action': 'store',
-                       'help': 'authentication_mode', 'default': 'HMAC_SHA_256'}
+                       'help': 'authentication_mode',
+                       'default': 'HMAC_SHA_256'}
         }, {
             'args': ['--authentication_key'],
             'kwargs': {'dest': 'authentication_key', 'action': 'store',

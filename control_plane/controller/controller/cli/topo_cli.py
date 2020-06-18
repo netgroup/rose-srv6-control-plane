@@ -249,7 +249,8 @@ def args_load_topo_on_arango():
         {
             'args': ['--arango-url'],
             'kwargs': {'dest': 'arango_url', 'action': 'store',
-                       'help': 'arango_url', 'default': os.getenv('ARANGO_URL')}
+                       'help': 'arango_url',
+                       'default': os.getenv('ARANGO_URL')}
         }, {
             'args': ['--arango-user'],
             'kwargs': {'dest': 'arango_user', 'action': 'store',
@@ -422,7 +423,7 @@ def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
     a list of parameters candidate for the auto-completion of the string"""
 
     # Get arguments for extract_topo_from_isis_and_load_on_arango
-    args = extract_topo_from_isis_and_load_on_arango()
+    args = args_extract_topo_from_isis_and_load_on_arango()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
@@ -537,7 +538,7 @@ def complete_topology_information_extraction_isis(text, prev_text):
     a list of parameters candidate for the auto-completion of the string"""
 
     # Get arguments for topology_information_extraction_isis
-    args = topology_information_extraction_isis()
+    args = args_topology_information_extraction_isis()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path

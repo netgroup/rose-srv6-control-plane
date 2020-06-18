@@ -217,8 +217,8 @@ def args_srv6_path():
                        'help': 'Operation'}
         }, {
             'args': ['--destination'],
-            'kwargs': {'dest': 'destination', 'action': 'store', 'required': True,
-                       'help': 'Destination'}
+            'kwargs': {'dest': 'destination', 'action': 'store',
+                       'required': True, 'help': 'Destination'}
         }, {
             'args': ['--segments'],
             'kwargs': {'dest': 'segments', 'action': 'store', 'required': True,
