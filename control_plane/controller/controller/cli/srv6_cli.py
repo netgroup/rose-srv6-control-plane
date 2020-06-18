@@ -348,7 +348,7 @@ args_srv6_behavior = [
                    'help': 'Interface', 'default': ''}
     }, {
         'args': ['--segments'],
-        'kwargs': {'dest': 'segments', 'action': 'store', 'required': True,
+        'kwargs': {'dest': 'segments', 'action': 'store',
                    'help': 'Segments', 'default': ''}
     }, {
         'args': ['--metric'],
