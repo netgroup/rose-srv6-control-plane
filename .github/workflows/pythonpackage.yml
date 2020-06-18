@@ -10,12 +10,12 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  build_controller:
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -28,14 +28,86 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install wheel flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
+        pip install setuptools wheel flake8 pytest
+    #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    #- name: Lint with flake8
+    #  run: |
+        # db_update folder
+        #
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    #    flake8 db_update --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    #    flake8 db_update --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        #
+        # controller folder
+        #
+        # stop the build if there are Python syntax errors or undefined names
+    #    flake8 control_plane/controller --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #    flake8 control_plane/controller --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        #
+        # control_plane/protos
+        #
+    #    flake8 control_plane/protos --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #    flake8 control_plane/protos --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        #
+        # control_plane/examples
+        #
+    #    flake8 control_plane/examples --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #    flake8 control_plane/examples --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     #- name: Test with pytest
     #  run: |
     #    pytest
+    - name: Build
+      run: |
+        cd db_update
+        python setup.py sdist bdist_wheel install
+        cd ../control_plane/protos
+        python setup.py sdist bdist_wheel install
+        cd ../../control_plane/controller
+        python setup.py sdist bdist_wheel install
+        
+  build_node_manager:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel flake8 pytest
+    #    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    #- name: Lint with flake8
+    #  run: |
+        # control_plane/node-manager
+        #
+        # stop the build if there are Python syntax errors or undefined names
+    #    flake8 control_plane/node-manager --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #    flake8 control_plane/node-manager --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        #
+        # control_plane/protos
+        #
+    #    flake8 control_plane/protos --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #    flake8 control_plane/protos --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    #- name: Test with pytest
+    #  run: |
+    #    pytest
+    - name: Build
+      run: |
+        cd control_plane/protos
+        python setup.py sdist bdist_wheel install
+        cd ../../control_plane/node-manager
+        python setup.py sdist bdist_wheel install
+

@@ -135,6 +135,28 @@ This section describes the Controller APIs.
 
 ### Usage examples
 
+This directory contains code examples for SRv6 controller for the topology 8r-1c-in-band-isis contained in draft-srv6-tutorial (https://github.com/netgroup/draft-srv6-tutorial)
+
+```
+- create_tunnel_r1r4r8.py
+Create a bidirectional SRv6 tunnel with metric 200 between h11 and h83 passing through router r4.
+
+- create_tunnel_r1r7r8.py
+Create a bidirectional SRv6 tunnel with metric 100 between h11 and h83 passing through router r7.
+
+- shift_path.py
+By executing create_tunnel_r1r4r8 and create_tunnel_r1r7r8 the path selected for the packets is r1---r7---r8 because the value of the metric is lower than the other path. This example shows how it is possible to choose between the two paths by changing the metric.
+
+- remove_tunnel_r1r4r8.py
+Remove the bidirectional SRv6 tunnel with metric 100 between h11 and h83 passing through router r4.
+
+- remove_tunnel_r1r7r8.py
+Remove the bidirectional SRv6 tunnel with metric 200 between h11 and h83 passing through router r7.
+
+- load_topo_on_arango.py
+Extract the network topology from a node running ISIS, export it in YAML format, perform some manipulation and load the topology on Arango DB.
+```
+
 #### Prerequisites
 This tutorial assumes that you have installed the Node Manager and the Controller. If you haven't installed them, check the documentation of the Controller and Node Manager.
 The following examples are referred to a topology emulated using the open-source emulator Mininet. The topology is available at [SRv6 tutorial](https://github.com/netgroup/rose-srv6-tutorial/tree/master/nets/8r-1c-in-band-isis).
