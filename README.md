@@ -2,18 +2,24 @@
 > Control plane functionalities for SDN.
 
 ![Python package](https://github.com/netgroup/rose-srv6-control-plane/workflows/Python%20package/badge.svg)
+![Python Lint Code Base](https://github.com/netgroup/rose-srv6-control-plane/workflows/Lint%20Code%20Base/badge.svg)
 ![GitHub](https://img.shields.io/github/license/netgroup/rose-srv6-control-plane)
 
 ## Table of Contents
 * [Getting Started](#getting-started)
+* [Docker](#docker)
+    * [Build the Docker image](build-the-docker-image)
+    * [Run the controller container](#run-the-controller-container)
+    * [Run the node-manager container](#run-the-node-manager-container)
+    * [Access to the Docker container](#access-to-the-docker-container)
+* [Database utilities](#database-utilities)
 * [Control plane functionalities](#control-plane-functionalities)
-* [Node manager](#node-manager)
-    * [Installation](#Installation)
-    * [Usage](#Usage)
-* [Controller](#controller)
-    * [Installation](#Installation-1)
-    * [Usage](#Usage-1)
-* [Usage examples](#usage-examples)
+    * [Node manager](#node-manager)
+    * [Controller](#controller)
+    * [Protocol Buffers](#protocol-buffers)
+    * [Usage examples](#usage-examples)
+        * [How to use the Controller CLI](#how-to-use-the-controller-cli)
+        * [How to use the Controller API in your Python application](#how-to-use-the-controller-api-in-your-python-application)
 * [Requirements](#requirements)
 * [Links](#links)
 * [Issues](#issues)
@@ -28,7 +34,6 @@ This project provides a collection of modules implementing different control pla
 First, you need to clone this repository.
 
 ```console
-$ cd workspace
 $ git clone https://github.com/netgroup/rose-srv6-control-plane
 ```
 
@@ -40,15 +45,19 @@ The project is structured as follows:
     └── README.md
 
 
+## Docker
+...
+
+
 ## Database utilities
 The *db_update* folder contains several modules used by the Controller to interact with an ArangoDB database.
 
 
 ## Control plane functionalities
 
-The Controller uses a gRPC API to contact the Linux nodes. A gRPC server (Node Manager) must be run on the Linux nodes that you want to control through the Controller. The gRPC server receives gRPC requests from the Controller, performs the requested task and returns a reply containing the status code of the operation and other parameters depending on the specific operation.
+The Controller uses a gRPC API to contact the Linux nodes. A gRPC server (Node Manager) must be run on the Linux nodes that you want to control through the Controller.
 
-The Controller leverages the gRPC API to enforce rules and commands on the Linux nodes, such as the setup of SRv6 paths and behaviors.
+The Controller interacts with the gRPC server executed on the nodes to enforce rules and commands, such as the setup of SRv6 paths and behaviors.
 
 The control-plane modules are organized as follows:
 
@@ -64,17 +73,31 @@ The control-plane modules are organized as follows:
 
 ## Node manager
 
-The **control_plane/node-manager** folder contains some modules that allow a Linux node to interact with a Controller by using the gRPC protocol.
-
-A Node Manager instance must be executed on each node that you want to control from the Controller.
+The **control_plane/node-manager** package implements the functionalities of a gRPC server.
+A gRPC server must be executed on each node that you want to control from the Controller.
 
 For more information about the installation and usage of the Node Manager follow the instructions contained in the *README.md* file under the *node-manager* folder.
 
 
 ## Controller
-The **control_plane/controller** folder provides a collection of modules implmenting different functionalities of a Controller.
+The **control_plane/controller** package provides a collection of modules implmenting different functionalities of a Controller.
 
 For more information about the installation and usage of the Node Manager follow the instructions contained in the *README.md* file under the *controller* folder.
+
+
+## Protocol Buffers
+This project depends on the **grpcio** library that provides an implementation of the gRPC protocol. gRPC services use Protocol Buffers as Interface Description Language (IDL). Consequently, both the Controller and the Node Manager require some Python classes generated from the .proto files stored in the **control_plane/protos** folder.
+Since the compilation and generation of the Python classes from the .proto files has been automated in the setup scripts, the manual generation of this classes is no longer required.
+
+
+## Usage examples
+There are two ways to use the functionalities offered by the Controller. You can execute the Python Command-Line Interface (CLI) provided by the Controller or you can import the Controller modules in your Python modules and use the API exposed by the Controller.
+
+### How to use the Controller CLI
+A description of the CLI and the supported commands is provided in the documentation contained in [control_plane/controller](control_plane/controller/README.md).
+
+### How to use the Controller API in your Python application
+The **control_plane/examples** directory contains several usage examples for the API exposed by the Controller. For the description of the API and the examples, check the documentation contained in the [control_plane/examples folder](control_plane/examples/README.md).
 
 
 ## Requirements
@@ -96,4 +119,4 @@ If you want to contribute to the ecosystem, provide feedback or get in touch wit
 
 
 ## License
---
+This project is licensed under the [Apache License, Version 2.0](https://github.com/netgroup/rose-srv6-control-plane/blob/master/LICENSE).
