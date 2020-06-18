@@ -137,48 +137,52 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
     )
 
 
-# Command-line arguments for the extract_topo_from_isis command
-# Arguments are represented as a dicts. Each dict has two items:
-# - args, a list of names for the argument
-# - kwargs, a dict containing the attributes for the argument required by
-#   the argparse library
-args_extract_topo_from_isis = [
-    {
-        'args': ['--isis-nodes'],
-        'kwargs': {'dest': 'isis_nodes', 'action': 'store',
-                   'required': True, 'help': 'isis_nodes'}
-    }, {
-        'args': ['--isisd-pwd'],
-        'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
-                   'help': 'period'}
-    }, {
-        'args': ['--nodes-yaml'],
-        'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--edges-yaml'],
-        'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--addrs-yaml'],
-        'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--hosts-yaml'],
-        'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--verbose'],
-        'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
-    }, {
-        'args': ['--debug'],
-        'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
-    }
-]
+def args_extract_topo_from_isis():
+    '''
+    Command-line arguments for the extract_topo_from_isis command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--isis-nodes'],
+            'kwargs': {'dest': 'isis_nodes', 'action': 'store',
+                       'required': True, 'help': 'isis_nodes'}
+        }, {
+            'args': ['--isisd-pwd'],
+            'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
+                       'help': 'period'}
+        }, {
+            'args': ['--nodes-yaml'],
+            'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
+                       'help': 'nodes_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--edges-yaml'],
+            'kwargs': {'dest': 'edges_yaml', 'action': 'store',
+                       'help': 'edges_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--addrs-yaml'],
+            'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
+                       'help': 'addrs_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--hosts-yaml'],
+            'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
+                       'help': 'hosts_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -190,7 +194,7 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
         prog=prog, description=''
     )
     # Add the arguments to the parser
-    for param in args_extract_topo_from_isis:
+    for param in args_extract_topo_from_isis():
         parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
@@ -203,11 +207,13 @@ def complete_extract_topo_from_isis(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Get arguments from extract_topo_from_isis
+    args = args_extract_topo_from_isis()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
         path_args = [arg
-                     for param in args_extract_topo_from_isis
+                     for param in args
                      for arg in param['args']
                      if param.get('is_path', False)]
         # Check whether the previous argument requires a path or not
@@ -218,7 +224,7 @@ def complete_extract_topo_from_isis(text, prev_text):
     #
     # Get the list of the arguments supported by the command
     args = [arg
-            for param in args_extract_topo_from_isis
+            for param in args
             for arg in param['args']]
     # Return the matching arguments
     if text:
@@ -230,44 +236,48 @@ def complete_extract_topo_from_isis(text, prev_text):
     return args
 
 
-# Command-line arguments for the load_topo_on_arango command
-# Arguments are represented as a dicts. Each dict has two items:
-# - args, a list of names for the argument
-# - kwargs, a dict containing the attributes for the argument required by
-#   the argparse library
-args_load_topo_on_arango = [
-    {
-        'args': ['--arango-url'],
-        'kwargs': {'dest': 'arango_url', 'action': 'store',
-                   'help': 'arango_url', 'default': os.getenv('ARANGO_URL')}
-    }, {
-        'args': ['--arango-user'],
-        'kwargs': {'dest': 'arango_user', 'action': 'store',
-                   'help': 'arango_user',
-                   'default': os.getenv('ARANGO_USER')}
-    }, {
-        'args': ['--arango-password'],
-        'kwargs': {'dest': 'arango_password', 'action': 'store',
-                   'help': 'arango_password',
-                   'default': os.getenv('ARANGO_PASSWORD')}
-    }, {
-        'args': ['--nodes-yaml'],
-        'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--edges-yaml'],
-        'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--verbose'],
-        'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
-    }, {
-        'args': ['--debug'],
-        'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
-    }
-]
+def args_load_topo_on_arango():
+    '''
+    Command-line arguments for the load_topo_on_arango command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--arango-url'],
+            'kwargs': {'dest': 'arango_url', 'action': 'store',
+                       'help': 'arango_url', 'default': os.getenv('ARANGO_URL')}
+        }, {
+            'args': ['--arango-user'],
+            'kwargs': {'dest': 'arango_user', 'action': 'store',
+                       'help': 'arango_user',
+                       'default': os.getenv('ARANGO_USER')}
+        }, {
+            'args': ['--arango-password'],
+            'kwargs': {'dest': 'arango_password', 'action': 'store',
+                       'help': 'arango_password',
+                       'default': os.getenv('ARANGO_PASSWORD')}
+        }, {
+            'args': ['--nodes-yaml'],
+            'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
+                       'help': 'nodes_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--edges-yaml'],
+            'kwargs': {'dest': 'edges_yaml', 'action': 'store',
+                       'help': 'edges_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -279,7 +289,7 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
         prog=prog, description=''
     )
     # Add the arguments to the parser
-    for param in args_load_topo_on_arango:
+    for param in args_load_topo_on_arango():
         parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
@@ -292,11 +302,13 @@ def complete_load_topo_on_arango(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Get arguments for load_topo_on_arango
+    args = args_load_topo_on_arango()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
         path_args = [arg
-                     for param in args_load_topo_on_arango
+                     for param in args
                      for arg in param['args']
                      if param.get('is_path', False)]
         # Check whether the previous argument requires a path or not
@@ -306,7 +318,7 @@ def complete_load_topo_on_arango(text, prev_text):
     # Argument is not a path
     #
     # Get the list of the arguments supported by the command
-    args = [arg for param in args_load_topo_on_arango for arg in param['args']]
+    args = [arg for param in args for arg in param['args']]
     # Return the matching arguments
     if text:
         return [
@@ -317,68 +329,72 @@ def complete_load_topo_on_arango(text, prev_text):
     return args
 
 
-# Command-line arguments for the extract_topo_from_isis_and_load_on_arango
-# command. Arguments are represented as a dicts. Each dict has two items:
-# - args, a list of names for the argument
-# - kwargs, a dict containing the attributes for the argument required by
-#   the argparse library
-args_extract_topo_from_isis_and_load_on_arango = [
-    {
-        'args': ['--isis-nodes'],
-        'kwargs': {'dest': 'isis_nodes', 'action': 'store',
-                   'required': True, 'help': 'isis_nodes'}
-    }, {
-        'args': ['--isisd-pwd'],
-        'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
-                   'help': 'period'}
-    }, {
-        'args': ['--arango-url'],
-        'kwargs': {'dest': 'arango_url', 'action': 'store',
-                   'help': 'arango_url',
-                   'default': os.getenv('ARANGO_URL')}
-    }, {
-        'args': ['--arango-user'],
-        'kwargs': {'dest': 'arango_user', 'action': 'store',
-                   'help': 'arango_user',
-                   'default': os.getenv('ARANGO_USER')}
-    }, {
-        'args': ['--arango-password'],
-        'kwargs': {'dest': 'arango_password', 'action': 'store',
-                   'help': 'arango_password',
-                   'default': os.getenv('ARANGO_PASSWORD')}
-    }, {
-        'args': ['--period'],
-        'kwargs': {'dest': 'period', 'action': 'store',
-                   'help': 'period', 'type': int,
-                   'default': DEFAULT_TOPO_EXTRACTION_PERIOD}
-    }, {
-        'args': ['--nodes-yaml'],
-        'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
-                   'help': 'nodes_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--edges-yaml'],
-        'kwargs': {'dest': 'edges_yaml', 'action': 'store',
-                   'help': 'edges_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--addrs-yaml'],
-        'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--hosts-yaml'],
-        'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--verbose'],
-        'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
-    }, {
-        'args': ['--debug'],
-        'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
-    }
-]
+def args_extract_topo_from_isis_and_load_on_arango():
+    '''
+    Command-line arguments for the extract_topo_from_isis_and_load_on_arango
+    command. Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--isis-nodes'],
+            'kwargs': {'dest': 'isis_nodes', 'action': 'store',
+                       'required': True, 'help': 'isis_nodes'}
+        }, {
+            'args': ['--isisd-pwd'],
+            'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
+                       'help': 'period'}
+        }, {
+            'args': ['--arango-url'],
+            'kwargs': {'dest': 'arango_url', 'action': 'store',
+                       'help': 'arango_url',
+                       'default': os.getenv('ARANGO_URL')}
+        }, {
+            'args': ['--arango-user'],
+            'kwargs': {'dest': 'arango_user', 'action': 'store',
+                       'help': 'arango_user',
+                       'default': os.getenv('ARANGO_USER')}
+        }, {
+            'args': ['--arango-password'],
+            'kwargs': {'dest': 'arango_password', 'action': 'store',
+                       'help': 'arango_password',
+                       'default': os.getenv('ARANGO_PASSWORD')}
+        }, {
+            'args': ['--period'],
+            'kwargs': {'dest': 'period', 'action': 'store',
+                       'help': 'period', 'type': int,
+                       'default': DEFAULT_TOPO_EXTRACTION_PERIOD}
+        }, {
+            'args': ['--nodes-yaml'],
+            'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
+                       'help': 'nodes_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--edges-yaml'],
+            'kwargs': {'dest': 'edges_yaml', 'action': 'store',
+                       'help': 'edges_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--addrs-yaml'],
+            'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
+                       'help': 'addrs_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--hosts-yaml'],
+            'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
+                       'help': 'hosts_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -392,7 +408,7 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
         prog=prog, description=''
     )
     # Add the arguments to the parser
-    for param in args_extract_topo_from_isis_and_load_on_arango:
+    for param in args_extract_topo_from_isis_and_load_on_arango():
         parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
@@ -405,12 +421,13 @@ def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Get arguments for extract_topo_from_isis_and_load_on_arango
+    args = extract_topo_from_isis_and_load_on_arango()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
         path_args = [arg
-                     for param in
-                     args_extract_topo_from_isis_and_load_on_arango
+                     for param in args
                      for arg in param['args']
                      if param.get('is_path', False)]
         # Check whether the previous argument requires a path or not
@@ -420,7 +437,7 @@ def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
     # Argument is not a path
     #
     # Get the list of the arguments supported by the command
-    args = [arg for param in args_extract_topo_from_isis_and_load_on_arango
+    args = [arg for param in args
             for arg in param['args']]
     # Return the matching arguments
     if text:
@@ -432,63 +449,67 @@ def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
     return args
 
 
-# Command-line arguments for the topology_information_extraction_isis
-# command. Arguments are represented as a dicts. Each dict has two items:
-# - args, a list of names for the argument
-# - kwargs, a dict containing the attributes for the argument required by
-#   the argparse library
-args_topology_information_extraction_isis = [
-    {
-        'args': ['--routers'],
-        'kwargs': {'dest': 'routers', 'action': 'store',
-                   'required': True, 'help': 'routers'}
-    }, {
-        'args': ['--period'],
-        'kwargs': {'dest': 'period', 'action': 'store',
-                   'help': 'period', 'type': int,
-                   'default': DEFAULT_TOPO_EXTRACTION_PERIOD}
-    }, {
-        'args': ['--isisd-pwd'],
-        'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
-                   'help': 'period'}
-    }, {
-        'args': ['--topo-file-json'],
-        'kwargs': {'dest': 'topo_file_json', 'action': 'store',
-                   'help': 'topo_file_json'},
-        'is_path': True
-    }, {
-        'args': ['--nodes-file-yaml'],
-        'kwargs': {'dest': 'nodes_file_yaml', 'action': 'store',
-                   'help': 'nodes_file_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--edges-file-yaml'],
-        'kwargs': {'dest': 'edges_file_yaml', 'action': 'store',
-                   'help': 'edges_file_yaml'},
-        'is_path': True
-    }, {
-        'args': ['--addrs-yaml'],
-        'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
-                   'help': 'addrs_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--hosts-yaml'],
-        'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
-                   'help': 'hosts_yaml', 'default': None},
-        'is_path': True
-    }, {
-        'args': ['--topo-graph'],
-        'kwargs': {'dest': 'topo_graph', 'action': 'store',
-                   'help': 'topo_graph'},
-        'is_path': True
-    }, {
-        'args': ['--verbose'],
-        'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
-    }, {
-        'args': ['--debug'],
-        'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
-    }
-]
+def args_topology_information_extraction_isis():
+    '''
+    Command-line arguments for the topology_information_extraction_isis
+    command. Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--routers'],
+            'kwargs': {'dest': 'routers', 'action': 'store',
+                       'required': True, 'help': 'routers'}
+        }, {
+            'args': ['--period'],
+            'kwargs': {'dest': 'period', 'action': 'store',
+                       'help': 'period', 'type': int,
+                       'default': DEFAULT_TOPO_EXTRACTION_PERIOD}
+        }, {
+            'args': ['--isisd-pwd'],
+            'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
+                       'help': 'period'}
+        }, {
+            'args': ['--topo-file-json'],
+            'kwargs': {'dest': 'topo_file_json', 'action': 'store',
+                       'help': 'topo_file_json'},
+            'is_path': True
+        }, {
+            'args': ['--nodes-file-yaml'],
+            'kwargs': {'dest': 'nodes_file_yaml', 'action': 'store',
+                       'help': 'nodes_file_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--edges-file-yaml'],
+            'kwargs': {'dest': 'edges_file_yaml', 'action': 'store',
+                       'help': 'edges_file_yaml'},
+            'is_path': True
+        }, {
+            'args': ['--addrs-yaml'],
+            'kwargs': {'dest': 'addrs_yaml', 'action': 'store',
+                       'help': 'addrs_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--hosts-yaml'],
+            'kwargs': {'dest': 'hosts_yaml', 'action': 'store',
+                       'help': 'hosts_yaml', 'default': None},
+            'is_path': True
+        }, {
+            'args': ['--topo-graph'],
+            'kwargs': {'dest': 'topo_graph', 'action': 'store',
+                       'help': 'topo_graph'},
+            'is_path': True
+        }, {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -502,7 +523,7 @@ def parse_arguments_topology_information_extraction_isis(
         prog=prog, description=''
     )
     # Add the arguments to the parser
-    for param in args_topology_information_extraction_isis:
+    for param in args_topology_information_extraction_isis():
         parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
@@ -515,11 +536,13 @@ def complete_topology_information_extraction_isis(text, prev_text):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
+    # Get arguments for topology_information_extraction_isis
+    args = topology_information_extraction_isis()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
         path_args = [arg
-                     for param in args_topology_information_extraction_isis
+                     for param in args
                      for arg in param['args']
                      if param.get('is_path', False)]
         # Check whether the previous argument requires a path or not
@@ -529,7 +552,7 @@ def complete_topology_information_extraction_isis(text, prev_text):
     # Argument is not a path
     #
     # Get the list of the arguments supported by the command
-    args = [arg for param in args_topology_information_extraction_isis
+    args = [arg for param in args
             for arg in param['args']]
     # Return the matching arguments
     if text:
