@@ -31,6 +31,7 @@ from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import srv6_utils, utils
+from controller.cli import utils as cli_utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'
@@ -182,6 +183,71 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
             print('Invalid operation %s' % operation)
 
 
+def args_srv6_path():
+    '''
+    Command-line arguments for the srv6_path command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    - is_path, a boolean flag indicating whether the argument is a path or not
+    '''
+
+    return [
+        {
+            'args': ['--grpc-ip'],
+            'kwargs': {'dest': 'grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--grpc-port'],
+            'kwargs': {'dest': 'grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--secure'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
+        }, {
+            'args': ['--server-cert'],
+            'kwargs': {'dest': 'server_cert', 'action': 'store',
+                       'default': DEFAULT_CERTIFICATE,
+                       'help': 'CA certificate file'},
+            'is_path': True
+        }, {
+            'args': ['--op'],
+            'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
+                       'help': 'Operation'}
+        }, {
+            'args': ['--destination'],
+            'kwargs': {'dest': 'destination', 'action': 'store',
+                       'required': True, 'help': 'Destination'}
+        }, {
+            'args': ['--segments'],
+            'kwargs': {'dest': 'segments', 'action': 'store', 'required': True,
+                       'help': 'Segments', 'default': ''}
+        }, {
+            'args': ['--device'],
+            'kwargs': {'dest': 'device', 'action': 'store', 'help': 'Device',
+                       'default': ''}
+        }, {
+            'args': ['--encapmode'],
+            'kwargs': {'dest': 'encapmode', 'action': 'store',
+                       'help': 'Encap mode',
+                       'choices': ['encap', 'inline', 'l2encap'],
+                       'default': 'encap'}
+        }, {
+            'args': ['--table'],
+            'kwargs': {'dest': 'table', 'action': 'store',
+                       'help': 'Table', 'type': int, 'default': -1}
+        }, {
+            'args': ['--metric'],
+            'kwargs': {'dest': 'metric', 'action': 'store',
+                       'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
+
+
 # Parse options
 def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
     """Command-line arguments parser for srv6_path function"""
@@ -190,57 +256,119 @@ def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
     )
-    parser.add_argument(
-        '-g', '--grpc-ip', dest='grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '-r', '--grpc-port', dest='grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '-s', '--secure', action='store_true', help='Activate secure mode'
-    )
-    parser.add_argument(
-        '-c', '--server-cert', dest='server_cert', action='store',
-        default=DEFAULT_CERTIFICATE, help='CA certificate file'
-    )
-    parser.add_argument(
-        '--op', dest='op', action='store', required=True,
-        help='Operation'
-    )
-    parser.add_argument(
-        '--destination', dest='destination', action='store', required=True,
-        help='Destination'
-    )
-    parser.add_argument(
-        '--segments', dest='segments', action='store', required=True,
-        help='Segments', default=''
-    )
-    parser.add_argument(
-        '--device', dest='device', action='store', help='Device',
-        default=''
-    )
-    parser.add_argument(
-        '--encapmode', dest='encapmode', action='store',
-        help='Encap mode', choices=['encap', 'inline', 'l2encap'],
-        default='encap'
-    )
-    parser.add_argument(
-        '--table', dest='table', action='store',
-        help='Table', type=int, default=-1
-    )
-    parser.add_argument(
-        '--metric', dest='metric', action='store',
-        help='Metric', type=int, default=-1
-    )
-    parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
-    )
+    # Add the arguments to the parser
+    for param in args_srv6_path():
+        parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
     # Return the arguments
     return args
+
+
+# TAB-completion for SRv6 Path
+def complete_srv6_path(text, prev_text):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_path
+    args = args_srv6_path()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_srv6_behavior():
+    '''
+    Command-line arguments for the srv6_behavior command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--grpc-ip'],
+            'kwargs': {'dest': 'grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--grpc-port'],
+            'kwargs': {'dest': 'grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--secure'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
+        }, {
+            'args': ['--server-cert'],
+            'kwargs': {'dest': 'server_cert', 'action': 'store',
+                       'default': DEFAULT_CERTIFICATE,
+                       'help': 'CA certificate file'},
+            'is_path': True
+        }, {
+            'args': ['--op'],
+            'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
+                       'help': 'Operation'}
+        }, {
+            'args': ['--device'],
+            'kwargs': {'dest': 'device', 'action': 'store', 'help': 'Device',
+                       'default': ''}
+        }, {
+            'args': ['--table'],
+            'kwargs': {'dest': 'table', 'action': 'store',
+                       'help': 'Table', 'type': int, 'default': -1}
+        }, {
+            'args': ['--segment'],
+            'kwargs': {'dest': 'segment', 'action': 'store', 'required': True,
+                       'help': 'Segment'}
+        }, {
+            'args': ['--action'],
+            'kwargs': {'dest': 'action', 'action': 'store', 'required': True,
+                       'help': 'Action', 'default': ''}
+        }, {
+            'args': ['--nexthop'],
+            'kwargs': {'dest': 'nexthop', 'action': 'store',
+                       'help': 'Next-hop', 'default': ''}
+        }, {
+            'args': ['--lookup-table'],
+            'kwargs': {'dest': 'lookup_table', 'action': 'store',
+                       'help': 'Lookup Table', 'type': int, 'default': -1}
+        }, {
+            'args': ['--interface'],
+            'kwargs': {'dest': 'interface', 'action': 'store',
+                       'help': 'Interface', 'default': ''}
+        }, {
+            'args': ['--segments'],
+            'kwargs': {'dest': 'segments', 'action': 'store',
+                       'help': 'Segments', 'default': ''}
+        }, {
+            'args': ['--metric'],
+            'kwargs': {'dest': 'metric', 'action': 'store',
+                       'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -251,68 +379,103 @@ def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
     )
-    parser.add_argument(
-        '-g', '--grpc-ip', dest='grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '-r', '--grpc-port', dest='grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '-s', '--secure', action='store_true', help='Activate secure mode'
-    )
-    parser.add_argument(
-        '-c', '--server-cert', dest='server_cert', action='store',
-        default=DEFAULT_CERTIFICATE, help='CA certificate file'
-    )
-    parser.add_argument(
-        '--op', dest='op', action='store', required=True,
-        help='Operation'
-    )
-    parser.add_argument(
-        '--segment', dest='segment', action='store', required=True,
-        help='Segment'
-    )
-    parser.add_argument(
-        '--action', dest='action', action='store', required=True,
-        help='Action', default=''
-    )
-    parser.add_argument(
-        '--device', dest='device', action='store', help='Device',
-        default=''
-    )
-    parser.add_argument(
-        '--table', dest='table', action='store',
-        help='Table', type=int, default=-1
-    )
-    parser.add_argument(
-        '--nexthop', dest='nexthop', action='store',
-        help='Next-hop', default=''
-    )
-    parser.add_argument(
-        '--lookup-table', dest='lookup_table', action='store',
-        help='Lookup Table', type=int, default=-1
-    )
-    parser.add_argument(
-        '--interface', dest='interface', action='store',
-        help='Interface', default=''
-    )
-    parser.add_argument(
-        '--segments', dest='segments', action='store',
-        help='Segments', default=''
-    )
-    parser.add_argument(
-        '--metric', dest='metric', action='store',
-        help='Metric', type=int, default=-1
-    )
-    parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
-    )
+    # Add the arguments to the parser
+    for param in args_srv6_behavior():
+        parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
     # Return the arguments
     return args
+
+
+# TAB-completion for SRv6 behavior
+def complete_srv6_behavior(text, prev_text):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_behavior
+    args = args_srv6_behavior()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_srv6_unitunnel():
+    '''
+    Command-line arguments for the srv6_unitunnel command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--op'],
+            'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
+                       'help': 'Operation'}
+        }, {
+            'args': ['--ingress-grpc-ip'],
+            'kwargs': {'dest': 'ingress_grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--egress-grpc-ip'],
+            'kwargs': {'dest': 'egress_grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--ingress-grpc-port'],
+            'kwargs': {'dest': 'ingress_grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--egress-grpc-port'],
+            'kwargs': {'dest': 'egress_grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--secure'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
+        }, {
+            'args': ['--server-cert'],
+            'kwargs': {'dest': 'server_cert', 'action': 'store',
+                       'default': DEFAULT_CERTIFICATE,
+                       'help': 'CA certificate file'},
+            'is_path': True
+        }, {
+            'args': ['--dest'],
+            'kwargs': {'dest': 'dest', 'action': 'store', 'required': True,
+                       'help': 'Destination'}
+        }, {
+            'args': ['--localseg'],
+            'kwargs': {'dest': 'localseg', 'action': 'store',
+                       'help': 'Local segment', 'default': None}
+        }, {
+            'args': ['--sidlist'],
+            'kwargs': {'dest': 'sidlist', 'action': 'store',
+                       'help': 'SID list', 'required': True}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -323,52 +486,115 @@ def parse_arguments_srv6_unitunnel(prog=sys.argv[0], args=None):
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
     )
-    parser.add_argument(
-        '--op', dest='op', action='store', required=True,
-        help='Operation'
-    )
-    parser.add_argument(
-        '--ingress-grpc-ip', dest='ingress_grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '--egress-grpc-ip', dest='egress_grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '--ingress-grpc-port', dest='ingress_grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '--egress-grpc-port', dest='egress_grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '-s', '--secure', action='store_true', help='Activate secure mode'
-    )
-    parser.add_argument(
-        '-c', '--server-cert', dest='server_cert', action='store',
-        default=DEFAULT_CERTIFICATE, help='CA certificate file'
-    )
-    parser.add_argument(
-        '--dest', dest='dest', action='store', required=True,
-        help='Destination'
-    )
-    parser.add_argument(
-        '--localseg', dest='localseg', action='store',
-        help='Local segment', default=None
-    )
-    parser.add_argument(
-        '--sidlist', dest='sidlist', action='store',
-        help='SID list', required=True
-    )
-    parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
-    )
+    # Add the arguments to the parser
+    for param in args_srv6_unitunnel():
+        parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
     # Return the arguments
     return args
+
+
+# TAB-completion for SRv6 unidirectional tunnel
+def complete_srv6_unitunnel(text, prev_text):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_unitunnel
+    args = args_srv6_unitunnel()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_srv6_biditunnel():
+    '''
+    Command-line arguments for the srv6_biditunnel command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+
+    return [
+        {
+            'args': ['--op'],
+            'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
+                       'help': 'Operation'}
+        }, {
+            'args': ['--left-grpc-ip'],
+            'kwargs': {'dest': 'l_grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--right-grpc-ip'],
+            'kwargs': {'dest': 'r_grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--left-grpc-port'],
+            'kwargs': {'dest': 'l_grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--right-grpc-port'],
+            'kwargs': {'dest': 'r_grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--secure'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
+        }, {
+            'args': ['--server-cert'],
+            'kwargs': {'dest': 'server_cert', 'action': 'store',
+                       'default': DEFAULT_CERTIFICATE,
+                       'help': 'CA certificate file'},
+            'is_path': True
+        }, {
+            'args': ['--left-right-dest'],
+            'kwargs': {'dest': 'dest_lr', 'action': 'store', 'required': True,
+                       'help': 'Left to Right destination'}
+        }, {
+            'args': ['--right-left-dest'],
+            'kwargs': {'dest': 'dest_rl', 'action': 'store', 'required': True,
+                       'help': 'Right to Left destination'}
+        }, {
+            'args': ['--left-right-localseg'],
+            'kwargs': {'dest': 'localseg_lr', 'action': 'store',
+                       'help': 'Left to Right Local segment', 'default': None}
+        }, {
+            'args': ['--right-left-localseg'],
+            'kwargs': {'dest': 'localseg_rl', 'action': 'store',
+                       'help': 'Right to Left Local segment', 'default': None}
+        }, {
+            'args': ['--left-right-sidlist'],
+            'kwargs': {'dest': 'sidlist_lr', 'action': 'store',
+                       'help': 'Left to Right SID list', 'required': True}
+        }, {
+            'args': ['--right-left-sidlist'],
+            'kwargs': {'dest': 'sidlist_rl', 'action': 'store',
+                       'help': 'Right to Left SID list', 'required': True}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
 
 
 # Parse options
@@ -379,61 +605,42 @@ def parse_arguments_srv6_biditunnel(prog=sys.argv[0], args=None):
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
     )
-    parser.add_argument(
-        '--op', dest='op', action='store', required=True,
-        help='Operation'
-    )
-    parser.add_argument(
-        '--left-grpc-ip', dest='l_grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '--right-grpc-ip', dest='r_grpc_ip', action='store',
-        required=True, help='IP of the gRPC server'
-    )
-    parser.add_argument(
-        '--left-grpc-port', dest='l_grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '--right-grpc-port', dest='r_grpc_port', action='store',
-        required=True, help='Port of the gRPC server'
-    )
-    parser.add_argument(
-        '-s', '--secure', action='store_true', help='Activate secure mode'
-    )
-    parser.add_argument(
-        '-c', '--server-cert', dest='server_cert', action='store',
-        default=DEFAULT_CERTIFICATE, help='CA certificate file'
-    )
-    parser.add_argument(
-        '--left-right-dest', dest='dest_lr', action='store', required=True,
-        help='Left to Right destination'
-    )
-    parser.add_argument(
-        '--right-left-dest', dest='dest_rl', action='store', required=True,
-        help='Right to Left destination'
-    )
-    parser.add_argument(
-        '--left-right-localseg', dest='localseg_lr', action='store',
-        help='Left to Right Local segment', default=None
-    )
-    parser.add_argument(
-        '--right-left-localseg', dest='localseg_rl', action='store',
-        help='Right to Left Local segment', default=None
-    )
-    parser.add_argument(
-        '--left-right-sidlist', dest='sidlist_lr', action='store',
-        help='Left to Right SID list', required=True
-    )
-    parser.add_argument(
-        '--right-left-sidlist', dest='sidlist_rl', action='store',
-        help='Right to Left SID list', required=True
-    )
-    parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
-    )
+    # Add the arguments to the parser
+    for param in args_srv6_biditunnel():
+        parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
     # Return the arguments
+    return args
+
+
+# TAB-completion for SRv6 bi-directional tunnel
+def complete_srv6_biditunnel(text, prev_text=None):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_biditunnel
+    args = args_srv6_biditunnel()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
     return args
