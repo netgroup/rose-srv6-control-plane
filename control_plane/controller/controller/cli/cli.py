@@ -27,6 +27,14 @@
 """Implementation of a CLI for the SRv6 Controller"""
 
 # General imports
+try:
+    # Optional dependency, required to support persistency of the command
+    # history
+    import readline
+except ImportError:
+    # If 'readline' is not found in the system, history persistency
+    # will be disabled
+    readline = None
 import logging
 import os
 import sys
@@ -62,6 +70,19 @@ DEFAULT_DEBUG = False
 class CustomCmd(Cmd):
     """This class extends the python class Cmd and implements a handler
     for CTRL+C and CTRL+D"""
+
+    histfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            '.controller_history')
+    histfile_size = 1000
+
+    def preloop(self):
+        if readline and os.path.exists(self.histfile):
+            readline.read_history_file(self.histfile)
+
+    def postloop(self):
+        if readline:
+            readline.set_history_length(self.histfile_size)
+            readline.write_history_file(self.histfile)
 
     def cmdloop(self, intro=None):
         """ Command loop"""
