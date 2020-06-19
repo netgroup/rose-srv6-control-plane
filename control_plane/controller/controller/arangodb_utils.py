@@ -273,8 +273,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                     edges_collection=edges_collection,
                     verbose=verbose
                 )
-            # Period = 0 means a single extraction
-            if period == 0:
-                break
+        # Period = 0 means a single extraction
+        if period == 0:
+            break
         # Wait 'period' seconds between two extractions
         time.sleep(period)
