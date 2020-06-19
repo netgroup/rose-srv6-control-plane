@@ -42,7 +42,6 @@ except ImportError:
     readline = None
 import logging
 import os
-import readline
 import sys
 from argparse import ArgumentParser
 from cmd import Cmd
