@@ -95,6 +95,14 @@ class CustomCmd(Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+            except Exception as err:    # pylint: disable=broad-except
+                # When an exception is raised, we log the traceback
+                # and keep the CLI open and ready to receive next comands
+                #
+                # We need mute pylint 'broad-except' in order to
+                # avoid annoying warnings
+                logging.exception(err)
+                print()
 
     def emptyline(self):
         """Avoid to execute the last command if empty line is entered"""
