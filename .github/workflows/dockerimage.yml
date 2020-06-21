@@ -2,20 +2,55 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
-
-  build:
-
+  docker-build-push:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Build the Controller Docker image
-      run: docker build --target controller -t rose-srv6-controller:$(date +%s) . --no-cache
-    - name: Build the Node manager Docker image
-      run: docker build --target node-manager -t rose-srv6-node-manager:$(date +%s) . --no-cache
+      - uses: actions/checkout@v2
+        name: Check out code
+      
+      - name: Build Docker Controller image
+        if: ${{ github.event == 'pull_request' and github.ref == 'refs/heads/master')}}
+        uses: zvfvrv/docker-bpgpr@1.0.0
+        with:
+          gh_token: ${{ secrets.TOKEN_GITHUB }}
+          image_name: rose-srv6-controller
+          target: controller
+          push: false
 
+      - name: Build Docker Node-manager image
+        if: ${{ github.event == 'pull_request' and github.ref == 'refs/heads/master')}}
+        uses: zvfvrv/docker-bpgpr@1.0.0
+        with:
+          gh_token: ${{ secrets.TOKEN_GITHUB }}
+          image_name: rose-srv6-node-manager
+          target: node-manager
+          push: false
+
+      - name: Build and Publish Docker Controller image
+        if: ${{ github.event == 'push' and github.ref == 'refs/heads/master')}}
+        uses: zvfvrv/docker-bpgpr@1.0.0
+        with:
+          gh_token: ${{ secrets.TOKEN_GITHUB }}
+          image_name: rose-srv6-controller
+          tag: latest
+          tag_with_ref: true
+          tag_with_sha: true
+          target: controller
+          push: true
+
+      - name: Build and Publish Docker Controller image
+        if: ${{ github.event == 'push' and github.ref == 'refs/heads/master')}}
+        uses: zvfvrv/docker-bpgpr@1.0.0
+        with:
+          gh_token: ${{ secrets.TOKEN_GITHUB }}
+          image_name: rose-srv6-node-manager
+          tag: latest
+          tag_with_ref: true
+          tag_with_sha: true
+          target: node-manager
+          push: true
