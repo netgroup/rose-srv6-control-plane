@@ -14,7 +14,7 @@ jobs:
         name: Check out code
       
       - name: Build Docker Controller image
-        if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master')}}
+        if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@1.0.0
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
@@ -23,7 +23,7 @@ jobs:
           push: false
 
       - name: Build Docker Node-manager image
-        if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master')}}
+        if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@1.0.0
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
@@ -32,7 +32,7 @@ jobs:
           push: false
 
       - name: Build and Publish Docker Controller image
-        if: ${{ github.event == 'push' && github.ref == 'refs/heads/master')}}
+        if: ${{ github.event == 'push' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@1.0.0
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
@@ -44,7 +44,7 @@ jobs:
           push: true
 
       - name: Build and Publish Docker Controller image
-        if: ${{ github.event == 'push' && github.ref == 'refs/heads/master')}}
+        if: ${{ github.event == 'push' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@1.0.0
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
