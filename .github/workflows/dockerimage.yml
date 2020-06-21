@@ -15,7 +15,7 @@ jobs:
       
       - name: Build Docker Controller image
         if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master'}}
-        uses: zvfvrv/docker-bpgpr@1.0.1
+        uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-controller
@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Docker Node-manager image
         if: ${{ github.event == 'pull_request' && github.ref == 'refs/heads/master'}}
-        uses: zvfvrv/docker-bpgpr@1.0.1
+        uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-node-manager
@@ -33,7 +33,7 @@ jobs:
 
       - name: Build and Publish Docker Controller image
         if: ${{ github.event == 'push' && github.ref == 'refs/heads/master'}}
-        uses: zvfvrv/docker-bpgpr@1.0.1
+        uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-controller
@@ -45,7 +45,7 @@ jobs:
 
       - name: Build and Publish Docker Controller image
         if: ${{ github.event == 'push' && github.ref == 'refs/heads/master'}}
-        uses: zvfvrv/docker-bpgpr@1.0.1
+        uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-node-manager
