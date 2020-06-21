@@ -37,7 +37,7 @@ jobs:
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-controller
-          tag: latest
+          tags: latest
           tag_with_ref: true
           tag_with_sha: true
           target: controller
@@ -49,7 +49,7 @@ jobs:
         with:
           gh_token: ${{ secrets.TOKEN_GITHUB }}
           image_name: rose-srv6-node-manager
-          tag: latest
+          tags: latest
           tag_with_ref: true
           tag_with_sha: true
           target: node-manager
