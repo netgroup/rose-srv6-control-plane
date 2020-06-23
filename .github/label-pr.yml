@@ -22,3 +22,5 @@
   labels: ["examples"]
 - regExp: "^control_plane/protos/"
   labels: ["protos"]
+- regExp: ".*/setup.py"
+  labels: ["build"]
