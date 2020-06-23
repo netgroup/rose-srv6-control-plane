@@ -30,7 +30,7 @@ jobs:
           committer: Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
           title: Fixes by autopep8 action
           body: This is an auto-generated PR with fixes by autopep8.
-          labels: autopep8, automated pr
+          labels: autopep8, automated pr, skip-changelog
           reviewers: cscarpitta
           branch: ${{ steps.vars.outputs.branch-name }}
       - name: Fail if autopep8 made changes

@@ -1,0 +1,28 @@
+- regExp: ".*\\.ts+$"
+  labels: ["typescript"]
+- regExp: ".*\\.sql+$"
+  labels: ["database", "critical"]
+- regExp: "^docs/"
+  labels: ["documentation"]
+- regExp: ".*\\.png+$"
+  labels: ["images"]
+- regExp: "^(pom\\.xml|package\\.json|build\\.gradle)$"
+  labels: ["dependencies"]
+- regExp: ".*/requirements.txt"
+  labels: ["dependencies"]
+- regExp: ".*\\.(zip|jar|war|ear)+$"
+  labels: ["artifact", "invalid"]
+- regExp: "^db_update/"
+  labels: ["database utilities"]
+- regExp: "^control_plane/node-manager/"
+  labels: ["node manager"]
+- regExp: "^control_plane/controller/"
+  labels: ["controller"]
+- regExp: "^control_plane/examples/"
+  labels: ["examples"]
+- regExp: "^control_plane/protos/"
+  labels: ["protos"]
+- regExp: ".*/setup.py"
+  labels: ["build"]
+- regExp: "^.github/"
+  labels: ["github-workflow"]
