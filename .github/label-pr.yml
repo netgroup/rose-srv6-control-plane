@@ -24,3 +24,5 @@
   labels: ["protos"]
 - regExp: ".*/setup.py"
   labels: ["build"]
+- regExp: "^.github/"
+  labels: ["github-workflow"]
