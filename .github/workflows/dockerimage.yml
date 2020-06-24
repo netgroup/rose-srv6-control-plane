@@ -31,7 +31,7 @@ jobs:
           target: node-manager
           push: false
 
-      - name: Build and Publish Docker Controller image
+      - name: Build and Publish Docker Controller image GPR
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
@@ -43,7 +43,7 @@ jobs:
           target: controller
           push: true
 
-      - name: Build and Publish Docker Controller image
+      - name: Build and Publish Docker Node-manager image GPR
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
         uses: zvfvrv/docker-bpgpr@v1.0.1
         with:
@@ -55,7 +55,7 @@ jobs:
           target: node-manager
           push: true
       
-      - name: Build and Publish Docker image DockerHub
+      - name: Build and Publish Docker Controller image DockerHub
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
         uses: docker/build-push-action@v1
         with:
@@ -66,7 +66,7 @@ jobs:
           tag_with_ref: true
           tags: latest
       
-      - name: Build and Publish Docker image rose-srv6-controller DockerHub
+      - name: Build and Publish Docker Node-manager image DockerHub
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
         uses: docker/build-push-action@v1
         with:
