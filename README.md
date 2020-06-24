@@ -18,8 +18,7 @@
         <!--<img src="https://img.shields.io/github/commit-activity/m/netgroup/rose-srv6-control-plane">-->
     </div>
 </div>
-
----
+<br />
 
 > Control plane functionalities for SDN.
 
