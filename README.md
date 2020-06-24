@@ -9,6 +9,7 @@
 ![Close Issues](https://img.shields.io/github/issues-closed/netgroup/rose-srv6-control-plane)
 ![Pull Requests](https://img.shields.io/github/issues-pr/netgroup/rose-srv6-control-plane)
 ![Close Pull Requests](https://img.shields.io/github/issues-pr-closed/netgroup/rose-srv6-control-plane)
+![GitHub Stars](https://img.shields.io/github/stars/netgroup/rose-srv6-control-plane?style=social)
 
 ## Table of Contents
 * [Getting Started](#getting-started)
