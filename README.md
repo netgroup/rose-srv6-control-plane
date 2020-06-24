@@ -47,6 +47,7 @@
 * [Links](#links)
 * [Issues](#issues)
 * [Contributing](#contributing)
+* [Versioning](#versioning)
 * [License](#license)
 
 
