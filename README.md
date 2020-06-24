@@ -22,6 +22,9 @@
 
 > Control plane functionalities for SDN.
 
+<img align="right" src="docs/images/rose-logo-recolored-red-200x60.png">
+<br />
+
 ## Table of Contents
 * [Getting Started](#getting-started)
 * [Project Overview](#project-overview)
