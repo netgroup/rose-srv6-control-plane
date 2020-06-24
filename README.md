@@ -9,7 +9,11 @@
 ![Close Issues](https://img.shields.io/github/issues-closed/netgroup/rose-srv6-control-plane)
 ![Pull Requests](https://img.shields.io/github/issues-pr/netgroup/rose-srv6-control-plane)
 ![Close Pull Requests](https://img.shields.io/github/issues-pr-closed/netgroup/rose-srv6-control-plane)
+![Python Version](https://img.shields.io/badge/python-3.6|3.7|3.8-blue?logo=python)
 ![GitHub Stars](https://img.shields.io/github/stars/netgroup/rose-srv6-control-plane?style=social)
+<!--![GitHub Contributors](https://img.shields.io/github/contributors/netgroup/rose-srv6-control-plane)-->
+<!--![GitHub Commit Activity](https://img.shields.io/github/commit-activity/m/netgroup/rose-srv6-control-plane)-->
+[GitHub Release Date](https://img.shields.io/github/release-date/netgroup/rose-srv6-control-plane)
 
 ## Table of Contents
 * [Getting Started](#getting-started)
