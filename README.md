@@ -20,24 +20,24 @@
 </div>
 <br />
 
+> Control plane functionalities for SDN.
+
 <a href="https://netgroup.github.io/rose/">
     <img align="right" src="docs/images/rose-logo-recolored-red-200x60.png">
 </a>
-
-> Control plane functionalities for SDN.
 <br />
 
 ## Table of Contents
 * [Getting Started](#getting-started)
 * [Project Overview](#project-overview)
-    * [Database utilities](#database-utilities)
-    * [Control plane functionalities](#control-plane-functionalities)
-        * [Node manager](#node-manager)
-        * [Controller](#controller)
-        * [Protocol Buffers](#protocol-buffers)
-        * [Usage examples](#usage-examples)
-            * [How to use the Controller CLI](#how-to-use-the-controller-cli)
-            * [How to use the Controller API in your Python application](#how-to-use-the-controller-api-in-your-python-application)
+* [Database utilities](#database-utilities)
+* [Control plane functionalities](#control-plane-functionalities)
+    * [Node manager](#node-manager)
+    * [Controller](#controller)
+    * [Protocol Buffers](#protocol-buffers)
+    * [Usage examples](#usage-examples)
+        * [How to use the Controller CLI](#how-to-use-the-controller-cli)
+        * [How to use the Controller API in your Python application](#how-to-use-the-controller-api-in-your-python-application)
 * [Docker](#docker)
     * [Build the Docker image](build-the-docker-image)
     * [Run the controller container](#run-the-controller-container)
@@ -74,7 +74,7 @@ This repository is structured as follows:
     └── README.md
 
 
-### Database utilities
+## Database utilities
 
 *db_update* is a Python library used to connect the Controller to a database. Using this library, the Controller can interact with a database in order to store information like the topology graph of a network.
 
