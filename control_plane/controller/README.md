@@ -1,5 +1,7 @@
 # Controller
 
+This folder contains an implementation of a Controller.
+
 ## Prerequisites
 
 The following dependencies are necessary:
