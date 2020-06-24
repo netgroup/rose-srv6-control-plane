@@ -20,12 +20,11 @@
 </div>
 <br />
 
-<div>
-    > Control plane functionalities for SDN.
-    <a href="https://netgroup.github.io/rose/">
-        <img align="right" src="docs/images/rose-logo-recolored-red-200x60.png">
-    </a>
-</div>
+<a href="https://netgroup.github.io/rose/">
+    <img align="right" src="docs/images/rose-logo-recolored-red-200x60.png">
+</a>
+
+> Control plane functionalities for SDN.
 <br />
 
 ## Table of Contents
