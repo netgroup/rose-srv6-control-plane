@@ -4,7 +4,7 @@
 ![Python package](https://github.com/netgroup/rose-srv6-control-plane/workflows/Python%20package/badge.svg)
 ![Python Lint Code Base](https://github.com/netgroup/rose-srv6-control-plane/workflows/Lint%20Code%20Base/badge.svg)
 ![GitHub](https://img.shields.io/github/license/netgroup/rose-srv6-control-plane)
-![Release Version](https://img.shields.io/github/v/tag/netgroup/rose-srv6-control-plane?sort=semver)
+![Release Version](https://img.shields.io/github/v/release/netgroup/rose-srv6-control-plane?sort=semver)
 
 ## Table of Contents
 * [Getting Started](#getting-started)
