@@ -24,3 +24,5 @@ control_plane/protos/gen_py/
 
 control_plane/controller/starter.sh
 control_plane/node-manager/starter.sh
+
+.controller_history
