@@ -1,19 +1,25 @@
-# ROSE SRv6 Control Plane
-> Control plane functionalities for SDN.
+# ROSE SRv6 Control Plane <img align="right" src="https://img.shields.io/github/stars/netgroup/rose-srv6-control-plane?style=social">
 
-![Python package](https://github.com/netgroup/rose-srv6-control-plane/workflows/Python%20package/badge.svg)
-![Python Lint Code Base](https://github.com/netgroup/rose-srv6-control-plane/workflows/Lint%20Code%20Base/badge.svg)
-![GitHub](https://img.shields.io/github/license/netgroup/rose-srv6-control-plane)
-![Release Version](https://img.shields.io/github/v/release/netgroup/rose-srv6-control-plane?sort=semver)
-![Issues](https://img.shields.io/github/issues/netgroup/rose-srv6-control-plane)
-![Close Issues](https://img.shields.io/github/issues-closed/netgroup/rose-srv6-control-plane)
-![Pull Requests](https://img.shields.io/github/issues-pr/netgroup/rose-srv6-control-plane)
-![Close Pull Requests](https://img.shields.io/github/issues-pr-closed/netgroup/rose-srv6-control-plane)
-![Python Version](https://img.shields.io/badge/python-3.6|3.7|3.8-blue?logo=python)
-![GitHub Stars](https://img.shields.io/github/stars/netgroup/rose-srv6-control-plane?style=social)
-<!--![GitHub Contributors](https://img.shields.io/github/contributors/netgroup/rose-srv6-control-plane)-->
-<!--![GitHub Commit Activity](https://img.shields.io/github/commit-activity/m/netgroup/rose-srv6-control-plane)-->
-[GitHub Release Date](https://img.shields.io/github/release-date/netgroup/rose-srv6-control-plane)
+<div align="center">
+    <div align="center">
+        <img src="https://img.shields.io/badge/python-3.6|3.7|3.8-blue?logo=python">
+        <img src="https://github.com/netgroup/rose-srv6-control-plane/workflows/Python%20package/badge.svg">
+        <img src="https://github.com/netgroup/rose-srv6-control-plane/workflows/Lint%20Code%20Base/badge.svg">
+        <img src="https://img.shields.io/github/license/netgroup/rose-srv6-control-plane">
+        <img src="https://img.shields.io/github/v/release/netgroup/rose-srv6-control-plane?sort=semver">
+    </div>
+    <div align="center">
+        <img src="https://img.shields.io/github/release-date/netgroup/rose-srv6-control-plane">
+        <img src="https://img.shields.io/github/issues/netgroup/rose-srv6-control-plane">
+        <img src="https://img.shields.io/github/issues-closed/netgroup/rose-srv6-control-plane">
+        <img src="https://img.shields.io/github/issues-pr/netgroup/rose-srv6-control-plane">
+        <img src="https://img.shields.io/github/issues-pr-closed/netgroup/rose-srv6-control-plane">
+        <!--<img src="https://img.shields.io/github/contributors/netgroup/rose-srv6-control-plane">-->
+        <!--<img src="https://img.shields.io/github/commit-activity/m/netgroup/rose-srv6-control-plane">-->
+    </div>
+</div>
+
+> Control plane functionalities for SDN.
 
 ## Table of Contents
 * [Getting Started](#getting-started)
