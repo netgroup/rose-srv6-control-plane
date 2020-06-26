@@ -8,7 +8,7 @@ The Node Manager is configured with a env-based configuration file, ``node_manag
 The ``config/node_manager.env`` file contains an example of configuration for the
 Node Manager, which is the configuration used by default:
 
-.. literalinclude:: ../node_manager/config/node_manager.env
+.. literalinclude:: ../../control_plane/node-manager/node_manager/config/node_manager.env
   :language: bash
   :caption: node_manager.env
   :name: node_manager.env

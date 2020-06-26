@@ -5,8 +5,8 @@
 
 .. _controller:
 
-Welcome to ROSE SRv6 Controller's documentation!
-================================================
+Controller
+==========
 
 .. toctree::
    :maxdepth: 2

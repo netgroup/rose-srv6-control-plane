@@ -8,7 +8,7 @@ The Controller is configured with a env-based configuration file, ``controller.e
 The ``config/controller.env`` file contains an example of configuration for the
 Controller, which is the configuration used by default:
 
-.. literalinclude:: ../controller/config/controller.env
+.. literalinclude:: ../../control_plane/controller/controller/config/controller.env
   :language: bash
   :caption: controller.env
   :name: controller.env

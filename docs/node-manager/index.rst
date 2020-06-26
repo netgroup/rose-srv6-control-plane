@@ -5,7 +5,7 @@
 
 .. _node-manager:
 
-Welcome to ROSE SRv6 Node Manager's documentation!
+Node Manager
 ==================================================
 
 .. toctree::

@@ -63,7 +63,7 @@ Configuration
 
 The Controller comes with a default configuration:
 
-.. literalinclude:: ../controller/config/controller.env
+.. literalinclude:: ../../control_plane/controller/controller/config/controller.env
   :language: shell
   :caption: controller.env
   :name: controller.env_installation_config_2
@@ -133,7 +133,7 @@ Configuration
 
 The Controller comes with a default configuration:
 
-.. literalinclude:: ../controller/config/controller.env
+.. literalinclude:: ../../control_plane/controller/controller/config/controller.env
   :language: shell
   :caption: controller.env
   :name: controller.env_installation_config

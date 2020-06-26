@@ -98,7 +98,7 @@ Configuration
 
 The Node Manager comes with a default configuration:
 
-.. literalinclude:: ../node_manager/config/node_manager.env
+.. literalinclude:: ../../control_plane/node-manager/node_manager/config/node_manager.env
   :language: shell
   :caption: node_manager.env
   :name: node_manager.env_installation_config_2

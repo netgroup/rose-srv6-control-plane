@@ -17,13 +17,12 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('../../../db_update'))
+sys.path.insert(0, os.path.abspath('../db_update'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'ROSE SRv6 Controller'
+project = 'ROSE SRv6 Control Plane'
 copyright = '2020, Carmine Scarpitta'
 author = 'Carmine Scarpitta'
 
@@ -116,7 +115,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ROSESRv6Controllerdoc'
+htmlhelp_basename = 'ROSESRv6ControlPlanedoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -143,7 +142,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ROSESRv6Controller.tex', 'ROSE SRv6 Controller Documentation',
+    (master_doc, 'ROSESRv6ControlPlane.tex', 'ROSE SRv6 Control Plane Documentation',
      'Carmine Scarpitta', 'manual'),
 ]
 
@@ -153,7 +152,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'rosesrv6controller', 'ROSE SRv6 Controller Documentation',
+    (master_doc, 'rosesrv6controlplane', 'ROSE SRv6 Control Plane Documentation',
      [author], 1)
 ]
 
@@ -164,8 +163,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ROSESRv6Controller', 'ROSE SRv6 Controller Documentation',
-     author, 'ROSESRv6Controller', 'One line description of project.',
+    (master_doc, 'ROSESRv6ControlPlane', 'ROSE SRv6 Control Plane Documentation',
+     author, 'ROSESRv6ControlPlane', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -193,7 +192,13 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'https://docs.python.org/': None,
+    'controller': ('../../control_plane/controller/build/html',
+                   '../control_plane/controller/build/html/objects.inv'),
+    'node-manager': ('../../control_plane/node-manager/build/html',
+                     '../control_plane/node-manager/build/html/objects.inv'),
+}
 
 # -- Options for todo extension ----------------------------------------------
 
