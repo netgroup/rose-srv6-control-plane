@@ -9,6 +9,30 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Set up Python 3
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3
+    - name: Install controller
+      run: |
+        sudo apt-get install graphviz libgraphviz-dev
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
+        cd db_update
+        python setup.py sdist bdist_wheel install
+        cd ../control_plane/protos
+        python setup.py sdist bdist_wheel install
+        cd ../../control_plane/controller
+        python setup.py sdist bdist_wheel install
+        cd ../../
+    - name: Install node manager
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
+        cd control_plane/protos
+        python setup.py sdist bdist_wheel install
+        cd ../../control_plane/node-manager
+        python setup.py sdist bdist_wheel install
     # Standard drop-in approach that should work for most people.
     - uses: ammaraskar/sphinx-action@master
       with:
