@@ -49,6 +49,9 @@ jobs:
         source python${{ matrix.python-version }}-venv/bin/activate
         # Build docs
         cd docs
+        # Installs sphinx dependencies
+        pip install sphinx
+        pip install -r requirements.txt
         make html
     # Standard drop-in approach that should work for most people.
     #- uses: ammaraskar/sphinx-action@master
