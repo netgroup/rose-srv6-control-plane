@@ -37,6 +37,7 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         pre-build-command: "pip install sphinx"
+        build-command: "python -m sphinx"
         docs-folder: "docs/"
     # Example of using a custom build-command.
     #- uses: ammaraskar/sphinx-action@master
