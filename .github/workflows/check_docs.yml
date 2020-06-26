@@ -43,7 +43,8 @@ jobs:
         python setup.py install
         cd ../../control_plane/node-manager
         python setup.py install
-    - name: |
+    - name: Build docs
+      run: |
         # Activate virtualenv
         source python${{ matrix.python-version }}-venv/bin/activate
         # Build docs
