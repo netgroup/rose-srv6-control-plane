@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; ROSE SRv6 Node Manager v0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> ROSE SRv6 Node Manager
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#starting-the-node-manager">Starting the Node Manager</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ROSE SRv6 Node Manager</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<span id="node-mgr-usage"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>In this section we explain how to use the Node Manager.
+Before continuing, be sure that you have the Node Manager installed
+in your system or in a virtual environment. If not, you can follow the
+instructions provided in the <a class="reference internal" href="installation.html#node-mgr-installation"><span class="std std-ref">Installation</span></a> section to install it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Node Manager comes with a default configuration.
+If you want to override the default settings, you can create a <em>.env</em> file
+containing the configuration parameters.
+For a description of the supported configuration options, see the
+<a class="reference internal" href="configuration.html#node-mgr-configuration"><span class="std std-ref">Configuration</span></a> section.</p>
+</div>
+<div class="section" id="starting-the-node-manager">
+<h2>Starting the Node Manager<a class="headerlink" href="#starting-the-node-manager" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p>If you have installed the Node Manager in a virtual environment,
+you need to activate the node manager virtual environment:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nb">source</span> ~/.envs/node-mgr-venv/bin/activate
+</pre></div>
+</div>
+</li>
+<li><p>To start the Node Manager:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> node_manager --env-file .env
+</pre></div>
+</div>
+</li>
+</ol>
+<blockquote>
+<div><p>Optionally, you can provide command-line arguments to override the
+configuration parameters set in the <em>.env</em> file.
+For a detailed description of the available parameters,
+you can start the node_manager with the –help command-line argument:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span> python node-manager --help
+<span class="go">usage: node_manager [-h] [-e ENV_FILE] [-g GRPC_IP] [-r GRPC_PORT] [-s] [-c SERVER_CERT] [-k SERVER_KEY] [-d]</span>
+
+<span class="go">gRPC Southbound APIs for SRv6 Controller</span>
+
+<span class="go">optional arguments:</span>
+<span class="go">-h, --help            show this help message and exit</span>
+<span class="go">-e ENV_FILE, --env-file ENV_FILE</span>
+<span class="go">                        Path to the .env file containing the parameters for the node manager</span>
+<span class="go">-g GRPC_IP, --grpc-ip GRPC_IP</span>
+<span class="go">                        IP of the gRPC server</span>
+<span class="go">-r GRPC_PORT, --grpc-port GRPC_PORT</span>
+<span class="go">                        Port of the gRPC server</span>
+<span class="go">-s, --secure          Activate secure mode</span>
+<span class="go">-c SERVER_CERT, --server-cert SERVER_CERT</span>
+<span class="go">                        Server certificate file</span>
+<span class="go">-k SERVER_KEY, --server-key SERVER_KEY</span>
+<span class="go">                        Server key file</span>
+<span class="go">-d, --debug           Activate debug logs</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The command-line arguments have priority over the parameters
+defined in the <em>.env</em> file.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Node Manager comes with a default configuration.
+If you want to override the default settings, you can create a <em>.env</em> file
+containing the configuration parameters.
+For a description of the supported configuration options, see the
+<a class="reference internal" href="configuration.html#node-mgr-configuration"><span class="std std-ref">Configuration</span></a> section.</p>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Carmine Scarpitta
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
