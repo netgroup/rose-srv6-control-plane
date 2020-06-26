@@ -192,13 +192,7 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    'https://docs.python.org/': None,
-    'controller': ('../../control_plane/controller/build/html',
-                   '../control_plane/controller/build/html/objects.inv'),
-    'node-manager': ('../../control_plane/node-manager/build/html',
-                     '../control_plane/node-manager/build/html/objects.inv'),
-}
+intersphinx_mapping = {'https://docs.python.org/': None}
 
 # -- Options for todo extension ----------------------------------------------
 
