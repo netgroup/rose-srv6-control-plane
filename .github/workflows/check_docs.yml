@@ -13,8 +13,16 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3
+    - name: Set up Python virtual environment
+      run: |
+        # Create a virtualenv
+        python -m venv python${{ matrix.python-version }}-venv
+        # Activate virtualenv
+        source python${{ matrix.python-version }}-venv/bin/activate
     - name: Install controller
       run: |
+        # Activate virtualenv
+        source python${{ matrix.python-version }}-venv/bin/activate
         sudo apt-get install graphviz libgraphviz-dev
         python -m pip install --upgrade pip
         pip install setuptools wheel
@@ -27,18 +35,26 @@ jobs:
         cd ../../
     - name: Install node manager
       run: |
+        # Activate virtualenv
+        source python${{ matrix.python-version }}-venv/bin/activate
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd control_plane/protos
         python setup.py install
         cd ../../control_plane/node-manager
         python setup.py install
+    - name: |
+        # Activate virtualenv
+        source python${{ matrix.python-version }}-venv/bin/activate
+        # Build docs
+        cd docs
+        make html
     # Standard drop-in approach that should work for most people.
-    - uses: ammaraskar/sphinx-action@master
-      with:
-        pre-build-command: "pip install sphinx"
-        # build-command: "python -m sphinx"
-        docs-folder: "docs/"
+    #- uses: ammaraskar/sphinx-action@master
+    #  with:
+    #    pre-build-command: "pip install sphinx"
+    #    # build-command: "python -m sphinx"
+    #    docs-folder: "docs/"
     # Example of using a custom build-command.
     #- uses: ammaraskar/sphinx-action@master
     #  with:
