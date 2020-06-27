@@ -27,11 +27,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd db_update
-        python setup.py sdist bdist_wheel install
+        python setup.py install
         cd ../control_plane/protos
-        python setup.py sdist bdist_wheel install
+        python setup.py install
         cd ../../control_plane/controller
-        python setup.py sdist bdist_wheel install
+        python setup.py install
         cd ../../
     - name: Install node manager
       run: |
@@ -40,9 +40,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd control_plane/protos
-        python setup.py sdist bdist_wheel install
+        python setup.py install
         cd ../../control_plane/node-manager
-        python setup.py sdist bdist_wheel install
+        python setup.py install
     #- name: Build docs
     #  run: |
     #    # Activate virtualenv
@@ -58,7 +58,7 @@ jobs:
       with:
         docs-folder: "docs/"
         pre-build-command: "pip install sphinx"
-        build-command: "python -m sphinx -b html . _build"
+        #build-command: "python -m sphinx -b html . _build"
 
 
     # Standard drop-in approach that should work for most people.
