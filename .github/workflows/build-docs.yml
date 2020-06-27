@@ -111,6 +111,7 @@ jobs:
         cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         # cd gh-pages
         # cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
