@@ -88,6 +88,9 @@ jobs:
     #  with:
     #    name: Documentation
     #    path: docs2/_build/latex/pdfexample.pdf
+    - uses: oleksiyrudenko/gha-git-credentials@v1
+      with:
+        token: '${{ secrets.TOKEN_GITHUB_SPHINX }}'
     # Publish built docs to gh-pages branch.
     # ===============================
     - name: Commit documentation changes
