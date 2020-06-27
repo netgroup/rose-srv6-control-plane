@@ -107,7 +107,8 @@ jobs:
       run: |
         # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
         # cp -r docs/build/html/* gh-pages/
-        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/gh-pages
+        mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
         # cd gh-pages
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
