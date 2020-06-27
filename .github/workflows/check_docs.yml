@@ -58,7 +58,7 @@ jobs:
       with:
         docs-folder: "docs/"
         pre-build-command: "pip install sphinx"
-        build-command: "sphinx-build -b html . _build"
+        build-command: "python -m sphinx -b html . _build"
         
 
     # Standard drop-in approach that should work for most people.
