@@ -22,7 +22,7 @@ jobs:
     - name: Install controller
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         sudo apt-get install graphviz libgraphviz-dev
         python -m pip install --upgrade pip
         pip install setuptools wheel
@@ -36,7 +36,7 @@ jobs:
     - name: Install node manager
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd control_plane/protos
@@ -57,7 +57,7 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
-        pre-build-command: "source python${{ matrix.python-version }}-venv/bin/activate && pip install sphinx"
+        pre-build-command: "pip install sphinx"
         build-command: "sphinx-build -b html . _build"
         
 
