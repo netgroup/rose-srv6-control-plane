@@ -43,16 +43,24 @@ jobs:
         python setup.py install
         cd ../../control_plane/node-manager
         python setup.py install
-    - name: Build docs
-      run: |
-        # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
-        # Build docs
-        cd docs
-        # Installs sphinx dependencies
-        pip install sphinx
-        pip install -r requirements.txt
-        make html
+    #- name: Build docs
+    #  run: |
+    #    # Activate virtualenv
+    #    source python${{ matrix.python-version }}-venv/bin/activate
+    #    # Build docs
+    #    cd docs
+    #    # Installs sphinx dependencies
+    #    pip install sphinx
+    #    pip install -r requirements.txt
+    #    make html
+        
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs/"
+        pre-build-command: "source python${{ matrix.python-version }}-venv/bin/activate && pip install sphinx"
+        build-command: "sphinx-build -b html . _build"
+        
+
     # Standard drop-in approach that should work for most people.
     #- uses: ammaraskar/sphinx-action@master
     #  with:
