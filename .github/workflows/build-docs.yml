@@ -86,6 +86,8 @@ jobs:
         pip install sphinx
         pip install -r docs/requirements.txt
         make html
+        #mkdir -p ${GITHUB_WORKSPACE}/docs
+        #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/docs
         
         
     # Create an artifact of the html output.
@@ -103,14 +105,22 @@ jobs:
     #    token: '${{ secrets.TOKEN_GITHUB_SPHINX }}'
     # Publish built docs to gh-pages branch.
     # ===============================
+    #- uses: actions/checkout@v2
+    #  with:
+    #    ref: gh-pages
     - name: Commit documentation changes
       run: |
-        # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
-        # cp -r docs/build/html/* gh-pages/
-        mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
-        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        git clone https://github.com/netgroup/rose-srv6-control-plane.git --branch gh-pages --single-branch gh-pages
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* gh-pages/
+        cd gh-pages
+        #mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
+        #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         # cd gh-pages
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        # cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        #cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
+        #git stash
+        #git checkout gh-pages
+        #git stash pop
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
@@ -121,7 +131,8 @@ jobs:
       uses: ad-m/github-push-action@master
       with:
         branch: gh-pages
-        directory: rose-srv6-control-plane-documentation/latest
-        github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
+        directory: gh-pages
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
         # repository: cscarpitta/rose-srv6-control-plane-documentation
     # ===============================

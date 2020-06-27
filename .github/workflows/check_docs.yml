@@ -22,7 +22,7 @@ jobs:
     - name: Install controller
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         sudo apt-get install graphviz libgraphviz-dev
         python -m pip install --upgrade pip
         pip install setuptools wheel
@@ -36,23 +36,31 @@ jobs:
     - name: Install node manager
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd control_plane/protos
         python setup.py install
         cd ../../control_plane/node-manager
         python setup.py install
-    - name: Build docs
-      run: |
-        # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
-        # Build docs
-        cd docs
-        # Installs sphinx dependencies
-        pip install sphinx
-        pip install -r requirements.txt
-        make html
+    #- name: Build docs
+    #  run: |
+    #    # Activate virtualenv
+    #    source python${{ matrix.python-version }}-venv/bin/activate
+    #    # Build docs
+    #    cd docs
+    #    # Installs sphinx dependencies
+    #    pip install sphinx
+    #    pip install -r requirements.txt
+    #    make html
+        
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "."
+        pre-build-command: "pip install sphinx"
+        #build-command: "python -m sphinx -b html . _build"
+
+
     # Standard drop-in approach that should work for most people.
     #- uses: ammaraskar/sphinx-action@master
     #  with:
