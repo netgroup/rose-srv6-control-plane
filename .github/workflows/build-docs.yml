@@ -52,30 +52,33 @@ jobs:
         python -m venv python${{ matrix.python-version }}-venv
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
+    - name: Install dependencies
+      run: |
+        sudo apt-get install -y python3-pip
     - name: Install controller
       run: |
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
-        sudo apt-get install graphviz libgraphviz-dev
-        sudo python -m pip install --upgrade pip
-        sudo pip install setuptools wheel
+        sudo apt-get install -y graphviz libgraphviz-dev
+        sudo python3 -m pip3 install --upgrade pip3
+        sudo pip3 install setuptools wheel
         cd db_update
-        sudo python setup.py install
+        sudo python3 setup.py install
         cd ../control_plane/protos
-        sudo python setup.py install
+        sudo python3 setup.py install
         cd ../../control_plane/controller
-        sudo python setup.py install
+        sudo python3 setup.py install
         cd ../../
     - name: Install node manager
       run: |
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
-        sudo python -m pip install --upgrade pip
+        sudo python3 -m pip3 install --upgrade pip3
         pip install setuptools wheel
         cd control_plane/protos
-        sudo python setup.py install
+        sudo python3 setup.py install
         cd ../../control_plane/node-manager
-        sudo python setup.py install
+        sudo python3 setup.py install
     #- name: Build docs
     #  run: |
     #    # Activate virtualenv
@@ -96,7 +99,7 @@ jobs:
         pre-build-command: "pip install sphinx"
         #pre-build-command: "apt-get install -y graphviz libgraphviz-dev && apt-get install -y python3-pip && python3 -m pip3 install --upgrade pip && pip3 install sphinx && pip install setuptools wheel && cd db_update && python3 setup.py install && cd ../control_plane/protos && python3 setup.py install && cd ../../control_plane/controller && python3 setup.py install && cd ../../ && cd ../../control_plane/node-manager && python3 setup.py install"
         #build-command: "python -m sphinx -b html . _build"
-        build-command: "python -m sphinx -b html . build"
+        build-command: "python3 -m sphinx -b html . build"
         
     # Create an artifact of the html output.
     #- uses: actions/upload-artifact@v1
