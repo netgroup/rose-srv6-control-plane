@@ -55,6 +55,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install -y python3-pip
+        sudo pip3 install setuptools wheel
         sudo pip3 install grpcio-tools
     - name: Install controller
       run: |
@@ -75,7 +76,7 @@ jobs:
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
         # sudo python3 -m pip3 install --upgrade pip3
-        pip install setuptools wheel
+        sudo pip3 install setuptools wheel
         cd control_plane/protos
         sudo python3 setup.py install
         cd ../../control_plane/node-manager
