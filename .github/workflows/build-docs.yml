@@ -51,11 +51,11 @@ jobs:
         # Create a virtualenv
         python -m venv python${{ matrix.python-version }}-venv
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
     - name: Install controller
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         sudo apt-get install graphviz libgraphviz-dev
         python -m pip install --upgrade pip
         pip install setuptools wheel
@@ -69,7 +69,7 @@ jobs:
     - name: Install node manager
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         python -m pip install --upgrade pip
         pip install setuptools wheel
         cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/protos
@@ -79,7 +79,7 @@ jobs:
     - name: Build docs
       run: |
         # Activate virtualenv
-        source python${{ matrix.python-version }}-venv/bin/activate
+        #source python${{ matrix.python-version }}-venv/bin/activate
         # Build docs
         cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
         # Installs sphinx dependencies
