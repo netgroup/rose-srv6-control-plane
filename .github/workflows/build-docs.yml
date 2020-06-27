@@ -52,7 +52,7 @@ jobs:
         cd db_update
         python setup.py install
         cd ../control_plane/protos
-        python setup.py install
+        python setup.py sdist bdist_wheel install
         cd ../../control_plane/controller
         python setup.py install
         cd ../../
@@ -79,10 +79,10 @@ jobs:
         
         
     # Create an artifact of the html output.
-    - uses: actions/upload-artifact@v1
-      with:
-        name: DocumentationHTML
-        path: docs/_build/html/
+    #- uses: actions/upload-artifact@v1
+    #  with:
+    #    name: DocumentationHTML
+    #    path: docs/_build/html/
     # Create an artifact out of the previously built pdf.
     #- uses: actions/upload-artifact@v1
     #  with:
@@ -93,7 +93,7 @@ jobs:
     - name: Commit documentation changes
       run: |
         git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
-        cp -r docs/_build/html/* gh-pages/
+        cp -r docs/build/html/* gh-pages/
         cd gh-pages
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
