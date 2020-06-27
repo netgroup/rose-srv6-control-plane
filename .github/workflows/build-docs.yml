@@ -103,6 +103,9 @@ jobs:
     #    token: '${{ secrets.TOKEN_GITHUB_SPHINX }}'
     # Publish built docs to gh-pages branch.
     # ===============================
+    - uses: actions/checkout@v2
+      with:
+        ref: gh-pages
     - name: Commit documentation changes
       run: |
         # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
