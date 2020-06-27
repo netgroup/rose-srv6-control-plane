@@ -95,6 +95,7 @@ jobs:
         docs-folder: "docs"
         pre-build-command: "pip install sphinx"
         #build-command: "python -m sphinx -b html . _build"
+        build-command: "python3 -m sphinx"
         
     # Create an artifact of the html output.
     #- uses: actions/upload-artifact@v1
