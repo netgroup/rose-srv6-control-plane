@@ -60,7 +60,7 @@ jobs:
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
         sudo apt-get install -y graphviz libgraphviz-dev
-        sudo python3 -m pip3 install --upgrade pip3
+        # sudo python3 -m pip3 install --upgrade pip3
         sudo pip3 install setuptools wheel
         cd db_update
         sudo python3 setup.py install
@@ -73,7 +73,7 @@ jobs:
       run: |
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
-        sudo python3 -m pip3 install --upgrade pip3
+        # sudo python3 -m pip3 install --upgrade pip3
         pip install setuptools wheel
         cd control_plane/protos
         sudo python3 setup.py install
