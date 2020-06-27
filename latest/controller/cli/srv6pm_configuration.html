@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SRv6 Performance Measurement Functions - Configuration &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="SRv6 Performance Measurement Functions - Experiment" href="srv6pm_experiment.html" />
+    <link rel="prev" title="SRv6 Performance Measurement Functions" href="srv6pm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> ROSE SRv6 Control Plane
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Controller</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="cli.html">Command-Line Interface (CLI) Reference</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="srv6.html">SRv6 Functions</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="srv6pm.html">SRv6 Performance Measurement Functions</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="srv6pm.html#entering-the-srv6pm-section">Entering the <code class="docutils literal notranslate"><span class="pre">srv6pm</span></code> section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="srv6pm.html#configuration"><code class="docutils literal notranslate"><span class="pre">configuration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="srv6pm.html#experiment"><code class="docutils literal notranslate"><span class="pre">experiment</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="srv6pm.html#exit"><code class="docutils literal notranslate"><span class="pre">exit</span></code></a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="srv6pm.html#help"><code class="docutils literal notranslate"><span class="pre">help</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="topology.html">Topology Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api/api_reference.html">API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../node-manager/index.html">Node Manager</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ROSE SRv6 Control Plane</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Controller</a> &raquo;</li>
+        
+          <li><a href="cli.html">Command-Line Interface (CLI) Reference</a> &raquo;</li>
+        
+          <li><a href="srv6pm.html">SRv6 Performance Measurement Functions</a> &raquo;</li>
+        
+      <li>SRv6 Performance Measurement Functions - Configuration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/controller/cli/srv6pm_configuration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="srv6-performance-measurement-functions-configuration">
+<span id="controller-cli-srv6pm-configuration"></span><h1>SRv6 Performance Measurement Functions - Configuration<a class="headerlink" href="#srv6-performance-measurement-functions-configuration" title="Permalink to this headline">¶</a></h1>
+<p>The Controller allows to execute performance measurement experiments
+on a network. The configuration functions are available under the
+section <code class="docutils literal notranslate"><span class="pre">srv6pm</span></code>/<code class="docutils literal notranslate"><span class="pre">configuration</span></code> of the Command-Line Interface.</p>
+<div class="section" id="entering-the-srv6pm-configuration-section">
+<h2>Entering the <code class="docutils literal notranslate"><span class="pre">srv6pm</span></code>/<code class="docutils literal notranslate"><span class="pre">configuration</span></code> section<a class="headerlink" href="#entering-the-srv6pm-configuration-section" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller&gt; srv6pm
+controller<span class="o">(</span>srv6pm<span class="o">)</span>&gt; configuration
+controller<span class="o">(</span>srv6pm-configuration<span class="o">)</span>&gt;
+</pre></div>
+</div>
+<p>Section <code class="docutils literal notranslate"><span class="pre">srv6pm</span></code>/<code class="docutils literal notranslate"><span class="pre">configuration</span></code> supports the following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">exit</span>  <span class="nb">help</span>  reset  <span class="nb">set</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reset">
+<h2><code class="docutils literal notranslate"><span class="pre">reset</span></code><a class="headerlink" href="#reset" title="Permalink to this headline">¶</a></h2>
+<p>Clear configuration settings on both sender and reflector nodes.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6pm-configuration<span class="o">)</span>&gt; reset --help
+usage: start <span class="o">[</span>-h<span class="o">]</span> --sender-ip SENDER_IP --sender-port SENDER_PORT
+             --reflector-ip REFLECTOR_IP --reflector-port REFLECTOR_PORT <span class="o">[</span>-s<span class="o">]</span>
+             <span class="o">[</span>--server-cert SERVER_CERT<span class="o">]</span> <span class="o">[</span>-d<span class="o">]</span>
+
+Clear configuration settings on both sender and reflector nodes
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --sender-ip SENDER_IP
+                        IP of the gRPC server of the sender
+  --sender-port SENDER_PORT
+                        Port of the gRPC server of the sender
+  --reflector-ip REFLECTOR_IP
+                        IP of the gRPC server of the reflector
+  --reflector-port REFLECTOR_PORT
+                        Port of the gRPC server of the reflector
+  -s, --secure          Activate secure mode
+  --server-cert SERVER_CERT
+                        CA certificate file
+  -d, --debug           Activate debug logs
+</pre></div>
+</div>
+</div>
+<div class="section" id="set">
+<h2><code class="docutils literal notranslate"><span class="pre">set</span></code><a class="headerlink" href="#set" title="Permalink to this headline">¶</a></h2>
+<p>Set the configuration on both sender and reflector nodes.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6pm-configuration<span class="o">)</span>&gt; <span class="nb">set</span> --help
+usage: start <span class="o">[</span>-h<span class="o">]</span> --sender-ip SENDER_IP --sender-port SENDER_PORT
+             --reflector-ip REFLECTOR_IP --reflector-port REFLECTOR_PORT <span class="o">[</span>-s<span class="o">]</span>
+             <span class="o">[</span>--server-cert SERVER_CERT<span class="o">]</span> <span class="o">[</span>--send_in_interfaces SEND_IN_INTERFACES<span class="o">]</span>
+             <span class="o">[</span>--refl_in_interfaces REFL_IN_INTERFACES<span class="o">]</span>
+             <span class="o">[</span>--send_out_interfaces SEND_OUT_INTERFACES<span class="o">]</span>
+             <span class="o">[</span>--refl_out_interfaces REFL_OUT_INTERFACES<span class="o">]</span>
+             <span class="o">[</span>--send_udp_port SEND_UDP_PORT<span class="o">]</span> <span class="o">[</span>--refl_udp_port REFL_UDP_PORT<span class="o">]</span>
+             <span class="o">[</span>--interval_duration INTERVAL_DURATION<span class="o">]</span>
+             <span class="o">[</span>--delay_margin DELAY_MARGIN<span class="o">]</span> <span class="o">[</span>--number_of_color NUMBER_OF_COLOR<span class="o">]</span>
+             <span class="o">[</span>--pm_driver PM_DRIVER<span class="o">]</span> <span class="o">[</span>-d<span class="o">]</span>
+
+Set the configuration on both sender and reflector nodes
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --sender-ip SENDER_IP
+                        IP of the gRPC server of the sender
+  --sender-port SENDER_PORT
+                        Port of the gRPC server of the sender
+  --reflector-ip REFLECTOR_IP
+                        IP of the gRPC server of the reflector
+  --reflector-port REFLECTOR_PORT
+                        Port of the gRPC server of the reflector
+  -s, --secure          Activate secure mode
+  --server-cert SERVER_CERT
+                        CA certificate file
+  --send_in_interfaces SEND_IN_INTERFACES
+                        send_in_interfaces
+  --refl_in_interfaces REFL_IN_INTERFACES
+                        refl_in_interfaces
+  --send_out_interfaces SEND_OUT_INTERFACES
+                        send_out_interfaces
+  --refl_out_interfaces REFL_OUT_INTERFACES
+                        refl_out_interfaces
+  --send_udp_port SEND_UDP_PORT
+                        send_udp_port
+  --refl_udp_port REFL_UDP_PORT
+                        refl_udp_port
+  --interval_duration INTERVAL_DURATION
+                        interval_duration
+  --delay_margin DELAY_MARGIN
+                        delay_margin
+  --number_of_color NUMBER_OF_COLOR
+                        number_of_color
+  --pm_driver PM_DRIVER
+                        pm_driver
+  -d, --debug           Activate debug logs
+</pre></div>
+</div>
+</div>
+<div class="section" id="exit">
+<h2><code class="docutils literal notranslate"><span class="pre">exit</span></code><a class="headerlink" href="#exit" title="Permalink to this headline">¶</a></h2>
+<p>Exit from this section and return the previous section.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; <span class="nb">exit</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="help">
+<h2><code class="docutils literal notranslate"><span class="pre">help</span></code><a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
+<p>Show a description of the commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; <span class="nb">help</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="srv6pm_experiment.html" class="btn btn-neutral float-right" title="SRv6 Performance Measurement Functions - Experiment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="srv6pm.html" class="btn btn-neutral float-left" title="SRv6 Performance Measurement Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Carmine Scarpitta
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
