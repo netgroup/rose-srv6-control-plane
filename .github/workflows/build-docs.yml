@@ -34,13 +34,13 @@ jobs:
     #    docs-folder: "docs2/"
     # Great extra actions to compose with:
     
-    - name: Checkout tools rose-srv6-control-plane-documentation
-      uses: actions/checkout@v2
-      with:
-        repository: cscarpitta/rose-srv6-control-plane-documentation
-        token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
-        path: rose-srv6-control-plane-documentation
-        fetch-depth: 0
+    #- name: Checkout tools rose-srv6-control-plane-documentation
+    #  uses: actions/checkout@v2
+    #  with:
+    #    repository: cscarpitta/rose-srv6-control-plane-documentation
+    #    token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
+    #    path: rose-srv6-control-plane-documentation
+    #    fetch-depth: 0
     
     - name: Set up Python 3
       uses: actions/setup-python@v2
@@ -81,10 +81,10 @@ jobs:
         # Activate virtualenv
         source python${{ matrix.python-version }}-venv/bin/activate
         # Build docs
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs
+        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
         # Installs sphinx dependencies
         pip install sphinx
-        pip install -r requirements.txt
+        pip install -r docs/requirements.txt
         make html
         
         
@@ -123,5 +123,5 @@ jobs:
         branch: gh-pages
         directory: rose-srv6-control-plane-documentation/latest
         github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
-        repository: cscarpitta/rose-srv6-control-plane-documentation
+        # repository: cscarpitta/rose-srv6-control-plane-documentation
     # ===============================
