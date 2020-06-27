@@ -1,0 +1,603 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Configuration &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> ROSE SRv6 Control Plane
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../controller/index.html">Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../controller/index.html#indices-and-tables">Indices and tables</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Node Manager</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-options">Configuration options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#general-settings">General settings</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#srv6-manager">SRv6 Manager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#srv6-pm-manager">SRv6-PM Manager</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#grpc-server-on-the-controller-settings">“gRPC server on the Controller” settings</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ROSE SRv6 Control Plane</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Node Manager</a> &raquo;</li>
+        
+      <li>Configuration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/node-manager/configuration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="configuration">
+<span id="node-mgr-configuration"></span><h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h1>
+<p>The Node Manager is configured with a env-based configuration file, <code class="docutils literal notranslate"><span class="pre">node_manager.env</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">config/node_manager.env</span></code> file contains an example of configuration for the
+Node Manager, which is the configuration used by default:</p>
+<div class="literal-block-wrapper docutils container" id="node-manager-env">
+<div class="code-block-caption"><span class="caption-text">node_manager.env</span><a class="headerlink" href="#node-manager-env" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bash</span>
+
+<span class="c1">##############################################################################</span>
+<span class="c1">################## Node Manager example configuration file  ##################</span>
+<span class="c1">##############################################################################</span>
+
+<span class="c1"># Node Manager example configuration file.</span>
+
+<span class="c1"># This is used to enable/disable features for the node manager and </span>
+<span class="c1"># to set configuration parameters.</span>
+<span class="c1">#</span>
+
+<span class="c1"># To provide the configuration settings defined in this script, pass</span>
+<span class="c1"># the path of this script as parameter when you start the node manager.</span>
+<span class="c1">#   $ node_manager --env-path .env</span>
+<span class="c1"># For more information, check the documentation.</span>
+
+<span class="c1"># Note that the configuration settings contained in this script are</span>
+<span class="c1"># defined as environment variables; therefore you can also load the</span>
+<span class="c1"># configuration by sourcing this script.</span>
+
+<span class="c1"># Some settings can be also passed as command-line arguments when you</span>
+<span class="c1"># start the node manager. Command-line arguments have priority over the</span>
+<span class="c1"># variables defined in this script.</span>
+
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1">############################## General settings ##############################</span>
+<span class="c1">##############################################################################</span>
+
+<span class="c1"># Must debug logs be enabled? (optional, default: True)</span>
+<span class="c1"># export DEBUG=True</span>
+                      
+<span class="c1"># Must SRv6 Manager features be enabled? (optional, default: True)</span>
+<span class="c1"># export ENABLE_SRV6_MANAGER=False</span>
+
+<span class="c1">##############################################################################</span>
+
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1">############################ gRPC server settings ############################</span>
+<span class="c1">##############################################################################</span>
+
+<span class="c1"># IP address of the gRPC server (:: means &#39;listen on any addrs&#39;, default: ::)</span>
+<span class="nb">export</span> <span class="nv">GRPC_IP</span><span class="o">=</span>::
+
+<span class="c1"># Number of port on which the gRPC server is reachable (default: 12345)</span>
+<span class="nb">export</span> <span class="nv">GRPC_PORT</span><span class="o">=</span><span class="m">12345</span>
+
+<span class="c1"># Must gRPC server use secure channels? (default: False)</span>
+<span class="c1"># export GRPC_SECURE=True</span>
+
+<span class="c1"># Path to the certificate of Certification Authority (CA) </span>
+<span class="c1"># required by gRPC secure mode (default: &#39;cert_client.pem&#39;)</span>
+<span class="c1"># export GRPC_SERVER_CERTIFICATE_PATH=/tmp/ca.crt</span>
+
+<span class="c1"># Path to the private key of the server required by gRPC secure mode</span>
+<span class="c1"># (default: &#39;key_server.pem&#39;)</span>
+<span class="c1"># export GRPC_SERVER_KEY_PATH=/tmp/server.key</span>
+
+<span class="c1">##############################################################################</span>
+
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1">############################ gRPC client settings ############################</span>
+<span class="c1">##############################################################################</span>
+
+<span class="c1"># Must gRPC client use secure channels? (default: False)</span>
+<span class="c1"># export GRPC_CLIENT_SECURE=True</span>
+
+<span class="c1"># Must gRPC use secure channels? (default: False)</span>
+<span class="c1"># export GRPC_CA_CERTIFICATE_PATH=/tmp/ca.crt</span>
+
+<span class="c1"># IP address of the controller&#39;s gRPC server (default: fcff:c::1)</span>
+<span class="c1"># export CONTROLLER_GRPC_IP=fcff:c::1</span>
+
+<span class="c1"># Number of port of the controller&#39;s gRPC server (default: 12345)</span>
+<span class="c1"># export CONTROLLER_GRPC_PORT=12345</span>
+
+<span class="c1">##############################################################################</span>
+
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1">########################## SRv6-PFPLM configuration ##########################</span>
+<span class="c1">##############################################################################</span>
+
+<span class="c1"># Define whether to enable or not SRv6-PFPLM features (default: False)</span>
+<span class="c1"># export ENABLE_SRV6_PM_MANAGER=True</span>
+
+<span class="c1"># Path to the folder where you cloned the repository</span>
+<span class="c1"># https://github.com/netgroup/srv6-pm-xdp-ebpf.git</span>
+<span class="c1"># export SRV6_PM_XDP_EBPF_PATH=/home/rose/workspace/srv6-pm-xdp-ebpf</span>
+
+<span class="c1"># Path to the folder where you cloned the repository</span>
+<span class="c1"># https://github.com/netgroup/rose-srv6-data-plane.git</span>
+<span class="c1"># export ROSE_SRV6_DATA_PLANE_PATH=/home/rose/workspace/rose-srv6-data-plane</span>
+
+<span class="c1">##############################################################################</span>
+</pre></div>
+</div>
+</div>
+<p>If you want to override the default settings, you can create a <em>node_manager.env</em>
+file containing the desired configuration parameters.</p>
+<p>The next section shows the available configuration options.</p>
+<div class="section" id="configuration-options">
+<h2>Configuration options<a class="headerlink" href="#configuration-options" title="Permalink to this headline">¶</a></h2>
+<p>This section shows a list of the available configuration options for the Node Manager.
+You can set configuration parameters by using the syntax of the environment variables:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">ATTRIBUTE</span><span class="o">=</span>VALUE
+</pre></div>
+</div>
+<p>where ATTRIBUTE is the name of the configuration option that you want to set
+and VALUE is the value to be assigned to the option.</p>
+<p>To use your custom configuration, you can pass your <em>.env</em> configuration file
+to the Node Manager when it is started, as explained in the
+<a class="reference internal" href="#node-mgr-load-config"><span class="std std-ref">Load configuration</span></a> section.</p>
+<div class="section" id="general-settings">
+<h3>General settings<a class="headerlink" href="#general-settings" title="Permalink to this headline">¶</a></h3>
+<table class="colwidths-given docutils align-default" id="id1">
+<caption><span class="caption-text">General settings for node_manager.env</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GRPC_IP</p></td>
+<td><p>string</p></td>
+<td><p>::</p></td>
+<td><p>IP of the gRPC server.</p></td>
+</tr>
+<tr class="row-odd"><td><p>GRPC_PORT</p></td>
+<td><p>integer</p></td>
+<td><p>12345</p></td>
+<td><p>Port of the gRPC server.</p></td>
+</tr>
+<tr class="row-even"><td><p>GRPC_SECURE</p></td>
+<td><p>boolean</p></td>
+<td><p>False</p></td>
+<td><div class="line-block">
+<div class="line">If True, the Node Manager will use</div>
+<div class="line">the TLS to encrypt and authenticate</div>
+<div class="line">the traffic sent to the Node Manager</div>
+<div class="line">on the gRPC Channel.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GRPC_SERVER_CERTIFICATE_PATH</p></td>
+<td><p>string</p></td>
+<td><p>None</p></td>
+<td><div class="line-block">
+<div class="line">Name of server certificate for the TLS,</div>
+<div class="line">required if GRPC_SECURE is True.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p>GRPC_SERVER_KEY_PATH</p></td>
+<td><p>string</p></td>
+<td><p>None</p></td>
+<td><div class="line-block">
+<div class="line">Name of server key for the TLS,</div>
+<div class="line">required if GRPC_SECURE is True.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>DEBUG</p></td>
+<td><p>boolean</p></td>
+<td><p>False</p></td>
+<td><p>If True, the debug logging is enabled.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The design of the node manager is highly modular. It is composed by different
+components that can be enabled or disabled in your configuration file.</p>
+<p>The current release has two components: <a class="reference internal" href="#node-mgr-configuration-srv6-manager"><span class="std std-ref">SRv6 Manager</span></a> and <a class="reference internal" href="#node-mgr-configuration-srv6pm-manager"><span class="std std-ref">SRv6-PM Manager</span></a>,
+described in the next sections.</p>
+</div>
+<div class="section" id="srv6-manager">
+<span id="node-mgr-configuration-srv6-manager"></span><h3>SRv6 Manager<a class="headerlink" href="#srv6-manager" title="Permalink to this headline">¶</a></h3>
+<p>The <strong>SRv6 Manager</strong> allows a Controller to enforce SRv6 rules and behaviors to
+the node. This can be used for example to create SRv6 tunnels between two nodes
+of the network. This component is enabled by default.</p>
+<table class="colwidths-given docutils align-default" id="id2">
+<caption><span class="caption-text">SRv6 Manager settings for node_manager.env</span><a class="headerlink" href="#id2" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ENABLE_SRV6_MANAGER</p></td>
+<td><p>boolean</p></td>
+<td><p>True</p></td>
+<td><p>If True, the SRv6 Manager is enabled.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="srv6-pm-manager">
+<span id="node-mgr-configuration-srv6pm-manager"></span><h3>SRv6-PM Manager<a class="headerlink" href="#srv6-pm-manager" title="Permalink to this headline">¶</a></h3>
+<p>SRv6 PFPLM functionalities depend on the SRv6-PM Manager.</p>
+<p>If you want to use these features, you need to enable the SRv6-PM Manager
+support in your configuration and to set the parameters listed in this
+section.</p>
+<p>If you are not interested in using SRv6 PM features, you can skip this
+section.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>SRv6 PFPLM support requires <a class="reference external" href="https://github.com/netgroup/srv6-pm-xdp-ebpf">SRv6 PFPLM implementation using
+XDP/eBPF and tc/eBPF</a>
+and <a class="reference external" href="https://github.com/netgroup/rose-srv6-data-plane">ROSE SRv6 Data-Plane</a>.
+Follow the instructions provided in <a class="reference internal" href="installation.html#node-mgr-installation-opt-req"><span class="std std-ref">Optional requirements</span></a>
+section to setup the required dependencies.</p>
+</div>
+<table class="colwidths-given docutils align-default" id="id3">
+<caption><span class="caption-text">SRv6-PM Manager settings for node_manager.env</span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ENABLE_SRV6_PM_MANAGER</p></td>
+<td><p>boolean</p></td>
+<td><p>False</p></td>
+<td><p>If True, the SRv6 PM features are enabled.</p></td>
+</tr>
+<tr class="row-odd"><td><p>SRV6_PM_XDP_EBPF_PATH</p></td>
+<td><p>string</p></td>
+<td><p>None</p></td>
+<td><div class="line-block">
+<div class="line">Path to folder where you cloned the</div>
+<div class="line">srv6-pm-xdp-ebpf-path library.</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="grpc-server-on-the-controller-settings">
+<h3>“gRPC server on the Controller” settings<a class="headerlink" href="#grpc-server-on-the-controller-settings" title="Permalink to this headline">¶</a></h3>
+<p>The Controller uses the gRPC protocol to interact with the nodes.
+In most use-cases it acts as a gRPC client, while the node executes the
+gRPC server.
+Optionally, you can also executes a gRPC server on the Controller.
+This enables several use-cases where the nodes need to send information to
+the Controller (e.g. performance measurement data).
+To use this feature, you need to enable and configure it in the
+Controller configuration. Then you need to set some parameters in the
+configuration of the Node Manager.
+This section explains how to configure this functionality on the Node Manager.</p>
+<table class="colwidths-given docutils align-default" id="id4">
+<caption><span class="caption-text">gRPC server settings for node_manager.env</span><a class="headerlink" href="#id4" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CONTROLLER_GRPC_IP</p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>The IP address of the Controller.</p></td>
+</tr>
+<tr class="row-odd"><td><p>CONTROLLER_GRPC_PORT</p></td>
+<td><p>integer</p></td>
+<td><p>12345</p></td>
+<td><div class="line-block">
+<div class="line">The TCP port on which the Controller</div>
+<div class="line">will listen for gRPC connections.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p>GRPC_CLIENT_SECURE</p></td>
+<td><p>boolean</p></td>
+<td><p>False</p></td>
+<td><div class="line-block">
+<div class="line">If True, the Node Manager will use</div>
+<div class="line">the TLS to encrypt and authenticate</div>
+<div class="line">the traffic exchanged with the</div>
+<div class="line">Controller on the</div>
+<div class="line">(Node -&gt; Controller) gRPC Channel.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GRPC_CA_CERTIFICATE_PATH</p></td>
+<td><p>string</p></td>
+<td><p>None</p></td>
+<td><div class="line-block">
+<div class="line">Name of CA certificate for the TLS,</div>
+<div class="line">required if GRPC_CLIENT_SECURE is True.</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="verifying-configuration">
+<h4>Verifying configuration<a class="headerlink" href="#verifying-configuration" title="Permalink to this headline">¶</a></h4>
+<p>You can verify that your configuration is correct with the <code class="docutils literal notranslate"><span class="pre">check_node_manager_config</span></code> script:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">check_node_manager_config /etc/rose-srv6-control-plane/node_manager.env</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration-examples">
+<h4>Configuration examples<a class="headerlink" href="#configuration-examples" title="Permalink to this headline">¶</a></h4>
+<p>For an example of configuration, you can see the <code class="docutils literal notranslate"><span class="pre">config/node_manager.env</span></code> file.
+It is the default configuration used by the Node Manager. You can use this file as
+a template for your custom configuration.</p>
+</div>
+<div class="section" id="load-configuration">
+<span id="node-mgr-load-config"></span><h4>Load configuration<a class="headerlink" href="#load-configuration" title="Permalink to this headline">¶</a></h4>
+<p>In order to load your configuration in the Node Manager, you can pass the
+path of your <em>node_manager.env</em> configuration file when you start the
+Node Manager:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> node_manager --env-file node_manager.env
+</pre></div>
+</div>
+<p>For more information about the usage of the Node Manager and the supported
+Command-Line arguments, see the <a class="reference internal" href="usage.html#node-mgr-usage"><span class="std std-ref">Usage</span></a> section.</p>
+</div>
+<div class="section" id="command-line-arguments">
+<h4>Command-Line arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">¶</a></h4>
+<p>You can provide Command-Line arguments to the Node Manager to override
+the settings written in your <em>node_manager.env</em> file such as paths
+for certificate files and port numbers.</p>
+<p>For more information about the supported Command-Line arguments,
+see the <a class="reference internal" href="usage.html#node-mgr-usage"><span class="std std-ref">Usage</span></a> section.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Carmine Scarpitta
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
