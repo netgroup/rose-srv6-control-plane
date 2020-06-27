@@ -76,19 +76,25 @@ jobs:
         python setup.py sdist bdist_wheel install
         cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/node-manager
         python setup.py sdist bdist_wheel install
-    - name: Build docs
-      run: |
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-        # Build docs
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
-        # Installs sphinx dependencies
-        pip install sphinx
-        pip install -r docs/requirements.txt
-        make html
-        #mkdir -p ${GITHUB_WORKSPACE}/docs
-        #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/docs
+    #- name: Build docs
+    #  run: |
+    #    # Activate virtualenv
+    #    #source python${{ matrix.python-version }}-venv/bin/activate
+    #    # Build docs
+    #    cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
+    #    # Installs sphinx dependencies
+    #    pip install sphinx
+    #    pip install -r docs/requirements.txt
+    #    make html
+    #    #mkdir -p ${GITHUB_WORKSPACE}/docs
+    #    #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/docs
         
+        
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        docs-folder: "docs"
+        pre-build-command: "pip install sphinx"
+        #build-command: "python -m sphinx -b html . _build"
         
     # Create an artifact of the html output.
     #- uses: actions/upload-artifact@v1
@@ -111,7 +117,7 @@ jobs:
     - name: Commit documentation changes
       run: |
         git clone https://github.com/netgroup/rose-srv6-control-plane.git --branch gh-pages --single-branch gh-pages
-        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* gh-pages/
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs/build/html/* gh-pages/
         cd gh-pages
         #mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
