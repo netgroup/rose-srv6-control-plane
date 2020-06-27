@@ -107,10 +107,10 @@ jobs:
       run: |
         # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
         # cp -r docs/build/html/* gh-pages/
-        mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
-        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         # cd gh-pages
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
+        # cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
@@ -121,7 +121,7 @@ jobs:
       uses: ad-m/github-push-action@master
       with:
         branch: gh-pages
-        directory: rose-srv6-control-plane-documentation/latest
-        github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
+        directory: rose-srv6-control-plane/latest
+        # github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
         # repository: cscarpitta/rose-srv6-control-plane-documentation
     # ===============================
