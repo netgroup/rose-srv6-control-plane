@@ -59,23 +59,23 @@ jobs:
         sudo apt-get install graphviz libgraphviz-dev
         python -m pip install --upgrade pip
         pip install setuptools wheel
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/db_update
-        python setup.py sdist bdist_wheel install
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/protos
-        python setup.py sdist bdist_wheel install
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/controller
-        python setup.py sdist bdist_wheel install
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
+        cd db_update
+        python setup.py install
+        cd ../control_plane/protos
+        python setup.py install
+        cd ../../control_plane/controller
+        python setup.py install
+        cd ../../
     - name: Install node manager
       run: |
         # Activate virtualenv
         #source python${{ matrix.python-version }}-venv/bin/activate
         python -m pip install --upgrade pip
         pip install setuptools wheel
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/protos
-        python setup.py sdist bdist_wheel install
-        cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/control_plane/node-manager
-        python setup.py sdist bdist_wheel install
+        cd control_plane/protos
+        python setup.py install
+        cd ../../control_plane/node-manager
+        python setup.py install
     #- name: Build docs
     #  run: |
     #    # Activate virtualenv
