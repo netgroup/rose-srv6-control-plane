@@ -86,6 +86,8 @@ jobs:
         pip install sphinx
         pip install -r docs/requirements.txt
         make html
+        mkdir -p ${GITHUB_WORKSPACE}/docs
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/docs
         
         
     # Create an artifact of the html output.
@@ -111,7 +113,7 @@ jobs:
         # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
         # cp -r docs/build/html/* gh-pages/
         mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
-        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
+        cp -r ${GITHUB_WORKSPACE}/docs/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
         # cd gh-pages
         # cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
         cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
