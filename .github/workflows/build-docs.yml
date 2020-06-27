@@ -94,7 +94,7 @@ jobs:
       with:
         docs-folder: "docs"
         #pre-build-command: "pip install sphinx"
-        pre-build-command: "sudo apt-get install graphviz libgraphviz-dev && python3 -m pip3 install --upgrade pip && pip3 install sphinx && pip install setuptools wheel && cd db_update && python3 setup.py install && cd ../control_plane/protos && python3 setup.py install && cd ../../control_plane/controller && python3 setup.py install && cd ../../ && cd ../../control_plane/node-manager && python3 setup.py install"
+        pre-build-command: "apt-get install graphviz libgraphviz-dev && python3 -m pip3 install --upgrade pip && pip3 install sphinx && pip install setuptools wheel && cd db_update && python3 setup.py install && cd ../control_plane/protos && python3 setup.py install && cd ../../control_plane/controller && python3 setup.py install && cd ../../ && cd ../../control_plane/node-manager && python3 setup.py install"
         #build-command: "python -m sphinx -b html . _build"
         build-command: "python3 -m sphinx -b html . build"
         
