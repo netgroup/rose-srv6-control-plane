@@ -123,4 +123,5 @@ jobs:
         branch: gh-pages
         directory: rose-srv6-control-plane-documentation/latest
         github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
+        repository: cscarpitta/rose-srv6-control-plane-documentation
     # ===============================
