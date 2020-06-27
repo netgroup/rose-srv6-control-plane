@@ -14,6 +14,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     # Standard drop-in approach that should work for most people.
     #- uses: ammaraskar/sphinx-action@master
     #  with:
@@ -31,6 +32,12 @@ jobs:
     #    docs-folder: "docs2/"
     # Great extra actions to compose with:
     
+    - name: Checkout tools rose-srv6-control-plane-documentation
+      uses: actions/checkout@v2
+      with:
+        repository: cscarpitta/rose-srv6-control-plane-documentation
+        token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
+        fetch-depth: 0
     
     - name: Set up Python 3
       uses: actions/setup-python@v2
@@ -95,9 +102,10 @@ jobs:
     # ===============================
     - name: Commit documentation changes
       run: |
-        git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
-        cp -r docs/build/html/* gh-pages/
-        cd gh-pages
+        # git clone https://github.com/cscarpitta/rose-srv6-control-plane-documentation.git --branch gh-pages --single-branch gh-pages
+        # cp -r docs/build/html/* gh-pages/
+        cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/docs/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/gh-pages
+        # cd gh-pages
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add .
