@@ -822,14 +822,14 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
     :param measurement_type: The measurement type (i.e. delay or loss)
     :type measurement_type: str
     :param authentication_mode: The authentication mode (i.e. HMAC_SHA_256)
-    :type authentication_mode: str 
+    :type authentication_mode: str
     :param authentication_key: The authentication key
     :type authentication_key: str
     :param timestamp_format: The Timestamp Format (i.e. PTPv2 or NTP)
     :type timestamp_format: str
     :param delay_measurement_mode: Delay measurement mode (i.e. one-way,
                                    two-way or loopback mode)
-    :type delay_measurement_mode: str 
+    :type delay_measurement_mode: str
     :param padding_mbz: The padding size
     :type padding_mbz: int
     :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
