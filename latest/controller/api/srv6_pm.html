@@ -176,16 +176,17 @@
 <dt id="controller.srv6_pm.get_experiment_results">
 <code class="sig-prename descclassname">controller.srv6_pm.</code><code class="sig-name descname">get_experiment_results</code><span class="sig-paren">(</span><em class="sig-param">sender_channel, reflector_channel, send_refl_sidlist, refl_send_sidlist, kafka_servers=['kafka:9092']</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_pm.html#get_experiment_results"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_pm.get_experiment_results" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the results of an experiment.</p>
-<dl class="simple">
-<dt>sender_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the sender node</p>
-</dd>
-<dt>reflector_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the reflector node</p>
-</dd>
-<dt>send_refl_sidlist<span class="classifier">list</span></dt><dd><p>The SID list to be used for the path sender-&gt;reflector</p>
-</dd>
-<dt>refl_send_sidlist<span class="classifier">list</span></dt><dd><p>The SID list to be used for the path reflector-&gt;sender</p>
-</dd>
-<dt>kafka_servers<span class="classifier">str</span></dt><dd><p>IP:port of Kafka server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the sender node</p></li>
+<li><p><strong>reflector_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the reflector node</p></li>
+<li><p><strong>send_refl_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be used for the path
+sender-&gt;reflector</p></li>
+<li><p><strong>refl_send_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be used for the path
+reflector-&gt;sender</p></li>
+<li><p><strong>kafka_servers</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – IP:port of Kafka server</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -206,20 +207,17 @@
 <dt id="controller.srv6_pm.reset_configuration">
 <code class="sig-prename descclassname">controller.srv6_pm.</code><code class="sig-name descname">reset_configuration</code><span class="sig-paren">(</span><em class="sig-param">sender_channel</em>, <em class="sig-param">reflector_channel</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_pm.html#reset_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_pm.reset_configuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the configuration</p>
-<dl class="simple">
-<dt>sender_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the sender node</p>
-</dd>
-<dt>reflector_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the reflector node</p>
-</dd>
-<dt>send_dst_udp_port<span class="classifier">int</span></dt><dd><p>The destination UDP port used by the sender</p>
-</dd>
-<dt>refl_dst_udp_port<span class="classifier">int</span></dt><dd><p>The destination UDP port used by the reflector</p>
-</dd>
-<dt>interval_duration<span class="classifier">int</span></dt><dd><p>The duration of the interval</p>
-</dd>
-<dt>delay_margin<span class="classifier">int</span></dt><dd><p>The delay margin</p>
-</dd>
-<dt>number_of_color<span class="classifier">int</span></dt><dd><p>The number of the color</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the sender node</p></li>
+<li><p><strong>reflector_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the reflector node</p></li>
+<li><p><strong>send_dst_udp_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The destination UDP port used by the sender</p></li>
+<li><p><strong>refl_dst_udp_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The destination UDP port used by the reflector</p></li>
+<li><p><strong>interval_duration</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The duration of the interval</p></li>
+<li><p><strong>delay_margin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The delay margin</p></li>
+<li><p><strong>number_of_color</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The number of the color</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -240,20 +238,17 @@
 <dt id="controller.srv6_pm.set_configuration">
 <code class="sig-prename descclassname">controller.srv6_pm.</code><code class="sig-name descname">set_configuration</code><span class="sig-paren">(</span><em class="sig-param">sender_channel</em>, <em class="sig-param">reflector_channel</em>, <em class="sig-param">send_udp_port</em>, <em class="sig-param">refl_udp_port</em>, <em class="sig-param">interval_duration</em>, <em class="sig-param">delay_margin</em>, <em class="sig-param">number_of_color</em>, <em class="sig-param">pm_driver</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_pm.html#set_configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_pm.set_configuration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the configuration</p>
-<dl class="simple">
-<dt>sender_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the sender node</p>
-</dd>
-<dt>reflector_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the reflector node</p>
-</dd>
-<dt>send_dst_udp_port<span class="classifier">int</span></dt><dd><p>The destination UDP port used by the sender</p>
-</dd>
-<dt>refl_dst_udp_port<span class="classifier">int</span></dt><dd><p>The destination UDP port used by the reflector</p>
-</dd>
-<dt>interval_duration<span class="classifier">int</span></dt><dd><p>The duration of the interval</p>
-</dd>
-<dt>delay_margin<span class="classifier">int</span></dt><dd><p>The delay margin</p>
-</dd>
-<dt>number_of_color<span class="classifier">int</span></dt><dd><p>The number of the color</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the sender</p></li>
+<li><p><strong>reflector_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the reflector node</p></li>
+<li><p><strong>send_dst_udp_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The destination UDP port used by the sender</p></li>
+<li><p><strong>refl_dst_udp_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The destination UDP port used by the reflector</p></li>
+<li><p><strong>interval_duration</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The duration of the interval</p></li>
+<li><p><strong>delay_margin</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The delay margin</p></li>
+<li><p><strong>number_of_color</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The number of the color</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -268,60 +263,46 @@
 <dt id="controller.srv6_pm.start_experiment">
 <code class="sig-prename descclassname">controller.srv6_pm.</code><code class="sig-name descname">start_experiment</code><span class="sig-paren">(</span><em class="sig-param">sender_channel</em>, <em class="sig-param">reflector_channel</em>, <em class="sig-param">send_refl_dest</em>, <em class="sig-param">refl_send_dest</em>, <em class="sig-param">send_refl_sidlist</em>, <em class="sig-param">refl_send_sidlist</em>, <em class="sig-param">measurement_protocol</em>, <em class="sig-param">measurement_type</em>, <em class="sig-param">authentication_mode</em>, <em class="sig-param">authentication_key</em>, <em class="sig-param">timestamp_format</em>, <em class="sig-param">delay_measurement_mode</em>, <em class="sig-param">padding_mbz</em>, <em class="sig-param">loss_measurement_mode</em>, <em class="sig-param">measure_id=None</em>, <em class="sig-param">send_refl_localseg=None</em>, <em class="sig-param">refl_send_localseg=None</em>, <em class="sig-param">force=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_pm.html#start_experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_pm.start_experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Start an experiment.</p>
-<dl class="simple">
-<dt>sender_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the sender node</p>
-</dd>
-<dt>reflector_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the reflector node</p>
-</dd>
-<dt>send_refl_dest<span class="classifier">str</span></dt><dd><p>The destination of the SRv6 path sender-&gt;reflector</p>
-</dd>
-<dt>refl_send_dest<span class="classifier">str</span></dt><dd><p>The destination of the SRv6 path reflector-&gt;sender</p>
-</dd>
-<dt>send_refl_sidlist<span class="classifier">list</span></dt><dd><p>The SID list to be used for the path sender-&gt;reflector</p>
-</dd>
-<dt>refl_send_sidlist<span class="classifier">list</span></dt><dd><p>The SID list to be used for the path reflector-&gt;sender</p>
-</dd>
-<dt>send_in_interfaces<span class="classifier">list</span></dt><dd><p>The list of the incoming interfaces of the sender</p>
-</dd>
-<dt>refl_in_interfaces<span class="classifier">list</span></dt><dd><p>The list of the incoming interfaces of the reflector</p>
-</dd>
-<dt>send_out_interfaces<span class="classifier">list</span></dt><dd><p>The list of the outgoing interfaces of the sender</p>
-</dd>
-<dt>refl_out_interfaces<span class="classifier">list</span></dt><dd><p>The list of the outgoing interfaces of the reflector</p>
-</dd>
-<dt>measurement_protocol<span class="classifier">str</span></dt><dd><p>The measurement protocol (i.e. TWAMP or STAMP)</p>
-</dd>
-<dt>measurement_type<span class="classifier">str</span></dt><dd><p>The measurement type (i.e. delay or loss)</p>
-</dd>
-<dt>authentication_mode<span class="classifier">str</span></dt><dd><p>The authentication mode (i.e. HMAC_SHA_256)</p>
-</dd>
-<dt>authentication_key<span class="classifier">str</span></dt><dd><p>The authentication key</p>
-</dd>
-<dt>timestamp_format<span class="classifier">str</span></dt><dd><p>The Timestamp Format (i.e. PTPv2 or NTP)</p>
-</dd>
-<dt>delay_measurement_mode<span class="classifier">str</span></dt><dd><p>Delay measurement mode (i.e. one-way, two-way or loopback mode)</p>
-</dd>
-<dt>padding_mbz<span class="classifier">int</span></dt><dd><p>The padding size</p>
-</dd>
-<dt>loss_measurement_mode<span class="classifier">str</span></dt><dd><p>The loss measurement mode (i.e. Inferred or Direct mode)</p>
-</dd>
-<dt>measure_id<span class="classifier">int, optional</span></dt><dd><p>Identifier for the experiment (default is None).
-If the argument ‘measure_id’ isn’t passed in, the measure_id is
-automatically generated.</p>
-</dd>
-<dt>send_refl_localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 (decap) function
-for the path sender-&gt;reflector (default is None).
-If the argument ‘send_localseg’ isn’t passed in, the seg6local
-End.DT6 route is not created.</p>
-</dd>
-<dt>refl_send_localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 (decap) function
-for the path reflector-&gt;sender (default is None).
-If the argument ‘send_localseg’ isn’t passed in, the seg6local
-End.DT6 route is not created.</p>
-</dd>
-<dt>force<span class="classifier">bool, optional</span></dt><dd><p>If set, force the controller to start an experiment if a
-SRv6 path for the destination already exists. The old SRv6 path
-is replaced with the new one (default is False).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the sender node</p></li>
+<li><p><strong>reflector_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the reflector node</p></li>
+<li><p><strong>send_refl_dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination of the SRv6 path
+sender-&gt;reflector</p></li>
+<li><p><strong>refl_send_dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination of the SRv6 path
+reflector-&gt;sender</p></li>
+<li><p><strong>send_refl_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be used for the path
+sender-&gt;reflector</p></li>
+<li><p><strong>refl_send_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be used for the path
+reflector-&gt;sender</p></li>
+<li><p><strong>measurement_protocol</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The measurement protocol (i.e. TWAMP
+or STAMP)</p></li>
+<li><p><strong>measurement_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The measurement type (i.e. delay or loss)</p></li>
+<li><p><strong>authentication_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The authentication mode (i.e. HMAC_SHA_256)</p></li>
+<li><p><strong>authentication_key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The authentication key</p></li>
+<li><p><strong>timestamp_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The Timestamp Format (i.e. PTPv2 or NTP)</p></li>
+<li><p><strong>delay_measurement_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Delay measurement mode (i.e. one-way,
+two-way or loopback mode)</p></li>
+<li><p><strong>padding_mbz</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The padding size</p></li>
+<li><p><strong>loss_measurement_mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The loss measurement mode (i.e. Inferred
+or Direct mode)</p></li>
+<li><p><strong>measure_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Identifier for the experiment (default is None).
+automatically generated.</p></li>
+<li><p><strong>send_refl_localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6
+(decap) function for the path
+sender-&gt;reflector (default is None).
+If the argument ‘send_localseg’ isn’t passed
+in, the seg6local End.DT6 route is not created.</p></li>
+<li><p><strong>refl_send_localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6
+(decap) function for the path
+reflector-&gt;sender (default is None).
+If the argument ‘send_localseg’ isn’t passed
+in, the seg6local End.DT6 route is not created.</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – If set, force the controller to start an experiment if a
+SRv6 path for the destination already exists. The old SRv6
+path is replaced with the new one (default is False).</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -342,29 +323,30 @@ is replaced with the new one (default is False).</p>
 <dt id="controller.srv6_pm.stop_experiment">
 <code class="sig-prename descclassname">controller.srv6_pm.</code><code class="sig-name descname">stop_experiment</code><span class="sig-paren">(</span><em class="sig-param">sender_channel</em>, <em class="sig-param">reflector_channel</em>, <em class="sig-param">send_refl_dest</em>, <em class="sig-param">refl_send_dest</em>, <em class="sig-param">send_refl_sidlist</em>, <em class="sig-param">refl_send_sidlist</em>, <em class="sig-param">send_refl_localseg=None</em>, <em class="sig-param">refl_send_localseg=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_pm.html#stop_experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_pm.stop_experiment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Stop a running experiment.</p>
-<dl class="simple">
-<dt>sender_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the sender node</p>
-</dd>
-<dt>reflector_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the reflector node</p>
-</dd>
-<dt>send_refl_dest<span class="classifier">str</span></dt><dd><p>The destination of the SRv6 path sender-&gt;reflector</p>
-</dd>
-<dt>refl_send_dest<span class="classifier">str</span></dt><dd><p>The destination of the SRv6 path reflector-&gt;sender</p>
-</dd>
-<dt>send_refl_sidlist<span class="classifier">list</span></dt><dd><p>The SID list used for the path sender-&gt;reflector</p>
-</dd>
-<dt>refl_send_sidlist<span class="classifier">list</span></dt><dd><p>The SID list used for the path reflector-&gt;sender</p>
-</dd>
-<dt>send_refl_localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 (decap) function
-for the path sender-&gt;reflector
-(default is None).
-If the argument ‘send_localseg’ isn’t passed in, the seg6local
-End.DT6 route is not removed.</p>
-</dd>
-<dt>refl_send_localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 (decap) function
-for the path reflector-&gt;sender
-If the argument ‘send_localseg’ isn’t passed in, the seg6local
-End.DT6 route is not removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the sender node</p></li>
+<li><p><strong>reflector_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the reflector node</p></li>
+<li><p><strong>send_refl_dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination of the SRv6 path
+sender-&gt;reflector</p></li>
+<li><p><strong>refl_send_dest</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination of the SRv6 path
+reflector-&gt;sender</p></li>
+<li><p><strong>send_refl_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list used for the path
+sender-&gt;reflector</p></li>
+<li><p><strong>refl_send_sidlist</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list used for the path
+reflector-&gt;sender</p></li>
+<li><p><strong>send_refl_localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6
+(decap) function for the path sender-&gt;reflector
+(default is None). If the argument
+‘send_localseg’ isn’t passed in, the seg6local
+End.DT6 route is not removed.</p></li>
+<li><p><strong>refl_send_localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6
+(decap) function for the path reflector-&gt;sender
+(default is None). If the argument
+‘send_localseg’ isn’t passed in, the seg6local
+End.DT6 route is not removed.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

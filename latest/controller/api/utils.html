@@ -183,28 +183,34 @@ or None if the IP is invalid</p>
 <dt id="controller.utils.get_grpc_session">
 <code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">get_grpc_session</code><span class="sig-paren">(</span><em class="sig-param">server_ip</em>, <em class="sig-param">server_port</em>, <em class="sig-param">secure=False</em>, <em class="sig-param">certificate=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#get_grpc_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.get_grpc_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a Channel to a server.</p>
-<dl class="simple">
-<dt>server_ip<span class="classifier">str</span></dt><dd><p>The IP address of the gRPC server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The IP address of the gRPC server</p></li>
+<li><p><strong>server_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The port of the gRPC server</p></li>
+</ul>
 </dd>
-<dt>server_port<span class="classifier">int</span></dt><dd><p>The port of the gRPC server</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The requested gRPC Channel or None if the operation has failed.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>class: <cite>grpc._channel.Channel</cite></p>
 </dd>
 </dl>
-<p>The requested gRPC Channel or None if the operation has failed.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="controller.utils.print_status_message">
 <code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">print_status_message</code><span class="sig-paren">(</span><em class="sig-param">status_code</em>, <em class="sig-param">success_msg</em>, <em class="sig-param">failure_msg</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#print_status_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.print_status_message" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Print success or failure message depending of the status code</dt><dd><p>returned by a gRPC operation.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>status_code<span class="classifier">int</span></dt><dd><p>The status code returned by the gRPC operation</p>
-</dd>
-<dt>success_msg<span class="classifier">str</span></dt><dd><p>The message to print in case of success</p>
-</dd>
-<dt>failure_msg<span class="classifier">str</span></dt><dd><p>The message to print in case of error</p>
+<dd><p>Print success or failure message depending of the status code
+returned by a gRPC operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>status_code</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – The status code returned by the gRPC operation</p></li>
+<li><p><strong>success_msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The message to print in case of success</p></li>
+<li><p><strong>failure_msg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The message to print in case of error</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

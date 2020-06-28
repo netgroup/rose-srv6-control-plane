@@ -174,7 +174,9 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&quot;&quot;&quot;Control-Plane functionalities for SRv6 Manager&quot;&quot;&quot;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Control-Plane functionalities for SRv6 Manager</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -199,7 +201,9 @@
 
 <span class="c1"># Parser for gRPC errors</span>
 <div class="viewcode-block" id="parse_grpc_error"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.parse_grpc_error">[docs]</a><span class="k">def</span> <span class="nf">parse_grpc_error</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Parse a gRPC error&quot;&quot;&quot;</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Parse a gRPC error</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">status_code</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">code</span><span class="p">()</span>
     <span class="n">details</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">details</span><span class="p">()</span>
@@ -217,7 +221,9 @@
 
 <div class="viewcode-block" id="handle_srv6_path"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_path">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_path</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">encapmode</span><span class="o">=</span><span class="s2">&quot;encap&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handle a SRv6 Path&quot;&quot;&quot;</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle a SRv6 Path</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># pylint: disable=too-many-locals, too-many-arguments</span>
 
@@ -290,10 +296,11 @@
 <div class="viewcode-block" id="handle_srv6_behavior"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_behavior">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_behavior</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                          <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nexthop</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">lookup_table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                          <span class="n">interface</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Handle a SRv6 behavior&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Handle a SRv6 behavior</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
-
+    <span class="c1">#</span>
     <span class="k">if</span> <span class="n">segments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="c1"># Create request message</span>
@@ -390,26 +397,25 @@
 
 <div class="viewcode-block" id="create_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span>
                            <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span> <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    ingress_channel : &lt;gRPC Channel&gt;</span>
-<span class="sd">        The gRPC Channel to the ingress node</span>
-<span class="sd">    egress_channel : &lt;gRPC Channel&gt;</span>
-<span class="sd">        The gRPC Channel to the egress node</span>
-<span class="sd">    destination : str</span>
-<span class="sd">        The destination prefix of the SRv6 path.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    segments : list</span>
-<span class="sd">        The SID list to be applied to the packets going to the destination</span>
-<span class="sd">    localseg : str, optional</span>
-<span class="sd">        The local segment to be associated to the End.DT6 seg6local</span>
-<span class="sd">        function on the egress node.</span>
-<span class="sd">        If the argument &#39;localseg&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not created.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
+<span class="sd">    :param ingress_channel: The gRPC Channel to the ingress node</span>
+<span class="sd">    :type ingress_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param egress_channel: The gRPC Channel to the egress node</span>
+<span class="sd">    :type egress_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param destination: The destination prefix of the SRv6 path.</span>
+<span class="sd">                  It can be a IP address or a subnet.</span>
+<span class="sd">    :type destination: str</span>
+<span class="sd">    :param segments: The SID list to be applied to the packets going to</span>
+<span class="sd">                     the destination</span>
+<span class="sd">    :type segments: list</span>
+<span class="sd">    :param localseg: The local segment to be associated to the End.DT6</span>
+<span class="sd">                     seg6local function on the egress node. If the argument</span>
+<span class="sd">                     &#39;localseg&#39; isn&#39;t passed in, the End.DT6 function</span>
+<span class="sd">                     is not created.</span>
+<span class="sd">    :type localseg: str, optional</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Add seg6 route to &lt;ingress&gt; to steer the packets sent to the</span>
     <span class="c1"># &lt;destination&gt; through the SID list &lt;segments&gt;</span>
     <span class="c1">#</span>
@@ -464,40 +470,40 @@
 <div class="viewcode-block" id="create_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                        <span class="n">sidlist_lr</span><span class="p">,</span> <span class="n">sidlist_rl</span><span class="p">,</span> <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span>
                        <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a bidirectional SRv6 tunnel.</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    node_l_channel : str</span>
-<span class="sd">        The gRPC Channel to the left endpoint of the SRv6 tunnel</span>
-<span class="sd">    node_r : str</span>
-<span class="sd">        The gRPC Channel to the right endpoint of the SRv6 tunnel</span>
-<span class="sd">    sidlist_lr : list</span>
-<span class="sd">        The SID list to be installed on the packets going</span>
-<span class="sd">        from &lt;node_l&gt; to &lt;node_r&gt;</span>
-<span class="sd">    sidlist_rl : list</span>
-<span class="sd">        SID list to be installed on the packets going</span>
-<span class="sd">        from &lt;node_r&gt; to &lt;node_l&gt;</span>
-<span class="sd">    dest_lr : str</span>
-<span class="sd">        The destination prefix of the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    dest_rl : str</span>
-<span class="sd">        The destination prefix of the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    localseg_lr : str, optional</span>
-<span class="sd">        The local segment to be associated to the End.DT6 seg6local</span>
-<span class="sd">        function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.</span>
-<span class="sd">        If the argument &#39;localseg_l&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not created.</span>
-<span class="sd">    localseg_rl : str, optional</span>
-<span class="sd">        The local segment to be associated to the End.DT6 seg6local</span>
-<span class="sd">        function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.</span>
-<span class="sd">        If the argument &#39;localseg_r&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not created.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
+<span class="sd">    :param node_l_channel: The gRPC Channel to the left endpoint (node_l)</span>
+<span class="sd">                           of the SRv6 tunnel</span>
+<span class="sd">    :type node_l_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param node_r_channel: The gRPC Channel to the right endpoint (node_r)</span>
+<span class="sd">                           of the SRv6 tunnel</span>
+<span class="sd">    :type node_r_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param sidlist_lr: The SID list to be installed on the packets going</span>
+<span class="sd">                       from &lt;node_l&gt; to &lt;node_r&gt;</span>
+<span class="sd">    :type sidlist_lr: list</span>
+<span class="sd">    :param sidlist_rl: The SID list to be installed on the packets going</span>
+<span class="sd">                       from &lt;node_r&gt; to &lt;node_l&gt;</span>
+<span class="sd">    :type sidlist_rl: list</span>
+<span class="sd">    :param dest_lr: The destination prefix of the SRv6 path from &lt;node_l&gt;</span>
+<span class="sd">                    to &lt;node_r&gt;. It can be a IP address or a subnet.</span>
+<span class="sd">    :type dest_lr: str</span>
+<span class="sd">    :param dest_rl: The destination prefix of the SRv6 path from &lt;node_r&gt;</span>
+<span class="sd">                    to &lt;node_l&gt;. It can be a IP address or a subnet.</span>
+<span class="sd">    :type dest_rl: str</span>
+<span class="sd">    :param localseg_lr: The local segment to be associated to the End.DT6</span>
+<span class="sd">                        seg6local function for the SRv6 path from &lt;node_l&gt;</span>
+<span class="sd">                        to &lt;node_r&gt;. If the argument &#39;localseg_lr&#39; isn&#39;t</span>
+<span class="sd">                        passed in, the End.DT6 function is not created.</span>
+<span class="sd">    :type localseg_lr: str, optional</span>
+<span class="sd">    :param localseg_rl: The local segment to be associated to the End.DT6</span>
+<span class="sd">                        seg6local function for the SRv6 path from &lt;node_r&gt;</span>
+<span class="sd">                        to &lt;node_l&gt;. If the argument &#39;localseg_rl&#39; isn&#39;t</span>
+<span class="sd">                        passed in, the End.DT6 function is not created.</span>
+<span class="sd">    :type localseg_rl: str, optional</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Create a unidirectional SRv6 tunnel from &lt;node_l&gt; to &lt;node_r&gt;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">create_uni_srv6_tunnel</span><span class="p">(</span>
         <span class="n">ingress_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>
@@ -526,26 +532,24 @@
 
 <div class="viewcode-block" id="destroy_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
                             <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    ingress_channel : &lt;gRPC Channel&gt;</span>
-<span class="sd">        The gRPC Channel to the ingress node</span>
-<span class="sd">    egress_channel : &lt;gRPC Channel&gt;</span>
-<span class="sd">        The gRPC Channel to the egress node</span>
-<span class="sd">    destination : str</span>
-<span class="sd">        The destination prefix of the SRv6 path.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    localseg : str, optional</span>
-<span class="sd">        The local segment associated to the End.DT6 seg6local</span>
-<span class="sd">        function on the egress node.</span>
-<span class="sd">        If the argument &#39;localseg&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not removed.</span>
-<span class="sd">    ignore_errors : bool, optional</span>
-<span class="sd">        Whether to ignore &quot;No such process&quot; errors or not (default is False)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
+<span class="sd">    :param ingress_channel: The gRPC Channel to the ingress node</span>
+<span class="sd">    :type ingress_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param egress_channel: The gRPC Channel to the egress node</span>
+<span class="sd">    :type egress_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param destination: The destination prefix of the SRv6 path.</span>
+<span class="sd">                        It can be a IP address or a subnet.</span>
+<span class="sd">    :type destination: str</span>
+<span class="sd">    :param localseg: The local segment associated to the End.DT6 seg6local</span>
+<span class="sd">                     function on the egress node. If the argument &#39;localseg&#39;</span>
+<span class="sd">                     isn&#39;t passed in, the End.DT6 function is not removed.</span>
+<span class="sd">    :type localseg: str, optional</span>
+<span class="sd">    :param ignore_errors: Whether to ignore &quot;No such process&quot; errors or not</span>
+<span class="sd">                          (default is False)</span>
+<span class="sd">    :type ignore_errors: bool, optional</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Remove seg6 route from &lt;ingress&gt; to steer the packets sent to</span>
     <span class="c1"># &lt;destination&gt; through the SID list &lt;segments&gt;</span>
     <span class="c1">#</span>
@@ -605,40 +609,41 @@
 <div class="viewcode-block" id="destroy_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                         <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span> <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Destroy a bidirectional SRv6 tunnel</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Destroy a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    node_l_channel : &lt;gRPC channel&gt;</span>
-<span class="sd">        The gRPC channel to the left endpoint of the SRv6 tunnel</span>
-<span class="sd">    node_r_channel : &lt;gRPC channel&gt;</span>
-<span class="sd">        The gRPC channel to the right endpoint of the SRv6 tunnel</span>
-<span class="sd">    node_l : str</span>
-<span class="sd">        The IP address of the left endpoint of the SRv6 tunnel</span>
-<span class="sd">    node_r : str</span>
-<span class="sd">        The IP address of the right endpoint of the SRv6 tunnel</span>
-<span class="sd">    dest_lr : str</span>
-<span class="sd">        The destination prefix of the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    dest_rl : str</span>
-<span class="sd">        The destination prefix of the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.</span>
-<span class="sd">        It can be a IP address or a subnet.</span>
-<span class="sd">    localseg_lr : str, optional</span>
-<span class="sd">        The local segment associated to the End.DT6 seg6local</span>
-<span class="sd">        function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.</span>
-<span class="sd">        If the argument &#39;localseg_l&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not removed.</span>
-<span class="sd">    localseg_rl : str, optional</span>
-<span class="sd">        The local segment associated to the End.DT6 seg6local</span>
-<span class="sd">        function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.</span>
-<span class="sd">        If the argument &#39;localseg_r&#39; isn&#39;t passed in, the End.DT6 function</span>
-<span class="sd">        is not removed.</span>
-<span class="sd">    ignore_errors : bool, optional</span>
-<span class="sd">        Whether to ignore &quot;No such process&quot; errors or not (default is False)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
+<span class="sd">    :param node_l_channel: The gRPC channel to the left endpoint of the</span>
+<span class="sd">                           SRv6 tunnel (node_l)</span>
+<span class="sd">    :type node_l_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param node_r_channel: The gRPC channel to the right endpoint of the</span>
+<span class="sd">                           SRv6 tunnel (node_r)</span>
+<span class="sd">    :type node_r_channel: class: `grpc._channel.Channel`</span>
+<span class="sd">    :param node_l: The IP address of the left endpoint of the SRv6 tunnel</span>
+<span class="sd">    :type node_l: str</span>
+<span class="sd">    :param node_r: The IP address of the right endpoint of the SRv6 tunnel</span>
+<span class="sd">    :type node_r: str</span>
+<span class="sd">    :param dest_lr: The destination prefix of the SRv6 path from &lt;node_l&gt;</span>
+<span class="sd">                    to &lt;node_r&gt;. It can be a IP address or a subnet.</span>
+<span class="sd">    :type dest_lr: str</span>
+<span class="sd">    :param dest_rl: The destination prefix of the SRv6 path from &lt;node_r&gt;</span>
+<span class="sd">                    to &lt;node_l&gt;. It can be a IP address or a subnet.</span>
+<span class="sd">    :type dest_rl: str</span>
+<span class="sd">    :param localseg_lr: The local segment associated to the End.DT6 seg6local</span>
+<span class="sd">                        function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.</span>
+<span class="sd">                        If the argument &#39;localseg_l&#39; isn&#39;t passed in, the</span>
+<span class="sd">                        End.DT6 function is not removed.</span>
+<span class="sd">    :type localseg_lr: str, optional</span>
+<span class="sd">    :param localseg_rl: The local segment associated to the End.DT6 seg6local</span>
+<span class="sd">                        function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.</span>
+<span class="sd">                        If the argument &#39;localseg_r&#39; isn&#39;t passed in, the</span>
+<span class="sd">                        End.DT6 function is not removed.</span>
+<span class="sd">    :type localseg_rl: str, optional</span>
+<span class="sd">    :param ignore_errors: Whether to ignore &quot;No such process&quot; errors or not</span>
+<span class="sd">                          (default is False)</span>
+<span class="sd">    :type ignore_errors: bool, optional</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Remove unidirectional SRv6 tunnel from &lt;node_l&gt; to &lt;node_r&gt;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">destroy_uni_srv6_tunnel</span><span class="p">(</span>
         <span class="n">ingress_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>

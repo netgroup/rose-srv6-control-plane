@@ -175,33 +175,31 @@
 <dl class="function">
 <dt id="controller.srv6_utils.create_srv6_tunnel">
 <code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">sidlist_lr</em>, <em class="sig-param">sidlist_rl</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a bidirectional SRv6 tunnel.</p>
-<dl class="simple">
-<dt>node_l_channel<span class="classifier">str</span></dt><dd><p>The gRPC Channel to the left endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>node_r<span class="classifier">str</span></dt><dd><p>The gRPC Channel to the right endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>sidlist_lr<span class="classifier">list</span></dt><dd><p>The SID list to be installed on the packets going
-from &lt;node_l&gt; to &lt;node_r&gt;</p>
-</dd>
-<dt>sidlist_rl<span class="classifier">list</span></dt><dd><p>SID list to be installed on the packets going
-from &lt;node_r&gt; to &lt;node_l&gt;</p>
-</dd>
-<dt>dest_lr<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>dest_rl<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>localseg_lr<span class="classifier">str, optional</span></dt><dd><p>The local segment to be associated to the End.DT6 seg6local
-function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.
-If the argument ‘localseg_l’ isn’t passed in, the End.DT6 function
-is not created.</p>
-</dd>
-<dt>localseg_rl<span class="classifier">str, optional</span></dt><dd><p>The local segment to be associated to the End.DT6 seg6local
-function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.
-If the argument ‘localseg_r’ isn’t passed in, the End.DT6 function
-is not created.</p>
+<dd><p>Create a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_l_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the left endpoint (node_l)
+of the SRv6 tunnel</p></li>
+<li><p><strong>node_r_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the right endpoint (node_r)
+of the SRv6 tunnel</p></li>
+<li><p><strong>sidlist_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be installed on the packets going
+from &lt;node_l&gt; to &lt;node_r&gt;</p></li>
+<li><p><strong>sidlist_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be installed on the packets going
+from &lt;node_r&gt; to &lt;node_l&gt;</p></li>
+<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
+to &lt;node_r&gt;. It can be a IP address or a subnet.</p></li>
+<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
+to &lt;node_l&gt;. It can be a IP address or a subnet.</p></li>
+<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+seg6local function for the SRv6 path from &lt;node_l&gt;
+to &lt;node_r&gt;. If the argument ‘localseg_lr’ isn’t
+passed in, the End.DT6 function is not created.</p></li>
+<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+seg6local function for the SRv6 path from &lt;node_r&gt;
+to &lt;node_l&gt;. If the argument ‘localseg_rl’ isn’t
+passed in, the End.DT6 function is not created.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -210,20 +208,20 @@ is not created.</p>
 <dt id="controller.srv6_utils.create_uni_srv6_tunnel">
 <code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">segments</em>, <em class="sig-param">localseg=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</p>
-<dl class="simple">
-<dt>ingress_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the ingress node</p>
-</dd>
-<dt>egress_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the egress node</p>
-</dd>
-<dt>destination<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>segments<span class="classifier">list</span></dt><dd><p>The SID list to be applied to the packets going to the destination</p>
-</dd>
-<dt>localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment to be associated to the End.DT6 seg6local
-function on the egress node.
-If the argument ‘localseg’ isn’t passed in, the End.DT6 function
-is not created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ingress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the ingress node</p></li>
+<li><p><strong>egress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the egress node</p></li>
+<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path.
+It can be a IP address or a subnet.</p></li>
+<li><p><strong>segments</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be applied to the packets going to
+the destination</p></li>
+<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+seg6local function on the egress node. If the argument
+‘localseg’ isn’t passed in, the End.DT6 function
+is not created.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -231,33 +229,31 @@ is not created.</p>
 <dl class="function">
 <dt id="controller.srv6_utils.destroy_srv6_tunnel">
 <code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Destroy a bidirectional SRv6 tunnel</p>
-<dl class="simple">
-<dt>node_l_channel<span class="classifier">&lt;gRPC channel&gt;</span></dt><dd><p>The gRPC channel to the left endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>node_r_channel<span class="classifier">&lt;gRPC channel&gt;</span></dt><dd><p>The gRPC channel to the right endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>node_l<span class="classifier">str</span></dt><dd><p>The IP address of the left endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>node_r<span class="classifier">str</span></dt><dd><p>The IP address of the right endpoint of the SRv6 tunnel</p>
-</dd>
-<dt>dest_lr<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>dest_rl<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>localseg_lr<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 seg6local
+<dd><p>Destroy a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node_l_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC channel to the left endpoint of the
+SRv6 tunnel (node_l)</p></li>
+<li><p><strong>node_r_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC channel to the right endpoint of the
+SRv6 tunnel (node_r)</p></li>
+<li><p><strong>node_l</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The IP address of the left endpoint of the SRv6 tunnel</p></li>
+<li><p><strong>node_r</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The IP address of the right endpoint of the SRv6 tunnel</p></li>
+<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
+to &lt;node_r&gt;. It can be a IP address or a subnet.</p></li>
+<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
+to &lt;node_l&gt;. It can be a IP address or a subnet.</p></li>
+<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
 function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.
-If the argument ‘localseg_l’ isn’t passed in, the End.DT6 function
-is not removed.</p>
-</dd>
-<dt>localseg_rl<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 seg6local
+If the argument ‘localseg_l’ isn’t passed in, the
+End.DT6 function is not removed.</p></li>
+<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
 function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.
-If the argument ‘localseg_r’ isn’t passed in, the End.DT6 function
-is not removed.</p>
-</dd>
-<dt>ignore_errors<span class="classifier">bool, optional</span></dt><dd><p>Whether to ignore “No such process” errors or not (default is False)</p>
+If the argument ‘localseg_r’ isn’t passed in, the
+End.DT6 function is not removed.</p></li>
+<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
+(default is False)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -265,21 +261,20 @@ is not removed.</p>
 <dl class="function">
 <dt id="controller.srv6_utils.destroy_uni_srv6_tunnel">
 <code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">localseg=None</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</p>
-<dl class="simple">
-<dt>ingress_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the ingress node</p>
-</dd>
-<dt>egress_channel<span class="classifier">&lt;gRPC Channel&gt;</span></dt><dd><p>The gRPC Channel to the egress node</p>
-</dd>
-<dt>destination<span class="classifier">str</span></dt><dd><p>The destination prefix of the SRv6 path.
-It can be a IP address or a subnet.</p>
-</dd>
-<dt>localseg<span class="classifier">str, optional</span></dt><dd><p>The local segment associated to the End.DT6 seg6local
-function on the egress node.
-If the argument ‘localseg’ isn’t passed in, the End.DT6 function
-is not removed.</p>
-</dd>
-<dt>ignore_errors<span class="classifier">bool, optional</span></dt><dd><p>Whether to ignore “No such process” errors or not (default is False)</p>
+<dd><p>Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ingress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the ingress node</p></li>
+<li><p><strong>egress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the egress node</p></li>
+<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path.
+It can be a IP address or a subnet.</p></li>
+<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
+function on the egress node. If the argument ‘localseg’
+isn’t passed in, the End.DT6 function is not removed.</p></li>
+<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
+(default is False)</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

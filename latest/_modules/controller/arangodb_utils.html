@@ -174,7 +174,9 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&quot;&quot;&quot;ArangoDB utilities&quot;&quot;&quot;</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">ArangoDB utilities</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">ipaddress</span>
@@ -197,24 +199,27 @@
 
 
 <div class="viewcode-block" id="save_yaml_dump"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.save_yaml_dump">[docs]</a><span class="k">def</span> <span class="nf">save_yaml_dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Export an object to a YAML file&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export an object to a YAML file</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Save file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
         <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="load_yaml_dump"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.load_yaml_dump">[docs]</a><span class="k">def</span> <span class="nf">load_yaml_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Load a YAML file and return a dict representation&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load a YAML file and return a dict representation</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Load YAML file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="fill_ip_addresses"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.fill_ip_addresses">[docs]</a><span class="k">def</span> <span class="nf">fill_ip_addresses</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">addresses_yaml</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Add addresses to a nodes dict&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Add addresses to a nodes dict</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Read IP addresses information from a YAML file and</span>
     <span class="c1"># add addresses to the nodes</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Filling nodes YAML file with IP addresses&#39;</span><span class="p">)</span>
@@ -235,8 +240,9 @@
 
 
 <div class="viewcode-block" id="add_hosts"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.add_hosts">[docs]</a><span class="k">def</span> <span class="nf">add_hosts</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Add hosts to a topology&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Add hosts to a topology</span>
+<span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># Read hosts information from a YAML file and</span>
     <span class="c1"># add hosts to the nodes and edges lists</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Adding hosts to the topology&#39;</span><span class="p">)</span>
@@ -278,10 +284,12 @@
 
 
 <div class="viewcode-block" id="initialize_db"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.initialize_db">[docs]</a><span class="k">def</span> <span class="nf">initialize_db</span><span class="p">(</span><span class="n">arango_url</span><span class="p">,</span> <span class="n">arango_user</span><span class="p">,</span> <span class="n">arango_password</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Initialize database&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Initialize database</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#</span>
     <span class="c1"># pylint: disable=unused-argument</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Wrapper function</span>
     <span class="k">return</span> <span class="n">arango_db</span><span class="o">.</span><span class="n">initialize_db</span><span class="p">(</span>
         <span class="n">arango_url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">,</span>
@@ -293,11 +301,13 @@
 <div class="viewcode-block" id="extract_topo_from_isis"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.extract_topo_from_isis">[docs]</a><span class="k">def</span> <span class="nf">extract_topo_from_isis</span><span class="p">(</span><span class="n">isis_nodes</span><span class="p">,</span> <span class="n">isisd_pwd</span><span class="p">,</span>
                            <span class="n">nodes_yaml</span><span class="p">,</span> <span class="n">edges_yaml</span><span class="p">,</span>
                            <span class="n">addrs_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Extract the network topology</span>
-<span class="sd">    from a set of nodes running ISIS protocol&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extract the network topology</span>
+<span class="sd">    from a set of nodes running ISIS protocol</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Param isis_nodes: list of ip-port</span>
     <span class="c1"># (e.g. [2000::1-2608,2000::2-2608])</span>
     <span class="c1">#</span>
@@ -335,12 +345,14 @@
                         <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span>
                         <span class="n">nodes_collection</span><span class="p">,</span> <span class="n">edges_collection</span><span class="p">,</span>
                         <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Load a network topology on a database&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load a network topology on a database</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#</span>
     <span class="c1"># Current Arango arguments are not used,</span>
     <span class="c1"># so we can skip the check</span>
     <span class="c1"># pylint: disable=unused-argument, too-many-arguments</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Load the topology on Arango DB</span>
     <span class="n">arango_db</span><span class="o">.</span><span class="n">populate2</span><span class="p">(</span>
         <span class="n">nodes</span><span class="o">=</span><span class="n">nodes_collection</span><span class="p">,</span>
@@ -357,11 +369,13 @@
                                               <span class="n">nodes_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                               <span class="n">addrs_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                               <span class="n">period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Extract the network topology from a set of nodes running ISIS protocol</span>
-<span class="sd">    and upload it on a database&quot;&quot;&quot;</span>
-
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Extract the network topology from a set of nodes running ISIS protocol</span>
+<span class="sd">    and upload it on a database</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
-
+    <span class="c1">#</span>
     <span class="c1"># Param isis_nodes: list of ip-port</span>
     <span class="c1"># (e.g. [2000::1-2608,2000::2-2608])</span>
     <span class="c1">#</span>
