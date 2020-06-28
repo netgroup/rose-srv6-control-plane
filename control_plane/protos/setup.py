@@ -76,6 +76,9 @@ setuptools.setup(
         '': '.',
     },
     install_requires=install_requires,
+    setup_requires=[
+        'grpcio-tools',
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License',
