@@ -120,3 +120,8 @@ Then, you need to add the path to the repository to your *.env* file, as describ
     ```
 
     Note: the command-line arguments have priority over the parameters defined in the *.env* file.
+
+
+## Documentation
+
+For more information about the installation and usage of the Node Manager, see the full documentation at https://netgroup.github.io/rose-srv6-control-plane
