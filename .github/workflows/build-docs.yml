@@ -57,8 +57,8 @@ jobs:
         # sudo apt-get install -y python3-pip
         sudo apt-get install python3.8
         sudo python3.8 -m pip install pip
-        sudo pip3.8 install setuptools wheel
-        sudo pip3.8 install grpcio-tools
+        sudo pip3 install setuptools wheel
+        sudo pip3 install grpcio-tools
     - name: Install controller
       run: |
         # Activate virtualenv
