@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>controller.utils &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> ROSE SRv6 Control Plane
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../controller/index.html">Controller</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../node-manager/index.html">Node Manager</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ROSE SRv6 Control Plane</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>controller.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for controller.utils</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+
+<span class="c1">##########################################################################</span>
+<span class="c1"># Copyright (C) 2020 Carmine Scarpitta</span>
+<span class="c1"># (Consortium GARR and University of Rome &quot;Tor Vergata&quot;)</span>
+<span class="c1"># www.garr.it - www.uniroma2.it/netgroup</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &#39;License&#39;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1"># http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+<span class="c1"># Utils for controller</span>
+<span class="c1">#</span>
+<span class="c1"># @author Carmine Scarpitta &lt;carmine.scarpitta@uniroma2.it&gt;</span>
+<span class="c1">#</span>
+
+
+<span class="sd">&quot;&quot;&quot;This module contains a collection of utilities used by Controller&quot;&quot;&quot;</span>
+
+<span class="c1"># General imports</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">ipaddress</span> <span class="kn">import</span> <span class="n">AddressValueError</span><span class="p">,</span> <span class="n">IPv4Interface</span><span class="p">,</span> <span class="n">IPv6Interface</span>
+<span class="kn">from</span> <span class="nn">socket</span> <span class="kn">import</span> <span class="n">AF_INET</span><span class="p">,</span> <span class="n">AF_INET6</span>
+
+<span class="c1"># gRPC dependencies</span>
+<span class="kn">import</span> <span class="nn">grpc</span>
+
+<span class="c1"># Proto dependencies</span>
+<span class="kn">import</span> <span class="nn">commons_pb2</span>
+
+<span class="c1"># Logger reference</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">NOTSET</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># Utiliy function to check if the IP</span>
+<span class="c1"># is a valid IPv6 address</span>
+
+
+<div class="viewcode-block" id="validate_ipv6_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ipv6_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the provided IP address is a valid IPv6 address&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">ip_address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">IPv6Interface</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="n">AddressValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="c1"># Utiliy function to check if the IP</span>
+<span class="c1"># is a valid IPv4 address</span>
+<div class="viewcode-block" id="validate_ipv4_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ipv4_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ipv4_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the provided IP address is a valid IPv4 address&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">ip_address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">IPv4Interface</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="n">AddressValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="c1"># Utiliy function to get the IP address family</span>
+<div class="viewcode-block" id="get_address_family"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.get_address_family">[docs]</a><span class="k">def</span> <span class="nf">get_address_family</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the family of the provided IP address</span>
+<span class="sd">    or None if the IP is invalid&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+        <span class="c1"># IPv6 address</span>
+        <span class="k">return</span> <span class="n">AF_INET6</span>
+    <span class="k">if</span> <span class="n">validate_ipv4_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+        <span class="c1"># IPv4 address</span>
+        <span class="k">return</span> <span class="n">AF_INET</span>
+    <span class="c1"># Invalid address</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="c1"># Utiliy function to check if the IP</span>
+<span class="c1"># is a valid IP address</span>
+<div class="viewcode-block" id="validate_ip_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ip_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ip_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if the provided IP address</span>
+<span class="sd">    is a valid IPv4 or IPv6 address&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">validate_ipv4_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span> <span class="ow">or</span> \
+        <span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span></div>
+
+
+<span class="c1"># Build a grpc stub</span>
+<div class="viewcode-block" id="get_grpc_session"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.get_grpc_session">[docs]</a><span class="k">def</span> <span class="nf">get_grpc_session</span><span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="n">server_port</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certificate</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a Channel to a server.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    server_ip : str</span>
+<span class="sd">        The IP address of the gRPC server</span>
+<span class="sd">    server_port : int</span>
+<span class="sd">        The port of the gRPC server</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The requested gRPC Channel or None if the operation has failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get family of the gRPC IP</span>
+    <span class="n">addr_family</span> <span class="o">=</span> <span class="n">get_address_family</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
+    <span class="c1"># Build address depending on the family</span>
+    <span class="k">if</span> <span class="n">addr_family</span> <span class="o">==</span> <span class="n">AF_INET</span><span class="p">:</span>
+        <span class="c1"># IPv4 address</span>
+        <span class="n">server_ip</span> <span class="o">=</span> <span class="s1">&#39;ipv4:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="n">server_port</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">addr_family</span> <span class="o">==</span> <span class="n">AF_INET6</span><span class="p">:</span>
+        <span class="c1"># IPv6 address</span>
+        <span class="n">server_ip</span> <span class="o">=</span> <span class="s1">&#39;ipv6:[</span><span class="si">%s</span><span class="s1">]:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="n">server_port</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Invalid address</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s1">&#39;Invalid gRPC address: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># If secure we need to establish a channel with the secure endpoint</span>
+    <span class="k">if</span> <span class="n">secure</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">certificate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">fatal</span><span class="p">(</span><span class="s1">&#39;Certificate required for gRPC secure mode&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Open the certificate file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">certificate</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">certificate_file</span><span class="p">:</span>
+            <span class="n">certificate</span> <span class="o">=</span> <span class="n">certificate_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="c1"># Then create the SSL credentials and establish the channel</span>
+        <span class="n">grpc_client_credentials</span> <span class="o">=</span> <span class="n">grpc</span><span class="o">.</span><span class="n">ssl_channel_credentials</span><span class="p">(</span><span class="n">certificate</span><span class="p">)</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">grpc</span><span class="o">.</span><span class="n">secure_channel</span><span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="n">grpc_client_credentials</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">grpc</span><span class="o">.</span><span class="n">insecure_channel</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
+    <span class="c1"># Return the channel</span>
+    <span class="k">return</span> <span class="n">channel</span></div>
+
+
+<span class="c1"># Human-readable gRPC return status</span>
+<span class="n">status_code_to_str</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span> <span class="s1">&#39;Success&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_OPERATION_NOT_SUPPORTED</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Operation &#39;</span>
+                                                 <span class="s1">&#39;not supported&#39;</span><span class="p">),</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_BAD_REQUEST</span><span class="p">:</span> <span class="s1">&#39;Bad request&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span><span class="p">:</span> <span class="s1">&#39;Internal error&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_GRPC_REQUEST</span><span class="p">:</span> <span class="s1">&#39;Invalid gRPC request&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_FILE_EXISTS</span><span class="p">:</span> <span class="s1">&#39;An entity already exists&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span><span class="p">:</span> <span class="s1">&#39;Entity not found&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_ACTION</span><span class="p">:</span> <span class="s1">&#39;Invalid seg6local action&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_SERVICE_UNAVAILABLE</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;gRPC service not &#39;</span>
+                                                  <span class="s1">&#39;available&#39;</span><span class="p">),</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_UNAUTHORIZED</span><span class="p">:</span> <span class="s1">&#39;Unauthorized&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NOT_CONFIGURED</span><span class="p">:</span> <span class="s1">&#39;Node not configured&#39;</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="print_status_message"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.print_status_message">[docs]</a><span class="k">def</span> <span class="nf">print_status_message</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="n">success_msg</span><span class="p">,</span> <span class="n">failure_msg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Print success or failure message depending of the status code</span>
+<span class="sd">        returned by a gRPC operation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    status_code : int</span>
+<span class="sd">        The status code returned by the gRPC operation</span>
+<span class="sd">    success_msg : str</span>
+<span class="sd">        The message to print in case of success</span>
+<span class="sd">    failure_msg : str</span>
+<span class="sd">        The message to print in case of error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">status_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+        <span class="c1"># Success</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (status code </span><span class="si">%s</span><span class="s1"> - </span><span class="si">%s</span><span class="s1">)&#39;</span>
+              <span class="o">%</span> <span class="p">(</span><span class="n">success_msg</span><span class="p">,</span> <span class="n">status_code</span><span class="p">,</span>
+                 <span class="n">status_code_to_str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Error</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (status code </span><span class="si">%s</span><span class="s1"> - </span><span class="si">%s</span><span class="s1">)&#39;</span>
+              <span class="o">%</span> <span class="p">(</span><span class="n">failure_msg</span><span class="p">,</span> <span class="n">status_code</span><span class="p">,</span>
+                 <span class="n">status_code_to_str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Carmine Scarpitta
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

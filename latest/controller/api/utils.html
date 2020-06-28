@@ -169,8 +169,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="utils-module">
-<h1>utils module<a class="headerlink" href="#utils-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-controller.utils">
+<span id="utils-module"></span><h1>utils module<a class="headerlink" href="#module-controller.utils" title="Permalink to this headline">¶</a></h1>
+<p>This module contains a collection of utilities used by Controller</p>
+<dl class="function">
+<dt id="controller.utils.get_address_family">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">get_address_family</code><span class="sig-paren">(</span><em class="sig-param">ip_address</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#get_address_family"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.get_address_family" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the family of the provided IP address
+or None if the IP is invalid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.utils.get_grpc_session">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">get_grpc_session</code><span class="sig-paren">(</span><em class="sig-param">server_ip</em>, <em class="sig-param">server_port</em>, <em class="sig-param">secure=False</em>, <em class="sig-param">certificate=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#get_grpc_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.get_grpc_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Channel to a server.</p>
+<dl class="simple">
+<dt>server_ip<span class="classifier">str</span></dt><dd><p>The IP address of the gRPC server</p>
+</dd>
+<dt>server_port<span class="classifier">int</span></dt><dd><p>The port of the gRPC server</p>
+</dd>
+</dl>
+<p>The requested gRPC Channel or None if the operation has failed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.utils.print_status_message">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">print_status_message</code><span class="sig-paren">(</span><em class="sig-param">status_code</em>, <em class="sig-param">success_msg</em>, <em class="sig-param">failure_msg</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#print_status_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.print_status_message" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Print success or failure message depending of the status code</dt><dd><p>returned by a gRPC operation.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>status_code<span class="classifier">int</span></dt><dd><p>The status code returned by the gRPC operation</p>
+</dd>
+<dt>success_msg<span class="classifier">str</span></dt><dd><p>The message to print in case of success</p>
+</dd>
+<dt>failure_msg<span class="classifier">str</span></dt><dd><p>The message to print in case of error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.utils.validate_ip_address">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">validate_ip_address</code><span class="sig-paren">(</span><em class="sig-param">ip_address</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#validate_ip_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.validate_ip_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the provided IP address
+is a valid IPv4 or IPv6 address</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.utils.validate_ipv4_address">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">validate_ipv4_address</code><span class="sig-paren">(</span><em class="sig-param">ip_address</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#validate_ipv4_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.validate_ipv4_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the provided IP address is a valid IPv4 address</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.utils.validate_ipv6_address">
+<code class="sig-prename descclassname">controller.utils.</code><code class="sig-name descname">validate_ipv6_address</code><span class="sig-paren">(</span><em class="sig-param">ip_address</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/utils.html#validate_ipv6_address"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.utils.validate_ipv6_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the provided IP address is a valid IPv6 address</p>
+</dd></dl>
+
 </div>
 
 
