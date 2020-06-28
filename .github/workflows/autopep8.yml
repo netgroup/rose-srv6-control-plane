@@ -27,11 +27,10 @@ jobs:
         uses: peter-evans/create-pull-request@v2
         with:
           commit-message: autopep8 action fixes
-          committer: Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
+          committer: GitHub Action <action@github.com>
           title: Fixes by autopep8 action
           body: This is an auto-generated PR with fixes by autopep8.
           labels: autopep8, automated pr, skip-changelog
-          reviewers: cscarpitta
           branch: ${{ steps.vars.outputs.branch-name }}
       - name: Fail if autopep8 made changes
         if: steps.autopep8.outputs.exit-code == 2
