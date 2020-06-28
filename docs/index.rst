@@ -12,6 +12,8 @@ Welcome to ROSE SRv6 Control Plane's documentation!
 
    controller/index
    node-manager/index
+   release/index
+   license
 
 
 Indices and tables
