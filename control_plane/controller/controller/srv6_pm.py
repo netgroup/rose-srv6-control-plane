@@ -24,7 +24,9 @@
 #
 
 
-"""This module implements control-plane functionalities for SRv6 PM"""
+'''
+This module implements control-plane functionalities for SRv6 PM
+'''
 
 # pylint: disable=too-many-lines
 
@@ -112,10 +114,12 @@ def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
                      timestamp, fw_color, rv_color, sender_seq_num,
                      reflector_seq_num, sender_tx_counter, sender_rx_counter,
                      reflector_tx_counter, reflector_rx_counter):
-    """Publish the measurement data to Kafka"""
-
+    '''
+    Publish the measurement data to Kafka
+    '''
+    #
     # pylint: disable=too-many-arguments, too-many-locals
-
+    #
     producer = None
     result = None
     try:
@@ -151,10 +155,12 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
                                 generator_id, interval, transfer,
                                 transfer_dim, bitrate, bitrate_dim,
                                 retr, cwnd, cwnd_dim):
-    """Publish IPERF data to Kafka"""
-
+    '''
+    Publish IPERF data to Kafka
+    '''
+    #
     # pylint: disable=too-many-arguments
-
+    #
     producer = None
     result = None
     try:
@@ -197,10 +203,12 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                             authentication_key, timestamp_format,
                             delay_measurement_mode, padding_mbz,
                             loss_measurement_mode):
-    """RPC used to start an experiment on the sender"""
-
+    '''
+    RPC used to start an experiment on the sender
+    '''
+    #
     # pylint: disable=too-many-arguments, too-many-return-statements
-
+    #
     # Convert string args to int
     #
     # Measurement Protocol
@@ -302,8 +310,9 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
 
 
 def stop_experiment_sender(channel, sidlist):
-    """RPC used to stop an experiment on the sender"""
-
+    '''
+    RPC used to stop an experiment on the sender
+    '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -315,8 +324,9 @@ def stop_experiment_sender(channel, sidlist):
 
 
 def retrieve_experiment_results_sender(channel, sidlist):
-    """RPC used to get the results of a running experiment"""
-
+    '''
+    RPC used to get the results of a running experiment
+    '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -330,10 +340,12 @@ def retrieve_experiment_results_sender(channel, sidlist):
 def set_node_configuration(channel, send_udp_port, refl_udp_port,
                            interval_duration, delay_margin,
                            number_of_color, pm_driver):
-    """RPC used to set the configuration on a sender node"""
-
+    '''
+    RPC used to set the configuration on a sender node
+    '''
+    #
     # pylint: disable=too-many-arguments
-
+    #
     # Convert string args to int
     #
     # PM Driver
@@ -372,8 +384,9 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
 
 
 def reset_node_configuration(channel):
-    """RPC used to clear the configuration on a sender node"""
-
+    '''
+    RPC used to clear the configuration on a sender node
+    '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -387,10 +400,11 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
                                measurement_protocol, measurement_type,
                                authentication_mode, authentication_key,
                                loss_measurement_mode):
-    """RPC used to start an experiment on the reflector"""
-
+    '''
+    RPC used to start an experiment on the reflector
+    '''
     # pylint: disable=too-many-arguments
-
+    #
     # Convert string args to int
     #
     # Measurement Protocol
@@ -464,8 +478,9 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
 
 
 def stop_experiment_reflector(channel, sidlist):
-    """RPC used to stop an experiment on the reflector"""
-
+    '''
+    RPC used to stop an experiment on the reflector
+    '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -484,48 +499,44 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
                         authentication_mode, authentication_key,
                         timestamp_format, delay_measurement_mode,
                         padding_mbz, loss_measurement_mode):
-    """Start the measurement process on reflector and sender.
+    '''
+    Start the measurement process on reflector and sender.
 
-    Parameters
-    ----------
-    measure_id : int
-        Identifier for the experiment
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_sidlist : list
-        The SID list to be used for the path sender->reflector
-    refl_send_sidlist : list
-        The SID list to be used for the path reflector->sender
-    send_in_interfaces : list
-        The list of the incoming interfaces of the sender
-    refl_in_interfaces : list
-        The list of the incoming interfaces of the reflector
-    send_out_interfaces : list
-        The list of the outgoing interfaces of the sender
-    refl_out_interfaces : list
-        The list of the outgoing interfaces of the reflector
-    measurement_protocol : str
-        The measurement protocol (i.e. TWAMP or STAMP)
-    measurement_type : str
-        The measurement type (i.e. delay or loss)
-    authentication_mode : str
-        The authentication mode (i.e. HMAC_SHA_256)
-    authentication_key : str
-        The authentication key
-    timestamp_format : str
-        The Timestamp Format (i.e. PTPv2 or NTP)
-    delay_measurement_mode : str
-        Delay measurement mode (i.e. one-way, two-way or loopback mode)
-    padding_mbz : int
-        The padding size
-    loss_measurement_mode : str
-        The loss measurement mode (i.e. Inferred or Direct mode)
-    """
-
+    :param measure_id: Identifier for the experiment
+    :type measure_id: int
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_sidlist: The SID list to be used for the path
+                              sender->reflector
+    :type send_refl_sidlist: list
+    :param refl_send_sidlist: The SID list to be used for the path
+                              reflector->sender
+    :type refl_send_sidlist: list
+    :param measurement_protocol: The measurement protocol (i.e. TWAMP or
+                                 STAMP)
+    :type measurement_protocol: str
+    :param measurement_type: The measurement type (i.e. delay or loss)
+    :type measurement_type: str
+    :param authentication_mode: The authentication mode (i.e. HMAC_SHA_256)
+    :type authentication_mode: str
+    :param authentication_key: The authentication key
+    :type authentication_key: str
+    :param timestamp_format: The Timestamp Format (i.e. PTPv2 or NTP)
+    :type timestamp_format: str
+    :param delay_measurement_mode: Delay measurement mode (i.e. one-way,
+                                   two-way or loopback mode)
+    :type delay_measurement_mode: str
+    :param padding_mbz: The padding size
+    :type padding_mbz: int
+    :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
+                                  or Direct mode)
+    :type loss_measurement_mode: str
+    '''
+    #
     # pylint: disable=too-many-arguments, unused-argument
-
+    #
     print("\n************** Start Measurement **************\n")
     # Start the experiment on the reflector
     refl_res = start_experiment_reflector(
@@ -584,22 +595,20 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
 
 def __get_measurement_results(sender_channel, reflector_channel,
                               send_refl_sidlist, refl_send_sidlist):
-    """Get the results of a measurement process.
+    '''
+    Get the results of a measurement process.
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_sidlist : list
-        The SID list used for sender->reflector path
-    refl_send_sidlist : list
-        The SID list used for reflector->sender path
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_sidlist: The SID list used for sender->reflector path
+    :type send_refl_sidlist: list
+    :param refl_send_sidlist: The SID list used for reflector->sender path
+    :type refl_send_sidlist: list
+    '''
     # pylint: disable=unused-argument
-
+    #
     # Retrieve the results of the experiment
     print("\n************** Get Measurement Data **************\n")
     # Retrieve the results from the sender
@@ -637,20 +646,21 @@ def __get_measurement_results(sender_channel, reflector_channel,
 
 def __stop_measurement(sender_channel, reflector_channel,
                        send_refl_sidlist, refl_send_sidlist):
-    """Stop a measurement process on reflector and sender.
+    '''
+    Stop a measurement process on reflector and sender.
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_sidlist : list
-        The SID list used for the path sender->reflector
-    refl_send_sidlist : list
-        The SID list used for the path reflector->sender
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_sidlist: The SID list used for the path
+                              sender->reflector
+    :type send_refl_sidlist: list
+    :param refl_send_sidlist: The SID list used for the path
+                              reflector->sender
+    :type refl_send_sidlist: list
+    '''
+    #
     print("\n************** Stop Measurement **************\n")
     # Stop the experiment on the sender
     sender_res = stop_experiment_sender(
@@ -688,28 +698,27 @@ def set_configuration(sender_channel, reflector_channel,
                       send_udp_port, refl_udp_port,
                       interval_duration, delay_margin,
                       number_of_color, pm_driver):
-    """Set the configuration
+    '''
+    Set the configuration
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_dst_udp_port : int
-        The destination UDP port used by the sender
-    refl_dst_udp_port : int
-        The destination UDP port used by the reflector
-    interval_duration : int
-        The duration of the interval
-    delay_margin : int
-        The delay margin
-    number_of_color : int
-        The number of the color
-    """
-
+    :param sender_channel: The gRPC Channel to the sender
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_dst_udp_port: The destination UDP port used by the sender
+    :type send_dst_udp_port: int
+    :param refl_dst_udp_port: The destination UDP port used by the reflector
+    :type refl_dst_udp_port: int
+    :param interval_duration: The duration of the interval
+    :type interval_duration: int
+    :param delay_margin: The delay margin
+    :type delay_margin: int
+    :param number_of_color: The number of the color
+    :type number_of_color: int
+    '''
+    #
     # pylint: disable=too-many-arguments
-
+    #
     # Set configuration on the sender
     res = set_node_configuration(
         channel=sender_channel,
@@ -741,26 +750,25 @@ def set_configuration(sender_channel, reflector_channel,
 
 
 def reset_configuration(sender_channel, reflector_channel):
-    """Reset the configuration
+    '''
+    Reset the configuration
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_dst_udp_port : int
-        The destination UDP port used by the sender
-    refl_dst_udp_port : int
-        The destination UDP port used by the reflector
-    interval_duration : int
-        The duration of the interval
-    delay_margin : int
-        The delay margin
-    number_of_color : int
-        The number of the color
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_dst_udp_port: The destination UDP port used by the sender
+    :type send_dst_udp_port: int
+    :param refl_dst_udp_port: The destination UDP port used by the reflector
+    :type refl_dst_udp_port: int
+    :param interval_duration: The duration of the interval
+    :type interval_duration: int
+    :param delay_margin: The delay margin
+    :type delay_margin: int
+    :param number_of_color: The number of the color
+    :type number_of_color: int
+    '''
+    #
     # Reset configuration on the sender
     res = reset_node_configuration(
         channel=sender_channel
@@ -789,68 +797,67 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
                      padding_mbz, loss_measurement_mode, measure_id=None,
                      send_refl_localseg=None, refl_send_localseg=None,
                      force=False):
-    """Start an experiment.
+    '''
+    Start an experiment.
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_dest : str
-        The destination of the SRv6 path sender->reflector
-    refl_send_dest : str
-        The destination of the SRv6 path reflector->sender
-    send_refl_sidlist : list
-        The SID list to be used for the path sender->reflector
-    refl_send_sidlist : list
-        The SID list to be used for the path reflector->sender
-    send_in_interfaces : list
-        The list of the incoming interfaces of the sender
-    refl_in_interfaces : list
-        The list of the incoming interfaces of the reflector
-    send_out_interfaces : list
-        The list of the outgoing interfaces of the sender
-    refl_out_interfaces : list
-        The list of the outgoing interfaces of the reflector
-    measurement_protocol : str
-        The measurement protocol (i.e. TWAMP or STAMP)
-    measurement_type : str
-        The measurement type (i.e. delay or loss)
-    authentication_mode : str
-        The authentication mode (i.e. HMAC_SHA_256)
-    authentication_key : str
-        The authentication key
-    timestamp_format : str
-        The Timestamp Format (i.e. PTPv2 or NTP)
-    delay_measurement_mode : str
-        Delay measurement mode (i.e. one-way, two-way or loopback mode)
-    padding_mbz : int
-        The padding size
-    loss_measurement_mode : str
-        The loss measurement mode (i.e. Inferred or Direct mode)
-    measure_id : int, optional
-        Identifier for the experiment (default is None).
-        If the argument 'measure_id' isn't passed in, the measure_id is
-        automatically generated.
-    send_refl_localseg : str, optional
-        The local segment associated to the End.DT6 (decap) function
-        for the path sender->reflector (default is None).
-        If the argument 'send_localseg' isn't passed in, the seg6local
-        End.DT6 route is not created.
-    refl_send_localseg : str, optional
-        The local segment associated to the End.DT6 (decap) function
-        for the path reflector->sender (default is None).
-        If the argument 'send_localseg' isn't passed in, the seg6local
-        End.DT6 route is not created.
-    force : bool, optional
-        If set, force the controller to start an experiment if a
-        SRv6 path for the destination already exists. The old SRv6 path
-        is replaced with the new one (default is False).
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_dest: The destination of the SRv6 path
+                           sender->reflector
+    :type send_refl_dest: str
+    :param refl_send_dest: The destination of the SRv6 path
+                           reflector->sender
+    :type refl_send_dest: str
+    :param send_refl_sidlist: The SID list to be used for the path
+                              sender->reflector
+    :type send_refl_sidlist:  list
+    :param refl_send_sidlist: The SID list to be used for the path
+                              reflector->sender
+    :type refl_send_sidlist: list
+    :param measurement_protocol: The measurement protocol (i.e. TWAMP
+                                 or STAMP)
+    :type measurement_protocol: str
+    :param measurement_type: The measurement type (i.e. delay or loss)
+    :type measurement_type: str
+    :param authentication_mode: The authentication mode (i.e. HMAC_SHA_256)
+    :type authentication_mode: str 
+    :param authentication_key: The authentication key
+    :type authentication_key: str
+    :param timestamp_format: The Timestamp Format (i.e. PTPv2 or NTP)
+    :type timestamp_format: str
+    :param delay_measurement_mode: Delay measurement mode (i.e. one-way,
+                                   two-way or loopback mode)
+    :type delay_measurement_mode: str 
+    :param padding_mbz: The padding size
+    :type padding_mbz: int
+    :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
+                                  or Direct mode)
+    :type loss_measurement_mode: str
+    :param measure_id: Identifier for the experiment (default is None).
+                        automatically generated.
+    :type measure_id: int, optional
+    :param send_refl_localseg: The local segment associated to the End.DT6
+                               (decap) function for the path
+                               sender->reflector (default is None).
+                               If the argument 'send_localseg' isn't passed
+                               in, the seg6local End.DT6 route is not created.
+    :type send_refl_localseg: str, optional
+    :param refl_send_localseg: The local segment associated to the End.DT6
+                               (decap) function for the path
+                               reflector->sender (default is None).
+                               If the argument 'send_localseg' isn't passed
+                               in, the seg6local End.DT6 route is not created.
+    :type refl_send_localseg: str, optional
+    :param force: If set, force the controller to start an experiment if a
+                  SRv6 path for the destination already exists. The old SRv6
+                  path is replaced with the new one (default is False).
+    :type force: bool, optional
+    '''
+    #
     # pylint: disable=too-many-arguments, too-many-locals
-
+    #
     # If the force flag is set and SRv6 path already exists, remove
     # the old path before creating the new one
     if force:
@@ -910,24 +917,25 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
 def get_experiment_results(sender_channel, reflector_channel,
                            send_refl_sidlist, refl_send_sidlist,
                            kafka_servers=KAFKA_SERVERS):
-    """Get the results of an experiment.
+    '''
+    Get the results of an experiment.
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_sidlist : list
-        The SID list to be used for the path sender->reflector
-    refl_send_sidlist : list
-        The SID list to be used for the path reflector->sender
-    kafka_servers : str
-        IP:port of Kafka server
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_sidlist: The SID list to be used for the path
+                              sender->reflector
+    :type send_refl_sidlist: list
+    :param refl_send_sidlist: The SID list to be used for the path
+                              reflector->sender
+    :type refl_send_sidlist: list
+    :param kafka_servers: IP:port of Kafka server
+    :type kafka_servers: str
+    '''
+    #
     # pylint: disable=too-many-arguments, too-many-locals
-
+    #
     # Get the results
     results = __get_measurement_results(
         sender_channel=sender_channel,
@@ -975,37 +983,41 @@ def get_experiment_results(sender_channel, reflector_channel,
 def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                     send_refl_localseg=None, refl_send_localseg=None):
-    """Stop a running experiment.
+    '''
+    Stop a running experiment.
 
-    Parameters
-    ----------
-    sender_channel : <gRPC Channel>
-        The gRPC Channel to the sender node
-    reflector_channel : <gRPC Channel>
-        The gRPC Channel to the reflector node
-    send_refl_dest : str
-        The destination of the SRv6 path sender->reflector
-    refl_send_dest : str
-        The destination of the SRv6 path reflector->sender
-    send_refl_sidlist : list
-        The SID list used for the path sender->reflector
-    refl_send_sidlist : list
-        The SID list used for the path reflector->sender
-    send_refl_localseg : str, optional
-        The local segment associated to the End.DT6 (decap) function
-        for the path sender->reflector
-        (default is None).
-        If the argument 'send_localseg' isn't passed in, the seg6local
-        End.DT6 route is not removed.
-    refl_send_localseg : str, optional
-        The local segment associated to the End.DT6 (decap) function
-        for the path reflector->sender
-        If the argument 'send_localseg' isn't passed in, the seg6local
-        End.DT6 route is not removed.
-    """
-
+    :param sender_channel: The gRPC Channel to the sender node
+    :type sender_channel: class: `grpc._channel.Channel`
+    :param reflector_channel: The gRPC Channel to the reflector node
+    :type reflector_channel: class: `grpc._channel.Channel`
+    :param send_refl_dest: The destination of the SRv6 path
+                           sender->reflector
+    :type send_refl_dest: str
+    :param refl_send_dest: The destination of the SRv6 path
+                           reflector->sender
+    :type refl_send_dest: str
+    :param send_refl_sidlist: The SID list used for the path
+                              sender->reflector
+    :type send_refl_sidlist: list
+    :param refl_send_sidlist: The SID list used for the path
+                              reflector->sender
+    :type refl_send_sidlist: list
+    :param send_refl_localseg: The local segment associated to the End.DT6
+                               (decap) function for the path sender->reflector
+                               (default is None). If the argument
+                               'send_localseg' isn't passed in, the seg6local
+                               End.DT6 route is not removed.
+    :type send_refl_localseg: str, optional
+    :param refl_send_localseg: The local segment associated to the End.DT6
+                              (decap) function for the path reflector->sender
+                              (default is None). If the argument
+                              'send_localseg' isn't passed in, the seg6local
+                              End.DT6 route is not removed.
+    :type refl_send_localseg: str, optional
+    '''
+    #
     # pylint: disable=too-many-arguments
-
+    #
     # Stop the experiment
     res = __stop_measurement(
         sender_channel=sender_channel,
@@ -1035,16 +1047,19 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
 if ENABLE_GRPC_SERVER:
     class _SRv6PMService(
             srv6pmServiceController_pb2_grpc.SRv6PMControllerServicer):
-        """Private class implementing methods exposed by the gRPC server"""
+        '''
+        Private class implementing methods exposed by the gRPC server
+        '''
 
         def __init__(self, kafka_servers=KAFKA_SERVERS):
             self.kafka_servers = kafka_servers
 
         def SendMeasurementData(self, request, context):
-            """RPC used to send measurement data to the controller"""
-
+            '''
+            RPC used to send measurement data to the controller
+            '''
             # pylint: disable=too-many-locals
-
+            #
             logger.debug('Measurement data received: %s', request)
             # Extract data from the request
             for data in request.measurement_data:
@@ -1081,10 +1096,12 @@ if ENABLE_GRPC_SERVER:
                 status=status)
 
         def SendIperfData(self, request, context):
-            """RPC used to send iperf data to the controller"""
-
+            '''
+            RPC used to send iperf data to the controller
+            '''
+            #
             # pylint: disable=too-many-locals
-
+            #
             logger.debug('Iperf data received: %s', request)
             # Extract data from the request
             for data in request.iperf_data:
@@ -1135,27 +1152,26 @@ if ENABLE_GRPC_SERVER:
                             secure=DEFAULT_SERVER_SECURE,
                             key=DEFAULT_SERVER_KEY,
                             certificate=DEFAULT_SERVER_CERTIFICATE):
-        """Start gRPC on the controller
+        '''
+        Start gRPC on the controller
 
-        Parameters
-        ----------
-        grpc_ip : str
-            the IP address of the gRPC server
-        grpc_port : int
-            the port of the gRPC server
-        secure : bool
-            define whether to use SSL or not for the gRPC server
-            (default is False)
-        certificate : str
-            the path of the server certificate required for the SSL
-            (default is None)
-        key : str
-            the path of the server key required for the SSL
-            (default is None)
-        """
-
+        :param grpc_ip: The IP address of the gRPC server
+        :type grpc_ip: str
+        :param grpc_port: the port of the gRPC server
+        :type grpc_port: int
+        :param secure: define whether to use SSL or not for the gRPC server
+                       (default is False)
+        :type secure: bool
+        :param certificate: The path of the server certificate required
+                            for the SSL (default is None)
+        :type certificate: str
+        :param key: the path of the server key required for the SSL
+                    (default is None)
+        :type key: str
+        '''
+        #
         # pylint: disable=too-many-arguments
-
+        #
         # Setup gRPC server
         #
         # Create the server and add the handler
