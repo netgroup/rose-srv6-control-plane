@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Overview: module code &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
+  <title>Release Log &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
   
 
   
@@ -35,7 +35,9 @@
 
     
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="License" href="../license.html" />
+    <link rel="prev" title="Usage" href="../node-manager/usage.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -81,10 +83,17 @@
             
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../controller/index.html">Controller</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../node-manager/index.html">Node Manager</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../release/index.html">Release Log</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#rose-srv6-control-plane-0-1-0">ROSE SRv6 Control Plane 0.1.0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#new-features">New features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug fixes</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
 </ul>
 
@@ -132,10 +141,14 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Overview: module code</li>
+      <li>Release Log</li>
     
     
       <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/release/index.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -147,18 +160,52 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="controller/arangodb_utils.html">controller.arangodb_utils</a></li>
-<li><a href="controller/srv6_pm.html">controller.srv6_pm</a></li>
-<li><a href="controller/srv6_utils.html">controller.srv6_utils</a></li>
-<li><a href="controller/ti_extraction.html">controller.ti_extraction</a></li>
-<li><a href="controller/utils.html">controller.utils</a></li>
+  <div class="section" id="release-log">
+<h1>Release Log<a class="headerlink" href="#release-log" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="rose-srv6-control-plane-0-1-0">
+<h2>ROSE SRv6 Control Plane 0.1.0<a class="headerlink" href="#rose-srv6-control-plane-0-1-0" title="Permalink to this headline">¶</a></h2>
+<p>Release date: 23 June 2020</p>
+<div class="section" id="new-features">
+<h3>New features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Add a CLI for the controller</p></li>
+<li><p>Implement arguments tab-completion in Controller CLI</p></li>
+<li><p>Implement persistent command history for the Controller CLI</p></li>
+<li><p>Integrate topology extraction and ArangoDB functionalities in the controller</p></li>
+<li><p>Add SRv6 PM functionalities</p></li>
+<li><p>Add command-line arguments to Controller</p></li>
+<li><p>Add support for IPv4 addresses to gRPC client and server</p></li>
+<li><p>Separate venv for node-manager and controller</p></li>
+<li><p>Check root privileges in srv6_manager</p></li>
+<li><p>Improve controller and node manager configuration settings</p></li>
+<li><p>Add LICENSE file</p></li>
 </ul>
+</div>
+<div class="section" id="bug-fixes">
+<h3>Bug fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fix wrong proto_path and controller_path in srv6 controller scripts</p></li>
+<li><p>Improve setup of dependencies and fix import paths</p></li>
+<li><p>Clean and improve code</p></li>
+</ul>
+</div>
+</div>
+</div>
+
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../node-manager/usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>
