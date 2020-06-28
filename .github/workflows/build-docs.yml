@@ -42,47 +42,47 @@ jobs:
     #    path: rose-srv6-control-plane-documentation
     #    fetch-depth: 0
     
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.6
-    - name: Set up Python virtual environment
-      run: |
-        # Create a virtualenv
-        python -m venv python${{ matrix.python-version }}-venv
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-    - name: Install dependencies
-      run: |
-        # sudo apt-get install -y python3-pip
-        sudo apt-get install python3.6
-        sudo python3.6 -m pip install pip
-        sudo pip3 install setuptools wheel
-        sudo pip3 install grpcio-tools
-    - name: Install controller
-      run: |
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-        sudo apt-get install -y graphviz libgraphviz-dev
-        # sudo python3 -m pip3 install --upgrade pip3
-        sudo pip3 install setuptools wheel
-        cd db_update
-        sudo python3 setup.py install
-        cd ../control_plane/protos
-        sudo python3 setup.py sdist bdist_wheel install
-        cd ../../control_plane/controller
-        sudo python3 setup.py install
-        cd ../../
-    - name: Install node manager
-      run: |
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-        # sudo python3 -m pip3 install --upgrade pip3
-        sudo pip3 install setuptools wheel
-        cd control_plane/protos
-        sudo python3 setup.py sdist bdist_wheel install
-        cd ../../control_plane/node-manager
-        sudo python3 setup.py install
+    #- name: Set up Python 3
+    #  uses: actions/setup-python@v2
+    #  with:
+    #    python-version: 3.6
+    #- name: Set up Python virtual environment
+    #  run: |
+    #    # Create a virtualenv
+    #    python -m venv python${{ matrix.python-version }}-venv
+    #    # Activate virtualenv
+    #    #source python${{ matrix.python-version }}-venv/bin/activate
+    #- name: Install dependencies
+    #  run: |
+    #    # sudo apt-get install -y python3-pip
+    #    sudo apt-get install python3.6
+    #    sudo python3.6 -m pip install pip
+    #    sudo pip3 install setuptools wheel
+    #    sudo pip3 install grpcio-tools
+    #- name: Install controller
+    #  run: |
+    #    # Activate virtualenv
+    #    #source python${{ matrix.python-version }}-venv/bin/activate
+    #    sudo apt-get install -y graphviz libgraphviz-dev
+    #    # sudo python3 -m pip3 install --upgrade pip3
+    #    sudo pip3 install setuptools wheel
+    #    cd db_update
+    #    sudo python3 setup.py install
+    #    cd ../control_plane/protos
+    #    sudo python3 setup.py sdist bdist_wheel install
+    #    cd ../../control_plane/controller
+    #    sudo python3 setup.py install
+    #    cd ../../
+    #- name: Install node manager
+    #  run: |
+    #    # Activate virtualenv
+    #    #source python${{ matrix.python-version }}-venv/bin/activate
+    #    # sudo python3 -m pip3 install --upgrade pip3
+    #    sudo pip3 install setuptools wheel
+    #    cd control_plane/protos
+    #    sudo python3 setup.py sdist bdist_wheel install
+    #    cd ../../control_plane/node-manager
+    #    sudo python3 setup.py install
     #- name: Build docs
     #  run: |
     #    # Activate virtualenv
@@ -100,10 +100,11 @@ jobs:
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs"
-        pre-build-command: "pip install sphinx"
+        #pre-build-command: "pip install sphinx"
         #pre-build-command: "apt-get install -y graphviz libgraphviz-dev && apt-get install -y python3-pip && python3 -m pip3 install --upgrade pip && pip3 install sphinx && pip install setuptools wheel && cd db_update && python3 setup.py install && cd ../control_plane/protos && python3 setup.py install && cd ../../control_plane/controller && python3 setup.py install && cd ../../ && cd ../../control_plane/node-manager && python3 setup.py install"
+        pre-build-command: "apt-get install -y graphviz libgraphviz-dev && python -m pip install --upgrade pip && pip install sphinx && pip install setuptools wheel && cd db_update && python setup.py install && cd ../control_plane/protos && python setup.py install && cd ../../control_plane/controller && python setup.py install && cd ../../ && cd ../../control_plane/node-manager && python setup.py install"
         #build-command: "python -m sphinx -b html . _build"
-        build-command: "python3.6 -m sphinx -b html . build"
+        build-command: "python -m sphinx -b html . build"
         
     # Create an artifact of the html output.
     #- uses: actions/upload-artifact@v1
