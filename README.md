@@ -57,6 +57,25 @@ This project provides a collection of modules implementing different control pla
 
 The project is part of a larger ecosystem called [Research on Open SRv6 Ecosystem (ROSE)](https://netgroup.github.io/rose/).
 
+<table>
+    <tr>
+        <td><b>ROSE Homepage:</b></td>
+        <td><a href="https://netgroup.github.io/rose/">https://netgroup.github.io/rose</a></td>
+    </tr>
+    <tr>
+        <td><b>Documentation:</b></td>
+        <td><a href="https://netgroup.github.io/rose-srv6-control-plane">https://netgroup.github.io/rose-srv6-control-plane</a></td>
+    </tr>
+    <tr>
+        <td><b>Report a bug:</b></td>
+        <td><a href="https://github.com/netgroup/rose-srv6-control-plane/issues">https://github.com/netgroup/rose-srv6-control-plane/issues</a></td>
+    </tr>
+    <tr>
+        <td><b>Contact page:</b></td>
+        <td><a href="https://netgroup.github.io/rose/rose-contacts.html">https://netgroup.github.io/rose/rose-contacts.html</a></td>
+    </tr>
+</table>
+
 To start using the project, you need to clone this repository:
 
 ```console
@@ -170,6 +189,7 @@ for instance access to rose-srv6-controller with:
 ## Links
 * Research on Open SRv6 Ecosystem (ROSE): https://netgroup.github.io/rose/
 * Source code: https://github.com/netgroup/rose-srv6-control-plane
+* Documentation: https://netgroup.github.io/rose-srv6-control-plane
 * Report a bug: https://github.com/netgroup/rose-srv6-control-plane/issues
 
 
