@@ -1,4 +1,4 @@
-name: CI
+name: Build and Publish Docs
 
 #on:
 #  push:
@@ -13,140 +13,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    #  with:
-    #    path: "rose-srv6-control-plane"
+      - name: Checkout Code
+        uses: actions/checkout@v2
 
-    # Standard drop-in approach that should work for most people.
-    #- uses: ammaraskar/sphinx-action@master
-    #  with:
-    #    docs-folder: "docs/"
-    # Example of using a custom build-command.
-    #- uses: ammaraskar/sphinx-action@master
-    #  with:
-    #    build-command: "sphinx-build -b html . _build"
-    #    docs-folder: "docs2/"
-    # Grabbing custom dependencies and building as a pdf.
-    #- uses: ammaraskar/sphinx-action@master
-    #  with:
-    #    pre-build-command: "apt-get update -y && apt-get install -y latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended"
-    #    build-command: "make latexpdf"
-    #    docs-folder: "docs2/"
-    # Great extra actions to compose with:
-    
-    #- name: Checkout tools rose-srv6-control-plane-documentation
-    #  uses: actions/checkout@v2
-    #  with:
-    #    repository: cscarpitta/rose-srv6-control-plane-documentation
-    #    token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
-    #    path: rose-srv6-control-plane-documentation
-    #    fetch-depth: 0
-    
-    - name: Set up Python 3
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3
-    - name: Set up Python virtual environment
-      run: |
-        # Create a virtualenv
-        python -m venv python${{ matrix.python-version }}-venv
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y python3-pip
-        sudo pip3 install setuptools wheel
-        sudo pip3 install grpcio-tools
-    - name: Install controller
-      run: |
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-        sudo apt-get install -y graphviz libgraphviz-dev
-        # sudo python3 -m pip3 install --upgrade pip3
-        sudo pip3 install setuptools wheel
-        cd db_update
-        sudo python3 setup.py install
-        cd ../control_plane/protos
-        sudo python3 setup.py install
-        cd ../../control_plane/controller
-        sudo python3 setup.py install
-        cd ../../
-    - name: Install node manager
-      run: |
-        # Activate virtualenv
-        #source python${{ matrix.python-version }}-venv/bin/activate
-        # sudo python3 -m pip3 install --upgrade pip3
-        sudo pip3 install setuptools wheel
-        cd control_plane/protos
-        sudo python3 setup.py install
-        cd ../../control_plane/node-manager
-        sudo python3 setup.py install
-    #- name: Build docs
-    #  run: |
-    #    # Activate virtualenv
-    #    #source python${{ matrix.python-version }}-venv/bin/activate
-    #    # Build docs
-    #    cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane
-    #    # Installs sphinx dependencies
-    #    pip install sphinx
-    #    pip install -r docs/requirements.txt
-    #    make html
-    #    #mkdir -p ${GITHUB_WORKSPACE}/docs
-    #    #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/docs
-        
-        
-    - uses: ammaraskar/sphinx-action@master
-      with:
-        docs-folder: "docs"
-        pre-build-command: "pip install sphinx"
-        #pre-build-command: "apt-get install -y graphviz libgraphviz-dev && apt-get install -y python3-pip && python3 -m pip3 install --upgrade pip && pip3 install sphinx && pip install setuptools wheel && cd db_update && python3 setup.py install && cd ../control_plane/protos && python3 setup.py install && cd ../../control_plane/controller && python3 setup.py install && cd ../../ && cd ../../control_plane/node-manager && python3 setup.py install"
-        #build-command: "python -m sphinx -b html . _build"
-        build-command: "python3 -m sphinx -b html . build"
-        
-    # Create an artifact of the html output.
-    #- uses: actions/upload-artifact@v1
-    #  with:
-    #    name: DocumentationHTML
-    #    path: docs/_build/html/
-    # Create an artifact out of the previously built pdf.
-    #- uses: actions/upload-artifact@v1
-    #  with:
-    #    name: Documentation
-    #    path: docs2/_build/latex/pdfexample.pdf
-    #- uses: oleksiyrudenko/gha-git-credentials@v1
-    #  with:
-    #    token: '${{ secrets.TOKEN_GITHUB_SPHINX }}'
-    # Publish built docs to gh-pages branch.
-    # ===============================
-    #- uses: actions/checkout@v2
-    #  with:
-    #    ref: gh-pages
-    - name: Commit documentation changes
-      run: |
-        git clone https://github.com/netgroup/rose-srv6-control-plane.git --branch gh-pages --single-branch gh-pages
-        mkdir -p gh-pages/latest
-        cp -r docs/build/html/* gh-pages/latest
-        cd gh-pages
-        #mkdir -p ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
-        #cp -r ${GITHUB_WORKSPACE}/rose-srv6-control-plane/build/html/* ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
-        # cd gh-pages
-        # cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane-documentation/latest
-        #cd ${GITHUB_WORKSPACE}/rose-srv6-control-plane/latest
-        #git stash
-        #git checkout gh-pages
-        #git stash pop
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add .
-        git commit -m "Update documentation" -a || true
-        # The above command will fail if no changes were present, so we ignore
-        # that.
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        branch: gh-pages
-        directory: gh-pages
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        # github_token: ${{ secrets.TOKEN_GITHUB_SPHINX }}
-        # repository: cscarpitta/rose-srv6-control-plane-documentation
-    # ===============================
+      - name: Build Docs
+        uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "docs"
+          pre-build-command: "apt-get install -y graphviz libgraphviz-dev && python -m pip install --upgrade pip && pip install sphinx && pip install setuptools wheel && cd db_update && python setup.py install && cd ../control_plane/protos && python setup.py install && cd ../../control_plane/controller && python setup.py install && cd ../../ && cd ../../control_plane/node-manager && python setup.py install"
+
+      - name: Commit documentation changes
+        run: |
+          git clone https://github.com/netgroup/rose-srv6-control-plane.git --branch gh-pages --single-branch gh-pages
+          mkdir -p gh-pages/latest
+          cp -r docs/build/html/* gh-pages/latest
+          cd gh-pages
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Update documentation" -a || true
+          # The above command will fail if no changes were present, so we ignore
+          # that.
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          branch: gh-pages
+          directory: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # ===============================
