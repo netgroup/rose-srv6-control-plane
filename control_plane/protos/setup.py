@@ -3,8 +3,8 @@
 
 import os
 import setuptools
-import setuptools.command.install
-import setuptools.command.develop
+from setuptools.command.develop import develop as _develop
+from setuptools.command.bdist_egg import bdist_egg as _bdist_egg
 
 
 with open("README.md", "r") as fh:
@@ -38,24 +38,21 @@ class BuildPackageProtos(setuptools.Command):
         command.build_package_protos(self.distribution.package_dir[''], True)
 
 
-class install(setuptools.command.install.install):
+class develop(_develop):
 
     def run(self):
-        setuptools.command.install.install.run(self)
-        # Build protos with strict mode enabled
-        # (i.e. exit with non-zero value if the proto compiling fails)
-        from grpc.tools import command
-        command.build_package_protos('', True)
+        # Run build_proto_modules command
+        self.run_command('build_proto_modules')
+        # Run develop command
+        _develop.run(self)
 
 
-class develop(setuptools.command.develop.develop):
-
+class bdist_egg(_bdist_egg):
     def run(self):
-        setuptools.command.develop.develop.run(self)
-        # Build protos with strict mode enabled
-        # (i.e. exit with non-zero value if the proto compiling fails)
-        from grpc.tools import command
-        command.build_package_protos('', True)
+        # Run build_proto_modules command
+        self.run_command('build_proto_modules')
+        # Run bdist_egg command
+        _bdist_egg.run(self)
 
 
 packages = [
@@ -87,7 +84,8 @@ setuptools.setup(
     ],
     cmdclass={
         'build_proto_modules': BuildPackageProtos,
-        'install': install,
+        'bdist_egg': bdist_egg,
+        'develop': develop,
     },
     python_requires='>=3.6',
 )
