@@ -253,19 +253,19 @@ class InvalidConfigurationError(SRv6Exception):
 
 class NodeNotFoundError(SRv6Exception):
     '''
-    Node not found.
+    Node not found error.
     '''
 
 
 class TooManySegmentsError(SRv6Exception):
     '''
-    Too many segments.
+    Too many segments error.
     '''
 
 
 class SIDLocatorError(SRv6Exception):
     '''
-    SID Locator is invalid.
+    SID Locator is invalid error.
     '''
 
 
@@ -276,7 +276,7 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
     :param nodes: List of node names
     :type node: list
     :param node_to_addr_filename: Name of the YAML file containing the
-                                mapping of node names to IP addresses
+                                  mapping of node names to IP addresses
     :type node_to_addr_filename: str
     :return: List of IP addresses
     :rtype: list
