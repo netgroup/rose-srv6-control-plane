@@ -128,3 +128,17 @@ def test_nodes_to_micro_segments():
     ]
     assert usid_list == srv6_utils.nodes_to_micro_segments(
         nodes, 'nodes.yml') == usid_list
+
+
+def test_nodes_to_micro_segments_invalid_1():
+    nodes = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R8']
+    with pytest.raises(srv6_utils.InvalidConfigurationError):
+        srv6_utils.nodes_to_micro_segments(
+            nodes, 'nodes_invalid_1.yml')
+
+
+def test_nodes_to_micro_segments_invalid_2():
+    nodes = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R8', 'R9']
+    with pytest.raises(srv6_utils.NodeNotFoundError):
+        srv6_utils.nodes_to_micro_segments(
+            nodes, 'nodes.yml')
