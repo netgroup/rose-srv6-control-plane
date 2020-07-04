@@ -30,6 +30,7 @@
 import logging
 
 import grpc
+from pyaml import yaml
 from six import text_type
 
 # Proto dependencies
@@ -234,6 +235,167 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
         # An error occurred during the gRPC operation
         # Parse the error and return it
         response = parse_grpc_error(err)
+    # Return the response
+    return response
+
+
+class SRv6Exception(Exception):
+    pass
+
+
+class InvalidConfigurationError(SRv6Exception):
+    pass
+
+
+class NodeNotFoundError(SRv6Exception):
+    pass
+
+
+class TooManySegmentsError(SRv6Exception):
+    pass
+
+
+class SIDLocatorError(SRv6Exception):
+    pass
+
+
+def nodes_to_addrs(nodes, node_addrs_filename):
+    '''Convert nodes list in addresses list'''
+
+    # Read the mapping from the file
+    with open(node_addrs_filename, 'r') as node_addrs_file:
+        node_to_addrs = yaml.safe_load(node_addrs_file)
+    # Validate the file
+    # TODO
+    # Translate nodes into IP addresses
+    node_addrs = list()
+    for node in nodes:
+        # Check if node is known
+        if node not in node_to_addrs:
+            logger.error('Node %s not found in configuration file %s',
+                         node, node_addrs_filename)
+            raise NodeNotFoundError
+        # Get the address of the node
+        # and enforce case-sensitivity
+        node_addrs.append(node_to_addrs[node].lower())
+    # Return the IP addresses list
+    return node_addrs
+
+
+def segments_to_micro_segment(locator, segments):
+    # Enforce case-sensitivity
+    locator = locator.lower()
+    _segments = list()
+    for segment in segments:
+        _segments.append(segment.lower())
+    segments = _segments
+    # Validation check
+    if len(segments) > 6:
+        logger.error('Too many segments')
+        raise TooManySegmentsError
+    # uSIDs always start with the SID Locator
+    usid = locator
+    # Iterate on the segments
+    for segment in segments:
+        segment = segment.split(':')
+        if locator != '%s:%s' % (segment[0], segment[1]):
+            # All the segments must have the same Locator
+            logger.error('Wrong locator')
+            raise SIDLocatorError
+        # Take the uSID identifier
+        usid_id = segment[2]
+        # And append to the uSID
+        usid += ':%s' % usid_id
+    # If we have less than 6 SIDs, fill the remaining ones with zeroes
+    if len(segments) < 6:
+        usid += '::'
+    # Enforce case-sensitivity and return the uSID
+    return usid.lower()
+
+
+def get_sid_locator(sid_list):
+    '''Get the SID Locator'''
+
+    # Enforce case-sensitivity
+    _sid_list = list()
+    for segment in sid_list:
+        _sid_list.append(segment.lower())
+    sid_list = _sid_list
+    # Locator
+    locator = ''
+    # Iterate on the SID list
+    for segment in sid_list:
+        segment = segment.split(':')
+        if locator == '':
+            # Store the segment
+            locator = '%s:%s' % (segment[0], segment[1])
+        elif locator != '%s:%s' % (segment[0], segment[1]):
+            # All the segments must have the same Locator
+            logger.error('Wrong locator')
+            raise SIDLocatorError
+    # Return the SID Locator
+    return locator
+
+
+def sidlist_to_usidlist(sid_list):
+    '''Convert SID list into uSID list'''
+
+    # Get the locator
+    locator = get_sid_locator(sid_list)
+    # Micro segments list
+    usid_list = []
+    # Iterate on the SID list
+    while len(sid_list) > 0:
+        # Segments are encoded in groups of 6
+        # Take the first 6 SIDs, build the uSID and add it to the uSID list
+        usid_list.append(segments_to_micro_segment(locator, sid_list[:6]))
+        # Advance SID list
+        sid_list = sid_list[6:]
+    # Return the uSID list
+    return usid_list
+
+
+def nodes_to_micro_segments(nodes, node_addrs_filename):
+    '''Convert a list of nodes into a list of micro segments'''
+
+    # Convert the list of nodes into a list of IP addresses (SID list)
+    # Translation is based on a file containing the mapping
+    # of node names to IP addresses
+    sid_list = nodes_to_addrs(nodes, node_addrs_filename)
+    # Compress the SID list into a uSID list
+    usid_list = sidlist_to_usidlist(sid_list)
+    # Return the uSID list
+    return usid_list
+
+
+def handle_srv6_usid_policy(operation, channel, node_addrs_filename,
+                            destination, nodes=None,
+                            device='', encapmode="encap", table=-1,
+                            metric=-1):
+    """Handle a SRv6 Policy"""
+
+    # pylint: disable=too-many-locals, too-many-arguments
+
+    # This function receives a list of node names; we need to convert
+    # this list into a uSID list, before creating the SRv6 policy
+    # In order to perform this translation, a file containing the
+    # mapping of node names to IPv6 addresses is required
+    segments = nodes_to_micro_segments(nodes, node_addrs_filename)
+    # Create the SRv6 Policy
+    try:
+        response = handle_srv6_path(
+            operation=operation,
+            channel=channel,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric
+        )
+    except (InvalidConfigurationError,
+            NodeNotFoundError, TooManySegmentsError, SIDLocatorError):
+        return commons_pb2.STATUS_INTERNAL_ERROR
     # Return the response
     return response
 
