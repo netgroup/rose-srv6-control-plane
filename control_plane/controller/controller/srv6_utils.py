@@ -240,49 +240,88 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
 
 
 class SRv6Exception(Exception):
-    pass
+    '''
+    Generic SRv6 Exception.
+    '''
 
 
 class InvalidConfigurationError(SRv6Exception):
-    pass
+    '''
+    Configuration file is not valid.
+    '''
 
 
 class NodeNotFoundError(SRv6Exception):
-    pass
+    '''
+    Node not found.
+    '''
 
 
 class TooManySegmentsError(SRv6Exception):
-    pass
+    '''
+    Too many segments.
+    '''
 
 
 class SIDLocatorError(SRv6Exception):
-    pass
+    '''
+    SID Locator is invalid.
+    '''
 
 
-def nodes_to_addrs(nodes, node_addrs_filename):
-    '''Convert nodes list in addresses list'''
+def nodes_to_addrs(nodes, node_to_addr_filename):
+    '''
+    Convert a list of node names into a list of IP addresses.
 
+    :param nodes: List of node names
+    :type node: list
+    :param node_to_addr_filename: Name of the YAML file containing the
+                                mapping of node names to IP addresses
+    :type node_to_addr_filename: str
+    :return: List of IP addresses
+    :rtype: list
+    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file
+    '''
     # Read the mapping from the file
-    with open(node_addrs_filename, 'r') as node_addrs_file:
-        node_to_addrs = yaml.safe_load(node_addrs_file)
+    with open(node_to_addr_filename, 'r') as node_to_addr_file:
+        node_to_addr = yaml.safe_load(node_to_addr_file)
     # Validate the file
-    # TODO
+    for addr in node_to_addr.values():
+        if not utils.validate_ipv6_address(addr):
+            logger.error('Invalid IPv6 address %s in %s',
+                         addr, node_to_addr_file)
+            raise InvalidConfigurationError
     # Translate nodes into IP addresses
     node_addrs = list()
     for node in nodes:
-        # Check if node is known
-        if node not in node_to_addrs:
+        # Check if the node exists in the mapping file
+        if node not in node_to_addr:
             logger.error('Node %s not found in configuration file %s',
-                         node, node_addrs_filename)
+                         node, node_to_addr_filename)
             raise NodeNotFoundError
         # Get the address of the node
         # and enforce case-sensitivity
-        node_addrs.append(node_to_addrs[node].lower())
+        node_addrs.append(node_to_addr[node].lower())
     # Return the IP addresses list
     return node_addrs
 
 
 def segments_to_micro_segment(locator, segments):
+    '''
+    Convert a SID list (with #segments <= 6) into a uSID.
+
+    :param locator: The SID Locator of the segments.
+                    All the segments must use the same SID Locator.
+    :type locator: str
+    :param segments: The SID List to be compressed
+    :type segments: list
+    :return: The uSID containing all the segments
+    :rtype: str
+    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    '''
     # Enforce case-sensitivity
     locator = locator.lower()
     _segments = list()
@@ -300,7 +339,7 @@ def segments_to_micro_segment(locator, segments):
         segment = segment.split(':')
         if locator != '%s:%s' % (segment[0], segment[1]):
             # All the segments must have the same Locator
-            logger.error('Wrong locator')
+            logger.error('Wrong locator for the SID %s', ''.join(segment))
             raise SIDLocatorError
         # Take the uSID identifier
         usid_id = segment[2]
@@ -314,8 +353,15 @@ def segments_to_micro_segment(locator, segments):
 
 
 def get_sid_locator(sid_list):
-    '''Get the SID Locator'''
+    '''
+    Get the SID Locator (i.e. the first 32 bits) from a SID List.
 
+    :param sid_list: SID List
+    :type sid_list: list
+    :return: SID Locator
+    :rtype: str
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    '''
     # Enforce case-sensitivity
     _sid_list = list()
     for segment in sid_list:
@@ -338,8 +384,16 @@ def get_sid_locator(sid_list):
 
 
 def sidlist_to_usidlist(sid_list):
-    '''Convert SID list into uSID list'''
+    '''
+    Convert a SID List into a uSID List.
 
+    :param sid_list: SID List to be converted
+    :type sid_list: list
+    :return: uSID List containing
+    :rtype: list
+    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    '''
     # Get the locator
     locator = get_sid_locator(sid_list)
     # Micro segments list
@@ -356,7 +410,22 @@ def sidlist_to_usidlist(sid_list):
 
 
 def nodes_to_micro_segments(nodes, node_addrs_filename):
-    '''Convert a list of nodes into a list of micro segments'''
+    '''
+    Convert a list of nodes into a list of micro segments (uSID List)
+
+    :param nodes: List of node names
+    :type node: list
+    :param node_to_addr_filename: Name of the YAML file containing the
+                                  mapping of node names to IP addresses
+    :type node_to_addr_filename: str
+    :return: uSID List
+    :rtype: list
+    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file
+    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    '''
 
     # Convert the list of nodes into a list of IP addresses (SID list)
     # Translation is based on a file containing the mapping
@@ -368,19 +437,52 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     return usid_list
 
 
-def handle_srv6_usid_policy(operation, channel, node_addrs_filename,
+def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
                             destination, nodes=None,
                             device='', encapmode="encap", table=-1,
                             metric=-1):
-    """Handle a SRv6 Policy"""
+    '''
+    Handle a SRv6 Policy using uSIDs
 
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del)
+    :type operation: str
+    :param channel: The gRPC Channel to the node
+    :type channel: class: `grpc._channel.Channel`
+    :param node_to_addr_filename: Name of the YAML file containing the
+                                  mapping of node names to IP addresses
+    :type node_to_addr_filename: str
+    :param destination: Destination of the SRv6 route
+    :type destination: str
+    :param nodes: Waypoints of the SRv6 route
+    :type nodes: list
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param encapmode: Encap mode for the SRv6 route (i.e. encap, inline or
+                      l2encap). Default: encap.
+    :type encapmode: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
+    :rtype: int
+    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file
+    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    '''
     # pylint: disable=too-many-locals, too-many-arguments
-
+    #
     # This function receives a list of node names; we need to convert
     # this list into a uSID list, before creating the SRv6 policy
     # In order to perform this translation, a file containing the
     # mapping of node names to IPv6 addresses is required
-    segments = nodes_to_micro_segments(nodes, node_addrs_filename)
+    segments = nodes_to_micro_segments(nodes, node_to_addr_filename)
     # Create the SRv6 Policy
     try:
         response = handle_srv6_path(
