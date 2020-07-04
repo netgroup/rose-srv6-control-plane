@@ -37,6 +37,39 @@ from controller.cli import utils as cli_utils
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
+def handle_srv6_usid_policy(
+        operation,
+        grpc_address,
+        grpc_port,
+        node_to_addr_filename,
+        destination,
+        nodes="",
+        device='',
+        encapmode="encap",
+        table=-1,
+        metric=-1):
+    """Handle a SRv6 uSID policy"""
+
+    # pylint: disable=too-many-arguments
+
+    with utils.get_grpc_session(grpc_address, grpc_port) as channel:
+        res = srv6_utils.handle_srv6_usid_policy(
+            operation=operation,
+            channel=channel,
+            node_to_addr_filename=node_to_addr_filename,
+            destination=destination,
+            nodes=nodes.split(','),
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric
+        )
+        if res == 0:
+            print('OK')
+        else:
+            print('Error')
+
+
 def handle_srv6_path(
         operation,
         grpc_address,
@@ -181,6 +214,120 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 print('Error')
         else:
             print('Invalid operation %s' % operation)
+
+
+def args_srv6_usid_policy():
+    '''
+    Command-line arguments for the srv6_usid_policy command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    - is_path, a boolean flag indicating whether the argument is a path or not
+    '''
+
+    return [
+        {
+            'args': ['--grpc-ip'],
+            'kwargs': {'dest': 'grpc_ip', 'action': 'store',
+                       'required': True, 'help': 'IP of the gRPC server'}
+        }, {
+            'args': ['--grpc-port'],
+            'kwargs': {'dest': 'grpc_port', 'action': 'store',
+                       'required': True, 'help': 'Port of the gRPC server'}
+        }, {
+            'args': ['--secure'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
+        }, {
+            'args': ['--server-cert'],
+            'kwargs': {'dest': 'server_cert', 'action': 'store',
+                       'default': DEFAULT_CERTIFICATE,
+                       'help': 'CA certificate file'},
+            'is_path': True
+        }, {
+            'args': ['--op'],
+            'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
+                       'help': 'Operation'}
+        }, {
+            'args': ['--destination'],
+            'kwargs': {'dest': 'destination', 'action': 'store',
+                       'required': True, 'help': 'Destination'}
+        }, {
+            'args': ['--nodes'],
+            'kwargs': {'dest': 'nodes', 'action': 'store', 'required': True,
+                       'help': 'Nodes', 'default': ''}
+        }, {
+            'args': ['--device'],
+            'kwargs': {'dest': 'device', 'action': 'store', 'help': 'Device',
+                       'default': ''}
+        }, {
+            'args': ['--encapmode'],
+            'kwargs': {'dest': 'encapmode', 'action': 'store',
+                       'help': 'Encap mode',
+                       'choices': ['encap', 'inline', 'l2encap'],
+                       'default': 'encap'}
+        }, {
+            'args': ['--table'],
+            'kwargs': {'dest': 'table', 'action': 'store',
+                       'help': 'Table', 'type': int, 'default': -1}
+        }, {
+            'args': ['--metric'],
+            'kwargs': {'dest': 'metric', 'action': 'store',
+                       'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
+
+
+# Parse options
+def parse_arguments_srv6_usid_policy(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_usid_policy function"""
+
+    # Get parser
+    parser = ArgumentParser(
+        prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
+    )
+    # Add the arguments to the parser
+    for param in args_srv6_usid_policy():
+        parser.add_argument(*param['args'], **param['kwargs'])
+    # Parse input parameters
+    args = parser.parse_args(args)
+    # Return the arguments
+    return args
+
+
+# TAB-completion for SRv6 uSID policy
+def complete_srv6_usid_policy(text, prev_text):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_usid_policy
+    args = args_srv6_usid_policy()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
 
 
 def args_srv6_path():
@@ -644,3 +791,77 @@ def complete_srv6_biditunnel(text, prev_text=None):
         ]
     # No argument provided: return all the available arguments
     return args
+
+
+def args_srv6_usid():
+    '''
+    Command-line arguments for the srv6_usid command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    - is_path, a boolean flag indicating whether the argument is a path or not
+    '''
+
+    return [
+        {
+            'args': ['--addrs-file'],
+            'kwargs': {'dest': 'addrs_file', 'action': 'store',
+                       'required': True, 'help': 'File containing the mapping '
+                       'of name nodes to IP addresses'},
+            'is_path': True
+        }
+    ]
+
+
+# Parse options
+def parse_arguments_srv6_usid(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for srv6_biditunnel function"""
+
+    # Get parser
+    parser = ArgumentParser(
+        prog=prog, description='uSID'
+    )
+    # Add the arguments to the parser
+    for param in args_srv6_usid():
+        parser.add_argument(*param['args'], **param['kwargs'])
+    # Parse input parameters
+    args = parser.parse_args(args)
+    # Return the arguments
+    return args
+
+
+# TAB-completion for SRv6 bi-directional tunnel
+def complete_srv6_usid(text, prev_text=None):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_biditunnel
+    args = args_srv6_usid()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def print_node_to_addr_mapping(node_to_addr_filename):
+    srv6_utils.print_node_to_addr_mapping(node_to_addr_filename)

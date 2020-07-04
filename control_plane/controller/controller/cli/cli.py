@@ -649,6 +649,97 @@ class ControllerCLISRv6PM(CustomCmd):
         sub_cmd.cmdloop()
 
 
+class ControllerCLISRv6USID(CustomCmd):
+    """srv6-usid subsection"""
+
+    prompt = "controller(srv6-usid)> "
+
+    def __init__(self, addrs_filename, *args):
+        # File containing the mapping node names to IP addresses
+        self.addrs_filename = addrs_filename
+        # Remove leading and trailing apices
+        if self.addrs_filename[0] == "'" and self.addrs_filename[-1] == "'":
+            self.addrs_filename = self.addrs_filename[1:-1]
+        elif self.addrs_filename[0] == '"' and self.addrs_filename[-1] == '"':
+            self.addrs_filename = self.addrs_filename[1:-1]
+        # Show the nodes available automatically when
+        # the uSID subsection is opened
+        try:
+            srv6_cli.print_node_to_addr_mapping(self.addrs_filename)
+        except FileNotFoundError:
+            logger.error('File not found %s' % addrs_filename)
+        CustomCmd.__init__(self, *args)
+
+    def do_nodes(self, args):
+        """Show nodes"""
+
+        # pylint: disable=no-self-use
+
+        srv6_cli.print_node_to_addr_mapping(self.addrs_filename)
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
+    def do_policy(self, args):
+        """Handle a SRv6 uSID policy"""
+
+        # pylint: disable=no-self-use
+
+        try:
+            args = srv6_cli.parse_arguments_srv6_usid_policy(
+                prog='policy',
+                args=args.split(' ')
+            )
+        except SystemExit:
+            return False  # This workaround avoid exit in case of errors
+        srv6_cli.handle_srv6_usid_policy(
+            operation=args.op,
+            grpc_address=args.grpc_ip,
+            grpc_port=args.grpc_port,
+            node_to_addr_filename=self.addrs_filename,
+            destination=args.destination,
+            nodes=args.nodes,
+            device=args.device,
+            encapmode=args.encapmode,
+            table=args.table,
+            metric=args.metric
+        )
+        # Print nodes available
+        srv6_cli.print_node_to_addr_mapping(self.addrs_filename)
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
+    def complete_policy(self, text, line, start_idx, end_idx):
+        """Auto-completion for policy command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_usid_policy(text, prev_text)
+
+    def help_policy(self):
+        """Show help usage for policy command"""
+
+        # pylint: disable=no-self-use
+
+        srv6_cli.parse_arguments_srv6_usid_policy(
+            prog='policy',
+            args=['--help']
+        )
+
+
 class ControllerCLISRv6(CustomCmd):
     """srv6 subsection"""
 
@@ -710,6 +801,23 @@ class ControllerCLISRv6(CustomCmd):
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
+
+    def do_usid(self, args):
+        """Enter uSID subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        try:
+            args = srv6_cli.parse_arguments_srv6_usid(
+                prog='usid',
+                args=args.split(' ')
+            )
+        except SystemExit:
+            return False  # This workaround avoid exit in case of errors
+        sub_cmd = ControllerCLISRv6USID(
+            addrs_filename=args.addrs_file
+        )
+        sub_cmd.cmdloop()
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""
@@ -842,6 +950,25 @@ class ControllerCLISRv6(CustomCmd):
         # possible arguments
         return srv6_cli.complete_srv6_biditunnel(text, prev_text)
 
+    def complete_usid(self, text, line, start_idx, end_idx):
+        """Auto-completion for usid command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_usid(text, prev_text)
+
     def help_path(self):
         """Show help usage for path command"""
 
@@ -879,6 +1006,16 @@ class ControllerCLISRv6(CustomCmd):
 
         srv6_cli.parse_arguments_srv6_biditunnel(
             prog='biditunnel',
+            args=['-help']
+        )
+
+    def help_usid(self):
+        """Show help usage for usid command"""
+
+        # pylint: disable=no-self-use
+
+        srv6_cli.parse_arguments_srv6_usid(
+            prog='usid',
             args=['-help']
         )
 

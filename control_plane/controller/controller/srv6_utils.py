@@ -288,7 +288,7 @@ def print_node_to_addr_mapping(node_to_addr_filename):
             logger.error('Invalid IPv6 address %s in %s',
                          addr, node_to_addr_file)
             raise InvalidConfigurationError
-    print('List of available devices:')
+    print('\nList of available devices:')
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(node_to_addr)
     print()
