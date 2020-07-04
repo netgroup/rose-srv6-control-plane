@@ -28,6 +28,7 @@
 
 # General imports
 import logging
+import pprint
 
 import grpc
 from pyaml import yaml
@@ -267,6 +268,30 @@ class SIDLocatorError(SRv6Exception):
     '''
     SID Locator is invalid error.
     '''
+
+
+def print_node_to_addr_mapping(node_to_addr_filename):
+    '''
+    This function reads a YAML file containing the mapping
+    of node names to IP addresses and pretty print it
+
+    :param node_to_addr_filename: Name of the YAML file containing the
+                                  mapping of node names to IP addresses
+    :type node_to_addr_filename: str
+    '''
+    # Read the mapping from the file
+    with open(node_to_addr_filename, 'r') as node_to_addr_file:
+        node_to_addr = yaml.safe_load(node_to_addr_file)
+    # Validate the file
+    for addr in node_to_addr.values():
+        if not utils.validate_ipv6_address(addr):
+            logger.error('Invalid IPv6 address %s in %s',
+                         addr, node_to_addr_file)
+            raise InvalidConfigurationError
+    print('List of available devices:')
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(node_to_addr)
+    print()
 
 
 def nodes_to_addrs(nodes, node_to_addr_filename):
