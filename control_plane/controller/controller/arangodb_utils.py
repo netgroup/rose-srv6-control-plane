@@ -24,7 +24,9 @@
 #
 
 
-"""ArangoDB utilities"""
+'''
+ArangoDB utilities
+'''
 
 # General imports
 import ipaddress
@@ -47,24 +49,27 @@ logger = logging.getLogger(__name__)
 
 
 def save_yaml_dump(obj, filename):
-    """Export an object to a YAML file"""
-
+    '''
+    Export an object to a YAML file
+    '''
     # Save file
     with open(filename, 'w') as outfile:
         yaml.dump(obj, outfile)
 
 
 def load_yaml_dump(filename):
-    """Load a YAML file and return a dict representation"""
-
+    '''
+    Load a YAML file and return a dict representation
+    '''
     # Load YAML file
     with open(filename, 'r') as infile:
         return yaml.safe_load(infile)
 
 
 def fill_ip_addresses(nodes, addresses_yaml):
-    """Add addresses to a nodes dict"""
-
+    '''
+    Add addresses to a nodes dict
+    '''
     # Read IP addresses information from a YAML file and
     # add addresses to the nodes
     logger.info('*** Filling nodes YAML file with IP addresses')
@@ -85,8 +90,9 @@ def fill_ip_addresses(nodes, addresses_yaml):
 
 
 def add_hosts(nodes, edges, hosts_yaml):
-    """Add hosts to a topology"""
-
+    '''
+    Add hosts to a topology
+    '''
     # Read hosts information from a YAML file and
     # add hosts to the nodes and edges lists
     logger.info('*** Adding hosts to the topology')
@@ -128,10 +134,12 @@ def add_hosts(nodes, edges, hosts_yaml):
 
 
 def initialize_db(arango_url, arango_user, arango_password, verbose=False):
-    """Initialize database"""
-
+    '''
+    Initialize database
+    '''
+    #
     # pylint: disable=unused-argument
-
+    #
     # Wrapper function
     return arango_db.initialize_db(
         arango_url=arango_url,
@@ -143,11 +151,13 @@ def initialize_db(arango_url, arango_user, arango_password, verbose=False):
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None, verbose=False):
-    """Extract the network topology
-    from a set of nodes running ISIS protocol"""
-
+    '''
+    Extract the network topology
+    from a set of nodes running ISIS protocol
+    '''
+    #
     # pylint: disable=too-many-arguments
-
+    #
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
     #
@@ -185,12 +195,14 @@ def load_topo_on_arango(arango_url, user, password,
                         nodes, edges,
                         nodes_collection, edges_collection,
                         verbose=False):
-    """Load a network topology on a database"""
-
+    '''
+    Load a network topology on a database
+    '''
+    #
     # Current Arango arguments are not used,
     # so we can skip the check
     # pylint: disable=unused-argument, too-many-arguments
-
+    #
     # Load the topology on Arango DB
     arango_db.populate2(
         nodes=nodes_collection,
@@ -207,11 +219,13 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
                                               period=0, verbose=False):
-    """Extract the network topology from a set of nodes running ISIS protocol
-    and upload it on a database"""
-
+    '''
+    Extract the network topology from a set of nodes running ISIS protocol
+    and upload it on a database
+    '''
+    #
     # pylint: disable=too-many-arguments, too-many-locals
-
+    #
     # Param isis_nodes: list of ip-port
     # (e.g. [2000::1-2608,2000::2-2608])
     #

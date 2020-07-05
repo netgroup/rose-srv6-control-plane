@@ -1,5 +1,7 @@
 # Controller
 
+This folder contains an implementation of a Controller.
+
 ## Prerequisites
 
 The following dependencies are necessary:
@@ -111,3 +113,8 @@ The *config* folder in the controller directory contains a sample configuration 
     ```console
     controller> help
     ```
+
+
+## Documentation
+
+For more information about the installation, usage and API reference, see the full documentation at https://netgroup.github.io/rose-srv6-control-plane
