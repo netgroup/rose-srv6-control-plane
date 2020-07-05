@@ -680,6 +680,13 @@ class ControllerCLISRv6USID(CustomCmd):
         # after the command execution
         return False
 
+    def help_nodes(self):
+        """Show help usage for nodes command"""
+        #
+        # pylint: disable=no-self-use
+        #
+        print('Show the list of the available devices')
+
     def do_policy(self, args):
         """Handle a SRv6 uSID policy"""
 
