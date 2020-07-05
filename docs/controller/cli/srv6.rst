@@ -20,7 +20,7 @@ The ``srv6`` section supports the following commands:
 
 .. code:: bash
 
-  behavior  biditunnel  exit  help  path  unitunnel
+  behavior  biditunnel  exit  help  path  unitunnel usid
 
 
 ``behavior``
@@ -602,6 +602,21 @@ Create, get, change or remove a unidirectional SRv6 tunnel between two nodes.
         | enabled.
 
 
+``usid``
+--------
+
+Enter the ``usid`` sub-section of the ``srv6`` CLI.
+This command requires the argument --addrs-file, that is a YAML file
+containing the mapping of node names to IP addresses.
+
+.. code:: bash
+
+  controller(srv6)> usid --addrs-file nodes.yml
+
+See :ref:`controller-cli-srv6-usid` for a description
+of the commands available in the ``usid`` section.
+
+
 ``exit``
 --------
 
@@ -620,3 +635,10 @@ Show a description of the commands.
 .. code:: bash
 
   controller(srv6)> help
+
+
+.. toctree ::
+   :maxdepth: 2
+   :hidden:
+
+   srv6_usid
