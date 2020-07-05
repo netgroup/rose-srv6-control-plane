@@ -434,7 +434,7 @@ def segments_to_micro_segment(locator, segments,
                             int(IPv6Address(segment))))
         # Other bits should be equal to zero
         if int(IPv6Address(segment)) & (
-                0b1 * (128-locator_bits-usid_id_bits)) != 0:
+                0b1 * (128 - locator_bits - usid_id_bits)) != 0:
             # The SID is invalid
             logger.error('SID %s is invalid. Final bits should be zero',
                          segment)
