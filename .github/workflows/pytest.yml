@@ -1,0 +1,204 @@
+---
+###########################
+###########################
+## Pylint GitHub Actions ##
+###########################
+###########################
+name: Python Pytest GitHub Action
+
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+
+#############################
+# Start the job on all push #
+#############################
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+###############
+# Set the Job #
+###############
+jobs:
+  pylint_controller:
+    # Name the Job
+    name: Pytest - Controller
+    # Set the agent to run on
+    runs-on: ubuntu-latest
+
+    ###################
+    # Python versions #
+    ###################
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    
+    ##################
+    # Load all steps #
+    ##################
+    steps:
+
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      #########################
+      # Pick a Python version #
+      #########################
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      ##############################
+      # Set up a Python virtualenv #
+      ##############################
+      - name: Set up Python virtual environment
+        run: |
+          # Create a virtualenv
+          python -m venv python${{ matrix.python-version }}-venv-controller
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+
+      ########################
+      # Install dependencies #
+      ########################
+      - name: Install dependencies
+        run: |          
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Install dependencies required by the controller
+          sudo apt-get install graphviz libgraphviz-dev
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          # Install pytest and other python modules
+          pip install setuptools wheel pytest
+
+      ##############################
+      # Install controller modules #
+      ##############################
+      - name: Install controller modules
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Setup db_update library
+          cd db_update
+          python setup.py install
+          # Setup protos
+          cd ../control_plane/protos
+          python setup.py install
+          # Setup controller modules
+          cd ../../control_plane/controller
+          python setup.py install
+          cd ../../
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Running Pytest
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-controller/bin/activate
+          # Module to be tested
+          cd db_update
+          # pytest
+          echo Running: pytest
+          pytest
+          if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
+          #cd ../
+          #
+          # Module to be tested
+          cd control_plane/controller/
+          echo Running: pytest
+          pytest
+          if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
+          cd ../../
+
+  pylint_node_manager:
+    # Name the Job
+    name: Pytest - Node Manager
+    # Set the agent to run on
+    runs-on: ubuntu-latest
+
+    ###################
+    # Python versions #
+    ###################
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    ##################
+    # Load all steps #
+    ##################
+    steps:
+
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      #########################
+      # Pick a Python version #
+      #########################
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      ##############################
+      # Set up a Python virtualenv #
+      ##############################
+      - name: Set up Python virtual environment
+        run: |
+          # Create a virtualenv
+          python -m venv python${{ matrix.python-version }}-venv-node-mgr
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+
+      ########################
+      # Install dependencies #
+      ########################
+      - name: Install dependencies
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Upgrade pip
+          python -m pip install --upgrade pip
+          # Install pytest and other python modules
+          pip install setuptools wheel pytest
+
+      ################################
+      # Install node manager modules #
+      ################################
+      - name: Install node manager modules
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Setup protos
+          cd control_plane/protos
+          python setup.py install
+          # Setup node-manager modules
+          cd ../../control_plane/node-manager
+          python setup.py install
+          cd ../../
+
+      ################################
+      # Run Linter against code base #
+      ################################
+      - name: Python Code Quality and Lint
+        run: |
+          # Activate virtualenv
+          source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
+          # Module to be tested
+          cd control_plane/node-manager/
+          echo Running: pytest
+          pytest
+          if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
+          cd ../../
