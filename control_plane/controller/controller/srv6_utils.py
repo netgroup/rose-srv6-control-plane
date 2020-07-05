@@ -28,7 +28,9 @@
 
 # General imports
 import logging
+import math
 import pprint
+from ipaddress import IPv6Address
 
 import grpc
 from pyaml import yaml
@@ -47,6 +49,10 @@ from controller import utils
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
+# Default number of bits for the SID Locator
+DEFAULT_LOCATOR_BITS = 32
+# Default number of bits for the uSID identifier
+DEFAULT_USID_ID_BITS = 16
 
 
 # Parser for gRPC errors
@@ -270,6 +276,12 @@ class SIDLocatorError(SRv6Exception):
     '''
 
 
+class InvalidSIDError(SRv6Exception):
+    '''
+    SID is invalid.
+    '''
+
+
 def print_node_to_addr_mapping(node_to_addr_filename):
     '''
     This function reads a YAML file containing the mapping
@@ -289,8 +301,7 @@ def print_node_to_addr_mapping(node_to_addr_filename):
                          addr, node_to_addr_file)
             raise InvalidConfigurationError
     print('\nList of available devices:')
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(node_to_addr)
+    pprint.PrettyPrinter(indent=4).pprint(node_to_addr)
     print()
 
 
@@ -303,8 +314,8 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
     :param node_to_addr_filename: Name of the YAML file containing the
                                   mapping of node names to IP addresses
     :type node_to_addr_filename: str
-    :return: List of IP addresses
-    :rtype: list
+    :return: Tuple (List of IP addresses, Locator bits, uSID ID bits)
+    :rtype: tuple
     :raises NodeNotFoundError: Node name not found in the mapping file
     :raises InvalidConfigurationError: The mapping file is not a valid
                                        YAML file
@@ -318,6 +329,21 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
             logger.error('Invalid IPv6 address %s in %s',
                          addr, node_to_addr_file)
             raise InvalidConfigurationError
+    # Get the #bits of the locator
+    locator_bits = node_to_addr.get('locator_bits')
+    # Validate #bits for the SID Locator
+    if locator_bits is not None and \
+            (int(locator_bits) < 0 or int(locator_bits) > 128):
+        raise InvalidConfigurationError
+    # Get the #bits of the uSID identifier
+    usid_id_bits = node_to_addr.get('usid_id_bits')
+    # Validate #bits for the uSID ID
+    if usid_id_bits is not None and \
+            (int(usid_id_bits) < 0 or int(usid_id_bits) > 128):
+        raise InvalidConfigurationError
+    if locator_bits is not None and usid_id_bits is not None and \
+            int(usid_id_bits) + int(locator_bits) > 128:
+        raise InvalidConfigurationError
     # Translate nodes into IP addresses
     node_addrs = list()
     for node in nodes:
@@ -330,10 +356,12 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
         # and enforce case-sensitivity
         node_addrs.append(node_to_addr[node].lower())
     # Return the IP addresses list
-    return node_addrs
+    return node_addrs, locator_bits, usid_id_bits
 
 
-def segments_to_micro_segment(locator, segments):
+def segments_to_micro_segment(locator, segments,
+                              locator_bits=DEFAULT_LOCATOR_BITS,
+                              usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
     Convert a SID list (with #segments <= 6) into a uSID.
 
@@ -342,11 +370,31 @@ def segments_to_micro_segment(locator, segments):
     :type locator: str
     :param segments: The SID List to be compressed
     :type segments: list
+    :param locator_bits: Number of bits of the locator part of the SIDs
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers
+    :type usid_id_bits: int
     :return: The uSID containing all the segments
     :rtype: str
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises TooManySegmentsError: segments arg contains too many segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises InvalidSIDError: SID is wrong for one or more segments
     '''
+    # Locator mask, used to extract the locator from the SIDs
+    #
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 111...11111, then we put to zero
+    # the bits of the non-locator part
+    # The remaining part is the locator, which is converted to an IPv6Address
+    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                   int('1' * (128 - locator_bits), 2)))
+    # uSID identifier mask
+    #
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 111...11111, then we perform a shift
+    # operation
+    usid_id_mask = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                   (128 - locator_bits - usid_id_bits)))
     # Enforce case-sensitivity
     locator = locator.lower()
     _segments = list()
@@ -354,39 +402,66 @@ def segments_to_micro_segment(locator, segments):
         _segments.append(segment.lower())
     segments = _segments
     # Validation check
-    if len(segments) > 6:
+    # We need to verify if there is space in the uSID for all the segments
+    if len(segments) > math.floor((128 - locator_bits) / usid_id_bits):
         logger.error('Too many segments')
         raise TooManySegmentsError
     # uSIDs always start with the SID Locator
-    usid = locator
+    usid_int = int(IPv6Address(locator))
+    # Offset of the uSIDs
+    offset = 0
     # Iterate on the segments
     for segment in segments:
-        segment = segment.split(':')
-        if locator != '%s:%s' % (segment[0], segment[1]):
+        # Split the segment in...
+        # ...segment locator
+        segment_locator = \
+            str(IPv6Address(int(IPv6Address(locator_mask)) &
+                            int(IPv6Address(segment))))
+        if locator != segment_locator:
             # All the segments must have the same Locator
             logger.error('Wrong locator for the SID %s', ''.join(segment))
             raise SIDLocatorError
-        # Take the uSID identifier
-        usid_id = segment[2]
+        # ...and uSID identifier
+        usid_id = \
+            str(IPv6Address(int(IPv6Address(usid_id_mask)) &
+                            int(IPv6Address(segment))))
+        # Other bits should be equal to zero
+        if int(IPv6Address(segment)) & (
+                0b1 * (128-locator_bits-usid_id_bits)) != 0:
+            # The SID is invalid
+            logger.error('SID %s is invalid. Final bits should be zero',
+                         segment)
+            raise InvalidSIDError
         # And append to the uSID
-        usid += ':%s' % usid_id
-    # If we have less than 6 SIDs, fill the remaining ones with zeroes
-    if len(segments) < 6:
-        usid += '::'
+        usid_int += int(IPv6Address(usid_id)) >> offset
+        # Increase offset
+        offset += usid_id_bits
+    # Get a string representation of the uSID
+    usid = str(IPv6Address(usid_int))
     # Enforce case-sensitivity and return the uSID
     return usid.lower()
 
 
-def get_sid_locator(sid_list):
+def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     '''
     Get the SID Locator (i.e. the first 32 bits) from a SID List.
 
     :param sid_list: SID List
     :type sid_list: list
+    :param locator_bits: Number of bits of the locator part of the SIDs
+    :type locator_bits: int
     :return: SID Locator
     :rtype: str
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
     '''
+    # Locator mask, used to extract the locator from the SIDs
+    #
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 111...11111, then we put to zero
+    # the bits of the non-locator part
+    # The remaining part is the locator, which is converted to an IPv6Address
+    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                   int('1' * (128 - locator_bits), 2)))
     # Enforce case-sensitivity
     _sid_list = list()
     for segment in sid_list:
@@ -396,11 +471,15 @@ def get_sid_locator(sid_list):
     locator = ''
     # Iterate on the SID list
     for segment in sid_list:
-        segment = segment.split(':')
+        # Split the segment in...
+        # ...segment locator
+        segment_locator = \
+            str(IPv6Address(int(IPv6Address(locator_mask)) &
+                            int(IPv6Address(segment))))
         if locator == '':
             # Store the segment
-            locator = '%s:%s' % (segment[0], segment[1])
-        elif locator != '%s:%s' % (segment[0], segment[1]):
+            locator = segment_locator
+        elif locator != segment_locator:
             # All the segments must have the same Locator
             logger.error('Wrong locator')
             raise SIDLocatorError
@@ -408,28 +487,43 @@ def get_sid_locator(sid_list):
     return locator
 
 
-def sidlist_to_usidlist(sid_list):
+def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
+                        usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
     Convert a SID List into a uSID List.
 
     :param sid_list: SID List to be converted
     :type sid_list: list
+    :param locator_bits: Number of bits of the locator part of the SIDs
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers
+    :type usid_id_bits: int
     :return: uSID List containing
     :rtype: list
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises TooManySegmentsError: segments arg contains too many segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
     '''
+    # Size of the group of SIDs to be compressed in one uSID
+    # The size depends on the locator bits and uSID ID bits
+    sid_group_size = math.floor((128 - locator_bits) / usid_id_bits)
     # Get the locator
-    locator = get_sid_locator(sid_list)
+    locator = get_sid_locator(sid_list=sid_list, locator_bits=locator_bits)
     # Micro segments list
     usid_list = []
     # Iterate on the SID list
     while len(sid_list) > 0:
-        # Segments are encoded in groups of 6
-        # Take the first 6 SIDs, build the uSID and add it to the uSID list
-        usid_list.append(segments_to_micro_segment(locator, sid_list[:6]))
+        # Segments are encoded in groups of X
+        # Take the first X SIDs, build the uSID and add it to the uSID list
+        usid_list.append(
+            segments_to_micro_segment(
+                locator=locator,
+                segments=sid_list[:sid_group_size],
+                locator_bits=locator_bits,
+                usid_id_bits=usid_id_bits
+            )
+        )
         # Advance SID list
-        sid_list = sid_list[6:]
+        sid_list = sid_list[sid_group_size:]
     # Return the uSID list
     return usid_list
 
@@ -455,9 +549,18 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     # Convert the list of nodes into a list of IP addresses (SID list)
     # Translation is based on a file containing the mapping
     # of node names to IP addresses
-    sid_list = nodes_to_addrs(nodes, node_addrs_filename)
+    sid_list, locator_bits, usid_id_bits = nodes_to_addrs(nodes,
+                                                          node_addrs_filename)
+    if locator_bits is None:
+        locator_bits = DEFAULT_LOCATOR_BITS
+    if usid_id_bits is None:
+        usid_id_bits = DEFAULT_USID_ID_BITS
     # Compress the SID list into a uSID list
-    usid_list = sidlist_to_usidlist(sid_list)
+    usid_list = sidlist_to_usidlist(
+        sid_list=sid_list,
+        locator_bits=locator_bits,
+        usid_id_bits=usid_id_bits
+    )
     # Return the uSID list
     return usid_list
 
@@ -500,6 +603,7 @@ def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
                                        YAML file
     :raises TooManySegmentsError: segments arg contains more than 6 segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises InvalidSIDError: SID is wrong for one or more segments
     '''
     # pylint: disable=too-many-locals, too-many-arguments
     #
@@ -520,8 +624,8 @@ def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
             table=table,
             metric=metric
         )
-    except (InvalidConfigurationError,
-            NodeNotFoundError, TooManySegmentsError, SIDLocatorError):
+    except (InvalidConfigurationError, NodeNotFoundError,
+            TooManySegmentsError, SIDLocatorError, InvalidSIDError):
         return commons_pb2.STATUS_INTERNAL_ERROR
     # Return the response
     return response

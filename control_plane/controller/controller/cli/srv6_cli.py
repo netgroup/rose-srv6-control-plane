@@ -807,8 +807,9 @@ def args_srv6_usid():
         {
             'args': ['--addrs-file'],
             'kwargs': {'dest': 'addrs_file', 'action': 'store',
-                       'required': True, 'help': 'File containing the mapping '
-                       'of name nodes to IP addresses'},
+                       'required': True,
+                       'help': 'File containing the mapping '
+                               'of name nodes to IP addresses'},
             'is_path': True
         }
     ]
@@ -864,4 +865,5 @@ def complete_srv6_usid(text, prev_text=None):
 
 
 def print_node_to_addr_mapping(node_to_addr_filename):
+    '''Print mapping node to IP address'''
     srv6_utils.print_node_to_addr_mapping(node_to_addr_filename)

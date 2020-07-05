@@ -1,8 +1,21 @@
 #!/usr/bin/python
 
+from ipaddress import IPv6Address
 import pytest
 
 from controller import srv6_utils
+
+
+def normalize_ip_addrs(ip_addrs):
+    return [str(IPv6Address(addr)) for addr in ip_addrs]
+
+
+def normalize_ip_addr(ip_addr):
+    return str(IPv6Address(ip_addr))
+
+
+def compare_ip_addrs(addr1, addr2):
+    return normalize_ip_addrs(addr1) == normalize_ip_addrs(addr2)
 
 
 def test_nodes_to_addrs():
@@ -10,26 +23,26 @@ def test_nodes_to_addrs():
     addrs_list = ['fcbb:bb00:0001::',
                   'fcbb:bb00:0002::',
                   'fcbb:bb00:0003::']
-    assert srv6_utils.nodes_to_addrs(
-        nodes, 'nodes.yml') == addrs_list, 'Test failed'
+    assert normalize_ip_addrs(srv6_utils.nodes_to_addrs(
+        nodes, 'nodes.yml')[0]) == normalize_ip_addrs(addrs_list), 'Test failed'
 
 
 def test_segments_to_micro_segment_1():
     # First test (#SIDs < 6)
-    locator = 'fcbb:bb00'
+    locator = 'fcbb:bb00::'
     sid_list = [
         'fcbb:bb00:0001::',
         'FCBB:BB00:0002::',
         'FCBB:BB00:0003::',
     ]
     usid = 'fcbb:bb00:0001:0002:0003::'
-    assert srv6_utils.segments_to_micro_segment(
-        locator, sid_list) == usid
+    assert normalize_ip_addr(srv6_utils.segments_to_micro_segment(
+        locator, sid_list)) == normalize_ip_addr(usid)
 
 
 def test_segments_to_micro_segment_2():
     # Second test (#SIDs = 6)
-    locator = 'fcbb:bb00'
+    locator = 'fcbb:bb00::'
     sid_list = [
         'fcbb:bb00:0001::',
         'FCBB:BB00:0002::',
@@ -39,13 +52,13 @@ def test_segments_to_micro_segment_2():
         'FCBB:BB00:0006::',
     ]
     usid = 'fcbb:bb00:0001:0002:0003:0004:0005:0006'
-    assert srv6_utils.segments_to_micro_segment(
-        locator, sid_list) == usid
+    assert normalize_ip_addr(srv6_utils.segments_to_micro_segment(
+        locator, sid_list)) == normalize_ip_addr(usid)
 
 
 def test_segments_to_micro_segment_3():
     # Third test (#SIDs > 6)
-    locator = 'fcbb:bb00'
+    locator = 'fcbb:bb00::'
     sid_list = [
         'fcbb:bb00:0001::',
         'FCBB:BB00:0002::',
@@ -58,11 +71,11 @@ def test_segments_to_micro_segment_3():
     ]
     with pytest.raises(srv6_utils.TooManySegmentsError):
         srv6_utils.segments_to_micro_segment(
-            locator, sid_list)
+            normalize_ip_addr(locator), normalize_ip_addrs(sid_list))
 
 
 def test_get_sid_locator():
-    locator = 'fcbb:bb00'
+    locator = 'fcbb:bb00::'
     sid_list = [
         'fcbb:bb00:0001::',
         'FCBB:BB00:0002::',
@@ -73,7 +86,8 @@ def test_get_sid_locator():
         'FCBB:BB00:0007::',
         'FCBB:BB00:0008::',
     ]
-    assert srv6_utils.get_sid_locator(sid_list) == locator
+    assert normalize_ip_addr(srv6_utils.get_sid_locator(sid_list)) == \
+        normalize_ip_addr(locator)
 
 
 def test_sidlist_to_usidlist_1():
@@ -84,7 +98,8 @@ def test_sidlist_to_usidlist_1():
         'FCBB:BB00:0003::',
     ]
     usid_list = ['fcbb:bb00:0001:0002:0003::']
-    assert srv6_utils.sidlist_to_usidlist(sid_list) == usid_list
+    assert normalize_ip_addrs(srv6_utils.sidlist_to_usidlist(sid_list)) == \
+        normalize_ip_addrs(usid_list)
 
 
 def test_sidlist_to_usidlist_2():
@@ -98,7 +113,8 @@ def test_sidlist_to_usidlist_2():
         'FCBB:BB00:0006::',
     ]
     usid_list = ['fcbb:bb00:0001:0002:0003:0004:0005:0006']
-    assert srv6_utils.sidlist_to_usidlist(sid_list) == usid_list
+    assert normalize_ip_addrs(srv6_utils.sidlist_to_usidlist(sid_list)) == \
+        normalize_ip_addrs(usid_list)
 
 
 def test_sidlist_to_usidlist_3():
@@ -117,7 +133,8 @@ def test_sidlist_to_usidlist_3():
         'fcbb:bb00:0001:0002:0003:0004:0005:0006',
         'fcbb:bb00:0007:0008::',
     ]
-    assert srv6_utils.sidlist_to_usidlist(sid_list) == usid_list
+    assert normalize_ip_addrs(srv6_utils.sidlist_to_usidlist(sid_list)) == \
+        normalize_ip_addrs(usid_list)
 
 
 def test_nodes_to_micro_segments():
@@ -126,8 +143,8 @@ def test_nodes_to_micro_segments():
         'fcbb:bb00:0001:0002:0003:0004:0005:0006',
         'fcbb:bb00:0008::',
     ]
-    assert usid_list == srv6_utils.nodes_to_micro_segments(
-        nodes, 'nodes.yml') == usid_list
+    assert normalize_ip_addrs(srv6_utils.nodes_to_micro_segments(
+        nodes, 'nodes.yml')) == normalize_ip_addrs(usid_list)
 
 
 def test_nodes_to_micro_segments_invalid_1():

@@ -667,13 +667,13 @@ class ControllerCLISRv6USID(CustomCmd):
         try:
             srv6_cli.print_node_to_addr_mapping(self.addrs_filename)
         except FileNotFoundError:
-            logger.error('File not found %s' % addrs_filename)
+            logger.error('File not found %s', addrs_filename)
         CustomCmd.__init__(self, *args)
 
     def do_nodes(self, args):
         """Show nodes"""
 
-        # pylint: disable=no-self-use
+        # pylint: disable=no-self-use, unused-argument
 
         srv6_cli.print_node_to_addr_mapping(self.addrs_filename)
         # Return False in order to keep the CLI subsection open
@@ -683,7 +683,7 @@ class ControllerCLISRv6USID(CustomCmd):
     def do_policy(self, args):
         """Handle a SRv6 uSID policy"""
 
-        # pylint: disable=no-self-use
+        # pylint: disable=no-self-use, unused-argument
 
         try:
             args = srv6_cli.parse_arguments_srv6_usid_policy(
@@ -818,6 +818,7 @@ class ControllerCLISRv6(CustomCmd):
             addrs_filename=args.addrs_file
         )
         sub_cmd.cmdloop()
+        return False
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""
