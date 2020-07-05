@@ -1,9 +1,13 @@
 #!/usr/bin/python
 
-from ipaddress import IPv6Address
+import os
 import pytest
+from ipaddress import IPv6Address
 
 from controller import srv6_utils
+
+NODES_YAML = os.path.join(os.path.dirname(__file__), 'nodes.yml')
+NODES_INVALID_1_YAML = os.path.join(os.path.dirname(__file__), 'nodes_invalid_1.yml')
 
 
 def normalize_ip_addrs(ip_addrs):
@@ -24,7 +28,7 @@ def test_nodes_to_addrs():
                   'fcbb:bb00:0002::',
                   'fcbb:bb00:0003::']
     assert normalize_ip_addrs(srv6_utils.nodes_to_addrs(
-        nodes, 'nodes.yml')[0]) == normalize_ip_addrs(addrs_list), 'Test failed'
+        nodes, NODES_YAML)[0]) == normalize_ip_addrs(addrs_list), 'Test failed'
 
 
 def test_segments_to_micro_segment_1():
@@ -144,18 +148,18 @@ def test_nodes_to_micro_segments():
         'fcbb:bb00:0008::',
     ]
     assert normalize_ip_addrs(srv6_utils.nodes_to_micro_segments(
-        nodes, 'nodes.yml')) == normalize_ip_addrs(usid_list)
+        nodes, NODES_YAML)) == normalize_ip_addrs(usid_list)
 
 
 def test_nodes_to_micro_segments_invalid_1():
     nodes = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R8']
     with pytest.raises(srv6_utils.InvalidConfigurationError):
         srv6_utils.nodes_to_micro_segments(
-            nodes, 'nodes_invalid_1.yml')
+            nodes, NODES_INVALID_1_YAML)
 
 
 def test_nodes_to_micro_segments_invalid_2():
     nodes = ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R8', 'R9']
     with pytest.raises(srv6_utils.NodeNotFoundError):
         srv6_utils.nodes_to_micro_segments(
-            nodes, 'nodes.yml')
+            nodes, NODES_YAML)
