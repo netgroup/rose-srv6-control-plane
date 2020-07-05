@@ -99,18 +99,18 @@ jobs:
           cd ../../
 
       ################################
-      # Run Linter against code base #
+      # Run Pytest against code base #
       ################################
       - name: Running Pytest
         run: |
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-controller/bin/activate
           # Module to be tested
-          cd db_update
+          #cd db_update
           # pytest
-          echo Running: pytest
-          pytest
-          if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
+          #echo Running: pytest
+          #pytest
+          #if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
           #cd ../
           #
           # Module to be tested
@@ -190,15 +190,15 @@ jobs:
           cd ../../
 
       ################################
-      # Run Linter against code base #
+      # Run Pytest against code base #
       ################################
-      - name: Python Code Quality and Lint
+      - name: Running Pytest
         run: |
           # Activate virtualenv
           source python${{ matrix.python-version }}-venv-node-mgr/bin/activate
           # Module to be tested
-          cd control_plane/node-manager/
-          echo Running: pytest
-          pytest
-          if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
-          cd ../../
+          #cd control_plane/node-manager/
+          #echo Running: pytest
+          #pytest
+          #if [ "$?" = "0" ]; then echo "Pytest ok"; elif [ "$?" = "5" ]; then echo "No tests were collected"; else echo "Pytest error"; exit $exit_code; fi
+          #cd ../../
