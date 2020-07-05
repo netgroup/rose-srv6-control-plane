@@ -7,7 +7,9 @@ from ipaddress import IPv6Address
 from controller import srv6_utils
 
 NODES_YAML = os.path.join(os.path.dirname(__file__), 'nodes.yml')
-NODES_INVALID_1_YAML = os.path.join(os.path.dirname(__file__), 'nodes_invalid_1.yml')
+NODES_INVALID_1_YAML = os.path.join(
+    os.path.dirname(__file__),
+    'nodes_invalid_1.yml')
 
 
 def normalize_ip_addrs(ip_addrs):
