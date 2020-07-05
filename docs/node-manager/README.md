@@ -60,7 +60,6 @@ The following dependencies are necessary:
         ```sh
         export ENABLE_SRV6_PM_MANAGER=True
         export SRV6_PM_XDP_EBPF_PATH=/home/rose/workspace/srv6-pm-xdp-ebpf
-        export ROSE_SRV6_DATA_PLANE_PATH=/home/rose/workspace/rose-srv6-data-plane
         ```
 The *config* folder in the node-manager directory provides a sample configuration file.
 
@@ -120,8 +119,3 @@ Then, you need to add the path to the repository to your *.env* file, as describ
     ```
 
     Note: the command-line arguments have priority over the parameters defined in the *.env* file.
-
-
-## Documentation
-
-For more information about the installation and usage of the Node Manager, see the full documentation at https://netgroup.github.io/rose-srv6-control-plane
