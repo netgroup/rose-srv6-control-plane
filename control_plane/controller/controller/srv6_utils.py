@@ -32,6 +32,7 @@ Control-Plane functionalities for SRv6 Manager
 import logging
 import math
 import pprint
+import sys
 from ipaddress import IPv6Address
 
 import grpc
@@ -78,7 +79,8 @@ def parse_grpc_error(err):
 
 
 def handle_srv6_path(operation, channel, destination, segments=None,
-                     device='', encapmode="encap", table=-1, metric=-1):
+                     device='', encapmode="encap", table=-1, metric=-1,
+                     fwd_engine='Linux'):
     '''
     Handle a SRv6 Path
     '''
@@ -107,6 +109,12 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
     path.metric = int(metric)
+    # Forwarding engine (Linux or VPP)
+    try:
+        path.fwd_engine = srv6_manager_pb2.Value(fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -153,7 +161,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
 
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments=None, metric=-1):
+                         interface="", segments=None, metric=-1,
+                         fwd_engine='Linux'):
     '''
     Handle a SRv6 behavior
     '''
@@ -186,6 +195,12 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
     behavior.metric = int(metric)
+    # Forwarding engine (Linux or VPP)
+    try:
+        behavior.fwd_engine = srv6_manager_pb2.Value(fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -312,15 +327,15 @@ def print_node_to_addr_mapping(node_to_addr_filename):
     print()
 
 
-def nodes_to_addrs(nodes, node_to_addr_filename):
+def read_nodes(nodes, nodes_filename):
     '''
     Convert a list of node names into a list of IP addresses.
 
     :param nodes: List of node names
     :type node: list
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
-    :type node_to_addr_filename: str
+    :param nodes_filename: Name of the YAML file containing the
+                           IP addresses
+    :type nodes_filename: str
     :return: Tuple (List of IP addresses, Locator bits, uSID ID bits)
     :rtype: tuple
     :raises NodeNotFoundError: Node name not found in the mapping file
@@ -328,22 +343,34 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
                                        YAML file
     '''
     # Read the mapping from the file
-    with open(node_to_addr_filename, 'r') as node_to_addr_file:
-        node_to_addr = yaml.safe_load(node_to_addr_file)
-    # Validate the file
-    for addr in node_to_addr.values():
+    with open(nodes_filename, 'r') as nodes_file:
+        nodes = yaml.safe_load(nodes_file)
+    # Validate the IP addresses
+    for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
         if not utils.validate_ipv6_address(addr):
             logger.error('Invalid IPv6 address %s in %s',
-                         addr, node_to_addr_file)
+                         addr, nodes_filename)
+            raise InvalidConfigurationError
+    # Validate the SIDs
+    for sid in [node['sid'] for node in nodes['nodes'].values()]:
+        if not utils.validate_ipv6_address(sid):
+            logger.error('Invalid SID %s in %s',
+                         sid, nodes_filename)
+            raise InvalidConfigurationError
+    # Validate the forwarding engine
+    for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
+        if fwd_engine not in ['linux', 'vpp']:
+            logger.error('Invalid forwarding engine %s in %s',
+                         fwd_engine, nodes_filename)
             raise InvalidConfigurationError
     # Get the #bits of the locator
-    locator_bits = node_to_addr.get('locator_bits')
+    locator_bits = nodes.get('locator_bits')
     # Validate #bits for the SID Locator
     if locator_bits is not None and \
             (int(locator_bits) < 0 or int(locator_bits) > 128):
         raise InvalidConfigurationError
     # Get the #bits of the uSID identifier
-    usid_id_bits = node_to_addr.get('usid_id_bits')
+    usid_id_bits = nodes.get('usid_id_bits')
     # Validate #bits for the uSID ID
     if usid_id_bits is not None and \
             (int(usid_id_bits) < 0 or int(usid_id_bits) > 128):
@@ -351,19 +378,12 @@ def nodes_to_addrs(nodes, node_to_addr_filename):
     if locator_bits is not None and usid_id_bits is not None and \
             int(usid_id_bits) + int(locator_bits) > 128:
         raise InvalidConfigurationError
-    # Translate nodes into IP addresses
-    node_addrs = list()
-    for node in nodes:
-        # Check if the node exists in the mapping file
-        if node not in node_to_addr:
-            logger.error('Node %s not found in configuration file %s',
-                         node, node_to_addr_filename)
-            raise NodeNotFoundError
-        # Get the address of the node
-        # and enforce case-sensitivity
-        node_addrs.append(node_to_addr[node].lower())
-    # Return the IP addresses list
-    return node_addrs, locator_bits, usid_id_bits
+    # Enforce case-sensitivity
+    for node in nodes['nodes'].values():
+        nodes['nodes'][node]['grpc_ip'] = node['grpc_ip'].lower()
+        nodes['nodes'][node]['sid'] = node['sid'].lower()
+    # Return the nodes list
+    return nodes['nodes'], locator_bits, usid_id_bits
 
 
 def segments_to_micro_segment(locator, segments,
@@ -556,8 +576,8 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     # Convert the list of nodes into a list of IP addresses (SID list)
     # Translation is based on a file containing the mapping
     # of node names to IP addresses
-    sid_list, locator_bits, usid_id_bits = nodes_to_addrs(nodes,
-                                                          node_addrs_filename)
+    sid_list, locator_bits, usid_id_bits = read_nodes(nodes,
+                                                      node_addrs_filename)
     if locator_bits is None:
         locator_bits = DEFAULT_LOCATOR_BITS
     if usid_id_bits is None:
@@ -572,21 +592,18 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     return usid_list
 
 
-def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
-                            destination, nodes=None,
-                            device='', encapmode="encap", table=-1,
-                            metric=-1):
+def handle_srv6_usid_policy_uni(operation, nodes_filename,
+                                destination, nodes=None,
+                                device='', table=-1, metric=-1):
     '''
-    Handle a SRv6 Policy using uSIDs
+    Handle a SRv6 Policy (unidirectional) using uSIDs
 
     :param operation: The operation to be performed on the uSID policy
                       (i.e. add, get, change, del)
     :type operation: str
-    :param channel: The gRPC Channel to the node
-    :type channel: class: `grpc._channel.Channel`
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
-    :type node_to_addr_filename: str
+    :param nodes_filename: Name of the YAML file containing the
+                           mapping of node names to IP addresses
+    :type nodes_filename: str
     :param destination: Destination of the SRv6 route
     :type destination: str
     :param nodes: Waypoints of the SRv6 route
@@ -594,9 +611,6 @@ def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
     :param device: Device of the SRv6 route. If not provided, the device
                    is selected automatically by the node.
     :type device: str, optional
-    :param encapmode: Encap mode for the SRv6 route (i.e. encap, inline or
-                      l2encap). Default: encap.
-    :type encapmode: str, optional
     :param table: Routing table containing the SRv6 route. If not provided,
                   the main table (i.e. table 254) will be used.
     :type table: int, optional
@@ -614,23 +628,93 @@ def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
     '''
     # pylint: disable=too-many-locals, too-many-arguments
     #
-    # This function receives a list of node names; we need to convert
-    # this list into a uSID list, before creating the SRv6 policy
     # In order to perform this translation, a file containing the
     # mapping of node names to IPv6 addresses is required
-    segments = nodes_to_micro_segments(nodes, node_to_addr_filename)
+    #
     # Create the SRv6 Policy
     try:
-        response = handle_srv6_path(
-            operation=operation,
-            channel=channel,
-            destination=destination,
-            segments=segments,
-            device=device,
-            encapmode=encapmode,
-            table=table,
-            metric=metric
-        )
+        # Read nodes from YAML file
+        nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
+        # Ingress node
+        ingress_node = nodes_info[nodes[0]]
+        # Intermediate nodes
+        intermediate_nodes = list()
+        for node in nodes[1:-1]:
+            intermediate_nodes = nodes_info[node]
+        # Egress node
+        egress_node = nodes_info[nodes[-1]]
+        # Extract the segments
+        segments = list()
+        for node in nodes[1:]:
+            segments = nodes_info[node]['sid']
+        # Ingress node
+        with utils.get_grpc_session(ingress_node['grpc_ip'],
+                                    ingress_node['grpc_port']) as channel:
+            # We need to convert the SID list into a uSID list
+            #  before creating the SRv6 policy
+            usid_list = sidlist_to_usidlist(sid_list=segments,
+                                            locator_bits=locator_bits,
+                                            usid_id_bits=usid_id_bits)
+            # Handle a SRv6 path
+            response = handle_srv6_path(
+                operation=operation,
+                channel=channel,
+                destination=destination,
+                segments=usid_list,
+                device=device,
+                encapmode='encap.red',
+                table=table,
+                metric=metric,
+                fwd_engine=ingress_node['fwd_engine']
+            )
+            if response != commons_pb2.STATUS_SUCCESS:
+                # Error
+                return response
+        # Intermediate nodes
+        idx = 0
+        for node in intermediate_nodes:
+            with utils.get_grpc_session(node['grpc_ip'],
+                                        node['grpc_port']) as channel:
+                # Local segment
+                localseg = sidlist_to_usidlist(sid_list=[segments[idx]],
+                                               locator_bits=locator_bits,
+                                               usid_id_bits=usid_id_bits)
+                # Create the uN behavior
+                response = handle_srv6_behavior(
+                    operation=operation,
+                    channel=channel,
+                    segment=localseg,
+                    action='uN',
+                    fwd_engine=node['fwd_engine']
+                )
+                if response != commons_pb2.STATUS_SUCCESS:
+                    # Error
+                    return response
+                idx += 1
+        # Egress node
+        with utils.get_grpc_session(egress_node['grpc_ip'],
+                                    egress_node['grpc_port']) as channel:
+            # Local segment
+            localseg = sidlist_to_usidlist(sid_list=[segments[idx]],
+                                           locator_bits=locator_bits,
+                                           usid_id_bits=usid_id_bits)
+            # Create the decap behavior
+            response = handle_srv6_behavior(
+                operation=operation,
+                channel=channel,
+                segment=localseg,
+                action='End.DT6',
+                lookup_table=254,
+                fwd_engine=node['fwd_engine']
+            )
+            if response != commons_pb2.STATUS_SUCCESS:
+                # Error
+                return response
+        # Check if the all the segments have been processed
+        if idx != len(segments) - 1:
+            logger.fatal('Not all the segments have been processed.'
+                         'Bug in handle_srv6_usid_policy()')
+            sys.exit(-2)
     except (InvalidConfigurationError, NodeNotFoundError,
             TooManySegmentsError, SIDLocatorError, InvalidSIDError):
         return commons_pb2.STATUS_INTERNAL_ERROR
@@ -638,8 +722,70 @@ def handle_srv6_usid_policy(operation, channel, node_to_addr_filename,
     return response
 
 
+def handle_srv6_usid_policy(operation, nodes_filename,
+                            destination, nodes=None,
+                            device='', table=-1, metric=-1):
+    '''
+    Handle a SRv6 Policy using uSIDs
+
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del)
+    :type operation: str
+    :param nodes_filename: Name of the YAML file containing the
+                           mapping of node names to IP addresses
+    :type nodes_filename: str
+    :param destination: Destination of the SRv6 route
+    :type destination: str
+    :param nodes: Waypoints of the SRv6 route
+    :type nodes: list
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
+    :rtype: int
+    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file
+    :raises TooManySegmentsError: segments arg contains more than 6 segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises InvalidSIDError: SID is wrong for one or more segments
+    '''
+    # Path from left to right
+    response = handle_srv6_usid_policy_uni(
+        operation=operation,
+        nodes_filename=nodes_filename,
+        destination=destination,
+        nodes=nodes,
+        device=device,
+        table=table,
+        metric=metric
+    )
+    if response != commons_pb2.STATUS_SUCCESS:
+        # Error
+        return response
+    # Path from right to left
+    response = handle_srv6_usid_policy_uni(
+        operation=operation,
+        nodes_filename=nodes_filename,
+        destination=destination,
+        nodes=nodes[::-1],
+        device=device,
+        table=table,
+        metric=metric
+    )
+    # Return the response
+    return response
+
+
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
-                           destination, segments, localseg=None):
+                           destination, segments, localseg=None,
+                           fwd_engine='Linux'):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -658,6 +804,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                      'localseg' isn't passed in, the End.DT6 function
                      is not created.
     :type localseg: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     '''
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
@@ -669,7 +817,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         operation='add',
         channel=ingress_channel,
         destination=destination,
-        segments=segments
+        segments=segments,
+        fwd_engine=fwd_engine
     )
     # Pretty print status code
     utils.print_status_message(
@@ -695,7 +844,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             channel=egress_channel,
             segment=localseg,
             action='End.DT6',
-            lookup_table=254
+            lookup_table=254,
+            fwd_engine=fwd_engine
         )
         # Pretty print status code
         utils.print_status_message(
@@ -712,7 +862,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
 
 def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
-                       localseg_lr=None, localseg_rl=None):
+                       localseg_lr=None, localseg_rl=None,
+                       fwd_engine='Linux'):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -744,6 +895,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                         to <node_l>. If the argument 'localseg_rl' isn't
                         passed in, the End.DT6 function is not created.
     :type localseg_rl: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     '''
     # pylint: disable=too-many-arguments
     #
@@ -753,7 +906,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
         segments=sidlist_lr,
-        localseg=localseg_lr
+        localseg=localseg_lr,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -764,7 +918,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
         segments=sidlist_rl,
-        localseg=localseg_rl
+        localseg=localseg_rl,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -774,7 +929,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
 
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                            localseg=None, ignore_errors=False):
+                            localseg=None, fwd_engine='Linux',
+                            ignore_errors=False):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -789,6 +945,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                      function on the egress node. If the argument 'localseg'
                      isn't passed in, the End.DT6 function is not removed.
     :type localseg: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
@@ -802,7 +960,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     res = handle_srv6_path(
         operation='del',
         channel=ingress_channel,
-        destination=destination
+        destination=destination,
+        fwd_engine=fwd_engine
     )
     # Pretty print status code
     utils.print_status_message(
@@ -830,7 +989,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         res = handle_srv6_behavior(
             operation='del',
             channel=egress_channel,
-            segment=localseg
+            segment=localseg,
+            fwd_engine=fwd_engine
         )
         # Pretty print status code
         utils.print_status_message(
@@ -851,7 +1011,7 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
 
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
-                        ignore_errors=False):
+                        fwd_engine='Linux', ignore_errors=False):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -881,6 +1041,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         If the argument 'localseg_r' isn't passed in, the
                         End.DT6 function is not removed.
     :type localseg_rl: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
@@ -893,7 +1055,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
         localseg=localseg_lr,
-        ignore_errors=ignore_errors
+        ignore_errors=ignore_errors,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -904,7 +1067,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
         localseg=localseg_rl,
-        ignore_errors=ignore_errors
+        ignore_errors=ignore_errors,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:

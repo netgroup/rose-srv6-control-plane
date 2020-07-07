@@ -41,13 +41,13 @@ def handle_srv6_usid_policy(
         operation,
         grpc_address,
         grpc_port,
-        node_to_addr_filename,
+        nodes_filename,
         destination,
         nodes="",
         device='',
-        encapmode="encap",
         table=-1,
-        metric=-1):
+        metric=-1,
+        fwd_engine='Linux'):
     """Handle a SRv6 uSID policy"""
 
     # pylint: disable=too-many-arguments
@@ -56,11 +56,10 @@ def handle_srv6_usid_policy(
         res = srv6_utils.handle_srv6_usid_policy(
             operation=operation,
             channel=channel,
-            node_to_addr_filename=node_to_addr_filename,
+            nodes_filename=nodes_filename,
             destination=destination,
             nodes=nodes.split(','),
             device=device,
-            encapmode=encapmode,
             table=table,
             metric=metric
         )
@@ -79,7 +78,8 @@ def handle_srv6_path(
         device='',
         encapmode="encap",
         table=-1,
-        metric=-1):
+        metric=-1,
+        fwd_engine='Linux'):
     """Handle a SRv6 path"""
 
     # pylint: disable=too-many-arguments
@@ -93,7 +93,8 @@ def handle_srv6_path(
             device=device,
             encapmode=encapmode,
             table=table,
-            metric=metric
+            metric=metric,
+            fwd_engine=fwd_engine
         )
         if res == 0:
             print('OK')
@@ -113,7 +114,8 @@ def handle_srv6_behavior(
         lookup_table=-1,
         interface="",
         segments="",
-        metric=-1):
+        metric=-1,
+        fwd_engine='Linux'):
     """Handle a SRv6 behavior"""
 
     # pylint: disable=too-many-arguments
@@ -130,7 +132,8 @@ def handle_srv6_behavior(
             lookup_table=lookup_table,
             interface=interface,
             segments=segments.split(','),
-            metric=metric
+            metric=metric,
+            fwd_engine=fwd_engine
         )
         if res == 0:
             print('OK')
@@ -140,7 +143,8 @@ def handle_srv6_behavior(
 
 def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                           egress_ip, egress_port,
-                          destination, segments, localseg=None):
+                          destination, segments, localseg=None,
+                          fwd_engine='Linux'):
     """Handle a SRv6 unidirectional tunnel"""
 
     # pylint: disable=too-many-arguments
@@ -153,7 +157,8 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 egress_channel=egress_channel,
                 destination=destination,
                 segments=segments.split(','),
-                localseg=localseg
+                localseg=localseg,
+                fwd_engine=fwd_engine
             )
             if res == 0:
                 print('OK')
@@ -164,7 +169,8 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 ingress_channel=ingress_channel,
                 egress_channel=egress_channel,
                 destination=destination,
-                localseg=localseg
+                localseg=localseg,
+                fwd_engine=fwd_engine
             )
             if res == 0:
                 print('OK')
@@ -177,7 +183,8 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
 def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
-                           localseg_lr=None, localseg_rl=None):
+                           localseg_lr=None, localseg_rl=None,
+                           fwd_engine='Linux'):
     """Handle SRv6 bidirectional tunnel"""
 
     # pylint: disable=too-many-arguments
@@ -193,7 +200,8 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 dest_lr=dest_lr,
                 dest_rl=dest_rl,
                 localseg_lr=localseg_lr,
-                localseg_rl=localseg_rl
+                localseg_rl=localseg_rl,
+                fwd_engine=fwd_engine
             )
             if res == 0:
                 print('OK')
@@ -206,7 +214,8 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 dest_lr=dest_lr,
                 dest_rl=dest_rl,
                 localseg_lr=localseg_lr,
-                localseg_rl=localseg_rl
+                localseg_rl=localseg_rl,
+                fwd_engine=fwd_engine
             )
             if res == 0:
                 print('OK')
@@ -260,12 +269,6 @@ def args_srv6_usid_policy():
             'args': ['--device'],
             'kwargs': {'dest': 'device', 'action': 'store', 'help': 'Device',
                        'default': ''}
-        }, {
-            'args': ['--encapmode'],
-            'kwargs': {'dest': 'encapmode', 'action': 'store',
-                       'help': 'Encap mode',
-                       'choices': ['encap', 'inline', 'l2encap'],
-                       'default': 'encap'}
         }, {
             'args': ['--table'],
             'kwargs': {'dest': 'table', 'action': 'store',
@@ -388,6 +391,11 @@ def args_srv6_path():
             'args': ['--metric'],
             'kwargs': {'dest': 'metric', 'action': 'store',
                        'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--fwd-engine'],
+            'kwargs': {'dest': 'fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine (Linux or VPP)',
+                       'type': str, 'default': 'Linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -512,6 +520,11 @@ def args_srv6_behavior():
             'kwargs': {'dest': 'metric', 'action': 'store',
                        'help': 'Metric', 'type': int, 'default': -1}
         }, {
+            'args': ['--fwd-engine'],
+            'kwargs': {'dest': 'fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine (Linux or VPP)',
+                       'type': str, 'default': 'Linux'}
+        }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
         }
@@ -618,6 +631,11 @@ def args_srv6_unitunnel():
             'args': ['--sidlist'],
             'kwargs': {'dest': 'sidlist', 'action': 'store',
                        'help': 'SID list', 'required': True}
+        }, {
+            'args': ['--fwd-engine'],
+            'kwargs': {'dest': 'fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine (Linux or VPP)',
+                       'type': str, 'default': 'Linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -738,6 +756,11 @@ def args_srv6_biditunnel():
             'kwargs': {'dest': 'sidlist_rl', 'action': 'store',
                        'help': 'Right to Left SID list', 'required': True}
         }, {
+            'args': ['--fwd-engine'],
+            'kwargs': {'dest': 'fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine (Linux or VPP)',
+                       'type': str, 'default': 'Linux'}
+        }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
         }
@@ -805,8 +828,8 @@ def args_srv6_usid():
 
     return [
         {
-            'args': ['--addrs-file'],
-            'kwargs': {'dest': 'addrs_file', 'action': 'store',
+            'args': ['--nodes-file'],
+            'kwargs': {'dest': 'nodes_file', 'action': 'store',
                        'required': True,
                        'help': 'File containing the mapping '
                                'of name nodes to IP addresses'},
