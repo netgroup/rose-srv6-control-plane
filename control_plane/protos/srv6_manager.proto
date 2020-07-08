@@ -30,6 +30,8 @@ message SRv6ManagerReply {
 // The SRv6PathRequest message containing a number of paths.
 message SRv6PathRequest {
   repeated SRv6Path paths = 1;
+  // Fowarding engine
+  FwdEngine fwd_engine = 2;
 }
 
 // The Path message encodes a path request
@@ -56,6 +58,8 @@ message SRv6Path {
 // The SRv6BehaviorRequest message containing a number of behaviors.
 message SRv6BehaviorRequest {
   repeated SRv6Behavior behaviors = 1;
+  // Fowarding engine
+  FwdEngine fwd_engine = 2;
 }
 
 // The SRv6Behavior message encodes a behavior request
@@ -82,4 +86,9 @@ message SRv6Behavior {
   int32 table = 8;
   // Metric (i.e. the preference value of the route)
   int32 metric = 9;
+}
+
+enum FwdEngine {
+  Linux = 0;
+  VPP = 1;
 }
