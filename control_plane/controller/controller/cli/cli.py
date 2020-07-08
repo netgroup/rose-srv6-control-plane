@@ -701,13 +701,10 @@ class ControllerCLISRv6USID(CustomCmd):
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_usid_policy(
             operation=args.op,
-            grpc_address=args.grpc_ip,
-            grpc_port=args.grpc_port,
             nodes_filename=self.nodes_filename,
-            destination=args.destination,
+            lr_destination=args.lr_destination,
+            rl_destination=args.rl_destination,
             nodes=args.nodes,
-            device=args.device,
-            encapmode=args.encapmode,
             table=args.table,
             metric=args.metric
         )

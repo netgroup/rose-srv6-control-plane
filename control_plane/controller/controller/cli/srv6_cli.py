@@ -39,12 +39,10 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 def handle_srv6_usid_policy(
         operation,
-        grpc_address,
-        grpc_port,
         nodes_filename,
-        destination,
+        lr_destination,
+        rl_destination,
         nodes="",
-        device='',
         table=-1,
         metric=-1,
         fwd_engine='Linux'):
@@ -52,21 +50,19 @@ def handle_srv6_usid_policy(
 
     # pylint: disable=too-many-arguments
 
-    with utils.get_grpc_session(grpc_address, grpc_port) as channel:
-        res = srv6_utils.handle_srv6_usid_policy(
-            operation=operation,
-            channel=channel,
-            nodes_filename=nodes_filename,
-            destination=destination,
-            nodes=nodes.split(','),
-            device=device,
-            table=table,
-            metric=metric
-        )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+    res = srv6_utils.handle_srv6_usid_policy(
+        operation=operation,
+        nodes_filename=nodes_filename,
+        lr_destination=lr_destination,
+        rl_destination=rl_destination,
+        nodes=nodes.split(','),
+        table=table,
+        metric=metric
+    )
+    if res == 0:
+        print('OK')
+    else:
+        print('Error')
 
 
 def handle_srv6_path(
@@ -237,14 +233,6 @@ def args_srv6_usid_policy():
 
     return [
         {
-            'args': ['--grpc-ip'],
-            'kwargs': {'dest': 'grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
-        }, {
-            'args': ['--grpc-port'],
-            'kwargs': {'dest': 'grpc_port', 'action': 'store',
-                       'required': True, 'help': 'Port of the gRPC server'}
-        }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
         }, {
@@ -258,17 +246,17 @@ def args_srv6_usid_policy():
             'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
                        'help': 'Operation'}
         }, {
-            'args': ['--destination'],
-            'kwargs': {'dest': 'destination', 'action': 'store',
-                       'required': True, 'help': 'Destination'}
+            'args': ['--lr-destination'],
+            'kwargs': {'dest': 'lr_destination', 'action': 'store',
+                       'required': True, 'help': 'Left to Right Destination'}
+        }, {
+            'args': ['--rl-destination'],
+            'kwargs': {'dest': 'rl_destination', 'action': 'store',
+                       'required': True, 'help': 'Right to Left Destination'}
         }, {
             'args': ['--nodes'],
             'kwargs': {'dest': 'nodes', 'action': 'store', 'required': True,
                        'help': 'Nodes', 'default': ''}
-        }, {
-            'args': ['--device'],
-            'kwargs': {'dest': 'device', 'action': 'store', 'help': 'Device',
-                       'default': ''}
         }, {
             'args': ['--table'],
             'kwargs': {'dest': 'table', 'action': 'store',
@@ -887,6 +875,6 @@ def complete_srv6_usid(text, prev_text=None):
     return args
 
 
-def print_node_to_addr_mapping(node_to_addr_filename):
+def print_node_to_addr_mapping(nodes_filename):
     '''Print mapping node to IP address'''
-    srv6_utils.print_node_to_addr_mapping(node_to_addr_filename)
+    srv6_utils.print_node_to_addr_mapping(nodes_filename)

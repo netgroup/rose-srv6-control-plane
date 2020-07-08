@@ -45,7 +45,7 @@ import srv6_manager_pb2_grpc
 # Node manager dependencies
 from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
-from node_manager.srv6_mgr_vpp import SRv6ManagerVPP
+# from node_manager.srv6_mgr_vpp import SRv6ManagerVPP      TODO
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -87,7 +87,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # SRv6 Manager for Linux Forwarding Engine
         self.srv6_mgr_linux = SRv6ManagerLinux()
         # SRv6 Manager for VPP Forwarding Engine
-        self.srv6_mgr_vpp = SRv6ManagerVPP()
+        self.srv6_mgr_vpp = None
+        # self.srv6_mgr_vpp = SRv6ManagerVPP()      TODO
 
     def handle_srv6_path_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -119,12 +120,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('linux'):
+        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('Linux'):
             # Linux forwarding engine
             return self.srv6_mgr_linux.handle_srv6_behavior_request(operation,
                                                                     request,
                                                                     context)
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('vpp'):
+        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
             # VPP forwarding engine
             # TODO gestire caso VPP non abilitato o non disponibile
             return self.srv6_mgr_vpp.handle_srv6_behavior_request(operation,

@@ -98,12 +98,11 @@ def parse_netlink_error(err):
     return commons_pb2.STATUS_INTERNAL_ERROR
 
 
-class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
-    """gRPC request handler"""
+class SRv6ManagerVPP():
 
     def __init__(self):
         # Setup VPP
-        self.vpp = vpp_init()
+        self.vpp = self.vpp_init()
         # Non-loopback interfaces
         self.non_loopback_interfaces = list()
         # Loopback interfaces
