@@ -790,6 +790,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
     try:
         # Read nodes from YAML file
         nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
+        # Prefix length for local segment
+        prefix_len = locator_bits + usid_id_bits
         # Ingress node
         ingress_node = nodes_info[nodes[0]]
         # Intermediate nodes
@@ -833,7 +835,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             response = handle_srv6_behavior(
                 operation=operation,
                 channel=channel,
-                segment=localseg,
+                segment='%s/%s' % (localseg, prefix_len),
                 action='End.DT6',
                 lookup_table=254,
                 fwd_engine=ingress_node['fwd_engine']
@@ -849,12 +851,12 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 # Local segment
                 localseg = sidlist_to_usidlist(sid_list=[segments[idx]],
                                                locator_bits=locator_bits,
-                                               usid_id_bits=usid_id_bits)
+                                               usid_id_bits=usid_id_bits)[0]
                 # Create the uN behavior
                 response = handle_srv6_behavior(
                     operation=operation,
                     channel=channel,
-                    segment=localseg[0],
+                    segment='%s/%s' % (localseg, prefix_len),
                     action='uN',
                     fwd_engine=node['fwd_engine']
                 )
@@ -873,7 +875,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             response = handle_srv6_behavior(
                 operation=operation,
                 channel=channel,
-                segment=localseg,
+                segment='%s/%s' % (localseg, prefix_len),
                 action='End.DT6',
                 lookup_table=254,
                 fwd_engine=egress_node['fwd_engine']

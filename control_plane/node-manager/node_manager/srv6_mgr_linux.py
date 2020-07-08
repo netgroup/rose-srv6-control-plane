@@ -642,6 +642,7 @@ class SRv6ManagerLinux():
         segment = behavior.segment
         device = behavior.device if behavior.device != '' \
             else self.non_loopback_interfaces[0]
+        device = self.interface_to_idx[device]
         table = behavior.table if behavior.table != -1 else None
         metric = behavior.metric if behavior.metric != -1 else None
         # Remove the route
@@ -669,8 +670,7 @@ class SRv6ManagerLinux():
             return handler(operation, behavior)
         # Error
         LOGGER.error('Error: Unrecognized action: %s', behavior.action)
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=commons_pb2.STATUS_INVALID_ACTION)
+        return commons_pb2.STATUS_INVALID_ACTION
 
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -680,6 +680,12 @@ class SRv6ManagerLinux():
         # Let's process the request
         try:
             for behavior in request.behaviors:
+                if operation == 'del':
+                    res = self.handle_srv6_behavior_del_request(behavior)
+                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                if operation == 'get':
+                    res = self.handle_srv6_behavior_get_request(behavior)
+                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
                 # Pass the request to the right handler
                 res = self.dispatch_srv6_behavior(operation, behavior)
                 if res != commons_pb2.STATUS_SUCCESS:
