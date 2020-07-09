@@ -39,7 +39,7 @@ from pyroute2.netlink.exceptions import NetlinkError
 from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # VPP dependencies
-from vpp_papi import VPP    # TODO put the import in try-except block
+# from vpp_papi import VPP    # TODO put the import in try-except block
 
 # Proto dependencies
 import commons_pb2
@@ -97,36 +97,14 @@ def parse_netlink_error(err):
     LOGGER.warning('Generic internal error: %s', err)
     return commons_pb2.STATUS_INTERNAL_ERROR
 
+def exec_vpp_cmd(cmd):
+    import subprocess
+    return subprocess.check_output(['vppctl', cmd])
+
 
 class SRv6ManagerVPP():
 
     def __init__(self):
-        # Setup VPP
-        self.vpp = self.vpp_init()
-        # Non-loopback interfaces
-        self.non_loopback_interfaces = list()
-        # Loopback interfaces
-        self.loopback_interfaces = list()
-        # Mapping interface name to interface index
-        self.interface_to_idx = dict()
-        # Resolve the interfaces
-        for link in self.ip_route.get_links():
-            # Check the IFF_LOOPBACK flag of the interfaces
-            # and make separation between loopback interfaces and
-            # non-loopback interfaces
-            if not link.get('flags') & IFF_LOOPBACK == 0:
-                self.loopback_interfaces.append(
-                    link.get_attr('IFLA_IFNAME'))
-            else:
-                self.non_loopback_interfaces.append(
-                    link.get_attr('IFLA_IFNAME'))
-        # Build mapping interface to index
-        interfaces = self.loopback_interfaces + self.non_loopback_interfaces
-        # Iterate on the interfaces
-        for interface in interfaces:
-            # Add interface index
-            self.interface_to_idx[interface] = \
-                self.ip_route.link_lookup(ifname=interface)[0]
         # Behavior handlers
         self.behavior_handlers = {
             'End': self.handle_end_behavior_request,
@@ -141,51 +119,98 @@ class SRv6ManagerVPP():
             'End.B6.Encaps': self.handle_end_b6_encaps_behavior_request,
         }
 
-    def vpp_init(self):
-        # first, construct a vpp instance from vpp json api files
-        # this will be a header for all python vpp scripts
-        # directory containing all the json api files.
-        # if vpp is installed on the system, these will be in /usr/share/vpp/api/
-        vpp_json_dir = os.environ['VPP'] + \
-            '/build-root/install-vpp_debug-native/vpp/share/vpp/api/core'
-        # construct a list of all the json api files
-        jsonfiles = []
-        for root, dirnames, filenames in os.walk(vpp_json_dir):
-            for filename in fnmatch.filter(filenames, '*.api.json'):
-                jsonfiles.append(os.path.join(vpp_json_dir, filename))
-        if not jsonfiles:
-            print('Error: no json api files found')
-            exit(-1)
-        # use all those files to create vpp.
-        # Note that there will be no vpp method available before vpp.connect()
-        self.vpp = VPP(jsonfiles)
-        self.vpp.connect('papi-example')
-        # None
-        # You're all set.
-        # You can check the list of available methods by calling dir(vpp)
-        # show vpp version
-        rv = self.vpp.api.show_version()
-        LOGGER.info('VPP version =', rv.version.decode().rstrip('\0x00'))
+    def handle_srv6_src_addr_request(self, operation, request, context):   # TODO
+        '''
+        This function is used to setup the source address used for the SRv6
+        encapsulation, equivalent to:
 
-    def vpp_uninit(self):
-        # Disconnect from VPP
-        res = self.vpp.disconnect()
-        # If r == 0: success
-        return res == 0
+        > set vppctl set sr encaps source addr $VPP_SR_Policy_src_addr
+        '''
+        # Return value
+        res = commons_pb2.STATUS_SUCCESS
+        # String representing the command to be sent to VPP
+        cmd = 'set sr encaps source addr %s' % str(request.src_addr)
+        # Send the command to VPP
+        # If success, an empty string will be returned
+        LOGGER.debug('Sending command to VPP: %s' % cmd)
+        res = exec_vpp_cmd(cmd).decode()
+        if res != '':
+            # Failure
+            logging.error('VPP returned an error: %s' % res)
+            res = commons_pb2.STATUS_INTERNAL_ERROR
+        return srv6_manager_pb2.SRv6ManagerReply(status=res)
+
+    def handle_srv6_policy_request(self, operation, request, context):
+        '''
+        This function is used to create, delete or change a SRv6 policy,
+        equivalent to:
+
+        > vppctl sr policy add bsid $VPP_SR_Policy_BSID next $srv6_1st_sid
+          next $srv6_2nd_sid
+        '''
+        # Perform the operation
+        if operation in ['change', 'get']:
+            LOGGER.error('Operation not yet supported: %s' % operation)
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+        if operation in ['add', 'del']:
+            # Let's push the routes
+            for policy in request.policies:
+                # Extract BSID
+                bsid_addr = policy.bsid
+                # Extract SID list
+                segments = []
+                for srv6_segment in policy.sr_path:
+                    segments.append(srv6_segment.segment)
+                # Extract the table
+                table = policy.table
+                if policy.table == -1:
+                    table = None
+                # Extract the metric
+                metric = policy.metric
+                if policy.metric == -1:
+                    metric = None
+                # Create a SR policy
+                # This command returns a empty string in case of success
+                cmd = ('sr policy %s bsid %s' % (operation, bsid_addr))
+                # Add segments
+                for segment in segments:
+                    cmd += ' next %s' % segment
+                # Add metric
+                if metric is not None:
+                    cmd += ' weight %s' % weight
+                # Add the table
+                if table is not None:
+                    cmd += ' fib-table %s' % table
+                # Execute the command
+                LOGGER.debug('Sending command to VPP: %s' % cmd)
+                res = exec_vpp_cmd(cmd).decode()
+                if res != '':
+                    # Failure
+                    logging.error('VPP returned an error: %s' % res)
+                    return srv6_manager_pb2.SRv6ManagerReply(
+                        status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return srv6_manager_pb2.SRv6ManagerReply(
+            status=commons_pb2.STATUS_SUCCESS)
 
     def handle_srv6_path_request(self, operation, request, context):
         # pylint: disable=unused-argument
-        """Handler for SRv6 paths"""
-
+        '''
+        Handler for SRv6 paths
+        '''
         LOGGER.debug('config received:\n%s', request)
         # Perform operation
-        if operation in ['change']:
+        if operation in ['change', 'get']:
+            LOGGER.error('Operation not yet supported: %s' % operation)
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-        if operation == 'get':
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-        if operation in ['add']:
+        if operation in ['add', 'del']:
             # Let's push the routes
             for path in request.paths:
                 # Extract BSID
@@ -194,108 +219,40 @@ class SRv6ManagerVPP():
                 segments = []
                 for srv6_segment in path.sr_path:
                     segments.append(srv6_segment.segment)
-                num_sids = len(segments)
-                while len(segments) < 16:
-                    segments.append('')
-                # segments.reverse()
+                # Extract the table
                 table = path.table
                 if path.table == -1:
                     table = None
+                # Extract the metric
                 metric = path.metric
                 if path.metric == -1:
                     metric = None
-                if path.encapmode == 'encap':
-                    is_encap = True
-                elif path.encapmode == 'inline':
-                    is_encap = False
-                else:
-                    LOGGER.error('Encap mode not supported')
+                # Perform operation
+                encapmode = path.encapmode
+                # Steer packets into a SR policy
+                # This command returns a empty string in case of success
+                destination = str(path.destination)
+                if len(destination.split('/')) == 1:
+                    destination += '/128'
+                # Is a delete operation?
+                del_cmd = 'del' if operation == 'del' else ''
+                # Build the command
+                cmd = ('sr steer %s l3 %s via bsid %s'
+                       % (del_cmd, destination, bsid_addr))
+                # Add the metric
+                if metric is not None:
+                    cmd += ' weight %s' % weight
+                # Add the table
+                if table is not None:
+                    cmd += ' fib-table %s' % table
+                # Execute the command
+                LOGGER.debug('Sending command to VPP: %s' % cmd)
+                res = exec_vpp_cmd(cmd).decode()
+                if res != '':
+                    # Failure
+                    logging.error('VPP returned an error: %s' % res)
                     return srv6_manager_pb2.SRv6ManagerReply(
-                        status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-                # if segments == []:
-                #     segments = ['::']
-                # oif = None
-                # if path.device != '':
-                #     oif = self.interface_to_idx[path.device]
-                # elif operation == 'add':
-                #     oif = self.interface_to_idx[
-                #         self.non_loopback_interfaces[0]]
-                # self.ip_route.route(operation, dst=path.destination,
-                #                     oif=oif,
-                #                     table=table,
-                #                     priority=metric,
-                #                     encap={'type': 'seg6',
-                #                            'mode': path.encapmode,
-                #                            'segs': segments})
-                # self.vpp.api.sr_set_encap_source(         TODO
-                #     encaps_source = src_addr
-                # )
-                self.vpp.api.sr_policy_add(
-                    bsid_addr=bsid_addr,
-                    is_encap=is_encap,
-                    weight=metric,
-                    fib_table=table,
-                    sids={
-                        "num_sids": num_sids,
-                        "sids": segments
-                    }
-                )
-                self.vpp.api.sr_steering_add_del(
-                    is_del=0,
-                    bsid_addr=bsid_addr,
-                    table_id=table,
-                    prefix_addr=path.destination.split('/')[0],
-                    mask_width=path.destination.split('/')[1]
-                    if len(path.destination.split('/')) > 1 else None
-                )
-        elif operation in ['del']:
-            # Let's push the routes
-            for path in request.paths:
-                # Extract BSID
-                bsid_addr = path.bsid
-                # Extract SID list
-                segments = []
-                for srv6_segment in path.sr_path:
-                    segments.append(srv6_segment.segment)
-                num_sids = len(segments)
-                while len(segments) < 16:
-                    segments.append('')
-                # segments.reverse()
-                table = path.table
-                if path.table == -1:
-                    table = None
-                metric = path.metric
-                if path.metric == -1:
-                    metric = None
-                # if segments == []:
-                #     segments = ['::']
-                # oif = None
-                # if path.device != '':
-                #     oif = self.interface_to_idx[path.device]
-                # elif operation == 'add':
-                #     oif = self.interface_to_idx[
-                #         self.non_loopback_interfaces[0]]
-                # self.ip_route.route(operation, dst=path.destination,
-                #                     oif=oif,
-                #                     table=table,
-                #                     priority=metric,
-                #                     encap={'type': 'seg6',
-                #                            'mode': path.encapmode,
-                #                            'segs': segments})
-                self.vpp.api.sr_steering_add_del(
-                    is_del=1,
-                    bsid_addr=bsid_addr,
-                    table_id=table,
-                    prefix_addr=path.destination.split('/')[0],
-                    mask_width=path.destination.split('/')[1]
-                    if len(path.destination.split('/')) > 1 else None
-                )
-                self.vpp.api.sr_policy_del(
-                    bsid_addr=bsid_addr
-                )
-                # self.vpp.api.sr_set_encap_source(         TODO
-                #     encaps_source = src_addr
-                # )
+                        status=commons_pb2.STATUS_INTERNAL_ERROR)
         else:
             # Operation unknown: this is a bug
             LOGGER.error('Unrecognized operation: %s', operation)
@@ -324,30 +281,33 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End'
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end' % segment)
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_x_behavior_request(self, operation, behavior):
         """Handle seg6local End.X behavior"""
 
         # Extract params from request
         segment = behavior.segment
+        interface = behavior.interface
         nexthop = behavior.nexthop
         device = behavior.device
         table = behavior.table
@@ -363,25 +323,27 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.X',
-                'nh4': nexthop
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.x %s %s'
+                   % (segment, interface, nexthop))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_t_behavior_request(self, operation, behavior):
         """Handle seg6local End.T behavior"""
@@ -403,25 +365,27 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.T',
-                'table': lookup_table
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.t %s'
+                   % (segment, lookup_table))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_dx2_behavior_request(self, operation, behavior):
         """Handle seg6local End.DX2 behavior"""
@@ -443,31 +407,34 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.DX2',
-                'oif': interface
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.dx2 %s'
+                   % (segment, interface))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_dx6_behavior_request(self, operation, behavior):
         """Handle seg6local End.DX6 behavior"""
 
         # Extract params from request
         segment = behavior.segment
+        interface = behavior.interface
         nexthop = behavior.nexthop
         device = behavior.device
         table = behavior.table
@@ -483,31 +450,34 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.DX6',
-                'nh4': nexthop
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.dx6 %s %s'
+                   % (segment, interface, nexthop))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_dx4_behavior_request(self, operation, behavior):
         """Handle seg6local End.DX4 behavior"""
 
         # Extract params from request
         segment = behavior.segment
+        interface = behavior.interface
         nexthop = behavior.nexthop
         device = behavior.device
         table = behavior.table
@@ -523,25 +493,27 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.DX4',
-                'nh4': nexthop
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.dx4 %s %s'
+                   % (segment, interface, nexthop))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_dt6_behavior_request(self, operation, behavior):
         """Handle seg6local End.DT6 behavior"""
@@ -563,25 +535,27 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.DT6',
-                'table': lookup_table
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.dt6 %s'
+                   % (segment, lookup_table))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_dt4_behavior_request(self, operation, behavior):
         """Handle seg6local End.DT4 behavior"""
@@ -603,25 +577,27 @@ class SRv6ManagerVPP():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.DT4',
-                'table': lookup_table
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # Build the command
+            cmd = ('sr localsid address %s behavior end.dt4 %s'
+                   % (segment, lookup_table))
+            # Add the table
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Execute the command
+            LOGGER.debug('Sending command to VPP: %s' % cmd)
+            res = exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # Failure
+                logging.error('VPP returned an error: %s' % res)
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_b6_behavior_request(self, operation, behavior):
         """Handle seg6local End.B6 behavior"""
@@ -643,30 +619,32 @@ class SRv6ManagerVPP():
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
             # Rebuild segments
-            segments = []
-            for srv6_segment in behavior.segs:
-                segments.append(srv6_segment.segment)
-            # pyroute2 requires the segments in reverse order
-            segments.reverse()
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.B6',
-                'srh': {'segs': segments}
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # segments = []
+            # for srv6_segment in behavior.segs:
+            #     segments.append(srv6_segment.segment)
+            # Build the command
+            # cmd = ('sr localsid address %s behavior end.x %s %s'
+            #        % (segment, interface, nexthop))
+            # # Add the table
+            # if table is not None:
+            #     cmd += ' fib-table %s' % table
+            # # Execute the command
+            # LOGGER.debug('Sending command to VPP: %s' % cmd)
+            # res = exec_vpp_cmd(cmd).decode()
+            # if res != '':
+            #     # Failure
+            #     logging.error('VPP returned an error: %s' % res)
+            #     return srv6_manager_pb2.SRv6ManagerReply(
+            #         status=commons_pb2.STATUS_INTERNAL_ERROR)
+            LOGGER.info('End.B6 behavior is not yet implemented\n')
+            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_end_b6_encaps_behavior_request(self, operation, behavior):
         """Handle seg6local End.B6.Encaps behavior"""
@@ -688,30 +666,73 @@ class SRv6ManagerVPP():
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
             # Rebuild segments
-            segments = []
-            for srv6_segment in behavior.segs:
-                segments.append(srv6_segment.segment)
-            # pyroute2 requires the segments in reverse order
-            segments.reverse()
-            # Build encap info
-            encap = {
-                'type': 'seg6local',
-                'action': 'End.B6.Encaps',
-                'srh': {'segs': segments}
-            }
-            # Handle route
-            self.ip_route.route(operation, family=AF_INET6,
-                                dst=segment,
-                                oif=self.interface_to_idx[device],
-                                table=table,
-                                priority=metric,
-                                encap=encap)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return commons_pb2.STATUS_SUCCESS
-        # Operation unknown: this is a bug
-        LOGGER.error('BUG - Unrecognized operation: %s', operation)
-        sys.exit(-1)
+            # segments = []
+            # for srv6_segment in behavior.segs:
+            #     segments.append(srv6_segment.segment)
+            # Build the command
+            # cmd = ('sr localsid address %s behavior end.x %s %s'
+            #        % (segment, interface, nexthop))
+            # # Add the table
+            # if table is not None:
+            #     cmd += ' fib-table %s' % table
+            # # Execute the command
+            # LOGGER.debug('Sending command to VPP: %s' % cmd)
+            # res = exec_vpp_cmd(cmd).decode()
+            # if res != '':
+            #     # Failure
+            #     logging.error('VPP returned an error: %s' % res)
+            #     return srv6_manager_pb2.SRv6ManagerReply(
+            #         status=commons_pb2.STATUS_INTERNAL_ERROR)
+            LOGGER.info('End.B6.Encaps behavior is not yet implemented\n')
+            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
+
+    def handle_un_behavior_request(self, operation, behavior):
+        """Handle seg6local End behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # # Build encap info
+            # encap = {
+            #     'type': 'seg6local',
+            #     'action': 'uN'
+            # }
+            # # Handle route
+            # self.ip_route.route(operation, family=AF_INET6,
+            #                     dst=segment,
+            #                     oif=self.interface_to_idx[device],
+            #                     table=table,
+            #                     priority=metric,
+            #                     encap=encap)
+            LOGGER.info('uN behavior is not yet implemented\n')
+            return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        else:
+            # Operation unknown: this is a bug
+            LOGGER.error('BUG - Unrecognized operation: %s', operation)
+            sys.exit(-1)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return commons_pb2.STATUS_SUCCESS
 
     def handle_srv6_behavior_del_request(self, behavior):
         """Delete a route"""
@@ -720,12 +741,22 @@ class SRv6ManagerVPP():
         segment = behavior.segment
         device = behavior.device if behavior.device != '' \
             else self.non_loopback_interfaces[0]
+        device = self.interface_to_idx[device]
         table = behavior.table if behavior.table != -1 else None
         metric = behavior.metric if behavior.metric != -1 else None
-        # Remove the route
-        self.ip_route.route('del', family=AF_INET6,
-                            oif=device, dst=segment,
-                            table=table, priority=metric)
+        # Build the command
+        cmd = ('sr localsid address %s behavior' % segment)
+        # Add the table
+        if table is not None:
+            cmd += ' fib-table %s' % table
+        # Execute the command
+        LOGGER.debug('Sending command to VPP: %s' % cmd)
+        res = exec_vpp_cmd(cmd).decode()
+        if res != '':
+            # Failure
+            logging.error('VPP returned an error: %s' % res)
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=commons_pb2.STATUS_INTERNAL_ERROR)
         # Return success
         return commons_pb2.STATUS_SUCCESS
 
@@ -747,8 +778,7 @@ class SRv6ManagerVPP():
             return handler(operation, behavior)
         # Error
         LOGGER.error('Error: Unrecognized action: %s', behavior.action)
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=commons_pb2.STATUS_INVALID_ACTION)
+        return commons_pb2.STATUS_INVALID_ACTION
 
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -758,6 +788,12 @@ class SRv6ManagerVPP():
         # Let's process the request
         try:
             for behavior in request.behaviors:
+                if operation == 'del':
+                    res = self.handle_srv6_behavior_del_request(behavior)
+                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                if operation == 'get':
+                    res = self.handle_srv6_behavior_get_request(behavior)
+                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
                 # Pass the request to the right handler
                 res = self.dispatch_srv6_behavior(operation, behavior)
                 if res != commons_pb2.STATUS_SUCCESS:

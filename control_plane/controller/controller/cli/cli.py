@@ -706,7 +706,8 @@ class ControllerCLISRv6USID(CustomCmd):
             rl_destination=args.rl_destination,
             nodes=args.nodes,
             table=args.table,
-            metric=args.metric
+            metric=args.metric,
+            fwd_engine=args.fwd_engine
         )
         # Print nodes available
         srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
@@ -770,7 +771,8 @@ class ControllerCLISRv6(CustomCmd):
             device=args.device,
             encapmode=args.encapmode,
             table=args.table,
-            metric=args.metric
+            metric=args.metric,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -800,7 +802,8 @@ class ControllerCLISRv6(CustomCmd):
             lookup_table=args.lookup_table,
             interface=args.interface,
             segments=args.segments,
-            metric=args.metric
+            metric=args.metric,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -844,7 +847,8 @@ class ControllerCLISRv6(CustomCmd):
             egress_port=args.egress_grpc_port,
             destination=args.dest,
             segments=args.sidlist,
-            localseg=args.localseg
+            localseg=args.localseg,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -873,7 +877,8 @@ class ControllerCLISRv6(CustomCmd):
             dest_lr=args.dest_lr,
             dest_rl=args.dest_rl,
             localseg_lr=args.localseg_lr,
-            localseg_rl=args.localseg_rl
+            localseg_rl=args.localseg_rl,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution

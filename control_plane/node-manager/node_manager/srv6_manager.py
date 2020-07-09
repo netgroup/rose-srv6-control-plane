@@ -45,7 +45,7 @@ import srv6_manager_pb2_grpc
 # Node manager dependencies
 from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
-# from node_manager.srv6_mgr_vpp import SRv6ManagerVPP      TODO
+from node_manager.srv6_mgr_vpp import SRv6ManagerVPP   #   TODO
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -87,8 +87,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # SRv6 Manager for Linux Forwarding Engine
         self.srv6_mgr_linux = SRv6ManagerLinux()
         # SRv6 Manager for VPP Forwarding Engine
-        self.srv6_mgr_vpp = None
-        # self.srv6_mgr_vpp = SRv6ManagerVPP()      TODO
+        # self.srv6_mgr_vpp = None TODO remove
+        self.srv6_mgr_vpp = SRv6ManagerVPP()      # TODO
 
     def handle_srv6_path_request(self, operation, request, context):
         # pylint: disable=unused-argument
