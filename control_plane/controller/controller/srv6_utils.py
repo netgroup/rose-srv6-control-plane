@@ -424,7 +424,7 @@ def print_node_to_addr_mapping(nodes_filename):
             raise InvalidConfigurationError
     # Validate the forwarding engine
     for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP']:
+        if fwd_engine not in ['Linux', 'VPP', 'P4']:
             logger.error('Invalid forwarding engine %s in %s',
                          fwd_engine, nodes_filename)
             raise InvalidConfigurationError
@@ -478,7 +478,7 @@ def read_nodes(nodes_filename):
             raise InvalidConfigurationError
     # Validate the forwarding engine
     for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP']:
+        if fwd_engine not in ['Linux', 'VPP', 'P4']:
             logger.error('Invalid forwarding engine %s in %s',
                          fwd_engine, nodes_filename)
             raise InvalidConfigurationError
@@ -772,6 +772,19 @@ def handle_srv6_usid_policy_uni(operation, nodes_filename,
         # Ingress node
         with utils.get_grpc_session(ingress_node['grpc_ip'],
                                     ingress_node['grpc_port']) as channel:
+            # VPP requires a BSID address
+            bsid_addr = ''
+            if ingress_node['fwd_engine'] == 'VPP':
+                for c in destination:
+                    if c != '0' and c != ':':
+                        bsid_addr += c
+                add_colon = False
+                if len(bsid_addr) <= 28:
+                    add_colon = True
+                bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                ':'.join(bsid_addr)
+                if add_colon:
+                    bsid_addr += '::'
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
@@ -788,6 +801,7 @@ def handle_srv6_usid_policy_uni(operation, nodes_filename,
                 encapmode='encap.red',
                 table=table,
                 metric=metric,
+                bsid_addr=bsid_addr,
                 fwd_engine=ingress_node['fwd_engine']
             )
             if response != commons_pb2.STATUS_SUCCESS:
@@ -913,6 +927,25 @@ def handle_srv6_usid_policy(operation, nodes_filename,
         # Ingress node
         with utils.get_grpc_session(ingress_node['grpc_ip'],
                                     ingress_node['grpc_port']) as channel:
+            # Currently ony Linux and VPP are suppoted for the encap
+            if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                logger.error('Encap operation is not supported for '
+                             '%s with fwd engine %s' % ingress_node['name'],
+                             ingress_node['fwd_engine'])
+                return commons_pb2.STATUS_INTERNAL_ERROR
+            # VPP requires a BSID address
+            bsid_addr = ''
+            if ingress_node['fwd_engine'] == 'VPP':
+                for c in lr_destination:
+                    if c != '0' and c != ':':
+                        bsid_addr += c
+                add_colon = False
+                if len(bsid_addr) <= 28:
+                    add_colon = True
+                bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                ':'.join(bsid_addr)
+                if add_colon:
+                    bsid_addr += '::'
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
@@ -929,6 +962,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 encapmode='encap.red',
                 table=table,
                 metric=metric,
+                bsid_addr=bsid_addr,
                 fwd_engine=ingress_node['fwd_engine']
             )
             if response != commons_pb2.STATUS_SUCCESS:
@@ -986,6 +1020,25 @@ def handle_srv6_usid_policy(operation, nodes_filename,
         # Egress node
         with utils.get_grpc_session(egress_node['grpc_ip'],
                                     egress_node['grpc_port']) as channel:
+            # Currently ony Linux and VPP are suppoted for the encap
+            if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                logger.error('Encap operation is not supported for '
+                             '%s with fwd engine %s' % egress_node['name'],
+                             egress_node['fwd_engine'])
+                return commons_pb2.STATUS_INTERNAL_ERROR
+            # VPP requires a BSID address
+            bsid_addr = ''
+            if ingress_node['fwd_engine'] == 'VPP':
+                for c in lr_destination:
+                    if c != '0' and c != ':':
+                        bsid_addr += c
+                add_colon = False
+                if len(bsid_addr) <= 28:
+                    add_colon = True
+                bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                ':'.join(bsid_addr)
+                if add_colon:
+                    bsid_addr += '::'
             # # Create the uN behavior
             # response = handle_srv6_behavior(
             #     operation=operation,
@@ -1036,6 +1089,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 encapmode='encap.red',
                 table=table,
                 metric=metric,
+                bsid_addr=bsid_addr,
                 fwd_engine=egress_node['fwd_engine']
             )
             if response != commons_pb2.STATUS_SUCCESS:
