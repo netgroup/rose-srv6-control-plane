@@ -75,6 +75,7 @@ def handle_srv6_path(
         encapmode="encap",
         table=-1,
         metric=-1,
+        bsid_addr='',
         fwd_engine='Linux'):
     """Handle a SRv6 path"""
 
@@ -90,6 +91,7 @@ def handle_srv6_path(
             encapmode=encapmode,
             table=table,
             metric=metric,
+            bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
         if res == 0:
@@ -140,7 +142,7 @@ def handle_srv6_behavior(
 def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                           egress_ip, egress_port,
                           destination, segments, localseg=None,
-                          fwd_engine='Linux'):
+                          bsid_addr='', fwd_engine='Linux'):
     """Handle a SRv6 unidirectional tunnel"""
 
     # pylint: disable=too-many-arguments
@@ -154,6 +156,7 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 destination=destination,
                 segments=segments.split(','),
                 localseg=localseg,
+                bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
             if res == 0:
@@ -166,6 +169,7 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 egress_channel=egress_channel,
                 destination=destination,
                 localseg=localseg,
+                bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
             if res == 0:
@@ -180,7 +184,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None,
-                           fwd_engine='Linux'):
+                           bsid_addr='', fwd_engine='Linux'):
     """Handle SRv6 bidirectional tunnel"""
 
     # pylint: disable=too-many-arguments
@@ -197,6 +201,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 dest_rl=dest_rl,
                 localseg_lr=localseg_lr,
                 localseg_rl=localseg_rl,
+                bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
             if res == 0:
@@ -211,6 +216,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 dest_rl=dest_rl,
                 localseg_lr=localseg_lr,
                 localseg_rl=localseg_rl,
+                bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
             if res == 0:
@@ -379,6 +385,10 @@ def args_srv6_path():
             'args': ['--metric'],
             'kwargs': {'dest': 'metric', 'action': 'store',
                        'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--bsid-addr'],
+            'kwargs': {'dest': 'bsid_addr', 'action': 'store',
+                       'help': 'BSID address required for VPP', 'default': ''}
         }, {
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
@@ -620,6 +630,10 @@ def args_srv6_unitunnel():
             'kwargs': {'dest': 'sidlist', 'action': 'store',
                        'help': 'SID list', 'required': True}
         }, {
+            'args': ['--bsid-addr'],
+            'kwargs': {'dest': 'bsid_addr', 'action': 'store',
+                       'help': 'BSID address required for VPP', 'default': ''}
+        }, {
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
@@ -743,6 +757,10 @@ def args_srv6_biditunnel():
             'args': ['--right-left-sidlist'],
             'kwargs': {'dest': 'sidlist_rl', 'action': 'store',
                        'help': 'Right to Left SID list', 'required': True}
+        }, {
+            'args': ['--bsid-addr'],
+            'kwargs': {'dest': 'bsid_addr', 'action': 'store',
+                       'help': 'BSID address required for VPP', 'default': ''}
         }, {
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',

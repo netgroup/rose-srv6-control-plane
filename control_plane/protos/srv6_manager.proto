@@ -61,6 +61,8 @@ message SRv6Path {
   int32 table = 5;
   // Metric (i.e. the preference value of the route)
   int32 metric = 6;
+  // BSID address required for VPP
+  string bsid_addr = 7;
 }
 
 // The Policy message encodes a policy request

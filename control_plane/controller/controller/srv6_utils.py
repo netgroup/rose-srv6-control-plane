@@ -1246,7 +1246,7 @@ def handle_srv6_usid_policy_complete(operation, nodes_filename,
 
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
-                           fwd_engine='Linux'):
+                           bsid_addr='', fwd_engine='Linux'):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -1279,6 +1279,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         channel=ingress_channel,
         destination=destination,
         segments=segments,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # Pretty print status code
@@ -1324,7 +1325,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
 def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
-                       fwd_engine='Linux'):
+                       bsid_addr='', fwd_engine='Linux'):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1368,6 +1369,7 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         destination=dest_lr,
         segments=sidlist_lr,
         localseg=localseg_lr,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
@@ -1380,6 +1382,7 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         destination=dest_rl,
         segments=sidlist_rl,
         localseg=localseg_rl,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
@@ -1390,7 +1393,7 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
 
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                            localseg=None, fwd_engine='Linux',
+                            localseg=None, bsid_addr='', fwd_engine='Linux',
                             ignore_errors=False):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
@@ -1422,6 +1425,7 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         operation='del',
         channel=ingress_channel,
         destination=destination,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # Pretty print status code
@@ -1472,7 +1476,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
 
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
-                        fwd_engine='Linux', ignore_errors=False):
+                        bsid_addr='', fwd_engine='Linux',
+                        ignore_errors=False):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1517,6 +1522,7 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         destination=dest_lr,
         localseg=localseg_lr,
         ignore_errors=ignore_errors,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
@@ -1529,6 +1535,7 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         destination=dest_rl,
         localseg=localseg_rl,
         ignore_errors=ignore_errors,
+        bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation

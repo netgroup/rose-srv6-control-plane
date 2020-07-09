@@ -772,6 +772,7 @@ class ControllerCLISRv6(CustomCmd):
             encapmode=args.encapmode,
             table=args.table,
             metric=args.metric,
+            bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
@@ -848,6 +849,7 @@ class ControllerCLISRv6(CustomCmd):
             destination=args.dest,
             segments=args.sidlist,
             localseg=args.localseg,
+            bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
@@ -878,6 +880,7 @@ class ControllerCLISRv6(CustomCmd):
             dest_rl=args.dest_rl,
             localseg_lr=args.localseg_lr,
             localseg_rl=args.localseg_rl,
+            bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
