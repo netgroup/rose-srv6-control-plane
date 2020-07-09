@@ -946,10 +946,26 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 ':'.join(bsid_addr)
                 if add_colon:
                     bsid_addr += '::'
+
+            udt_sids = list()
+            # Locator mask
+            locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                        int('1' * (128 - locator_bits), 2)))
+            # uDT mask
+            udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                        (128 - locator_bits - usid_id_bits)))
+            udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                        (128 - locator_bits - 2*usid_id_bits)))
+            # Build uDT sid list
+            locator_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(locator_mask))
+            udt_mask_1_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_1))
+            udt_mask_2_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+            udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
+            udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[1:] + [egress_node['uDT']],
+                sid_list=segments[1:] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -1073,10 +1089,26 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # if response != commons_pb2.STATUS_SUCCESS:
             #     # Error
             #     return response
+
+            udt_sids = list()
+            # Locator mask
+            locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                        int('1' * (128 - locator_bits), 2)))
+            # uDT mask
+            udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                        (128 - locator_bits - usid_id_bits)))
+            udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                        (128 - locator_bits - 2*usid_id_bits)))
+            # Build uDT sid list
+            locator_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(locator_mask))
+            udt_mask_1_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_1))
+            udt_mask_2_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+            udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
+            udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[::-1][1:] + [ingress_node['uDT']],
+                sid_list=segments[::-1][1:] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
