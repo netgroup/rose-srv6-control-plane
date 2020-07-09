@@ -97,6 +97,7 @@ def parse_netlink_error(err):
     LOGGER.warning('Generic internal error: %s', err)
     return commons_pb2.STATUS_INTERNAL_ERROR
 
+
 def exec_vpp_cmd(cmd):
     import subprocess
     return subprocess.check_output(['vppctl', cmd])
