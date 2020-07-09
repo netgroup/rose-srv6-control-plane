@@ -633,7 +633,8 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     return locator
 
 
-def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
+def sidlist_to_usidlist(sid_list, udt_list=[],
+                        locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
     Convert a SID List into a uSID List.
@@ -652,6 +653,7 @@ def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
     # Size of the group of SIDs to be compressed in one uSID
     # The size depends on the locator bits and uSID ID bits
     sid_group_size = math.floor((128 - locator_bits) / usid_id_bits)
+    sid_group_size = sid_group_size - len(udt_list)
     # Get the locator
     locator = get_sid_locator(sid_list=sid_list, locator_bits=locator_bits)
     # Micro segments list
@@ -663,7 +665,7 @@ def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
         usid_list.append(
             segments_to_micro_segment(
                 locator=locator,
-                segments=sid_list[:sid_group_size],
+                segments=sid_list[:sid_group_size] + udt_list,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -788,7 +790,7 @@ def handle_srv6_usid_policy_uni(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[1:] + [egress_node['uDT']],
+                sid_list=segments[1:] + [egress_node['uDT']],   # TODO bug: FIXME
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -943,7 +945,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 if len(bsid_addr) <= 28:
                     add_colon = True
                 bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
-                ':'.join(bsid_addr)
+                bsid_addr = ':'.join(bsid_addr)
                 if add_colon:
                     bsid_addr += '::'
 
@@ -965,7 +967,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[1:] + udt_sids,
+                sid_list=segments[1:],
+                udt_list=udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -1044,7 +1047,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 return commons_pb2.STATUS_INTERNAL_ERROR
             # VPP requires a BSID address
             bsid_addr = ''
-            if ingress_node['fwd_engine'] == 'VPP':
+            if egress_node['fwd_engine'] == 'VPP':
                 for c in lr_destination:
                     if c != '0' and c != ':':
                         bsid_addr += c
@@ -1052,7 +1055,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 if len(bsid_addr) <= 28:
                     add_colon = True
                 bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
-                ':'.join(bsid_addr)
+                bsid_addr = ':'.join(bsid_addr)
                 if add_colon:
                     bsid_addr += '::'
             # # Create the uN behavior
@@ -1108,7 +1111,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[::-1][1:] + udt_sids,
+                sid_list=segments[::-1][1:],
+                udt_list=udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
