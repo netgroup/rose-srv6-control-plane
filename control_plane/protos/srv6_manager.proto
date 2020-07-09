@@ -17,6 +17,7 @@ service SRv6Manager {
 message SRv6ManagerRequest {
   SRv6PathRequest srv6_path_request = 1;
   SRv6BehaviorRequest srv6_behavior_request = 2;
+  SRv6PolicyRequest srv6_policy_request = 3;
 }
 
 // The SRv6ManagerReply message containing a simple status message
@@ -25,11 +26,19 @@ message SRv6ManagerReply {
   srv6_services.StatusCode status = 1;
   repeated SRv6Path paths = 2;
   repeated SRv6Behavior behaviors = 3;
+  repeated SRv6Policy policies = 4;
 }
 
 // The SRv6PathRequest message containing a number of paths.
 message SRv6PathRequest {
   repeated SRv6Path paths = 1;
+  // Fowarding engine
+  FwdEngine fwd_engine = 2;
+}
+
+// The SRv6PolicyRequest message containing a number of policies.
+  message SRv6PolicyRequest {         // Required for VPP
+  repeated SRv6Policy policies = 1;
   // Fowarding engine
   FwdEngine fwd_engine = 2;
 }
@@ -51,6 +60,22 @@ message SRv6Path {
   // Table
   int32 table = 5;
   // Metric (i.e. the preference value of the route)
+  int32 metric = 6;
+}
+
+// The Policy message encodes a policy request
+message SRv6Policy {
+  // Route of the SRv6 policy
+  string bsid_addr = 1;
+  // SRv6 Segment
+  message SRv6Segment {
+    string segment = 1;
+  }
+  // A collection of SRv6 Segments
+  repeated SRv6Segment sr_path = 2;
+  // Table
+  int32 table = 5;
+  // Metric (i.e. the preference value of the policy)
   int32 metric = 6;
 }
 

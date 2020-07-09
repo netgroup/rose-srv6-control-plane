@@ -157,7 +157,7 @@ class SRv6ManagerVPP():
             # Let's push the routes
             for policy in request.policies:
                 # Extract BSID
-                bsid_addr = policy.bsid
+                bsid_addr = policy.bsid_addr
                 # Extract SID list
                 segments = []
                 for srv6_segment in policy.sr_path:
@@ -178,7 +178,7 @@ class SRv6ManagerVPP():
                     cmd += ' next %s' % segment
                 # Add metric
                 if metric is not None:
-                    cmd += ' weight %s' % weight
+                    cmd += ' weight %s' % metric
                 # Add the table
                 if table is not None:
                     cmd += ' fib-table %s' % table
@@ -214,7 +214,7 @@ class SRv6ManagerVPP():
             # Let's push the routes
             for path in request.paths:
                 # Extract BSID
-                bsid_addr = path.bsid
+                bsid_addr = path.bsid_addr
                 # Extract SID list
                 segments = []
                 for srv6_segment in path.sr_path:
@@ -241,7 +241,7 @@ class SRv6ManagerVPP():
                        % (del_cmd, destination, bsid_addr))
                 # Add the metric
                 if metric is not None:
-                    cmd += ' weight %s' % weight
+                    cmd += ' weight %s' % metric
                 # Add the table
                 if table is not None:
                     cmd += ' fib-table %s' % table

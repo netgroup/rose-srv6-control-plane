@@ -80,7 +80,7 @@ def parse_grpc_error(err):
 
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
-                     fwd_engine='Linux'):
+                     bsid_addr='', fwd_engine='Linux'):
     '''
     Handle a SRv6 Path
     '''
@@ -109,6 +109,26 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
     path.metric = int(metric)
+    # Set the BSID address (required for VPP)
+    path.bsid_addr = str(bsid_addr)
+    # Handle SRv6 policy for VPP
+    if fwd_engine == 'VPP':
+        if bsid_addr == '':
+            logger.error('"bsid_addr" argument is mandatory for VPP')
+            return None
+        # Handle SRv6 policy
+        res = handle_srv6_policy(
+            operation=operation,
+            channel=channel,
+            bsid_addr=bsid_addr,
+            segments=segments,
+            table=table,
+            metric=metric,
+            fwd_engine=fwd_engine
+        )
+        if res != commons_pb2.STATUS_SUCCESS:
+            logger.error('Cannot create SRv6 policy: error %s')
+            return None
     # Forwarding engine (Linux or VPP)
     try:
         path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
@@ -143,6 +163,79 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             for segment in segments:
                 # Append the segment to the SID list
                 srv6_segment = path.sr_path.add()
+                srv6_segment.segment = text_type(segment)
+            # Update the SRv6 path
+            response = stub.Update(request)
+        elif operation == 'del':
+            # Remove the SRv6 path
+            response = stub.Remove(request)
+        # Get the status code of the gRPC operation
+        response = response.status
+    except grpc.RpcError as err:
+        # An error occurred during the gRPC operation
+        # Parse the error and return it
+        response = parse_grpc_error(err)
+    # Return the response
+    return response
+
+
+def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
+                       table=-1, metric=-1, fwd_engine='Linux'):
+    '''
+    Handle a SRv6 Path
+    '''
+
+    # pylint: disable=too-many-locals, too-many-arguments
+
+    if segments is None:
+        segments = []
+    # Create request message
+    request = srv6_manager_pb2.SRv6ManagerRequest()
+    # Create a new SRv6 path request
+    policy_request = request.srv6_policy_request   # pylint: disable=no-member
+    # Create a new path
+    policy = policy_request.policies.add()
+    # Set BSID address
+    policy.bsid_addr = text_type(bsid_addr)
+    # Set table ID
+    # If the table ID is not specified (i.e. table=-1),
+    # the main table will be used
+    policy.table = int(table)
+    # Set metric (i.e. preference value of the route)
+    # If the metric is not specified (i.e. metric=-1),
+    # the decision is left to the Linux kernel
+    policy.metric = int(metric)
+    # Forwarding engine (Linux or VPP)
+    try:
+        policy_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+            fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
+    try:
+        # Get the reference of the stub
+        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+        # Fill the request depending on the operation
+        # and send the request
+        if operation == 'add':
+            if len(segments) == 0:
+                logger.error('*** Missing segments for seg6 route')
+                return commons_pb2.STATUS_INTERNAL_ERROR
+            # Iterate on the segments and build the SID list
+            for segment in segments:
+                # Append the segment to the SID list
+                srv6_segment = policy.sr_path.add()
+                srv6_segment.segment = text_type(segment)
+            # Create the SRv6 path
+            response = stub.Create(request)
+        elif operation == 'get':
+            # Get the SRv6 path
+            response = stub.Get(request)
+        elif operation == 'change':
+            # Iterate on the segments and build the SID list
+            for segment in segments:
+                # Append the segment to the SID list
+                srv6_segment = policy.sr_path.add()
                 srv6_segment.segment = text_type(segment)
             # Update the SRv6 path
             response = stub.Update(request)
