@@ -79,25 +79,6 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 DEFAULT_KEY = 'key_server.pem'
 
 
-def parse_netlink_error(err):
-    """Convert the errors returned by Netlink in gRPC status codes"""
-
-    if err.code == NETLINK_ERROR_FILE_EXISTS:
-        LOGGER.warning('Netlink error: File exists')
-        return commons_pb2.STATUS_FILE_EXISTS
-    if err.code == NETLINK_ERROR_NO_SUCH_PROCESS:
-        LOGGER.warning('Netlink error: No such process')
-        return commons_pb2.STATUS_NO_SUCH_PROCESS
-    if err.code == NETLINK_ERROR_NO_SUCH_DEVICE:
-        LOGGER.warning('Netlink error: No such device')
-        return commons_pb2.STATUS_NO_SUCH_DEVICE
-    if err.code == NETLINK_ERROR_OPERATION_NOT_SUPPORTED:
-        LOGGER.warning('Netlink error: Operation not supported')
-        return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-    LOGGER.warning('Generic internal error: %s', err)
-    return commons_pb2.STATUS_INTERNAL_ERROR
-
-
 def exec_vpp_cmd(cmd):
     import subprocess
     return subprocess.check_output(['vppctl', cmd])
@@ -268,12 +249,9 @@ class SRv6ManagerVPP():
 
         # Extract params from request
         segment = behavior.segment
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -293,8 +271,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -310,12 +287,9 @@ class SRv6ManagerVPP():
         segment = behavior.segment
         interface = behavior.interface
         nexthop = behavior.nexthop
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -336,8 +310,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -352,12 +325,9 @@ class SRv6ManagerVPP():
         # Extract params from request
         segment = behavior.segment
         lookup_table = behavior.lookup_table
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -378,8 +348,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -394,12 +363,9 @@ class SRv6ManagerVPP():
         # Extract params from request
         segment = behavior.segment
         interface = behavior.interface
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -420,8 +386,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -437,12 +402,9 @@ class SRv6ManagerVPP():
         segment = behavior.segment
         interface = behavior.interface
         nexthop = behavior.nexthop
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -463,8 +425,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -480,12 +441,9 @@ class SRv6ManagerVPP():
         segment = behavior.segment
         interface = behavior.interface
         nexthop = behavior.nexthop
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -506,8 +464,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -522,12 +479,9 @@ class SRv6ManagerVPP():
         # Extract params from request
         segment = behavior.segment
         lookup_table = behavior.lookup_table
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -548,8 +502,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -564,12 +517,9 @@ class SRv6ManagerVPP():
         # Extract params from request
         segment = behavior.segment
         lookup_table = behavior.lookup_table
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -590,8 +540,7 @@ class SRv6ManagerVPP():
             if res != '':
                 # Failure
                 logging.error('VPP returned an error: %s' % res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_INTERNAL_ERROR)
+                return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
             LOGGER.error('BUG - Unrecognized operation: %s', operation)
@@ -605,12 +554,9 @@ class SRv6ManagerVPP():
 
         # Extract params from request
         segment = behavior.segment
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -652,12 +598,9 @@ class SRv6ManagerVPP():
 
         # Extract params from request
         segment = behavior.segment
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -699,12 +642,9 @@ class SRv6ManagerVPP():
 
         # Extract params from request
         segment = behavior.segment
-        device = behavior.device
         table = behavior.table
         metric = behavior.metric
         # Check optional params
-        device = device if device != '' \
-            else self.non_loopback_interfaces[0]
         table = table if table != -1 else None
         metric = metric if metric != -1 else None
         # Perform the operation
@@ -740,13 +680,10 @@ class SRv6ManagerVPP():
 
         # Extract params
         segment = behavior.segment
-        device = behavior.device if behavior.device != '' \
-            else self.non_loopback_interfaces[0]
-        device = self.interface_to_idx[device]
         table = behavior.table if behavior.table != -1 else None
         metric = behavior.metric if behavior.metric != -1 else None
         # Build the command
-        cmd = ('sr localsid address %s behavior' % segment)
+        cmd = ('sr localsid del address %s' % segment)
         # Add the table
         if table is not None:
             cmd += ' fib-table %s' % table
@@ -756,8 +693,7 @@ class SRv6ManagerVPP():
         if res != '':
             # Failure
             logging.error('VPP returned an error: %s' % res)
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_INTERNAL_ERROR)
+            return commons_pb2.STATUS_INTERNAL_ERROR
         # Return success
         return commons_pb2.STATUS_SUCCESS
 
@@ -784,25 +720,20 @@ class SRv6ManagerVPP():
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
         """Handler for SRv6 behaviors"""
-
         LOGGER.debug('config received:\n%s', request)
         # Let's process the request
-        try:
-            for behavior in request.behaviors:
-                if operation == 'del':
-                    res = self.handle_srv6_behavior_del_request(behavior)
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
-                if operation == 'get':
-                    res = self.handle_srv6_behavior_get_request(behavior)
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
-                # Pass the request to the right handler
-                res = self.dispatch_srv6_behavior(operation, behavior)
-                if res != commons_pb2.STATUS_SUCCESS:
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
-            # and create the response
-            LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_SUCCESS)
-        except NetlinkError as err:
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=parse_netlink_error(err))
+        for behavior in request.behaviors:
+            if operation == 'del':
+                res = self.handle_srv6_behavior_del_request(behavior)
+                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+            if operation == 'get':
+                res = self.handle_srv6_behavior_get_request(behavior)
+                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+            # Pass the request to the right handler
+            res = self.dispatch_srv6_behavior(operation, behavior)
+            if res != commons_pb2.STATUS_SUCCESS:
+                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+        # and create the response
+        LOGGER.debug('Send response: OK')
+        return srv6_manager_pb2.SRv6ManagerReply(
+            status=commons_pb2.STATUS_SUCCESS)

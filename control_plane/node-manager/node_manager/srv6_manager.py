@@ -112,6 +112,27 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return srv6_manager_pb2.SRv6ManagerReply(
             status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))       # TODO creare un errore specifico
 
+    def handle_srv6_policy_request(self, operation, request, context):
+        # pylint: disable=unused-argument
+        """Handler for SRv6 policies"""
+
+        LOGGER.debug('config received:\n%s', request)
+        # Extract forwarding engine
+        fwd_engine = request.fwd_engine
+        # Perform operation
+        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('Linux'):
+            # Linux forwarding engine does not support SRv6 policy
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
+            # VPP forwarding engine
+            return self.srv6_mgr_vpp.handle_srv6_policy_request(operation,
+                                                              request,
+                                                              context)     # TODO gestire caso VPP non abilitato o non disponibile
+        # Unknown forwarding engine
+        return srv6_manager_pb2.SRv6ManagerReply(
+            status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))       # TODO creare un errore specifico
+
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
         """Handler for SRv6 behaviors"""
@@ -142,9 +163,19 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Handle operation
         # The operation to be executed depends on
         # the entity carried by the request message
-        res = self.handle_srv6_path_request(
-            operation, request.srv6_path_request, context)
-        if res.status == commons_pb2.STATUS_SUCCESS:
+        res = srv6_manager_pb2.SRv6ManagerReply(
+            status=commons_pb2.STATUS_SUCCESS)
+        if request.HasField('srv6_path_request'):
+            res = self.handle_srv6_path_request(
+                operation, request.srv6_path_request, context)
+            if res.status != commons_pb2.STATUS_SUCCESS:
+                return res
+        if request.HasField('srv6_policy_request'):
+            res = self.handle_srv6_policy_request(
+                operation, request.srv6_policy_request, context)
+            if res.status != commons_pb2.STATUS_SUCCESS:
+                return res
+        if request.HasField('srv6_behavior_request'):
             res = self.handle_srv6_behavior_request(
                 operation, request.srv6_behavior_request, context)
         return res

@@ -127,7 +127,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             fwd_engine=fwd_engine
         )
         if res != commons_pb2.STATUS_SUCCESS:
-            logger.error('Cannot create SRv6 policy: error %s')
+            logger.error('Cannot create SRv6 policy: error %s' % res)
             return None
     # Forwarding engine (Linux or VPP)
     try:
