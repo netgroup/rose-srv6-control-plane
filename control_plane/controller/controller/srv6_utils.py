@@ -633,8 +633,7 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     return locator
 
 
-def sidlist_to_usidlist(sid_list, udt_list=[],
-                        locator_bits=DEFAULT_LOCATOR_BITS,
+def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
     Convert a SID List into a uSID List.
@@ -652,8 +651,8 @@ def sidlist_to_usidlist(sid_list, udt_list=[],
     '''
     # Size of the group of SIDs to be compressed in one uSID
     # The size depends on the locator bits and uSID ID bits
-    sid_group_size = math.floor((128 - locator_bits) / usid_id_bits)
-    sid_group_size = sid_group_size - len(udt_list)
+    # Last slot should be always leaved free
+    sid_group_size = math.floor((128 - locator_bits) / usid_id_bits) - 1
     # Get the locator
     locator = get_sid_locator(sid_list=sid_list, locator_bits=locator_bits)
     # Micro segments list
@@ -665,7 +664,7 @@ def sidlist_to_usidlist(sid_list, udt_list=[],
         usid_list.append(
             segments_to_micro_segment(
                 locator=locator,
-                segments=sid_list[:sid_group_size] + udt_list,
+                segments=sid_list[:sid_group_size],
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -967,8 +966,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[1:],
-                udt_list=udt_sids,
+                sid_list=segments + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -977,7 +975,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
                 operation=operation,
                 channel=channel,
                 destination=lr_destination,
-                segments=usid_list[::-1],
+                segments=usid_list,
                 encapmode='encap.red',
                 table=table,
                 metric=metric,
@@ -1111,8 +1109,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[::-1][1:],
-                udt_list=udt_sids,
+                sid_list=segments[::-1] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
