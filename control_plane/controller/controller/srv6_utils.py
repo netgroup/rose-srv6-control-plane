@@ -633,7 +633,8 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     return locator
 
 
-def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
+def sidlist_to_usidlist(sid_list, udt_sids=[],
+                        locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
     Convert a SID List into a uSID List.
@@ -658,13 +659,19 @@ def sidlist_to_usidlist(sid_list, locator_bits=DEFAULT_LOCATOR_BITS,
     # Micro segments list
     usid_list = []
     # Iterate on the SID list
-    while len(sid_list) > 0:
+    while len(sid_list) + len(udt_sids) > 0:
+        # Extract the SIDs to be encoded in one uSID
+        sids_group = sid_list[:sid_group_size]
+        # uDT list should not be broken into different SIDs
+        if len(sid_list) + len(udt_sids) <= sid_group_size:
+            sids_group += udt_sids
+            udt_sids = []
         # Segments are encoded in groups of X
         # Take the first X SIDs, build the uSID and add it to the uSID list
         usid_list.append(
             segments_to_micro_segment(
                 locator=locator,
-                segments=sid_list[:sid_group_size],
+                segments=sids_group,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -966,7 +973,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments + udt_sids,
+                sid_list=segments[1:][:-1],
+                udt_sids=[segments[1:][-1]] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -1109,7 +1117,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[::-1] + udt_sids,
+                sid_list=segments[::-1][1:][:-1],
+                udt_sids=[segments[0]] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
