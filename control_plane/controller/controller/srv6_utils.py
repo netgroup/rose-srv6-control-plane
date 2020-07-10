@@ -1118,7 +1118,7 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
                 sid_list=segments[::-1][1:][:-1],
-                udt_sids=[segments[0]] + udt_sids,
+                udt_sids=[segments[::-1][1:][-1]] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
