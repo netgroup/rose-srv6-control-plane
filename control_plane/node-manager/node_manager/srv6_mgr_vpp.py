@@ -78,10 +78,16 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
 
+VPP_SOCK_FILE = os.getenv('VPP_SOCK_FILE', None)
+
 
 def exec_vpp_cmd(cmd):
     import subprocess
-    return subprocess.check_output(['vppctl', cmd])
+    vpp_cmd = ['vppctl']
+    if VPP_SOCK_FILE is not None:
+        vpp_cmd += ['-s', VPP_SOCK_FILE]
+    vpp_cmd += [cmd]
+    return subprocess.check_output(vpp_cmd)
 
 
 class SRv6ManagerVPP():
