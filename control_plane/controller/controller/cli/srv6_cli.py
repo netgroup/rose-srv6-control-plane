@@ -42,7 +42,8 @@ def handle_srv6_usid_policy(
         nodes_filename,
         lr_destination,
         rl_destination,
-        nodes="",
+        nodes_lr="",
+        nodes_rl="",
         table=-1,
         metric=-1,
         fwd_engine='Linux'):
@@ -55,7 +56,8 @@ def handle_srv6_usid_policy(
         nodes_filename=nodes_filename,
         lr_destination=lr_destination,
         rl_destination=rl_destination,
-        nodes=nodes.split(','),
+        nodes_lr=nodes_lr.split(','),
+        nodes_rl=nodes_rl.split(',') if nodes_rl is not None else None,
         table=table,
         metric=metric
     )
@@ -263,6 +265,10 @@ def args_srv6_usid_policy():
             'args': ['--nodes'],
             'kwargs': {'dest': 'nodes', 'action': 'store', 'required': True,
                        'help': 'Nodes', 'default': ''}
+        }, {
+            'args': ['--nodes-rev'],
+            'kwargs': {'dest': 'nodes_rev', 'action': 'store',
+                       'help': 'Reverse nodes list', 'default': None}
         }, {
             'args': ['--table'],
             'kwargs': {'dest': 'table', 'action': 'store',

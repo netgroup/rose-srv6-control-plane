@@ -875,8 +875,8 @@ def handle_srv6_usid_policy_uni(operation, nodes_filename,
 
 
 def handle_srv6_usid_policy(operation, nodes_filename,
-                            lr_destination, rl_destination,
-                            nodes=None, table=-1, metric=-1):
+                            lr_destination, rl_destination, nodes_lr=None,
+                            nodes_rl=None, table=-1, metric=-1):
     '''
     Handle a SRv6 Policy using uSIDs
 
@@ -913,6 +913,14 @@ def handle_srv6_usid_policy(operation, nodes_filename,
     # In order to perform this translation, a file containing the
     # mapping of node names to IPv6 addresses is required
     #
+    # If right to left nodes list is not provided, we use the reverse left to
+    # right SID list (symmetric path)
+    if nodes_rl is None:
+        nodes_rl = nodes_lr[::-1]
+    # The two SID lists must have the same endpoints
+    if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
+        logger.error('Bad tunnel endpoints')
+        return None
     # Create the SRv6 Policy
     try:
         # Read nodes from YAML file
@@ -920,17 +928,23 @@ def handle_srv6_usid_policy(operation, nodes_filename,
         # # Prefix length for local segment
         # prefix_len = locator_bits + usid_id_bits
         # Ingress node
-        ingress_node = nodes_info[nodes[0]]
+        ingress_node = nodes_info[nodes_lr[0]]
         # Intermediate nodes
-        intermediate_nodes = list()
-        for node in nodes[1:-1]:
-            intermediate_nodes.append(nodes_info[node])
+        intermediate_nodes_lr = list()
+        for node in nodes_lr[1:-1]:
+            intermediate_nodes_lr.append(nodes_info[node])
+        intermediate_nodes_rl = list()
+        for node in nodes_rl[1:-1]:
+            intermediate_nodes_rl.append(nodes_info[node])
         # Egress node
-        egress_node = nodes_info[nodes[-1]]
+        egress_node = nodes_info[nodes_lr[-1]]
         # Extract the segments
-        segments = list()
-        for node in nodes:
-            segments.append(nodes_info[node]['uN'])
+        segments_lr = list()
+        for node in nodes_lr:
+            segments_lr.append(nodes_info[node]['uN'])
+        segments_rl = list()
+        for node in nodes_rl:
+            segments_rl.append(nodes_info[node]['uN'])
 
         # Ingress node
         with utils.get_grpc_session(ingress_node['grpc_ip'],
@@ -973,8 +987,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[1:][:-1],
-                udt_sids=[segments[1:][-1]] + udt_sids,
+                sid_list=segments_lr[1:][:-1],
+                udt_sids=[segments_lr[1:][-1]] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )
@@ -1117,8 +1131,8 @@ def handle_srv6_usid_policy(operation, nodes_filename,
             # We need to convert the SID list into a uSID list
             #  before creating the SRv6 policy
             usid_list = sidlist_to_usidlist(
-                sid_list=segments[::-1][1:][:-1],
-                udt_sids=[segments[::-1][1:][-1]] + udt_sids,
+                sid_list=segments_rl[1:][:-1],
+                udt_sids=[segments_rl[1:][-1]] + udt_sids,
                 locator_bits=locator_bits,
                 usid_id_bits=usid_id_bits
             )

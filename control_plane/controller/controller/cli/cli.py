@@ -704,7 +704,8 @@ class ControllerCLISRv6USID(CustomCmd):
             nodes_filename=self.nodes_filename,
             lr_destination=args.lr_destination,
             rl_destination=args.rl_destination,
-            nodes=args.nodes,
+            nodes_lr=args.nodes,
+            nodes_rl=args.nodes_rev,
             table=args.table,
             metric=args.metric
         )
