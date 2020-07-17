@@ -46,7 +46,8 @@ def handle_srv6_usid_policy(
         nodes_rl=None,
         table=-1,
         metric=-1,
-        fwd_engine='Linux'):
+        fwd_engine='Linux',
+        _id=None):
     """Handle a SRv6 uSID policy"""
 
     # pylint: disable=too-many-arguments
@@ -59,7 +60,8 @@ def handle_srv6_usid_policy(
         nodes_lr=nodes_lr.split(',') if nodes_lr is not None else None,
         nodes_rl=nodes_rl.split(',') if nodes_rl is not None else None,
         table=table,
-        metric=metric
+        metric=metric,
+        _id=_id
     )
     if res == 0:
         print('OK')
@@ -277,6 +279,10 @@ def args_srv6_usid_policy():
             'args': ['--metric'],
             'kwargs': {'dest': 'metric', 'action': 'store',
                        'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--id'],
+            'kwargs': {'dest': '_id', 'action': 'store',
+                       'help': 'id', 'type': int, 'default': None}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}

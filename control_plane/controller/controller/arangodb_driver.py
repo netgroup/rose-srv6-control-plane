@@ -103,7 +103,7 @@ def find_usid_policy(database, key=None, lr_dst=None,
     if rl_nodes is not None:
         policy['rl_nodes'] = rl_nodes
     if key is not None:
-        policy['_key'] = key
+        policy['_key'] = str(key)
     # Find the policy
     return usid_policies.find(policy)
 
@@ -123,7 +123,8 @@ def update_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes):
 # ############# Delete uSID policy #############
 # ##############################################
 
-def delete_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes):
+def delete_usid_policy(database, key=None, lr_dst=None,
+                       rl_dst=None, lr_nodes=None, rl_nodes=None):
     '''
     Insert a uSID policy into a ArangoDB database
     '''
@@ -139,5 +140,7 @@ def delete_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes):
         policy['lr_nodes'] = lr_nodes
     if rl_nodes is not None:
         policy['rl_nodes'] = rl_nodes
+    if key is not None:
+        policy['_key'] = key
     # Remove the policy
     return usid_policies.delete(policy)

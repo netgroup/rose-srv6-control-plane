@@ -707,7 +707,8 @@ class ControllerCLISRv6USID(CustomCmd):
             nodes_lr=args.nodes,
             nodes_rl=args.nodes_rev,
             table=args.table,
-            metric=args.metric
+            metric=args.metric,
+            _id=args._id
         )
         # Print nodes available
         srv6_cli.print_node_to_addr_mapping(self.nodes_filename)

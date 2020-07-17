@@ -883,7 +883,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_destination=None, rl_destination=None,
                             nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1,
-                            persistency=True, id=None):
+                            persistency=True, _id=None):
     '''
     Handle a SRv6 Policy using uSIDs
 
@@ -924,12 +924,12 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
     #
     # Validate arguments
     if lr_destination is None:
-        if operation in ['add', 'del']:
+        if operation in ['add']:
             logger.error('"lr_destination" argument is mandatory for %s '
                          'operation', operation)
             return None
     if rl_destination is None:
-        if operation in ['add', 'del']:
+        if operation in ['add']:
             logger.error('"rl_destination" argument is mandatory for %s '
                          'operation', operation)
             return None
@@ -963,7 +963,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         # Get the policy from the db
         policies = arangodb_driver.find_usid_policy(
             database=database,
-            key=id,
+            key=_id,
             lr_dst=lr_destination,
             rl_dst=rl_destination,
             lr_nodes=nodes_lr,
@@ -982,284 +982,322 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         #
         # Read nodes from YAML file
         nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
-        #
-        # If right to left nodes list is not provided, we use the reverse left to
-        # right SID list (symmetric path)
-        if nodes_rl is None:
-            nodes_rl = nodes_lr[::-1]
-        # The two SID lists must have the same endpoints
-        if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
-            logger.error('Bad tunnel endpoints')
+        # Add
+        if operation == 'add':
+            policies = [{
+                'lr_dst': lr_destination,
+                'rl_dst': rl_destination,
+                'lr_nodes': nodes_lr,
+                'rl_nodes': nodes_rl
+            }]
+        if operation == 'del':
+            #
+            # Connect to ArangoDB
+            client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+            # Connect to the db
+            database = arangodb_driver.connect_srv6_usid_db(
+                client=client,
+                username=arango_user,
+                password=arango_password
+            )
+            # Get the policy from the db
+            policies = arangodb_driver.find_usid_policy(
+                database=database,
+                key=_id,
+                lr_dst=lr_destination,
+                rl_dst=rl_destination,
+                lr_nodes=nodes_lr,
+                rl_nodes=nodes_rl
+            )
+        if len(policies) == 0:
+            logger.error('Policy not found')
             return None
-        # Create the SRv6 Policy
-        try:
-            # # Prefix length for local segment
-            # prefix_len = locator_bits + usid_id_bits
-            # Ingress node
-            ingress_node = nodes_info[nodes_lr[0]]
-            # Intermediate nodes
-            intermediate_nodes_lr = list()
-            for node in nodes_lr[1:-1]:
-                intermediate_nodes_lr.append(nodes_info[node])
-            intermediate_nodes_rl = list()
-            for node in nodes_rl[1:-1]:
-                intermediate_nodes_rl.append(nodes_info[node])
-            # Egress node
-            egress_node = nodes_info[nodes_lr[-1]]
-            # Extract the segments
-            segments_lr = list()
-            for node in nodes_lr:
-                segments_lr.append(nodes_info[node]['uN'])
-            segments_rl = list()
-            for node in nodes_rl:
-                segments_rl.append(nodes_info[node]['uN'])
+        # Iterate on the policies
+        for policy in policies:
+            lr_destination = policy.get('lr_dst')
+            rl_destination = policy.get('rl_dst')
+            nodes_lr = policy.get('lr_nodes')
+            nodes_rl = policy.get('rl_nodes')
+            id = policy.get('_key')
+            #
+            # If right to left nodes list is not provided, we use the reverse left
+            # to right SID list (symmetric path)
+            if nodes_rl is None:
+                nodes_rl = nodes_lr[::-1]
+            # The two SID lists must have the same endpoints
+            if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
+                logger.error('Bad tunnel endpoints')
+                return None
+            # Create the SRv6 Policy
+            try:
+                # # Prefix length for local segment
+                # prefix_len = locator_bits + usid_id_bits
+                # Ingress node
+                ingress_node = nodes_info[nodes_lr[0]]
+                # Intermediate nodes
+                intermediate_nodes_lr = list()
+                for node in nodes_lr[1:-1]:
+                    intermediate_nodes_lr.append(nodes_info[node])
+                intermediate_nodes_rl = list()
+                for node in nodes_rl[1:-1]:
+                    intermediate_nodes_rl.append(nodes_info[node])
+                # Egress node
+                egress_node = nodes_info[nodes_lr[-1]]
+                # Extract the segments
+                segments_lr = list()
+                for node in nodes_lr:
+                    segments_lr.append(nodes_info[node]['uN'])
+                segments_rl = list()
+                for node in nodes_rl:
+                    segments_rl.append(nodes_info[node]['uN'])
 
-            # Ingress node
-            with utils.get_grpc_session(ingress_node['grpc_ip'],
-                                        ingress_node['grpc_port']) as channel:
-                # Currently ony Linux and VPP are suppoted for the encap
-                if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                    logger.error('Encap operation is not supported for '
-                                '%s with fwd engine %s' % ingress_node['name'],
-                                ingress_node['fwd_engine'])
-                    return commons_pb2.STATUS_INTERNAL_ERROR
-                # VPP requires a BSID address
-                bsid_addr = ''
-                if ingress_node['fwd_engine'] == 'VPP':
-                    for c in lr_destination:
-                        if c != '0' and c != ':':
-                            bsid_addr += c
-                    add_colon = False
-                    if len(bsid_addr) <= 28:
-                        add_colon = True
-                    bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
-                    bsid_addr = ':'.join(bsid_addr)
-                    if add_colon:
-                        bsid_addr += '::'
+                # Ingress node
+                with utils.get_grpc_session(ingress_node['grpc_ip'],
+                                            ingress_node['grpc_port']) as channel:
+                    # Currently ony Linux and VPP are suppoted for the encap
+                    if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                        logger.error('Encap operation is not supported for '
+                                    '%s with fwd engine %s' % ingress_node['name'],
+                                    ingress_node['fwd_engine'])
+                        return commons_pb2.STATUS_INTERNAL_ERROR
+                    # VPP requires a BSID address
+                    bsid_addr = ''
+                    if ingress_node['fwd_engine'] == 'VPP':
+                        for c in lr_destination:
+                            if c != '0' and c != ':':
+                                bsid_addr += c
+                        add_colon = False
+                        if len(bsid_addr) <= 28:
+                            add_colon = True
+                        bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                        bsid_addr = ':'.join(bsid_addr)
+                        if add_colon:
+                            bsid_addr += '::'
 
-                udt_sids = list()
-                # Locator mask
-                locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                            int('1' * (128 - locator_bits), 2)))
-                # uDT mask
-                udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                            (128 - locator_bits - usid_id_bits)))
-                udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                            (128 - locator_bits - 2*usid_id_bits)))
-                # Build uDT sid list
-                locator_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(locator_mask))
-                udt_mask_1_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_1))
-                udt_mask_2_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_2))
-                udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
-                udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
-                # We need to convert the SID list into a uSID list
-                #  before creating the SRv6 policy
-                usid_list = sidlist_to_usidlist(
-                    sid_list=segments_lr[1:][:-1],
-                    udt_sids=[segments_lr[1:][-1]] + udt_sids,
-                    locator_bits=locator_bits,
-                    usid_id_bits=usid_id_bits
-                )
-                # Handle a SRv6 path
-                response = handle_srv6_path(
-                    operation=operation,
-                    channel=channel,
-                    destination=lr_destination,
-                    segments=usid_list,
-                    encapmode='encap.red',
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=ingress_node['fwd_engine']
-                )
-                if response != commons_pb2.STATUS_SUCCESS:
-                    # Error
-                    return response
-                # # Create the uN behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (ingress_node['uN'], prefix_len),
-                #     action='uN',
-                #     fwd_engine=ingress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
-                # # Create the End behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (ingress_node['uN'], 64),
-                #     action='End',
-                #     fwd_engine=ingress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
-                # # Create the decap behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (ingress_node['uDT'], 64),
-                #     action='End.DT6',
-                #     lookup_table=254,
-                #     fwd_engine=ingress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
-            # # Intermediate nodes
-            # for node in intermediate_nodes:
-            #     with utils.get_grpc_session(node['grpc_ip'],
-            #                                 node['grpc_port']) as channel:
-            #         # Create the uN behavior
-            #         response = handle_srv6_behavior(
-            #             operation=operation,
-            #             channel=channel,
-            #             segment='%s/%s' % (node['uN'], prefix_len),
-            #             action='uN',
-            #             fwd_engine=node['fwd_engine']
-            #         )
-            #         if response != commons_pb2.STATUS_SUCCESS:
-            #             # Error
-            #             return response
-            # Egress node
-            with utils.get_grpc_session(egress_node['grpc_ip'],
-                                        egress_node['grpc_port']) as channel:
-                # Currently ony Linux and VPP are suppoted for the encap
-                if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                    logger.error('Encap operation is not supported for '
-                                '%s with fwd engine %s' % egress_node['name'],
-                                egress_node['fwd_engine'])
-                    return commons_pb2.STATUS_INTERNAL_ERROR
-                # VPP requires a BSID address
-                bsid_addr = ''
-                if egress_node['fwd_engine'] == 'VPP':
-                    for c in lr_destination:
-                        if c != '0' and c != ':':
-                            bsid_addr += c
-                    add_colon = False
-                    if len(bsid_addr) <= 28:
-                        add_colon = True
-                    bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
-                    bsid_addr = ':'.join(bsid_addr)
-                    if add_colon:
-                        bsid_addr += '::'
-                # # Create the uN behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (egress_node['uN'], prefix_len),
-                #     action='uN',
-                #     fwd_engine=egress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
-                # # Create the End behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (egress_node['uN'], 64),
-                #     action='End',
-                #     fwd_engine=egress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
-                # # Create the decap behavior
-                # response = handle_srv6_behavior(
-                #     operation=operation,
-                #     channel=channel,
-                #     segment='%s/%s' % (egress_node['uDT'], 64),
-                #     action='End.DT6',
-                #     lookup_table=254,
-                #     fwd_engine=egress_node['fwd_engine']
-                # )
-                # if response != commons_pb2.STATUS_SUCCESS:
-                #     # Error
-                #     return response
+                    udt_sids = list()
+                    # Locator mask
+                    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                                int('1' * (128 - locator_bits), 2)))
+                    # uDT mask
+                    udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                (128 - locator_bits - usid_id_bits)))
+                    udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                (128 - locator_bits - 2*usid_id_bits)))
+                    # Build uDT sid list
+                    locator_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(locator_mask))
+                    udt_mask_1_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_1))
+                    udt_mask_2_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+                    udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
+                    udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
+                    # We need to convert the SID list into a uSID list
+                    #  before creating the SRv6 policy
+                    usid_list = sidlist_to_usidlist(
+                        sid_list=segments_lr[1:][:-1],
+                        udt_sids=[segments_lr[1:][-1]] + udt_sids,
+                        locator_bits=locator_bits,
+                        usid_id_bits=usid_id_bits
+                    )
+                    # Handle a SRv6 path
+                    response = handle_srv6_path(
+                        operation=operation,
+                        channel=channel,
+                        destination=lr_destination,
+                        segments=usid_list,
+                        encapmode='encap.red',
+                        table=table,
+                        metric=metric,
+                        bsid_addr=bsid_addr,
+                        fwd_engine=ingress_node['fwd_engine']
+                    )
+                    if response != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        return response
+                    # # Create the uN behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (ingress_node['uN'], prefix_len),
+                    #     action='uN',
+                    #     fwd_engine=ingress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
+                    # # Create the End behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (ingress_node['uN'], 64),
+                    #     action='End',
+                    #     fwd_engine=ingress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
+                    # # Create the decap behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (ingress_node['uDT'], 64),
+                    #     action='End.DT6',
+                    #     lookup_table=254,
+                    #     fwd_engine=ingress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
+                # # Intermediate nodes
+                # for node in intermediate_nodes:
+                #     with utils.get_grpc_session(node['grpc_ip'],
+                #                                 node['grpc_port']) as channel:
+                #         # Create the uN behavior
+                #         response = handle_srv6_behavior(
+                #             operation=operation,
+                #             channel=channel,
+                #             segment='%s/%s' % (node['uN'], prefix_len),
+                #             action='uN',
+                #             fwd_engine=node['fwd_engine']
+                #         )
+                #         if response != commons_pb2.STATUS_SUCCESS:
+                #             # Error
+                #             return response
+                # Egress node
+                with utils.get_grpc_session(egress_node['grpc_ip'],
+                                            egress_node['grpc_port']) as channel:
+                    # Currently ony Linux and VPP are suppoted for the encap
+                    if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                        logger.error('Encap operation is not supported for '
+                                    '%s with fwd engine %s' % egress_node['name'],
+                                    egress_node['fwd_engine'])
+                        return commons_pb2.STATUS_INTERNAL_ERROR
+                    # VPP requires a BSID address
+                    bsid_addr = ''
+                    if egress_node['fwd_engine'] == 'VPP':
+                        for c in lr_destination:
+                            if c != '0' and c != ':':
+                                bsid_addr += c
+                        add_colon = False
+                        if len(bsid_addr) <= 28:
+                            add_colon = True
+                        bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                        bsid_addr = ':'.join(bsid_addr)
+                        if add_colon:
+                            bsid_addr += '::'
+                    # # Create the uN behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (egress_node['uN'], prefix_len),
+                    #     action='uN',
+                    #     fwd_engine=egress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
+                    # # Create the End behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (egress_node['uN'], 64),
+                    #     action='End',
+                    #     fwd_engine=egress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
+                    # # Create the decap behavior
+                    # response = handle_srv6_behavior(
+                    #     operation=operation,
+                    #     channel=channel,
+                    #     segment='%s/%s' % (egress_node['uDT'], 64),
+                    #     action='End.DT6',
+                    #     lookup_table=254,
+                    #     fwd_engine=egress_node['fwd_engine']
+                    # )
+                    # if response != commons_pb2.STATUS_SUCCESS:
+                    #     # Error
+                    #     return response
 
-                udt_sids = list()
-                # Locator mask
-                locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                            int('1' * (128 - locator_bits), 2)))
-                # uDT mask
-                udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                            (128 - locator_bits - usid_id_bits)))
-                udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                            (128 - locator_bits - 2*usid_id_bits)))
-                # Build uDT sid list
-                locator_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(locator_mask))
-                udt_mask_1_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_1))
-                udt_mask_2_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_2))
-                udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
-                udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
-                # We need to convert the SID list into a uSID list
-                #  before creating the SRv6 policy
-                usid_list = sidlist_to_usidlist(
-                    sid_list=segments_rl[1:][:-1],
-                    udt_sids=[segments_rl[1:][-1]] + udt_sids,
-                    locator_bits=locator_bits,
-                    usid_id_bits=usid_id_bits
-                )
-                # Handle a SRv6 path
-                response = handle_srv6_path(
-                    operation=operation,
-                    channel=channel,
-                    destination=rl_destination,
-                    segments=usid_list,
-                    encapmode='encap.red',
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=egress_node['fwd_engine']
-                )
-                if response != commons_pb2.STATUS_SUCCESS:
-                    # Error
-                    return response
-            # Persist uSID policy to database
-            if persistency:
-                if operation == 'add':
-                    # Connect to ArangoDB
-                    client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
-                    # Connect to the db
-                    database = arangodb_driver.connect_srv6_usid_db(
-                        client=client,
-                        username=arango_user,
-                        password=arango_password
+                    udt_sids = list()
+                    # Locator mask
+                    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                                int('1' * (128 - locator_bits), 2)))
+                    # uDT mask
+                    udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                (128 - locator_bits - usid_id_bits)))
+                    udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                (128 - locator_bits - 2*usid_id_bits)))
+                    # Build uDT sid list
+                    locator_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(locator_mask))
+                    udt_mask_1_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_1))
+                    udt_mask_2_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+                    udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
+                    udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
+                    # We need to convert the SID list into a uSID list
+                    #  before creating the SRv6 policy
+                    usid_list = sidlist_to_usidlist(
+                        sid_list=segments_rl[1:][:-1],
+                        udt_sids=[segments_rl[1:][-1]] + udt_sids,
+                        locator_bits=locator_bits,
+                        usid_id_bits=usid_id_bits
                     )
-                    # Save the policy to the db
-                    arangodb_driver.insert_usid_policy(
-                        database=database,
-                        lr_dst=lr_destination,
-                        rl_dst=rl_destination,
-                        lr_nodes=nodes_lr,
-                        rl_nodes=nodes_rl
+                    # Handle a SRv6 path
+                    response = handle_srv6_path(
+                        operation=operation,
+                        channel=channel,
+                        destination=rl_destination,
+                        segments=usid_list,
+                        encapmode='encap.red',
+                        table=table,
+                        metric=metric,
+                        bsid_addr=bsid_addr,
+                        fwd_engine=egress_node['fwd_engine']
                     )
-                elif operation == 'del':
-                    # Connect to ArangoDB
-                    client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
-                    # Connect to the db
-                    database = arangodb_driver.connect_srv6_usid_db(
-                        client=client,
-                        username=arango_user,
-                        password=arango_password
-                    )
-                    # Save the policy to the db
-                    arangodb_driver.delete_usid_policy(
-                        database=database,
-                        lr_dst=lr_destination,
-                        rl_dst=rl_destination,
-                        lr_nodes=nodes_lr,
-                        rl_nodes=nodes_rl
-                    )
-                else:
-                    logger.error('Unsupported operation: %s' % operation)
-        except (InvalidConfigurationError, NodeNotFoundError,
-                TooManySegmentsError, SIDLocatorError, InvalidSIDError):
-            return commons_pb2.STATUS_INTERNAL_ERROR
+                    if response != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        return response
+                # Persist uSID policy to database
+                if persistency:
+                    if operation == 'add':
+                        # Connect to ArangoDB
+                        client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+                        # Connect to the db
+                        database = arangodb_driver.connect_srv6_usid_db(
+                            client=client,
+                            username=arango_user,
+                            password=arango_password
+                        )
+                        # Save the policy to the db
+                        arangodb_driver.insert_usid_policy(
+                            database=database,
+                            lr_dst=lr_destination,
+                            rl_dst=rl_destination,
+                            lr_nodes=nodes_lr,
+                            rl_nodes=nodes_rl
+                        )
+                    elif operation == 'del':
+                        # Connect to ArangoDB
+                        client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+                        # Connect to the db
+                        database = arangodb_driver.connect_srv6_usid_db(
+                            client=client,
+                            username=arango_user,
+                            password=arango_password
+                        )
+                        # Save the policy to the db
+                        arangodb_driver.delete_usid_policy(
+                            database=database,
+                            key=id,
+                            lr_dst=lr_destination,
+                            rl_dst=rl_destination,
+                            lr_nodes=nodes_lr,
+                            rl_nodes=nodes_rl
+                        )
+                    else:
+                        logger.error('Unsupported operation: %s' % operation)
+            except (InvalidConfigurationError, NodeNotFoundError,
+                    TooManySegmentsError, SIDLocatorError, InvalidSIDError):
+                return commons_pb2.STATUS_INTERNAL_ERROR
     else:
         logger.error('Unsupported operation: %s' % operation)
         return None
