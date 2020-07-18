@@ -967,7 +967,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
             lr_dst=lr_destination,
             rl_dst=rl_destination,
             lr_nodes=nodes_lr,
-            rl_nodes=nodes_rl
+            rl_nodes=nodes_rl,
+            table=table if table != -1 else None,
+            metric=metric if metric != -1 else None
         )
         # Remove useless fields
         policies
@@ -1007,7 +1009,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 lr_dst=lr_destination,
                 rl_dst=rl_destination,
                 lr_nodes=nodes_lr,
-                rl_nodes=nodes_rl
+                rl_nodes=nodes_rl,
+                table=table if table != -1 else None,
+                metric=metric if metric != -1 else None
             )
         if len(policies) == 0:
             logger.error('Policy not found')
@@ -1273,7 +1277,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_dst=lr_destination,
                             rl_dst=rl_destination,
                             lr_nodes=nodes_lr,
-                            rl_nodes=nodes_rl
+                            rl_nodes=nodes_rl,
+                            table=table if table != -1 else None,
+                            metric=metric if metric != -1 else None
                         )
                     elif operation == 'del':
                         # Connect to ArangoDB
@@ -1291,7 +1297,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_dst=lr_destination,
                             rl_dst=rl_destination,
                             lr_nodes=nodes_lr,
-                            rl_nodes=nodes_rl
+                            rl_nodes=nodes_rl,
+                            table=table if table != -1 else None,
+                            metric=metric if metric != -1 else None
                         )
                     else:
                         logger.error('Unsupported operation: %s' % operation)
