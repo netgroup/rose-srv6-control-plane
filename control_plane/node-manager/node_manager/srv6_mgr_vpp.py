@@ -26,25 +26,22 @@
 """This module provides an implementation of a SRv6 Manager"""
 
 
-import logging
 # General imports
+import logging
+import subprocess
 import os
-import fnmatch
 import sys
-from socket import AF_INET6
-
-# pyroute2 dependencies
-from pyroute2 import IPRoute
-from pyroute2.netlink.exceptions import NetlinkError
-from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # VPP dependencies
-# from vpp_papi import VPP    # TODO put the import in try-except block
+# try:
+#     from vpp_papi import VPP
+# except ImportError:
+#     print('VPP modules not found')
+#     sys.exit(-2)
 
 # Proto dependencies
 import commons_pb2
 import srv6_manager_pb2
-import srv6_manager_pb2_grpc
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -78,19 +75,14 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
 
-VPP_SOCK_FILE = os.getenv('VPP_SOCK_FILE', None)
-
-
-def exec_vpp_cmd(cmd):
-    import subprocess
-    vpp_cmd = ['vppctl']
-    if VPP_SOCK_FILE is not None:
-        vpp_cmd += ['-s', VPP_SOCK_FILE]
-    vpp_cmd += [cmd]
-    return subprocess.check_output(vpp_cmd)
+VPP_SOCK_FILE = os.getenv('vpp_sock_file', None)
 
 
 class SRv6ManagerVPP():
+    '''
+    This class implements several VPP-related functionalities of a SRv6
+    Manager
+    '''
 
     def __init__(self):
         # Behavior handlers
@@ -106,8 +98,20 @@ class SRv6ManagerVPP():
             'End.B6': self.handle_end_b6_behavior_request,
             'End.B6.Encaps': self.handle_end_b6_encaps_behavior_request,
         }
+        # Socket file for VPP
+        self.vpp_sock_file = VPP_SOCK_FILE
 
-    def handle_srv6_src_addr_request(self, operation, request, context):   # TODO
+    def exec_vpp_cmd(self, cmd):
+        '''
+        Helper function used to send a VPP command to vppctl
+        '''
+        vpp_cmd = ['vppctl']
+        if self.vpp_sock_file is not None:
+            vpp_cmd += ['-s', self.vpp_sock_file]
+        vpp_cmd += [cmd]
+        return subprocess.check_output(vpp_cmd)
+
+    def handle_srv6_src_addr_request(self, operation, request, context):
         '''
         This function is used to setup the source address used for the SRv6
         encapsulation, equivalent to:
@@ -120,15 +124,16 @@ class SRv6ManagerVPP():
         cmd = 'set sr encaps source addr %s' % str(request.src_addr)
         # Send the command to VPP
         # If success, an empty string will be returned
-        LOGGER.debug('Sending command to VPP: %s' % cmd)
-        res = exec_vpp_cmd(cmd).decode()
+        LOGGER.debug('Sending command to VPP: %s', cmd)
+        res = self.exec_vpp_cmd(cmd).decode()
         if res != '':
             # Failure
-            logging.error('VPP returned an error: %s' % res)
+            logging.error('VPP returned an error: %s', res)
             res = commons_pb2.STATUS_INTERNAL_ERROR
         return srv6_manager_pb2.SRv6ManagerReply(status=res)
 
     def handle_srv6_policy_request(self, operation, request, context):
+        # pylint: disable=unused-argument
         '''
         This function is used to create, delete or change a SRv6 policy,
         equivalent to:
@@ -138,7 +143,7 @@ class SRv6ManagerVPP():
         '''
         # Perform the operation
         if operation in ['change', 'get']:
-            LOGGER.error('Operation not yet supported: %s' % operation)
+            LOGGER.error('Operation not yet supported: %s', operation)
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
         if operation in ['add', 'del']:
@@ -171,11 +176,11 @@ class SRv6ManagerVPP():
                 if table is not None:
                     cmd += ' fib-table %s' % table
                 # Execute the command
-                LOGGER.debug('Sending command to VPP: %s' % cmd)
-                res = exec_vpp_cmd(cmd).decode()
+                LOGGER.debug('Sending command to VPP: %s', cmd)
+                res = self.exec_vpp_cmd(cmd).decode()
                 if res != '':
                     # Failure
-                    logging.error('VPP returned an error: %s' % res)
+                    logging.error('VPP returned an error: %s', res)
                     return srv6_manager_pb2.SRv6ManagerReply(
                         status=commons_pb2.STATUS_INTERNAL_ERROR)
         else:
@@ -195,7 +200,7 @@ class SRv6ManagerVPP():
         LOGGER.debug('config received:\n%s', request)
         # Perform operation
         if operation in ['change', 'get']:
-            LOGGER.error('Operation not yet supported: %s' % operation)
+            LOGGER.error('Operation not yet supported: %s', operation)
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
         if operation in ['add', 'del']:
@@ -234,11 +239,11 @@ class SRv6ManagerVPP():
                 if table is not None:
                     cmd += ' fib-table %s' % table
                 # Execute the command
-                LOGGER.debug('Sending command to VPP: %s' % cmd)
-                res = exec_vpp_cmd(cmd).decode()
+                LOGGER.debug('Sending command to VPP: %s', cmd)
+                res = self.exec_vpp_cmd(cmd).decode()
                 if res != '':
                     # Failure
-                    logging.error('VPP returned an error: %s' % res)
+                    logging.error('VPP returned an error: %s', res)
                     return srv6_manager_pb2.SRv6ManagerReply(
                         status=commons_pb2.STATUS_INTERNAL_ERROR)
         else:
@@ -272,11 +277,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -311,11 +316,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -349,11 +354,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -387,11 +392,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -426,11 +431,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -465,11 +470,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -503,11 +508,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -541,11 +546,11 @@ class SRv6ManagerVPP():
             if table is not None:
                 cmd += ' fib-table %s' % table
             # Execute the command
-            LOGGER.debug('Sending command to VPP: %s' % cmd)
-            res = exec_vpp_cmd(cmd).decode()
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
             if res != '':
                 # Failure
-                logging.error('VPP returned an error: %s' % res)
+                logging.error('VPP returned an error: %s', res)
                 return commons_pb2.STATUS_INTERNAL_ERROR
         else:
             # Operation unknown: this is a bug
@@ -583,7 +588,7 @@ class SRv6ManagerVPP():
             #     cmd += ' fib-table %s' % table
             # # Execute the command
             # LOGGER.debug('Sending command to VPP: %s' % cmd)
-            # res = exec_vpp_cmd(cmd).decode()
+            # res = self.exec_vpp_cmd(cmd).decode()
             # if res != '':
             #     # Failure
             #     logging.error('VPP returned an error: %s' % res)
@@ -591,13 +596,9 @@ class SRv6ManagerVPP():
             #         status=commons_pb2.STATUS_INTERNAL_ERROR)
             LOGGER.info('End.B6 behavior is not yet implemented\n')
             return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-        else:
-            # Operation unknown: this is a bug
-            LOGGER.error('BUG - Unrecognized operation: %s', operation)
-            sys.exit(-1)
-        # and create the response
-        LOGGER.debug('Send response: OK')
-        return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
 
     def handle_end_b6_encaps_behavior_request(self, operation, behavior):
         """Handle seg6local End.B6.Encaps behavior"""
@@ -627,7 +628,7 @@ class SRv6ManagerVPP():
             #     cmd += ' fib-table %s' % table
             # # Execute the command
             # LOGGER.debug('Sending command to VPP: %s' % cmd)
-            # res = exec_vpp_cmd(cmd).decode()
+            # res = self.exec_vpp_cmd(cmd).decode()
             # if res != '':
             #     # Failure
             #     logging.error('VPP returned an error: %s' % res)
@@ -635,13 +636,9 @@ class SRv6ManagerVPP():
             #         status=commons_pb2.STATUS_INTERNAL_ERROR)
             LOGGER.info('End.B6.Encaps behavior is not yet implemented\n')
             return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-        else:
-            # Operation unknown: this is a bug
-            LOGGER.error('BUG - Unrecognized operation: %s', operation)
-            sys.exit(-1)
-        # and create the response
-        LOGGER.debug('Send response: OK')
-        return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
 
     def handle_un_behavior_request(self, operation, behavior):
         """Handle seg6local End behavior"""
@@ -673,13 +670,9 @@ class SRv6ManagerVPP():
             #                     encap=encap)
             LOGGER.info('uN behavior is not yet implemented\n')
             return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-        else:
-            # Operation unknown: this is a bug
-            LOGGER.error('BUG - Unrecognized operation: %s', operation)
-            sys.exit(-1)
-        # and create the response
-        LOGGER.debug('Send response: OK')
-        return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
 
     def handle_srv6_behavior_del_request(self, behavior):
         """Delete a route"""
@@ -687,18 +680,18 @@ class SRv6ManagerVPP():
         # Extract params
         segment = behavior.segment
         table = behavior.table if behavior.table != -1 else None
-        metric = behavior.metric if behavior.metric != -1 else None
+        # metric = behavior.metric if behavior.metric != -1 else None
         # Build the command
         cmd = ('sr localsid del address %s' % segment)
         # Add the table
         if table is not None:
             cmd += ' fib-table %s' % table
         # Execute the command
-        LOGGER.debug('Sending command to VPP: %s' % cmd)
-        res = exec_vpp_cmd(cmd).decode()
+        LOGGER.debug('Sending command to VPP: %s', cmd)
+        res = self.exec_vpp_cmd(cmd).decode()
         if res != '':
             # Failure
-            logging.error('VPP returned an error: %s' % res)
+            logging.error('VPP returned an error: %s', res)
             return commons_pb2.STATUS_INTERNAL_ERROR
         # Return success
         return commons_pb2.STATUS_SUCCESS

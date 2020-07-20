@@ -40,7 +40,6 @@ from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 # Proto dependencies
 import commons_pb2
 import srv6_manager_pb2
-import srv6_manager_pb2_grpc
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -95,6 +94,10 @@ def parse_netlink_error(err):
 
 
 class SRv6ManagerLinux():
+    '''
+    This class implements several Linux-related functionalities of a SRv6
+    Manager
+    '''
 
     def __init__(self):
         # Setup ip route
