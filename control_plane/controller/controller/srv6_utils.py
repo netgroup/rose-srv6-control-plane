@@ -709,8 +709,11 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     # Translation is based on a file containing the mapping
     # of node names to IP addresses
     nodes_info, locator_bits, usid_id_bits = read_nodes(node_addrs_filename)
+    sid_list = list()
     for node in nodes:
-        sid_list = nodes_info[node]['uN']
+        if node not in nodes_info:
+            raise NodeNotFoundError
+        sid_list.append(nodes_info[node]['uN'])
     if locator_bits is None:
         locator_bits = DEFAULT_LOCATOR_BITS
     if usid_id_bits is None:
