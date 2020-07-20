@@ -45,7 +45,7 @@ import srv6_manager_pb2_grpc
 # Node manager dependencies
 from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
-from node_manager.srv6_mgr_vpp import SRv6ManagerVPP   #   TODO
+from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -105,12 +105,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                                 context)
         if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
             # VPP forwarding engine
-            return self.srv6_mgr_vpp.handle_srv6_path_request(operation,
-                                                              request,
-                                                              context)     # TODO gestire caso VPP non abilitato o non disponibile
+            # TODO gestire caso VPP non abilitato o non disponibile
+            return self.srv6_mgr_vpp.handle_srv6_path_request(
+                operation, request, context)
         # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))       # TODO creare un errore specifico
+        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
+            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
 
     def handle_srv6_policy_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -126,12 +126,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
         if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
             # VPP forwarding engine
-            return self.srv6_mgr_vpp.handle_srv6_policy_request(operation,
-                                                              request,
-                                                              context)     # TODO gestire caso VPP non abilitato o non disponibile
+            # TODO gestire caso VPP non abilitato o non disponibile
+            return self.srv6_mgr_vpp.handle_srv6_policy_request(
+                operation, request, context)
         # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))       # TODO creare un errore specifico
+        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
+            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
 
     def handle_srv6_behavior_request(self, operation, request, context):
         # pylint: disable=unused-argument
@@ -153,8 +153,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                                   request,
                                                                   context)
         # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))       # TODO creare un errore specifico
+        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
+            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
 
     def execute(self, operation, request, context):
         """This function dispatch the gRPC requests based
