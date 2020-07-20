@@ -42,10 +42,12 @@ def handle_srv6_usid_policy(
         nodes_filename,
         lr_destination,
         rl_destination,
-        nodes="",
+        nodes_lr=None,
+        nodes_rl=None,
         table=-1,
         metric=-1,
-        fwd_engine='Linux'):
+        fwd_engine='Linux',
+        _id=None):
     """Handle a SRv6 uSID policy"""
 
     # pylint: disable=too-many-arguments
@@ -55,9 +57,11 @@ def handle_srv6_usid_policy(
         nodes_filename=nodes_filename,
         lr_destination=lr_destination,
         rl_destination=rl_destination,
-        nodes=nodes.split(','),
+        nodes_lr=nodes_lr.split(',') if nodes_lr is not None else None,
+        nodes_rl=nodes_rl.split(',') if nodes_rl is not None else None,
         table=table,
-        metric=metric
+        metric=metric,
+        _id=_id
     )
     if res == 0:
         print('OK')
@@ -254,15 +258,19 @@ def args_srv6_usid_policy():
         }, {
             'args': ['--lr-destination'],
             'kwargs': {'dest': 'lr_destination', 'action': 'store',
-                       'required': True, 'help': 'Left to Right Destination'}
+                       'help': 'Left to Right Destination'}
         }, {
             'args': ['--rl-destination'],
             'kwargs': {'dest': 'rl_destination', 'action': 'store',
-                       'required': True, 'help': 'Right to Left Destination'}
+                       'help': 'Right to Left Destination'}
         }, {
             'args': ['--nodes'],
-            'kwargs': {'dest': 'nodes', 'action': 'store', 'required': True,
-                       'help': 'Nodes', 'default': ''}
+            'kwargs': {'dest': 'nodes', 'action': 'store',
+                       'help': 'Nodes', 'default': None}
+        }, {
+            'args': ['--nodes-rev'],
+            'kwargs': {'dest': 'nodes_rev', 'action': 'store',
+                       'help': 'Reverse nodes list', 'default': None}
         }, {
             'args': ['--table'],
             'kwargs': {'dest': 'table', 'action': 'store',
@@ -271,6 +279,10 @@ def args_srv6_usid_policy():
             'args': ['--metric'],
             'kwargs': {'dest': 'metric', 'action': 'store',
                        'help': 'Metric', 'type': int, 'default': -1}
+        }, {
+            'args': ['--id'],
+            'kwargs': {'dest': '_id', 'action': 'store',
+                       'help': 'id', 'type': int, 'default': None}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
