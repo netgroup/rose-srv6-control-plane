@@ -46,6 +46,8 @@ import srv6_manager_pb2_grpc
 from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
 from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
+# Import constants file
+from node_manager.constants import FwdEngine
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -98,12 +100,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('Linux'):
+        if fwd_engine == FwdEngine.LINUX:
             # Linux forwarding engine
             return self.srv6_mgr_linux.handle_srv6_path_request(operation,
                                                                 request,
                                                                 context)
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
+        if fwd_engine == FwdEngine.VPP:
             # VPP forwarding engine
             # TODO gestire caso VPP non abilitato o non disponibile
             return self.srv6_mgr_vpp.handle_srv6_path_request(
@@ -120,11 +122,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('Linux'):
+        if fwd_engine == FwdEngine.LINUX:
             # Linux forwarding engine does not support SRv6 policy
             return srv6_manager_pb2.SRv6ManagerReply(
                 status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
+        if fwd_engine == FwdEngine.VPP:
             # VPP forwarding engine
             # TODO gestire caso VPP non abilitato o non disponibile
             return self.srv6_mgr_vpp.handle_srv6_policy_request(
@@ -141,12 +143,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('Linux'):
+        if fwd_engine == FwdEngine.LINUX:
             # Linux forwarding engine
             return self.srv6_mgr_linux.handle_srv6_behavior_request(operation,
                                                                     request,
                                                                     context)
-        if fwd_engine == srv6_manager_pb2.FwdEngine.Value('VPP'):
+        if fwd_engine == FwdEngine.VPP:
             # VPP forwarding engine
             # TODO gestire caso VPP non abilitato o non disponibile
             return self.srv6_mgr_vpp.handle_srv6_behavior_request(operation,
