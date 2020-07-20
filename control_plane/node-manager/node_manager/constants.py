@@ -29,17 +29,12 @@ This file contains several constants used in different scripts
 '''
 
 # Proto dependencies
-import srv6_manager_pb2
+from srv6_manager_pb2 import FwdEngine
 
 
 # Forwarding Engine
-class FwdEngine:
-    '''
-    Class representing a Forwarding Engine
-    '''
-    # VPP
-    VPP = srv6_manager_pb2.FwdEngine.Value('Linux')
-    # Linux
-    LINUX = srv6_manager_pb2.FwdEngine.Value('VPP')
-    # P4
-    P4 = srv6_manager_pb2.FwdEngine.Value('P4')
+FWD_ENGINE = {
+    'VPP': FwdEngine.Value('VPP'),
+    'Linux': FwdEngine.Value('Linux'),
+    'P4': FwdEngine.Value('P4'),
+}  # pylint: disable=no-member
