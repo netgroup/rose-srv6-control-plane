@@ -953,7 +953,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
             logger.error('Error in get(): Persistency is disabled')
             return None
         # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+        client = arangodb_driver.connect_arango(
+            url=arango_url)     # TODO keep arango connection open
         # Connect to the db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
@@ -995,7 +996,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         if operation == 'del':
             #
             # Connect to ArangoDB
-            client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+            client = arangodb_driver.connect_arango(
+                url=arango_url)     # TODO keep arango connection open
             # Connect to the db
             database = arangodb_driver.connect_srv6_usid_db(
                 client=client,
@@ -1060,9 +1062,11 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                                             ingress_node['grpc_port']) as channel:
                     # Currently ony Linux and VPP are suppoted for the encap
                     if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                        logger.error('Encap operation is not supported for '
-                                    '%s with fwd engine %s' % ingress_node['name'],
-                                    ingress_node['fwd_engine'])
+                        logger.error(
+                            'Encap operation is not supported for '
+                            '%s with fwd engine %s' %
+                            ingress_node['name'],
+                            ingress_node['fwd_engine'])
                         return commons_pb2.STATUS_INTERNAL_ERROR
                     # VPP requires a BSID address
                     bsid_addr = ''
@@ -1073,26 +1077,37 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         add_colon = False
                         if len(bsid_addr) <= 28:
                             add_colon = True
-                        bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                        bsid_addr = [(bsid_addr[i:i + 4])
+                                     for i in range(0, len(bsid_addr), 4)]
                         bsid_addr = ':'.join(bsid_addr)
                         if add_colon:
                             bsid_addr += '::'
 
                     udt_sids = list()
                     # Locator mask
-                    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                                int('1' * (128 - locator_bits), 2)))
+                    locator_mask = str(IPv6Address(
+                        int('1' * 128, 2) ^ int('1' * (128 - locator_bits), 2)))
                     # uDT mask
-                    udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                (128 - locator_bits - usid_id_bits)))
-                    udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                (128 - locator_bits - 2*usid_id_bits)))
+                    udt_mask_1 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                 (128 - locator_bits - usid_id_bits)))
+                    udt_mask_2 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                 (128 - locator_bits - 2 * usid_id_bits)))
                     # Build uDT sid list
-                    locator_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(locator_mask))
-                    udt_mask_1_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_1))
-                    udt_mask_2_int = int(IPv6Address(egress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+                    locator_int = int(
+                        IPv6Address(
+                            egress_node['uDT'])) & int(
+                        IPv6Address(locator_mask))
+                    udt_mask_1_int = int(
+                        IPv6Address(
+                            egress_node['uDT'])) & int(
+                        IPv6Address(udt_mask_1))
+                    udt_mask_2_int = int(
+                        IPv6Address(
+                            egress_node['uDT'])) & int(
+                        IPv6Address(udt_mask_2))
                     udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
-                    udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
+                    udt_sids += [str(IPv6Address(locator_int +
+                                                 (udt_mask_2_int << usid_id_bits)))]
                     # We need to convert the SID list into a uSID list
                     #  before creating the SRv6 policy
                     usid_list = sidlist_to_usidlist(
@@ -1170,9 +1185,11 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                                             egress_node['grpc_port']) as channel:
                     # Currently ony Linux and VPP are suppoted for the encap
                     if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                        logger.error('Encap operation is not supported for '
-                                    '%s with fwd engine %s' % egress_node['name'],
-                                    egress_node['fwd_engine'])
+                        logger.error(
+                            'Encap operation is not supported for '
+                            '%s with fwd engine %s' %
+                            egress_node['name'],
+                            egress_node['fwd_engine'])
                         return commons_pb2.STATUS_INTERNAL_ERROR
                     # VPP requires a BSID address
                     bsid_addr = ''
@@ -1183,7 +1200,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         add_colon = False
                         if len(bsid_addr) <= 28:
                             add_colon = True
-                        bsid_addr = [(bsid_addr[i:i+4]) for i in range(0, len(bsid_addr), 4)]
+                        bsid_addr = [(bsid_addr[i:i + 4])
+                                     for i in range(0, len(bsid_addr), 4)]
                         bsid_addr = ':'.join(bsid_addr)
                         if add_colon:
                             bsid_addr += '::'
@@ -1224,19 +1242,29 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
 
                     udt_sids = list()
                     # Locator mask
-                    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                                int('1' * (128 - locator_bits), 2)))
+                    locator_mask = str(IPv6Address(
+                        int('1' * 128, 2) ^ int('1' * (128 - locator_bits), 2)))
                     # uDT mask
-                    udt_mask_1 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                (128 - locator_bits - usid_id_bits)))
-                    udt_mask_2 =  str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                (128 - locator_bits - 2*usid_id_bits)))
+                    udt_mask_1 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                 (128 - locator_bits - usid_id_bits)))
+                    udt_mask_2 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                                 (128 - locator_bits - 2 * usid_id_bits)))
                     # Build uDT sid list
-                    locator_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(locator_mask))
-                    udt_mask_1_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_1))
-                    udt_mask_2_int = int(IPv6Address(ingress_node['uDT'])) & int(IPv6Address(udt_mask_2))
+                    locator_int = int(
+                        IPv6Address(
+                            ingress_node['uDT'])) & int(
+                        IPv6Address(locator_mask))
+                    udt_mask_1_int = int(
+                        IPv6Address(
+                            ingress_node['uDT'])) & int(
+                        IPv6Address(udt_mask_1))
+                    udt_mask_2_int = int(
+                        IPv6Address(
+                            ingress_node['uDT'])) & int(
+                        IPv6Address(udt_mask_2))
                     udt_sids += [str(IPv6Address(locator_int + udt_mask_1_int))]
-                    udt_sids += [str(IPv6Address(locator_int + (udt_mask_2_int << usid_id_bits)))]
+                    udt_sids += [str(IPv6Address(locator_int +
+                                                 (udt_mask_2_int << usid_id_bits)))]
                     # We need to convert the SID list into a uSID list
                     #  before creating the SRv6 policy
                     usid_list = sidlist_to_usidlist(
@@ -1264,7 +1292,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 if persistency:
                     if operation == 'add':
                         # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+                        client = arangodb_driver.connect_arango(
+                            url=arango_url)     # TODO keep arango connection open
                         # Connect to the db
                         database = arangodb_driver.connect_srv6_usid_db(
                             client=client,
@@ -1283,7 +1312,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         )
                     elif operation == 'del':
                         # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(url=arango_url)     # TODO keep arango connection open
+                        client = arangodb_driver.connect_arango(
+                            url=arango_url)     # TODO keep arango connection open
                         # Connect to the db
                         database = arangodb_driver.connect_srv6_usid_db(
                             client=client,
