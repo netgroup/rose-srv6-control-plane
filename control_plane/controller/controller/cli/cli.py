@@ -62,6 +62,9 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Logger reference
 logger = logging.getLogger(__name__)
 
+# Configure logging level for urllib3
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+
 # import utils
 # import srv6_controller
 # import ti_extraction
