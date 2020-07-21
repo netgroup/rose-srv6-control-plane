@@ -53,6 +53,7 @@ from pkg_resources import resource_filename
 
 # Controller dependencies
 from controller.cli import srv6_cli, srv6pm_cli, topo_cli
+from controller.init_db import init_srv6_usid_db
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -664,10 +665,7 @@ class ControllerCLISRv6USID(CustomCmd):
             self.nodes_filename = self.nodes_filename[1:-1]
         # Show the nodes available automatically when
         # the uSID subsection is opened
-        try:
-            srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
-        except FileNotFoundError:
-            logger.error('File not found %s', nodes_filename)
+        srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
         CustomCmd.__init__(self, *args)
 
     def do_nodes(self, args):
@@ -823,11 +821,15 @@ class ControllerCLISRv6(CustomCmd):
             )
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
-        sub_cmd = ControllerCLISRv6USID(
-            nodes_filename=args.nodes_file
-        )
-        sub_cmd.cmdloop()
-        return False
+        try:
+            sub_cmd = ControllerCLISRv6USID(
+                nodes_filename=args.nodes_file
+            )
+            sub_cmd.cmdloop()
+        except FileNotFoundError:
+            logger.error('File not found %s', args.nodes_file)
+        finally:
+            return False
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""
@@ -1192,6 +1194,8 @@ def __main():
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
     env_file = args.env_file
+    # Initialize database
+    init_srv6_usid_db()
     # Create a new configuration object
     config = Config()
     # Load configuration from .env file

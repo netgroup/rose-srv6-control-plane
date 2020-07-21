@@ -42,8 +42,7 @@ ARANGO_USER = os.getenv('ARANGO_USER', 'root')
 ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', '12345678')
 
 
-# Entry point for this module
-if __name__ == '__main__':
+def init_srv6_usid_db():
     # Connect to ArangoDB
     client = arangodb_driver.connect_arango(url=ARANGO_URL)
     # Initialize SRv6 uSID database
@@ -58,3 +57,8 @@ if __name__ == '__main__':
         arango_username=ARANGO_USER,
         arango_password=ARANGO_PASSWORD
     )
+
+
+# Entry point for this module
+if __name__ == '__main__':
+    init_usid_db()
