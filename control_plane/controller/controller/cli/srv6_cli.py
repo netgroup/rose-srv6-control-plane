@@ -62,10 +62,7 @@ def handle_srv6_usid_policy(
         metric=metric,
         _id=_id
     )
-    if res == 0:
-        print('OK')
-    else:
-        print('Error')
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_path(
@@ -97,10 +94,7 @@ def handle_srv6_path(
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_behavior(
@@ -136,10 +130,7 @@ def handle_srv6_behavior(
             metric=metric,
             fwd_engine=fwd_engine
         )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
@@ -162,10 +153,7 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
-            if res == 0:
-                print('OK')
-            else:
-                print('Error')
+            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
         elif operation == 'del':
             res = srv6_utils.destroy_uni_srv6_tunnel(
                 ingress_channel=ingress_channel,
@@ -175,10 +163,7 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                 bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
-            if res == 0:
-                print('OK')
-            else:
-                print('Error')
+            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
         else:
             print('Invalid operation %s' % operation)
 
@@ -207,10 +192,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
-            if res == 0:
-                print('OK')
-            else:
-                print('Error')
+            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
         elif operation == 'del':
             res = srv6_utils.destroy_srv6_tunnel(
                 node_l_channel=node_l_channel,
@@ -222,10 +204,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                 bsid_addr=bsid_addr,
                 fwd_engine=fwd_engine
             )
-            if res == 0:
-                print('OK')
-            else:
-                print('Error')
+            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
         else:
             print('Invalid operation %s' % operation)
 

@@ -57,10 +57,7 @@ def set_configuration(sender, reflector,
             number_of_color=number_of_color,
             pm_driver=pm_driver
         )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def reset_configuration(sender, reflector,
@@ -73,10 +70,7 @@ def reset_configuration(sender, reflector,
             sender_channel=sender_channel,
             reflector_channel=refl_channel
         )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def start_experiment(sender, reflector,
@@ -121,10 +115,7 @@ def start_experiment(sender, reflector,
             refl_send_localseg=refl_send_localseg,
             force=force
         )
-        if res == 0:
-            print('OK')
-        else:
-            print('Error')
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def get_experiment_results(sender, reflector,
