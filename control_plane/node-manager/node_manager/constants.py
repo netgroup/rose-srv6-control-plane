@@ -29,8 +29,20 @@ This file contains several constants used in different scripts
 '''
 
 # Proto dependencies
-from srv6_manager_pb2 import FwdEngine
-
+from srv6_manager_pb2 import FwdEngine  # pylint: disable=no-name-in-module
+from commons_pb2 import (STATUS_SUCCESS,
+                         STATUS_OPERATION_NOT_SUPPORTED,
+                         STATUS_BAD_REQUEST,
+                         STATUS_INTERNAL_ERROR,
+                         STATUS_INVALID_GRPC_REQUEST,
+                         STATUS_FILE_EXISTS,
+                         STATUS_NO_SUCH_PROCESS,
+                         STATUS_INVALID_ACTION,
+                         STATUS_GRPC_SERVICE_UNAVAILABLE,
+                         STATUS_GRPC_UNAUTHORIZED,
+                         STATUS_NOT_CONFIGURED,
+                         STATUS_ALREADY_CONFIGURED,
+                         STATUS_NO_SUCH_DEVICE)
 
 # Forwarding Engine
 FWD_ENGINE = {
@@ -38,3 +50,37 @@ FWD_ENGINE = {
     'Linux': FwdEngine.Value('Linux'),
     'P4': FwdEngine.Value('P4'),
 }  # pylint: disable=no-member
+
+# Status codes
+STATUS_CODE = {
+    'STATUS_SUCCESS': STATUS_SUCCESS,
+    'STATUS_OPERATION_NOT_SUPPORTED': STATUS_OPERATION_NOT_SUPPORTED,
+    'STATUS_BAD_REQUEST': STATUS_BAD_REQUEST,
+    'STATUS_INTERNAL_ERROR': STATUS_INTERNAL_ERROR,
+    'STATUS_INVALID_GRPC_REQUEST': STATUS_INVALID_GRPC_REQUEST,
+    'STATUS_FILE_EXISTS': STATUS_FILE_EXISTS,
+    'STATUS_NO_SUCH_PROCESS': STATUS_NO_SUCH_PROCESS,
+    'STATUS_INVALID_ACTION': STATUS_INVALID_ACTION,
+    'STATUS_GRPC_SERVICE_UNAVAILABLE': STATUS_GRPC_SERVICE_UNAVAILABLE,
+    'STATUS_GRPC_UNAUTHORIZED': STATUS_GRPC_UNAUTHORIZED,
+    'STATUS_NOT_CONFIGURED': STATUS_NOT_CONFIGURED,
+    'STATUS_ALREADY_CONFIGURED': STATUS_ALREADY_CONFIGURED,
+    'STATUS_NO_SUCH_DEVICE': STATUS_NO_SUCH_DEVICE,
+}
+
+# Status description
+STATUS_MSG = {
+    'STATUS_SUCCESS': 'Operation completed successfully',
+    'STATUS_OPERATION_NOT_SUPPORTED': 'Operation not supported',
+    'STATUS_BAD_REQUEST': 'Bad request',
+    'STATUS_INTERNAL_ERROR': 'Internal error',
+    'STATUS_INVALID_GRPC_REQUEST': 'Invalid gRPC request',
+    'STATUS_FILE_EXISTS': 'Entity already exists',
+    'STATUS_NO_SUCH_PROCESS': 'Entity not found',
+    'STATUS_INVALID_ACTION': 'Invalid action',
+    'STATUS_GRPC_SERVICE_UNAVAILABLE': 'Unreachable grPC server',
+    'STATUS_GRPC_UNAUTHORIZED': 'Unauthorized',
+    'STATUS_NOT_CONFIGURED': 'Not configured',
+    'STATUS_ALREADY_CONFIGURED': 'Already configured',
+    'STATUS_NO_SUCH_DEVICE': 'Device not found',
+}
