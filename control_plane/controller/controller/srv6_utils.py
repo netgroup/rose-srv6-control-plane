@@ -80,7 +80,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     Handle a SRv6 Path
     '''
 
-    # pylint: disable=too-many-locals, too-many-arguments
+    # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 
     if segments is None:
         segments = []
@@ -387,6 +387,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     '''
+    # pylint: disable=too-many-arguments
+    #
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
     #
@@ -534,6 +536,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                           (default is False)
     :type ignore_errors: bool, optional
     '''
+    # pylint: disable=too-many-arguments
+    #
     # Remove seg6 route from <ingress> to steer the packets sent to
     # <destination> through the SID list <segments>
     #
