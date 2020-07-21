@@ -28,6 +28,9 @@
 ArangoDB driver
 '''
 
+# pylint: disable=too-many-arguments
+
+
 # python-arango dependencies
 from arango import ArangoClient
 

@@ -46,7 +46,6 @@ def handle_srv6_usid_policy(
         nodes_rl=None,
         table=-1,
         metric=-1,
-        fwd_engine='Linux',
         _id=None):
     """Handle a SRv6 uSID policy"""
 
@@ -191,7 +190,7 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            bsid_addr='', fwd_engine='Linux'):
     """Handle SRv6 bidirectional tunnel"""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-locals
 
     with utils.get_grpc_session(node_l_ip, node_l_port) as node_l_channel, \
             utils.get_grpc_session(node_r_ip, node_r_port) as node_r_channel:
@@ -281,7 +280,7 @@ def args_srv6_usid_policy():
                        'help': 'Metric', 'type': int, 'default': -1}
         }, {
             'args': ['--id'],
-            'kwargs': {'dest': '_id', 'action': 'store',
+            'kwargs': {'dest': 'id', 'action': 'store',
                        'help': 'id', 'type': int, 'default': None}
         }, {
             'args': ['--debug'],
