@@ -47,32 +47,31 @@ Create, get, change or remove a SRv6 uSID policy in a node.
 .. code:: bash
 
   controller(srv6)> policy --help
-  usage: path [-h] -g GRPC_IP -r GRPC_PORT [-s] [--server-cert SERVER_CERT] --op OP
-              --destination DESTINATION --segments SEGMENTS [--device DEVICE]
-              [--encapmode {encap,inline,l2encap}] [--table TABLE]
-              [--metric METRIC] [-d]
+  usage: policy [-h] [--secure] [--server-cert SERVER_CERT] --op OP
+                [--lr-destination LR_DESTINATION]
+                [--rl-destination RL_DESTINATION] [--nodes NODES]
+                [--nodes-rev NODES_REV] [--table TABLE] [--metric METRIC]
+                [--id ID] [--debug]
 
-  Create, get, change or remove a SRv6 uSID policy in a node.
+  gRPC Southbound APIs for SRv6 Controller
 
   optional arguments:
     -h, --help            show this help message and exit
-    -g GRPC_IP, --grpc-ip GRPC_IP
-                          IP of the gRPC server
-    -r GRPC_PORT, --grpc-port GRPC_PORT
-                         Port of the gRPC server
-    -s, --secure          Activate secure mode
+    --secure              Activate secure mode
     --server-cert SERVER_CERT
                           CA certificate file
     --op OP               Operation
-    --destination DESTINATION
-                          Destination
-    --nodes NODES   Waypoints of the path
-    --device DEVICE       Device
-    --encapmode {encap,inline,l2encap}
-                          Encap mode
+    --lr-destination LR_DESTINATION
+                          Left to Right Destination
+    --rl-destination RL_DESTINATION
+                          Right to Left Destination
+    --nodes NODES         Nodes
+    --nodes-rev NODES_REV
+                          Reverse nodes list
     --table TABLE         Table
     --metric METRIC       Metric
-    -d, --debug           Activate debug logs
+    --id ID               id
+    --debug               Activate debug logs
 
 
 .. list-table:: Arguments for the ``policy`` command
