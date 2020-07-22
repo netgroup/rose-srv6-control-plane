@@ -37,7 +37,7 @@ message SRv6PathRequest {
 }
 
 // The SRv6PolicyRequest message containing a number of policies.
-  message SRv6PolicyRequest {         // Required for VPP
+  message SRv6PolicyRequest {
   repeated SRv6Policy policies = 1;
   // Fowarding engine
   FwdEngine fwd_engine = 2;
@@ -66,7 +66,7 @@ message SRv6Path {
 }
 
 // The Policy message encodes a policy request
-message SRv6Policy {
+message SRv6Policy {         // Required for VPP
   // Route of the SRv6 policy
   string bsid_addr = 1;
   // SRv6 Segment
