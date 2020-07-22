@@ -9,7 +9,7 @@ API Reference
 
 
    srv6_utils
-   srv6_policy
+   srv6_usid
    srv6_pm
    ti_extraction
    arangodb_utils

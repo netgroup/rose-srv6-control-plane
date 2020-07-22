@@ -30,7 +30,7 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import srv6_utils, srv6_policy, utils
+from controller import srv6_utils, srv6_usid, utils
 from controller.cli import utils as cli_utils
 
 # Default CA certificate path
@@ -51,7 +51,7 @@ def handle_srv6_usid_policy(
 
     # pylint: disable=too-many-arguments
 
-    res = srv6_policy.handle_srv6_usid_policy(
+    res = srv6_usid.handle_srv6_usid_policy(
         operation=operation,
         nodes_filename=nodes_filename,
         lr_destination=lr_destination,
@@ -885,4 +885,4 @@ def complete_srv6_usid(text, prev_text=None):
 
 def print_node_to_addr_mapping(nodes_filename):
     '''Print mapping node to IP address'''
-    srv6_policy.print_node_to_addr_mapping(nodes_filename)
+    srv6_usid.print_node_to_addr_mapping(nodes_filename)
