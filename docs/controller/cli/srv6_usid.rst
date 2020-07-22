@@ -89,18 +89,6 @@ Create, get, change or remove a SRv6 uSID policy in a node.
       - --
       - --
       - Show an help message and exit.
-    * - ``--grpc-ip``
-      - string
-      - --
-      - no
-      - | IP of the gRPC server executed
-        | on the node.
-    * - ``--grpc-port``
-      - integer
-      - 12345
-      - yes
-      - | Port of the gRPC server executed
-        | on the node.
     * - ``--secure``
       - boolean
       - False
@@ -120,16 +108,31 @@ Create, get, change or remove a SRv6 uSID policy in a node.
       - --
       - no
       - Operation (add, change, get, del).
-    * - ``--destination``
+    * - ``--lr-destination``
       - string
       - --
-      - no
-      - Destination of the SRv6 path.
+      - yes
+      - Destination of the SRv6 left-to-right path.
+    * - ``--rl-destination``
+      - string
+      - --
+      - yes
+      - Destination of the SRv6 right-to-left path.
     * - ``--nodes``
       - string
       - --
       - yes
-      - | The list of the waypoints (device names) of the SRv6 path.
+      - | The list of the waypoints (device names) of
+        | the SRv6 path (left-to-right).
+    * - ``--nodes-rev``
+      - string
+      - --
+      - yes
+      - | The list of the waypoints (device names) of the
+        | reverse SRv6 path (right-to-left).
+        | If not provided, the same nodes of the
+        | left-to-right path in reverse order
+        | will be used.
     * - ``--device``
       - string
       - --
