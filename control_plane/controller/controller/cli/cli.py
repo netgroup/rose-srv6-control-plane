@@ -829,10 +829,9 @@ class ControllerCLISRv6(CustomCmd):
                 nodes_filename=args.nodes_file
             )
             sub_cmd.cmdloop()
+            return False
         except FileNotFoundError:
             logger.error('File not found %s', args.nodes_file)
-        finally:
-            return False
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""

@@ -43,6 +43,9 @@ ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', '12345678')
 
 
 def init_srv6_usid_db():
+    '''
+    Initialize uSID database and uSID policies collection
+    '''
     # Connect to ArangoDB
     client = arangodb_driver.connect_arango(url=ARANGO_URL)
     # Initialize SRv6 uSID database
@@ -61,4 +64,4 @@ def init_srv6_usid_db():
 
 # Entry point for this module
 if __name__ == '__main__':
-    init_usid_db()
+    init_srv6_usid_db()
