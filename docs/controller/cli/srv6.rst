@@ -611,7 +611,7 @@ containing the mapping of node names to IP addresses.
 
 .. code:: bash
 
-  controller(srv6)> usid --addrs-file nodes.yml
+  controller(srv6)> usid --nodes-file nodes.yml
 
 See :ref:`controller-cli-srv6-usid` for a description
 of the commands available in the ``usid`` section.

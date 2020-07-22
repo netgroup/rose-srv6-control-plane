@@ -12,13 +12,13 @@ functions related to uSID.
 Entering the ``srv6``/``usid`` section
 --------------------------------------
 
-.. note:: usid requires the argument --addrs-file, that is a YAML file
+.. note:: usid requires the argument --nodes-file, that is a YAML file
   containing the mapping of node names to IP addresses.
 
 .. code:: bash
 
   controller> srv6
-  controller(srv6)> usid --addrs-file nodes.yml
+  controller(srv6)> usid --nodes-file nodes.yml
   controller(srv6-usid)> 
 
 Section ``srv6``/``usid`` supports the following commands:
