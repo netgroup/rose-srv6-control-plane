@@ -1,0 +1,59 @@
+locator_bits: 32
+usid_id_bits: 16
+nodes:
+  r1:
+    name: 'r1'
+    grpc_ip: 'fcfd:0:0:1::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:100::'
+    uDT: 'FCBB:BBBB:100:F00D::'
+    fwd_engine: 'Linux'
+  r2:
+    name: 'r2'
+    grpc_ip: 'fcfd:0:0:2::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:200::'
+    uDT: 'FCBB:BBBB:200:F00D::'
+    fwd_engine: 'Linux'
+  r3:
+    name: 'r3'
+    grpc_ip: 'fcfd:0:0:3::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:300::'
+    uDT: 'FCBB:BBBB:300:F00D::'
+    fwd_engine: 'Linux'
+  vpp_1:
+    name: 'vpp_1'
+    grpc_ip: 'fcfd:0:0:4::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:400::'
+    uDT: 'FCBB:BBBB:400:F00D::'
+    fwd_engine: 'VPP'
+  vpp_2:
+    name: 'vpp_2'
+    grpc_ip: 'fcfd:0:0:5::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:500::'
+    uDT: 'FCBB:BBBB:500:F00D::'
+    fwd_engine: 'VPP'
+  vpp_3:
+    name: 'vpp_3'
+    grpc_ip: 'fcfd:0:0:8::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:800::'
+    uDT: 'FCBB:BBBB:800:F00D::'
+    fwd_engine: 'VPP'
+  p4_1:
+    name: 'p4_1'
+    grpc_ip: 'fcfd:0:0:7::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:700::'
+    uDT: 'FCBB:BBBB:700:F00D::'
+    fwd_engine: 'P4'
+  p4_2:
+    name: 'p4_2'
+    grpc_ip: 'fcfd:0:0:6::1'
+    grpc_port: 12345
+    uN: 'FCBB:BBBB:600::'
+    uDT: 'FCBB:BBBB:600:F00D::'
+    fwd_engine: 'P4'

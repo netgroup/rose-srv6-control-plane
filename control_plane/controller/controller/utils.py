@@ -188,3 +188,20 @@ def print_status_message(status_code, success_msg, failure_msg):
         print('%s (status code %s - %s)'
               % (failure_msg, status_code,
                  status_code_to_str.get(status_code, 'Unknown')))
+
+
+STATUS_CODE_TO_DESC = {
+    commons_pb2.STATUS_SUCCESS: 'Operation completed successfully',
+    commons_pb2.STATUS_OPERATION_NOT_SUPPORTED: 'Error: Operation not supported',
+    commons_pb2.STATUS_BAD_REQUEST: 'Error: Bad request',
+    commons_pb2.STATUS_INTERNAL_ERROR: 'Error: Internal error',
+    commons_pb2.STATUS_INVALID_GRPC_REQUEST: 'Error: Invalid gRPC request',
+    commons_pb2.STATUS_FILE_EXISTS: 'Error: Entity already exists',
+    commons_pb2.STATUS_NO_SUCH_PROCESS: 'Error: Entity not found',
+    commons_pb2.STATUS_INVALID_ACTION: 'Error: Invalid action',
+    commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE: 'Error: Unreachable grPC server',
+    commons_pb2.STATUS_GRPC_UNAUTHORIZED: 'Error: Unauthorized',
+    commons_pb2.STATUS_NOT_CONFIGURED: 'Error: Not configured',
+    commons_pb2.STATUS_ALREADY_CONFIGURED: 'Error: Already configured',
+    commons_pb2.STATUS_NO_SUCH_DEVICE: 'Error: Device not found',
+}

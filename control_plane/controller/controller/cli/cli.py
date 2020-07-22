@@ -53,6 +53,7 @@ from pkg_resources import resource_filename
 
 # Controller dependencies
 from controller.cli import srv6_cli, srv6pm_cli, topo_cli
+from controller.init_db import init_srv6_usid_db
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -60,6 +61,9 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Logger reference
 logger = logging.getLogger(__name__)
+
+# Configure logging level for urllib3
+logging.getLogger('urllib3').setLevel(logging.WARNING)
 
 # import utils
 # import srv6_controller
@@ -649,6 +653,100 @@ class ControllerCLISRv6PM(CustomCmd):
         sub_cmd.cmdloop()
 
 
+class ControllerCLISRv6USID(CustomCmd):
+    """srv6-usid subsection"""
+
+    prompt = "controller(srv6-usid)> "
+
+    def __init__(self, nodes_filename, *args):
+        # File containing the mapping node names to IP addresses
+        self.nodes_filename = nodes_filename
+        # Remove leading and trailing apices
+        if self.nodes_filename[0] == "'" and self.nodes_filename[-1] == "'":
+            self.nodes_filename = self.nodes_filename[1:-1]
+        elif self.nodes_filename[0] == '"' and self.nodes_filename[-1] == '"':
+            self.nodes_filename = self.nodes_filename[1:-1]
+        # Show the nodes available automatically when
+        # the uSID subsection is opened
+        srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
+        CustomCmd.__init__(self, *args)
+
+    def do_nodes(self, args):
+        """Show nodes"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
+    def help_nodes(self):
+        """Show help usage for nodes command"""
+        #
+        # pylint: disable=no-self-use
+        #
+        print('Show the list of the available devices')
+
+    def do_policy(self, args):
+        """Handle a SRv6 uSID policy"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        try:
+            args = srv6_cli.parse_arguments_srv6_usid_policy(
+                prog='policy',
+                args=args.split(' ')
+            )
+        except SystemExit:
+            return False  # This workaround avoid exit in case of errors
+        srv6_cli.handle_srv6_usid_policy(
+            operation=args.op,
+            nodes_filename=self.nodes_filename,
+            lr_destination=args.lr_destination,
+            rl_destination=args.rl_destination,
+            nodes_lr=args.nodes,
+            nodes_rl=args.nodes_rev,
+            table=args.table,
+            metric=args.metric,
+            _id=args.id
+        )
+        # Print nodes available
+        srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
+    def complete_policy(self, text, line, start_idx, end_idx):
+        """Auto-completion for policy command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_usid_policy(text, prev_text)
+
+    def help_policy(self):
+        """Show help usage for policy command"""
+
+        # pylint: disable=no-self-use
+
+        srv6_cli.parse_arguments_srv6_usid_policy(
+            prog='policy',
+            args=['--help']
+        )
+
+
 class ControllerCLISRv6(CustomCmd):
     """srv6 subsection"""
 
@@ -675,7 +773,9 @@ class ControllerCLISRv6(CustomCmd):
             device=args.device,
             encapmode=args.encapmode,
             table=args.table,
-            metric=args.metric
+            metric=args.metric,
+            bsid_addr=args.bsid_addr,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -705,11 +805,33 @@ class ControllerCLISRv6(CustomCmd):
             lookup_table=args.lookup_table,
             interface=args.interface,
             segments=args.segments,
-            metric=args.metric
+            metric=args.metric,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
+
+    def do_usid(self, args):
+        """Enter uSID subsection"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        try:
+            args = srv6_cli.parse_arguments_srv6_usid(
+                prog='usid',
+                args=args.split(' ')
+            )
+        except SystemExit:
+            return False  # This workaround avoid exit in case of errors
+        try:
+            sub_cmd = ControllerCLISRv6USID(
+                nodes_filename=args.nodes_file
+            )
+            sub_cmd.cmdloop()
+            return False
+        except FileNotFoundError:
+            logger.error('File not found %s', args.nodes_file)
 
     def do_unitunnel(self, args):
         """Handle a SRv6 unidirectional tunnel"""
@@ -731,7 +853,9 @@ class ControllerCLISRv6(CustomCmd):
             egress_port=args.egress_grpc_port,
             destination=args.dest,
             segments=args.sidlist,
-            localseg=args.localseg
+            localseg=args.localseg,
+            bsid_addr=args.bsid_addr,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -760,7 +884,9 @@ class ControllerCLISRv6(CustomCmd):
             dest_lr=args.dest_lr,
             dest_rl=args.dest_rl,
             localseg_lr=args.localseg_lr,
-            localseg_rl=args.localseg_rl
+            localseg_rl=args.localseg_rl,
+            bsid_addr=args.bsid_addr,
+            fwd_engine=args.fwd_engine
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -842,6 +968,25 @@ class ControllerCLISRv6(CustomCmd):
         # possible arguments
         return srv6_cli.complete_srv6_biditunnel(text, prev_text)
 
+    def complete_usid(self, text, line, start_idx, end_idx):
+        """Auto-completion for usid command"""
+
+        # pylint: disable=no-self-use, unused-argument
+
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return srv6_cli.complete_srv6_usid(text, prev_text)
+
     def help_path(self):
         """Show help usage for path command"""
 
@@ -879,6 +1024,16 @@ class ControllerCLISRv6(CustomCmd):
 
         srv6_cli.parse_arguments_srv6_biditunnel(
             prog='biditunnel',
+            args=['-help']
+        )
+
+    def help_usid(self):
+        """Show help usage for usid command"""
+
+        # pylint: disable=no-self-use
+
+        srv6_cli.parse_arguments_srv6_usid(
+            prog='usid',
             args=['-help']
         )
 
@@ -1041,6 +1196,8 @@ def __main():
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
     env_file = args.env_file
+    # Initialize database
+    init_srv6_usid_db()
     # Create a new configuration object
     config = Config()
     # Load configuration from .env file

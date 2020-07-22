@@ -47,6 +47,10 @@ from controller import utils
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
+# Default number of bits for the SID Locator
+DEFAULT_LOCATOR_BITS = 32
+# Default number of bits for the uSID identifier
+DEFAULT_USID_ID_BITS = 16
 
 
 # Parser for gRPC errors
@@ -70,12 +74,13 @@ def parse_grpc_error(err):
 
 
 def handle_srv6_path(operation, channel, destination, segments=None,
-                     device='', encapmode="encap", table=-1, metric=-1):
+                     device='', encapmode="encap", table=-1, metric=-1,
+                     bsid_addr='', fwd_engine='Linux'):
     '''
     Handle a SRv6 Path
     '''
 
-    # pylint: disable=too-many-locals, too-many-arguments
+    # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 
     if segments is None:
         segments = []
@@ -99,6 +104,32 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
     path.metric = int(metric)
+    # Set the BSID address (required for VPP)
+    path.bsid_addr = str(bsid_addr)
+    # Handle SRv6 policy for VPP
+    if fwd_engine == 'VPP':
+        if bsid_addr == '':
+            logger.error('"bsid_addr" argument is mandatory for VPP')
+            return None
+        # Handle SRv6 policy
+        res = handle_srv6_policy(
+            operation=operation,
+            channel=channel,
+            bsid_addr=bsid_addr,
+            segments=segments,
+            table=table,
+            metric=metric,
+            fwd_engine=fwd_engine
+        )
+        if res != commons_pb2.STATUS_SUCCESS:
+            logger.error('Cannot create SRv6 policy: error %s', res)
+            return None
+    # Forwarding engine (Linux or VPP)
+    try:
+        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -143,9 +174,83 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     return response
 
 
+def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
+                       table=-1, metric=-1, fwd_engine='Linux'):
+    '''
+    Handle a SRv6 Path
+    '''
+
+    # pylint: disable=too-many-locals, too-many-arguments
+
+    if segments is None:
+        segments = []
+    # Create request message
+    request = srv6_manager_pb2.SRv6ManagerRequest()
+    # Create a new SRv6 path request
+    policy_request = request.srv6_policy_request   # pylint: disable=no-member
+    # Create a new path
+    policy = policy_request.policies.add()
+    # Set BSID address
+    policy.bsid_addr = text_type(bsid_addr)
+    # Set table ID
+    # If the table ID is not specified (i.e. table=-1),
+    # the main table will be used
+    policy.table = int(table)
+    # Set metric (i.e. preference value of the route)
+    # If the metric is not specified (i.e. metric=-1),
+    # the decision is left to the Linux kernel
+    policy.metric = int(metric)
+    # Forwarding engine (Linux or VPP)
+    try:
+        policy_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+            fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
+    try:
+        # Get the reference of the stub
+        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+        # Fill the request depending on the operation
+        # and send the request
+        if operation == 'add':
+            if len(segments) == 0:
+                logger.error('*** Missing segments for seg6 route')
+                return commons_pb2.STATUS_INTERNAL_ERROR
+            # Iterate on the segments and build the SID list
+            for segment in segments:
+                # Append the segment to the SID list
+                srv6_segment = policy.sr_path.add()
+                srv6_segment.segment = text_type(segment)
+            # Create the SRv6 path
+            response = stub.Create(request)
+        elif operation == 'get':
+            # Get the SRv6 path
+            response = stub.Get(request)
+        elif operation == 'change':
+            # Iterate on the segments and build the SID list
+            for segment in segments:
+                # Append the segment to the SID list
+                srv6_segment = policy.sr_path.add()
+                srv6_segment.segment = text_type(segment)
+            # Update the SRv6 path
+            response = stub.Update(request)
+        elif operation == 'del':
+            # Remove the SRv6 path
+            response = stub.Remove(request)
+        # Get the status code of the gRPC operation
+        response = response.status
+    except grpc.RpcError as err:
+        # An error occurred during the gRPC operation
+        # Parse the error and return it
+        response = parse_grpc_error(err)
+    # Return the response
+    return response
+
+
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments=None, metric=-1):
+                         interface="", segments=None, metric=-1,
+                         fwd_engine='Linux'):
     '''
     Handle a SRv6 behavior
     '''
@@ -178,6 +283,13 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
     behavior.metric = int(metric)
+    # Forwarding engine (Linux or VPP)
+    try:
+        behavior_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+            fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        return None
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -245,8 +357,15 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     return response
 
 
+class SRv6Exception(Exception):
+    '''
+    Generic SRv6 Exception.
+    '''
+
+
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
-                           destination, segments, localseg=None):
+                           destination, segments, localseg=None,
+                           bsid_addr='', fwd_engine='Linux'):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -265,7 +384,11 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                      'localseg' isn't passed in, the End.DT6 function
                      is not created.
     :type localseg: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     '''
+    # pylint: disable=too-many-arguments
+    #
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
     #
@@ -276,7 +399,9 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         operation='add',
         channel=ingress_channel,
         destination=destination,
-        segments=segments
+        segments=segments,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # Pretty print status code
     utils.print_status_message(
@@ -302,7 +427,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             channel=egress_channel,
             segment=localseg,
             action='End.DT6',
-            lookup_table=254
+            lookup_table=254,
+            fwd_engine=fwd_engine
         )
         # Pretty print status code
         utils.print_status_message(
@@ -319,7 +445,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
 
 def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
-                       localseg_lr=None, localseg_rl=None):
+                       localseg_lr=None, localseg_rl=None,
+                       bsid_addr='', fwd_engine='Linux'):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -351,6 +478,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                         to <node_l>. If the argument 'localseg_rl' isn't
                         passed in, the End.DT6 function is not created.
     :type localseg_rl: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     '''
     # pylint: disable=too-many-arguments
     #
@@ -360,7 +489,9 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
         segments=sidlist_lr,
-        localseg=localseg_lr
+        localseg=localseg_lr,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -371,7 +502,9 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
         segments=sidlist_rl,
-        localseg=localseg_rl
+        localseg=localseg_rl,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -381,7 +514,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
 
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                            localseg=None, ignore_errors=False):
+                            localseg=None, bsid_addr='', fwd_engine='Linux',
+                            ignore_errors=False):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -396,10 +530,14 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                      function on the egress node. If the argument 'localseg'
                      isn't passed in, the End.DT6 function is not removed.
     :type localseg: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
     '''
+    # pylint: disable=too-many-arguments
+    #
     # Remove seg6 route from <ingress> to steer the packets sent to
     # <destination> through the SID list <segments>
     #
@@ -409,7 +547,9 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     res = handle_srv6_path(
         operation='del',
         channel=ingress_channel,
-        destination=destination
+        destination=destination,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # Pretty print status code
     utils.print_status_message(
@@ -437,7 +577,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         res = handle_srv6_behavior(
             operation='del',
             channel=egress_channel,
-            segment=localseg
+            segment=localseg,
+            fwd_engine=fwd_engine
         )
         # Pretty print status code
         utils.print_status_message(
@@ -458,6 +599,7 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
 
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
+                        bsid_addr='', fwd_engine='Linux',
                         ignore_errors=False):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
@@ -488,6 +630,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         If the argument 'localseg_r' isn't passed in, the
                         End.DT6 function is not removed.
     :type localseg_rl: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
@@ -500,7 +644,9 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
         localseg=localseg_lr,
-        ignore_errors=ignore_errors
+        ignore_errors=ignore_errors,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -511,7 +657,9 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
         localseg=localseg_rl,
-        ignore_errors=ignore_errors
+        ignore_errors=ignore_errors,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
