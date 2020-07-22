@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>srv6_usid module &mdash; ROSE SRv6 Control Plane v0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="srv6_pm module" href="srv6_pm.html" />
+    <link rel="prev" title="srv6_utils module" href="srv6_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> ROSE SRv6 Control Plane
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Controller</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cli/cli.html">Command-Line Interface (CLI) Reference</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="srv6_utils.html">srv6_utils module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">srv6_usid module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="srv6_pm.html">srv6_pm module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ti_extraction.html">ti_extraction module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="arangodb_utils.html">arangodb_utils module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils.html">utils module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../node-manager/index.html">Node Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../release/index.html">Release Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ROSE SRv6 Control Plane</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Controller</a> &raquo;</li>
+        
+          <li><a href="api_reference.html">API Reference</a> &raquo;</li>
+        
+      <li>srv6_usid module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/controller/api/srv6_usid.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-controller.srv6_usid">
+<span id="srv6-usid-module"></span><h1>srv6_usid module<a class="headerlink" href="#module-controller.srv6_usid" title="Permalink to this headline">¶</a></h1>
+<p>Control-Plane functionalities for SRv6 Manager</p>
+<dl class="exception">
+<dt id="controller.srv6_usid.InvalidConfigurationError">
+<em class="property">exception </em><code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">InvalidConfigurationError</code><a class="reference internal" href="../../_modules/controller/srv6_usid.html#InvalidConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.InvalidConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration file is not valid.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="controller.srv6_usid.InvalidSIDError">
+<em class="property">exception </em><code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">InvalidSIDError</code><a class="reference internal" href="../../_modules/controller/srv6_usid.html#InvalidSIDError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.InvalidSIDError" title="Permalink to this definition">¶</a></dt>
+<dd><p>SID is invalid.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="controller.srv6_usid.NodeNotFoundError">
+<em class="property">exception </em><code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">NodeNotFoundError</code><a class="reference internal" href="../../_modules/controller/srv6_usid.html#NodeNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.NodeNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node not found error.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="controller.srv6_usid.SIDLocatorError">
+<em class="property">exception </em><code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">SIDLocatorError</code><a class="reference internal" href="../../_modules/controller/srv6_usid.html#SIDLocatorError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.SIDLocatorError" title="Permalink to this definition">¶</a></dt>
+<dd><p>SID Locator is invalid error.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="controller.srv6_usid.TooManySegmentsError">
+<em class="property">exception </em><code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">TooManySegmentsError</code><a class="reference internal" href="../../_modules/controller/srv6_usid.html#TooManySegmentsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.TooManySegmentsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Too many segments error.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.get_sid_locator">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">get_sid_locator</code><span class="sig-paren">(</span><em class="sig-param">sid_list</em>, <em class="sig-param">locator_bits=32</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#get_sid_locator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.get_sid_locator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the SID Locator (i.e. the first 32 bits) from a SID List.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sid_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – SID List</p></li>
+<li><p><strong>locator_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of bits of the locator part of the SIDs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SID Locator</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.handle_srv6_usid_policy">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">handle_srv6_usid_policy</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">nodes_filename=None</em>, <em class="sig-param">lr_destination=None</em>, <em class="sig-param">rl_destination=None</em>, <em class="sig-param">nodes_lr=None</em>, <em class="sig-param">nodes_rl=None</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">persistency=True</em>, <em class="sig-param">_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#handle_srv6_usid_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.handle_srv6_usid_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle a SRv6 Policy using uSIDs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The operation to be performed on the uSID policy
+(i.e. add, get, change, del)</p></li>
+<li><p><strong>nodes_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
+mapping of node names to IP addresses</p></li>
+<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Destination of the SRv6 route</p></li>
+<li><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – Waypoints of the SRv6 route</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Device of the SRv6 route. If not provided, the device
+is selected automatically by the node.</p></li>
+<li><p><strong>table</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Routing table containing the SRv6 route. If not provided,
+the main table (i.e. table 254) will be used.</p></li>
+<li><p><strong>metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Metric for the SRv6 route. If not provided, the default
+metric will be used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Status Code of the operation (e.g. 0 for STATUS_SUCCESS)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)">int</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#controller.srv6_usid.NodeNotFoundError" title="controller.srv6_usid.NodeNotFoundError"><strong>NodeNotFoundError</strong></a> – Node name not found in the mapping file</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – The mapping file is not a valid
+YAML file</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.TooManySegmentsError" title="controller.srv6_usid.TooManySegmentsError"><strong>TooManySegmentsError</strong></a> – segments arg contains more than 6 segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.InvalidSIDError" title="controller.srv6_usid.InvalidSIDError"><strong>InvalidSIDError</strong></a> – SID is wrong for one or more segments</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.nodes_to_micro_segments">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">nodes_to_micro_segments</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">node_addrs_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#nodes_to_micro_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.nodes_to_micro_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a list of nodes into a list of micro segments (uSID List)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nodes</strong> – List of node names</p></li>
+<li><p><strong>node_to_addr_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
+mapping of node names to IP addresses</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>uSID List</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#controller.srv6_usid.NodeNotFoundError" title="controller.srv6_usid.NodeNotFoundError"><strong>NodeNotFoundError</strong></a> – Node name not found in the mapping file</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – The mapping file is not a valid
+YAML file</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.TooManySegmentsError" title="controller.srv6_usid.TooManySegmentsError"><strong>TooManySegmentsError</strong></a> – segments arg contains more than 6 segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.print_node_to_addr_mapping">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">print_node_to_addr_mapping</code><span class="sig-paren">(</span><em class="sig-param">nodes_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#print_node_to_addr_mapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.print_node_to_addr_mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function reads a YAML file containing the mapping
+of node names to IP addresses and pretty print it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>node_to_addr_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
+mapping of node names to IP addresses</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.read_nodes">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">read_nodes</code><span class="sig-paren">(</span><em class="sig-param">nodes_filename</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#read_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.read_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a list of node names into a list of IP addresses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nodes_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
+IP addresses</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple (List of IP addresses, Locator bits, uSID ID bits)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.8)">tuple</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#controller.srv6_usid.NodeNotFoundError" title="controller.srv6_usid.NodeNotFoundError"><strong>NodeNotFoundError</strong></a> – Node name not found in the mapping file</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – The mapping file is not a valid
+YAML file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.segments_to_micro_segment">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">segments_to_micro_segment</code><span class="sig-paren">(</span><em class="sig-param">locator</em>, <em class="sig-param">segments</em>, <em class="sig-param">locator_bits=32</em>, <em class="sig-param">usid_id_bits=16</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#segments_to_micro_segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.segments_to_micro_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a SID list (with #segments &lt;= 6) into a uSID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The SID Locator of the segments.
+All the segments must use the same SID Locator.</p></li>
+<li><p><strong>segments</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID List to be compressed</p></li>
+<li><p><strong>locator_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of bits of the locator part of the SIDs</p></li>
+<li><p><strong>usid_id_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of bits of the uSID identifiers</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The uSID containing all the segments</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#controller.srv6_usid.TooManySegmentsError" title="controller.srv6_usid.TooManySegmentsError"><strong>TooManySegmentsError</strong></a> – segments arg contains too many segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.InvalidSIDError" title="controller.srv6_usid.InvalidSIDError"><strong>InvalidSIDError</strong></a> – SID is wrong for one or more segments</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.sidlist_to_usidlist">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">sidlist_to_usidlist</code><span class="sig-paren">(</span><em class="sig-param">sid_list</em>, <em class="sig-param">udt_sids=None</em>, <em class="sig-param">locator_bits=32</em>, <em class="sig-param">usid_id_bits=16</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#sidlist_to_usidlist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.sidlist_to_usidlist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a SID List into a uSID List.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sid_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – SID List to be converted</p></li>
+<li><p><strong>locator_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of bits of the locator part of the SIDs</p></li>
+<li><p><strong>usid_id_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of bits of the uSID identifiers</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>uSID List containing</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)">list</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#controller.srv6_usid.TooManySegmentsError" title="controller.srv6_usid.TooManySegmentsError"><strong>TooManySegmentsError</strong></a> – segments arg contains too many segments</p></li>
+<li><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="srv6_pm.html" class="btn btn-neutral float-right" title="srv6_pm module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="srv6_utils.html" class="btn btn-neutral float-left" title="srv6_utils module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Carmine Scarpitta
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

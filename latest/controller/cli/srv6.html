@@ -36,7 +36,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="SRv6 Performance Measurement Functions" href="srv6pm.html" />
+    <link rel="next" title="SRv6 uSID Functions" href="srv6_usid.html" />
     <link rel="prev" title="Command-Line Interface (CLI) Reference" href="cli.html" /> 
 </head>
 
@@ -95,6 +95,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#biditunnel"><code class="docutils literal notranslate"><span class="pre">biditunnel</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#path"><code class="docutils literal notranslate"><span class="pre">path</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unitunnel"><code class="docutils literal notranslate"><span class="pre">unitunnel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usid"><code class="docutils literal notranslate"><span class="pre">usid</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exit"><code class="docutils literal notranslate"><span class="pre">exit</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#help"><code class="docutils literal notranslate"><span class="pre">help</span></code></a></li>
 </ul>
@@ -190,7 +191,7 @@ controller<span class="o">(</span>srv6<span class="o">)</span>&gt;
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">srv6</span></code> section supports the following commands:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>behavior  biditunnel  <span class="nb">exit</span>  <span class="nb">help</span>  path  unitunnel
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>behavior  biditunnel  <span class="nb">exit</span>  <span class="nb">help</span>  path  unitunnel usid
 </pre></div>
 </div>
 </div>
@@ -983,6 +984,17 @@ optional arguments:
 </tbody>
 </table>
 </div>
+<div class="section" id="usid">
+<h2><code class="docutils literal notranslate"><span class="pre">usid</span></code><a class="headerlink" href="#usid" title="Permalink to this headline">¶</a></h2>
+<p>Enter the <code class="docutils literal notranslate"><span class="pre">usid</span></code> sub-section of the <code class="docutils literal notranslate"><span class="pre">srv6</span></code> CLI.
+This command requires the argument –addrs-file, that is a YAML file
+containing the mapping of node names to IP addresses.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; usid --nodes-file nodes.yml
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="srv6_usid.html#controller-cli-srv6-usid"><span class="std std-ref">SRv6 uSID Functions</span></a> for a description
+of the commands available in the <code class="docutils literal notranslate"><span class="pre">usid</span></code> section.</p>
+</div>
 <div class="section" id="exit">
 <h2><code class="docutils literal notranslate"><span class="pre">exit</span></code><a class="headerlink" href="#exit" title="Permalink to this headline">¶</a></h2>
 <p>Exit from this section and return the previous section.</p>
@@ -996,6 +1008,8 @@ optional arguments:
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; <span class="nb">help</span>
 </pre></div>
 </div>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 </div>
 
@@ -1007,7 +1021,7 @@ optional arguments:
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="srv6pm.html" class="btn btn-neutral float-right" title="SRv6 Performance Measurement Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="srv6_usid.html" class="btn btn-neutral float-right" title="SRv6 uSID Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="cli.html" class="btn btn-neutral float-left" title="Command-Line Interface (CLI) Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

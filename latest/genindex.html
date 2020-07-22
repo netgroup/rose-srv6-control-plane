@@ -164,6 +164,7 @@
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -197,6 +198,8 @@
       <li><a href="controller/api/arangodb_utils.html#module-controller.arangodb_utils">controller.arangodb_utils (module)</a>
 </li>
       <li><a href="controller/api/srv6_pm.html#module-controller.srv6_pm">controller.srv6_pm (module)</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#module-controller.srv6_usid">controller.srv6_usid (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -256,11 +259,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/utils.html#controller.utils.get_address_family">get_address_family() (in module controller.utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.get_experiment_results">get_experiment_results() (in module controller.srv6_pm)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/utils.html#controller.utils.get_grpc_session">get_grpc_session() (in module controller.utils)</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.get_sid_locator">get_sid_locator() (in module controller.srv6_usid)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -270,9 +275,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_behavior">handle_srv6_behavior() (in module controller.srv6_utils)</a>
 </li>
+      <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_path">handle_srv6_path() (in module controller.srv6_utils)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_path">handle_srv6_path() (in module controller.srv6_utils)</a>
+      <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_policy">handle_srv6_policy() (in module controller.srv6_utils)</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.handle_srv6_usid_policy">handle_srv6_usid_policy() (in module controller.srv6_usid)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -281,6 +290,12 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/arangodb_utils.html#controller.arangodb_utils.initialize_db">initialize_db() (in module controller.arangodb_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.InvalidConfigurationError">InvalidConfigurationError</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.InvalidSIDError">InvalidSIDError</a>
 </li>
   </ul></td>
 </tr></table>
@@ -297,12 +312,26 @@
   </ul></td>
 </tr></table>
 
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.NodeNotFoundError">NodeNotFoundError</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.nodes_to_micro_segments">nodes_to_micro_segments() (in module controller.srv6_usid)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/ti_extraction.html#controller.ti_extraction.parse_arguments">parse_arguments() (in module controller.ti_extraction)</a>
 </li>
       <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.parse_grpc_error">parse_grpc_error() (in module controller.srv6_utils)</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.print_node_to_addr_mapping">print_node_to_addr_mapping() (in module controller.srv6_usid)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -318,6 +347,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.read_nodes">read_nodes() (in module controller.srv6_usid)</a>
+</li>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.reset_configuration">reset_configuration() (in module controller.srv6_pm)</a>
 </li>
   </ul></td>
@@ -334,14 +365,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/arangodb_utils.html#controller.arangodb_utils.save_yaml_dump">save_yaml_dump() (in module controller.arangodb_utils)</a>
 </li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.segments_to_micro_segment">segments_to_micro_segment() (in module controller.srv6_usid)</a>
+</li>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.set_configuration">set_configuration() (in module controller.srv6_pm)</a>
 </li>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.set_node_configuration">set_node_configuration() (in module controller.srv6_pm)</a>
 </li>
-      <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.start_experiment">start_experiment() (in module controller.srv6_pm)</a>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.sidlist_to_usidlist">sidlist_to_usidlist() (in module controller.srv6_usid)</a>
+</li>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.SIDLocatorError">SIDLocatorError</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_utils.html#controller.srv6_utils.SRv6Exception">SRv6Exception</a>
+</li>
+      <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.start_experiment">start_experiment() (in module controller.srv6_pm)</a>
+</li>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.start_experiment_reflector">start_experiment_reflector() (in module controller.srv6_pm)</a>
 </li>
       <li><a href="controller/api/srv6_pm.html#controller.srv6_pm.start_experiment_sender">start_experiment_sender() (in module controller.srv6_pm)</a>
@@ -357,6 +396,10 @@
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="controller/api/srv6_usid.html#controller.srv6_usid.TooManySegmentsError">TooManySegmentsError</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="controller/api/ti_extraction.html#controller.ti_extraction.topology_information_extraction_isis">topology_information_extraction_isis() (in module controller.ti_extraction)</a>
 </li>

@@ -340,6 +340,23 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> (status code </span><span class="si">%s</span><span class="s1"> - </span><span class="si">%s</span><span class="s1">)&#39;</span>
               <span class="o">%</span> <span class="p">(</span><span class="n">failure_msg</span><span class="p">,</span> <span class="n">status_code</span><span class="p">,</span>
                  <span class="n">status_code_to_str</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="s1">&#39;Unknown&#39;</span><span class="p">)))</span></div>
+
+
+<span class="n">STATUS_CODE_TO_DESC</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span> <span class="s1">&#39;Operation completed successfully&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_OPERATION_NOT_SUPPORTED</span><span class="p">:</span> <span class="s1">&#39;Error: Operation not supported&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_BAD_REQUEST</span><span class="p">:</span> <span class="s1">&#39;Error: Bad request&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span><span class="p">:</span> <span class="s1">&#39;Error: Internal error&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_GRPC_REQUEST</span><span class="p">:</span> <span class="s1">&#39;Error: Invalid gRPC request&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_FILE_EXISTS</span><span class="p">:</span> <span class="s1">&#39;Error: Entity already exists&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span><span class="p">:</span> <span class="s1">&#39;Error: Entity not found&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_ACTION</span><span class="p">:</span> <span class="s1">&#39;Error: Invalid action&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_SERVICE_UNAVAILABLE</span><span class="p">:</span> <span class="s1">&#39;Error: Unreachable grPC server&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_UNAUTHORIZED</span><span class="p">:</span> <span class="s1">&#39;Error: Unauthorized&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NOT_CONFIGURED</span><span class="p">:</span> <span class="s1">&#39;Error: Not configured&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_ALREADY_CONFIGURED</span><span class="p">:</span> <span class="s1">&#39;Error: Already configured&#39;</span><span class="p">,</span>
+    <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_DEVICE</span><span class="p">:</span> <span class="s1">&#39;Error: Device not found&#39;</span><span class="p">,</span>
+<span class="p">}</span>
 </pre></div>
 
            </div>
