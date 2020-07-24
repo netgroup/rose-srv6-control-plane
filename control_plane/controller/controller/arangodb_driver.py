@@ -174,7 +174,10 @@ def init_usid_policies_collection(client, arango_username, arango_password,
 
 
 def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
-                       table=None, metric=None):
+                       table=None, metric=None, l_grpc_ip=None,
+                       l_grpc_port=None, l_fwd_engine=None,
+                       r_grpc_ip=None, r_grpc_port=None,
+                       r_fwd_engine=None, decap_sid=None, locator=None):
     '''
     Insert a uSID policy into the 'usid_policies' collection of a Arango
     database.
@@ -187,14 +190,35 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
     :param rl_dst: Destination (IP address or network prefix) for the
                    right-to-left path.
     :type rl_dst: str
-    :param lr_nodes: List of nodes making the left-to-right path.
+    :param lr_nodes: List of nodes (names or uN sids) making the left-to-right
+                     path.
     :type lr_nodes: list
-    :param rl_nodes: List of nodes making the right-to-left path.
+    :param rl_nodes: List of nodes (names or uN sids) making the right-to-left
+                     path.
     :type rl_nodes: list
     :param table: FIB table where the policy must be saved.
     :type table: int, optional
     :param metric: Metric (weight) to be used for the policy.
     :type metric: int, optional
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: forwarding engine of the left node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
     :return: True.
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
@@ -208,6 +232,14 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
         'rl_nodes': rl_nodes,
         'table': table,
         'metric': metric,
+        'l_grpc_ip': l_grpc_ip,
+        'l_grpc_port': l_grpc_port,
+        'l_fwd_engine': l_fwd_engine,
+        'r_grpc_ip': r_grpc_ip,
+        'r_grpc_port': r_grpc_port,
+        'r_fwd_engine': r_fwd_engine,
+        'decap_sid': decap_sid,
+        'locator': locator
     }
     # Get the uSID policy collection
     # This returns an API wrapper for "usid_policies" collection
@@ -359,3 +391,22 @@ def delete_usid_policy(database, key, lr_dst=None,
     # ignore_missing was set to True
     return usid_policies.delete(document=policy,
                                 ignore_missing=ignore_missing)
+
+
+def insert_nodes_config(database, nodes):
+    # Create "nodes_config" collection, if it does not exist
+    if database.has_collection('nodes_config'):
+        # The collection already exists
+        database.delete_collection(name='nodes_config', ignore_missing=True)
+        nodes_config = database.create_collection(name='nodes_config')
+    else:
+        # The collection does not exist, create a new one
+        nodes_config = database.create_collection(name='nodes_config')
+    # Insert the nodes config
+    return nodes_config.insert(document=nodes, silent=True)    
+
+
+def get_nodes_config(database):
+    nodes_config = database.collection(name='nodes_config')
+    # TODO nodes not loaded
+    return nodes_config.find(filters={})
