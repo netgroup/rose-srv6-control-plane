@@ -35,6 +35,12 @@ ArangoDB driver
 from arango import ArangoClient
 
 
+class NodesConfigNotLoadedError(Exception):
+    '''
+    NodesConfigNotLoadedError
+    '''
+
+
 def connect_arango(url):
     '''
     Initialize the ArangoDB client.
@@ -211,14 +217,18 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
     :type l_fwd_engine: str, optional
     :param r_grpc_ip: gRPC IP address of the right node, required if the right
                       node is expressed numerically in the nodes list.
-    :type r_grpc_ip: str
+    :type r_grpc_ip: str, optional
     :param r_grpc_port: gRPC port of the right node, required if the right
                         node is expressed numerically in the nodes list.
     :type r_grpc_port: str, optional
-    :param r_fwd_engine: forwarding engine of the left node, required if the
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
                          right node is expressed numerically in the nodes
                          list.
     :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
     :return: True.
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
@@ -394,19 +404,50 @@ def delete_usid_policy(database, key, lr_dst=None,
 
 
 def insert_nodes_config(database, nodes):
-    # Create "nodes_config" collection, if it does not exist
-    if database.has_collection('nodes_config'):
-        # The collection already exists
-        database.delete_collection(name='nodes_config', ignore_missing=True)
-        nodes_config = database.create_collection(name='nodes_config')
-    else:
-        # The collection does not exist, create a new one
-        nodes_config = database.create_collection(name='nodes_config')
+    '''
+    Load nodes configuration on a database.
+
+    :param database: Database where the nodes configuration must be saved.
+    :type database: arango.database.StandardDatabase
+    :param nodes: Dictionary containing the nodes configuration. For each
+                  entry in the dict the following fields are expected:
+                  - name: name (or identifier) of the node
+                  - grpc_ip: IP address of the gRPC server
+                  - grpc_port: port of the gRPC server
+                  - uN: uN sid
+                  - uDT: uDT sid used for the decap
+                  - fwd_engine: forwarding engine (e.g. VPP or Linux)
+    :type nodes: dict
+    :return: True.
+    :rtype: bool
+    '''
+    # Delete the collection if it already exists
+    database.delete_collection(name='nodes_config', ignore_missing=True)
+    # Create a new 'nodes_config' collection
+    nodes_config = database.create_collection(name='nodes_config')
     # Insert the nodes config
-    return nodes_config.insert(document=nodes, silent=True)    
+    return nodes_config.insert(document=nodes.values(), silent=True)
 
 
 def get_nodes_config(database):
+    '''
+    Get the nodes configuration saved to a database.
+
+    :param database: Database where the nodes configuration is saved.
+    :type database: arango.database.StandardDatabase
+    :return: Dict reresentation of the nodes saved to the db. For a
+             of the node entries, see :func:`insert_nodes_config`.
+    :rtype: dict
+    '''
+    # Does the collection 'nodes_config' exist?
+    if not database.has_collection('nodes_config'):
+        raise NodesConfigNotLoadedError
+    # Get the 'nodes_config' collection
     nodes_config = database.collection(name='nodes_config')
-    # TODO nodes not loaded
-    return nodes_config.find(filters={})
+    # Have nodes been loaded loaded?
+    if nodes_config.count() == 0:
+        raise NodesConfigNotLoadedError
+    # Get the nodes
+    nodes = nodes_config.find(filters={})
+    # Convert the nodes list to a dict representation
+    return {node['name']: node for node in nodes}
