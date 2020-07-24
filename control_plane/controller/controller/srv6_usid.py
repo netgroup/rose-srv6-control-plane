@@ -416,11 +416,48 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     return usid_list
 
 
+def validate_usid_id(usid_id):
+    '''
+    Validate a uSID identifier. A valid uSID id should be an integer in the
+    range (0, 0xffff).
+
+    :param usid_id: uSID idenfier to validate.
+    :type usid_id: str
+    :return: True if the uSID identifier is valid.
+    :rtype: bool
+    '''
+    try:
+        # A valid uSID id should be an integer in the range (0, 0xffff)
+        return int(usid_id, 16) >= 0x0 and int(usid_id, 16) <= 0xffff
+    except ValueError:
+        # The uSID id is invalid
+        return False
+    return True
+
+
+def usid_id_to_usid(usid_id, locator):
+    '''
+    Convert a uSID identifier into a SID.
+
+    :param usid_id: uSID idenfier to convert.
+    :type usid_id: str
+    :param locator: Locator part to be used for the SID.
+    :type locator: str
+    :return: Generated SID.
+    :rtype: str
+    '''
+    return str(IPv6Address(int(IPv6Address(locator)) +
+                           (int(usid_id, 16) << 80)))
+
+
 def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_destination=None, rl_destination=None,
                             nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1,
-                            persistency=True, _id=None):
+                            persistency=True, _id=None, l_grpc_ip=None,
+                            l_grpc_port=None, l_fwd_engine=None,
+                            r_grpc_ip=None, r_grpc_port=None,
+                            r_fwd_engine=None, decap_sid=None, locator=None):
     '''
     Handle a SRv6 Policy using uSIDs
 
@@ -523,6 +560,236 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         #
         # Read nodes from YAML file
         nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
+
+        # nodes = list()
+        # if nodes_rl is not None:
+        #     nodes = list(set(nodes_lr).union(set(nodes_rl)))
+        # elif nodes_lr is not None:
+        #     nodes = nodes_lr
+
+        # nodes_array = []
+        # if nodes_lr is not None:
+        #     nodes_array.append(nodes_lr)
+        # if nodes_rl is not None:
+        #     nodes_array.append(nodes_rl)
+        if nodes_lr is not None:
+            nodes = nodes_lr
+            for idx in range(len(nodes)):
+                node = nodes[idx]
+                # if node in nodes_info:
+                #     # Config file contains node info, nothing to do
+                #     pass
+                # elif utils.validate_ipv6_address(node):
+                if utils.validate_ipv6_address(node):
+                    grpc_ip = None
+                    grpc_port = None
+                    un = None
+                    udt = None
+                    fwd_engine = None
+                    if locator is None:
+                        logger.error('locator is mandatory')
+                        return None
+                    if idx == 0:
+                        # left node
+                        if l_grpc_ip is None:
+                            logger.error('l_grpc_ip is mandatory')
+                            return None
+                        if l_grpc_port is None:
+                            logger.error('l_grpc_port is mandatory')
+                        if l_fwd_engine is None:
+                            logger.error('l_fwd_engine is mandatory')
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = l_grpc_ip
+                        grpc_port = l_grpc_port
+                        fwd_engine = l_fwd_engine
+                    elif idx == len(nodes) - 1:
+                        # right node
+                        if r_grpc_ip is None:
+                            logger.error('r_grpc_ip is mandatory')
+                            return None
+                        if r_grpc_port is None:
+                            logger.error('r_grpc_port is mandatory')
+                        if r_fwd_engine is None:
+                            logger.error('r_fwd_engine is mandatory')
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = r_grpc_ip
+                        grpc_port = r_grpc_port
+                        fwd_engine = r_fwd_engine
+                    nodes_info[str(node)] = {
+                        'name': node,
+                        'grpc_ip': grpc_ip,
+                        'grpc_port': grpc_port,
+                        'uN': node,
+                        'uDT': udt,
+                        'fwd_engine': fwd_engine
+                    }
+                elif validate_usid_id(node):
+                    grpc_ip = None
+                    grpc_port = None
+                    un = None
+                    udt = None
+                    fwd_engine = None
+                    if locator is None:
+                        logger.error('locator is mandatory')
+                        return None
+                    if idx == 0:
+                        if l_grpc_ip is None:
+                            logger.error('l_grpc_ip is mandatory')
+                            return None
+                        if l_grpc_port is None:
+                            logger.error('l_grpc_port is mandatory')
+                            return None
+                        if l_fwd_engine is None:
+                            logger.error('l_fwd_engine is mandatory')
+                            return None
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = l_grpc_ip
+                        grpc_port = l_grpc_port
+                        fwd_engine = l_fwd_engine
+                    if idx == len(nodes) - 1:
+                        if r_grpc_ip is None:
+                            logger.error('r_grpc_ip is mandatory')
+                            return None
+                        if r_grpc_port is None:
+                            logger.error('r_grpc_port is mandatory')
+                            return None
+                        if r_fwd_engine is None:
+                            logger.error('r_fwd_engine is mandatory')
+                            return None
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = r_grpc_ip
+                        grpc_port = r_grpc_port
+                        fwd_engine = r_fwd_engine
+                    un = usid_id_to_usid(node, locator)
+                    nodes_info[str(node)] = {
+                        'name': node,
+                        'grpc_ip': grpc_ip,
+                        'grpc_port': grpc_port,
+                        'uN': un,
+                        'uDT': udt,
+                        'fwd_engine': fwd_engine
+                    }
+                else:
+                    # logger.error('Unknown node: %s', node)
+                    # return None
+                    pass
+        if nodes_rl is not None:
+            nodes = nodes_rl
+            for idx in range(len(nodes)):
+                node = nodes[idx]
+                # if node in nodes_info:
+                #     # Config file contains node info, nothing to do
+                #     pass
+                # elif utils.validate_ipv6_address(node):
+                if utils.validate_ipv6_address(node):
+                    grpc_ip = None
+                    grpc_port = None
+                    un = None
+                    udt = None
+                    fwd_engine = None
+                    if locator is None:
+                        logger.error('locator is mandatory')
+                        return None
+                    if idx == 0:
+                        # left node
+                        if l_grpc_ip is None:
+                            logger.error('l_grpc_ip is mandatory')
+                            return None
+                        if l_grpc_port is None:
+                            logger.error('l_grpc_port is mandatory')
+                        if l_fwd_engine is None:
+                            logger.error('l_fwd_engine is mandatory')
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = r_grpc_ip
+                        grpc_port = r_grpc_port
+                        fwd_engine = r_fwd_engine
+                    elif idx == len(nodes) - 1:
+                        # right node
+                        if r_grpc_ip is None:
+                            logger.error('r_grpc_ip is mandatory')
+                            return None
+                        if r_grpc_port is None:
+                            logger.error('r_grpc_port is mandatory')
+                        if r_fwd_engine is None:
+                            logger.error('r_fwd_engine is mandatory')
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = l_grpc_ip
+                        grpc_port = l_grpc_port
+                        fwd_engine = l_fwd_engine
+                    nodes_info[node] = {
+                        'name': node,
+                        'grpc_ip': grpc_ip,
+                        'grpc_port': grpc_port,
+                        'uN': node,
+                        'uDT': udt,
+                        'fwd_engine': fwd_engine
+                    }
+                elif validate_usid_id(node):
+                    grpc_ip = None
+                    grpc_port = None
+                    un = None
+                    udt = None
+                    fwd_engine = None
+                    if locator is None:
+                        logger.error('locator is mandatory')
+                        return None
+                    if idx == 0:
+                        if l_grpc_ip is None:
+                            logger.error('l_grpc_ip is mandatory')
+                            return None
+                        if l_grpc_port is None:
+                            logger.error('l_grpc_port is mandatory')
+                            return None
+                        if l_fwd_engine is None:
+                            logger.error('l_fwd_engine is mandatory')
+                            return None
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = r_grpc_ip
+                        grpc_port = r_grpc_port
+                        fwd_engine = r_fwd_engine
+                    if idx == len(nodes) - 1:
+                        if r_grpc_ip is None:
+                            logger.error('r_grpc_ip is mandatory')
+                            return None
+                        if r_grpc_port is None:
+                            logger.error('r_grpc_port is mandatory')
+                            return None
+                        if r_fwd_engine is None:
+                            logger.error('r_fwd_engine is mandatory')
+                            return None
+                        if decap_sid is not None and \
+                                not utils.validate_ipv6_address(decap_sid):
+                            udt = usid_id_to_usid(decap_sid, locator)
+                        grpc_ip = l_grpc_ip
+                        grpc_port = l_grpc_port
+                        fwd_engine = l_fwd_engine
+                    un = usid_id_to_usid(node, locator)
+                    nodes_info[node] = {
+                        'name': node,
+                        'grpc_ip': grpc_ip,
+                        'grpc_port': grpc_port,
+                        'uN': un,
+                        'uDT': udt,
+                        'fwd_engine': fwd_engine
+                    }
+                else:
+                    # logger.error('Unknown node: %s', node)
+                    # return None
+                    pass
         # Add
         if operation == 'add':
             policies = [{
@@ -553,11 +820,185 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 table=table if table != -1 else None,
                 metric=metric if metric != -1 else None
             )
+
+            policies = list(policies)
+            for policy in policies:
+                # nodes = list()
+                # if policy.get('rl_nodes') is not None:
+                #     nodes = list(set(policy['lr_nodes']).union(set(policy['rl_nodes'])))
+                # elif policy.get('lr_nodes') is not None:
+                #     nodes = policy['lr_nodes']
+
+                # nodes_array = []
+                # if policy.get('lr_nodes') is not None:
+                #     nodes_array.append(policy.get('lr_nodes'))
+                # if policy.get('rl_nodes') is not None:
+                #     nodes_array.append(policy.get('rl_nodes'))
+                # print('naaaa', nodes_array)
+                if policy.get('lr_nodes') is not None:
+                    nodes = policy.get('lr_nodes')
+                    for idx in range(len(nodes)):
+                        node = str(nodes[idx])
+                        print('/*************************', node)
+                        #if node in nodes_info:
+                        #    # Config file contains node info, nothing to do
+                        #    pass
+                        #elif utils.validate_ipv6_address(node):
+                        if utils.validate_ipv6_address(node):
+                            grpc_ip = None
+                            grpc_port = None
+                            un = None
+                            udt = None
+                            fwd_engine = None
+                            if idx == 0:
+                                # left node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('l_grpc_ip')
+                                grpc_port = policy.get('l_grpc_port')
+                                fwd_engine = policy.get('l_fwd_engine')
+                                locator = policy['locator']
+                            elif idx == len(nodes) - 1:
+                                # right node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('r_grpc_ip')
+                                grpc_port = policy.get('r_grpc_port')
+                                fwd_engine = policy.get('r_fwd_engine')
+                                locator = policy['locator']
+                            nodes_info[node] = {
+                                'name': node,
+                                'grpc_ip': grpc_ip,
+                                'grpc_port': grpc_port,
+                                'uN': node,
+                                'uDT': udt,
+                                'fwd_engine': fwd_engine
+                            }
+                        elif validate_usid_id(node):
+                            grpc_ip = None
+                            grpc_port = None
+                            un = None
+                            udt = None
+                            fwd_engine = None
+                            if idx == 0:
+                                # left node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('l_grpc_ip')
+                                grpc_port = policy.get('l_grpc_port')
+                                fwd_engine = policy.get('l_fwd_engine')
+                                locator = policy['locator']
+                            elif idx == len(nodes) - 1:
+                                # right node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('r_grpc_ip')
+                                grpc_port = policy.get('r_grpc_port')
+                                fwd_engine = policy.get('r_fwd_engine')
+                                locator = policy['locator']
+                            un = usid_id_to_usid(node, locator)
+                            nodes_info[node] = {
+                                'name': node,
+                                'grpc_ip': grpc_ip,
+                                'grpc_port': grpc_port,
+                                'uN': un,
+                                'uDT': udt,
+                                'fwd_engine': fwd_engine
+                            }
+                            print('nininin\n\n\n', nodes_info[node])
+                        else:
+                            # logger.error('Unknown node: %s', node)
+                            # return None
+                            pass
+                if policy.get('rl_nodes') is not None:
+                    nodes = policy.get('rl_nodes')
+                    for idx in range(len(nodes)):
+                        node = nodes[idx]
+                        #if node in nodes_info:
+                        #    # Config file contains node info, nothing to do
+                        #    pass
+                        #elif utils.validate_ipv6_address(node):
+                        if utils.validate_ipv6_address(node):
+                            grpc_ip = None
+                            grpc_port = None
+                            un = None
+                            udt = None
+                            fwd_engine = None
+                            if idx == 0:
+                                # left node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('r_grpc_ip')
+                                grpc_port = policy.get('r_grpc_port')
+                                fwd_engine = policy.get('r_fwd_engine')
+                                locator = policy['locator']
+                            elif idx == len(nodes) - 1:
+                                # right node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('l_grpc_ip')
+                                grpc_port = policy.get('l_grpc_port')
+                                fwd_engine = policy.get('l_fwd_engine')
+                                locator = policy['locator']
+                            nodes_info[str(node)] = {
+                                'name': node,
+                                'grpc_ip': grpc_ip,
+                                'grpc_port': grpc_port,
+                                'uN': node,
+                                'uDT': udt,
+                                'fwd_engine': fwd_engine
+                            }
+                        elif validate_usid_id(node):
+                            grpc_ip = None
+                            grpc_port = None
+                            un = None
+                            udt = None
+                            fwd_engine = None
+                            if idx == 0:
+                                # left node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('r_grpc_ip')
+                                grpc_port = policy.get('r_grpc_port')
+                                fwd_engine = policy.get('r_fwd_engine')
+                                locator = policy['locator']
+                            elif idx == len(nodes) - 1:
+                                # right node
+                                if policy.get('decap_sid') is not None and \
+                                        not utils.validate_ipv6_address(policy.get('decap_sid')):
+                                    udt = usid_id_to_usid(policy['decap_sid'], policy['locator'])
+                                grpc_ip = policy.get('l_grpc_ip')
+                                grpc_port = policy.get('l_grpc_port')
+                                fwd_engine = policy.get('l_fwd_engine')
+                                locator = policy['locator']
+                            un = usid_id_to_usid(node, locator)
+                            nodes_info[str(node)] = {
+                                'name': node,
+                                'grpc_ip': grpc_ip,
+                                'grpc_port': grpc_port,
+                                'uN': un,
+                                'uDT': udt,
+                                'fwd_engine': fwd_engine
+                            }
+                            print('nininin\n\n\n', nodes_info[node])
+                        else:
+                            # logger.error('Unknown node: %s', node)
+                            # return None
+                            pass
+        print('\n\n', nodes_info)
         if len(policies) == 0:
             logger.error('Policy not found')
             return None
         # Iterate on the policies
         for policy in policies:
+            print(1)
             lr_destination = policy.get('lr_dst')
             rl_destination = policy.get('rl_dst')
             nodes_lr = policy.get('lr_nodes')
@@ -574,9 +1015,11 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 return None
             # Create the SRv6 Policy
             try:
+                print(2)
                 # # Prefix length for local segment
                 # prefix_len = locator_bits + usid_id_bits
                 # Ingress node
+                print(nodes_info)
                 ingress_node = nodes_info[nodes_lr[0]]
                 # Intermediate nodes
                 intermediate_nodes_lr = list()
@@ -599,6 +1042,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 with utils.get_grpc_session(ingress_node['grpc_ip'],
                                             ingress_node['grpc_port']
                                             ) as channel:
+                    print(3)
                     # Currently ony Linux and VPP are suppoted for the encap
                     if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
                         logger.error(
@@ -654,6 +1098,16 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         locator_bits=locator_bits,
                         usid_id_bits=usid_id_bits
                     )
+
+                    print(ingress_node)
+                    print(operation)
+                    print(lr_destination)
+                    print(usid_list)
+                    print(table)
+                    print(metric)
+                    print(bsid_addr)
+                    print(ingress_node['fwd_engine'])
+
                     # Handle a SRv6 path
                     response = srv6_utils.handle_srv6_path(
                         operation=operation,
@@ -723,6 +1177,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 with utils.get_grpc_session(egress_node['grpc_ip'],
                                             egress_node['grpc_port']
                                             ) as channel:
+                    print(4)
                     # Currently ony Linux and VPP are suppoted for the encap
                     if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
                         logger.error(
@@ -816,6 +1271,16 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         locator_bits=locator_bits,
                         usid_id_bits=usid_id_bits
                     )
+
+                    print()
+                    print(egress_node)
+                    print(operation)
+                    print(rl_destination)
+                    print(usid_list)
+                    print(table)
+                    print(metric)
+                    print(bsid_addr)
+                    print(egress_node['fwd_engine'])
                     # Handle a SRv6 path
                     response = srv6_utils.handle_srv6_path(
                         operation=operation,
@@ -833,6 +1298,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         return response
                 # Persist uSID policy to database
                 if persistency:
+                    print(5)
                     if operation == 'add':
                         # Connect to ArangoDB
                         client = arangodb_driver.connect_arango(
@@ -851,7 +1317,15 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_nodes=nodes_lr,
                             rl_nodes=nodes_rl,
                             table=table if table != -1 else None,
-                            metric=metric if metric != -1 else None
+                            metric=metric if metric != -1 else None,
+                            l_grpc_ip = l_grpc_ip,
+                            l_grpc_port = l_grpc_port,
+                            l_fwd_engine = l_fwd_engine,
+                            r_grpc_ip = r_grpc_ip,
+                            r_grpc_port = r_grpc_port,
+                            r_fwd_engine = r_fwd_engine,
+                            decap_sid = decap_sid,
+                            locator = locator
                         )
                     elif operation == 'del':
                         # TODO keep arango connection open
@@ -876,7 +1350,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             metric=metric if metric != -1 else None
                         )
                     else:
+                        print('errrrr')
                         logger.error('Unsupported operation: %s', operation)
+                    print(6)
             except (InvalidConfigurationError, NodeNotFoundError,
                     TooManySegmentsError, SIDLocatorError, InvalidSIDError):
                 return commons_pb2.STATUS_INTERNAL_ERROR
