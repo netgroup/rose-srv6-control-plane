@@ -480,6 +480,29 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
     :param metric: Metric for the SRv6 route. If not provided, the default
                    metric will be used.
     :type metric: int, optional
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
     :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
     :rtype: int
     :raises NodeNotFoundError: Node name not found in the mapping file
@@ -839,7 +862,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                     nodes = policy.get('lr_nodes')
                     for idx in range(len(nodes)):
                         node = str(nodes[idx])
-                        print('/*************************', node)
                         #if node in nodes_info:
                         #    # Config file contains node info, nothing to do
                         #    pass
@@ -992,13 +1014,11 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             # logger.error('Unknown node: %s', node)
                             # return None
                             pass
-        print('\n\n', nodes_info)
         if len(policies) == 0:
             logger.error('Policy not found')
             return None
         # Iterate on the policies
         for policy in policies:
-            print(1)
             lr_destination = policy.get('lr_dst')
             rl_destination = policy.get('rl_dst')
             nodes_lr = policy.get('lr_nodes')
@@ -1015,11 +1035,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 return None
             # Create the SRv6 Policy
             try:
-                print(2)
                 # # Prefix length for local segment
                 # prefix_len = locator_bits + usid_id_bits
                 # Ingress node
-                print(nodes_info)
                 ingress_node = nodes_info[nodes_lr[0]]
                 # Intermediate nodes
                 intermediate_nodes_lr = list()
@@ -1042,7 +1060,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 with utils.get_grpc_session(ingress_node['grpc_ip'],
                                             ingress_node['grpc_port']
                                             ) as channel:
-                    print(3)
                     # Currently ony Linux and VPP are suppoted for the encap
                     if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
                         logger.error(
@@ -1098,16 +1115,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         locator_bits=locator_bits,
                         usid_id_bits=usid_id_bits
                     )
-
-                    print(ingress_node)
-                    print(operation)
-                    print(lr_destination)
-                    print(usid_list)
-                    print(table)
-                    print(metric)
-                    print(bsid_addr)
-                    print(ingress_node['fwd_engine'])
-
                     # Handle a SRv6 path
                     response = srv6_utils.handle_srv6_path(
                         operation=operation,
@@ -1177,7 +1184,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 with utils.get_grpc_session(egress_node['grpc_ip'],
                                             egress_node['grpc_port']
                                             ) as channel:
-                    print(4)
                     # Currently ony Linux and VPP are suppoted for the encap
                     if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
                         logger.error(
@@ -1271,16 +1277,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         locator_bits=locator_bits,
                         usid_id_bits=usid_id_bits
                     )
-
-                    print()
-                    print(egress_node)
-                    print(operation)
-                    print(rl_destination)
-                    print(usid_list)
-                    print(table)
-                    print(metric)
-                    print(bsid_addr)
-                    print(egress_node['fwd_engine'])
                     # Handle a SRv6 path
                     response = srv6_utils.handle_srv6_path(
                         operation=operation,
@@ -1298,7 +1294,6 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         return response
                 # Persist uSID policy to database
                 if persistency:
-                    print(5)
                     if operation == 'add':
                         # Connect to ArangoDB
                         client = arangodb_driver.connect_arango(
@@ -1350,9 +1345,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             metric=metric if metric != -1 else None
                         )
                     else:
-                        print('errrrr')
                         logger.error('Unsupported operation: %s', operation)
-                    print(6)
             except (InvalidConfigurationError, NodeNotFoundError,
                     TooManySegmentsError, SIDLocatorError, InvalidSIDError):
                 return commons_pb2.STATUS_INTERNAL_ERROR

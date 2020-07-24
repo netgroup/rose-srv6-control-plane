@@ -438,6 +438,9 @@ def get_nodes_config(database):
     :return: Dict reresentation of the nodes saved to the db. For a
              of the node entries, see :func:`insert_nodes_config`.
     :rtype: dict
+    :raises controller.arangodb_driver.NodesConfigNotLoadedError: If nodes are
+                                                                  not loaded
+                                                                  on db.
     '''
     # Does the collection 'nodes_config' exist?
     if not database.has_collection('nodes_config'):
