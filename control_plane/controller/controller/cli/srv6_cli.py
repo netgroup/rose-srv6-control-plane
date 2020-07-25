@@ -39,7 +39,7 @@ DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 def handle_srv6_usid_policy(
         operation,
-        nodes_filename,
+        nodes_dict,
         lr_destination,
         rl_destination,
         nodes_lr=None,
@@ -61,7 +61,7 @@ def handle_srv6_usid_policy(
 
     res = srv6_usid.handle_srv6_usid_policy(
         operation=operation,
-        nodes_filename=nodes_filename,
+        nodes_dict=nodes_dict,
         lr_destination=lr_destination,
         rl_destination=rl_destination,
         nodes_lr=nodes_lr.split(',') if nodes_lr is not None else None,
@@ -871,7 +871,7 @@ def complete_srv6_biditunnel(text, prev_text=None):
     return args
 
 
-def args_srv6_usid():
+def args_load_nodes_config():
     '''
     Command-line arguments for the srv6_usid command
     Arguments are represented as a dicts. Each dict has two items:
@@ -894,15 +894,15 @@ def args_srv6_usid():
 
 
 # Parse options
-def parse_arguments_srv6_usid(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_biditunnel function"""
+def parse_arguments_load_nodes_config(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for load_nodes_config function"""
 
     # Get parser
     parser = ArgumentParser(
-        prog=prog, description='uSID'
+        prog=prog, description='Load nodes configuration to the database'
     )
     # Add the arguments to the parser
-    for param in args_srv6_usid():
+    for param in args_load_nodes_config():
         parser.add_argument(*param['args'], **param['kwargs'])
     # Parse input parameters
     args = parser.parse_args(args)
@@ -910,13 +910,76 @@ def parse_arguments_srv6_usid(prog=sys.argv[0], args=None):
     return args
 
 
-# TAB-completion for SRv6 bi-directional tunnel
-def complete_srv6_usid(text, prev_text=None):
+# TAB-completion for SRv6 uSID
+def complete_load_nodes_config(text, prev_text=None):
     """This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string"""
 
     # Get arguments for srv6_biditunnel
-    args = args_srv6_usid()
+    args = args_load_nodes_config()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg for param in args for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_print_nodes():
+    '''
+    Command-line arguments for the print_nodes command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    - is_path, a boolean flag indicating whether the argument is a path or not
+    '''
+
+    return [
+    ]
+
+
+# Parse options
+def parse_arguments_print_nodes(prog=sys.argv[0], args=None):
+    """Command-line arguments parser for print_nodes function"""
+
+    # Get parser
+    parser = ArgumentParser(
+        prog=prog, description='Show the list of the available devices'
+    )
+    # Add the arguments to the parser
+    for param in args_print_nodes():
+        parser.add_argument(*param['args'], **param['kwargs'])
+    # Parse input parameters
+    args = parser.parse_args(args)
+    # Return the arguments
+    return args
+
+
+# TAB-completion for SRv6 uSID
+def complete_print_nodes(text, prev_text=None):
+    """This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string"""
+
+    # Get arguments for srv6_biditunnel
+    args = args_print_nodes()
     # Paths auto-completion
     if prev_text is not None:
         # Get the list of the arguments requiring a path
@@ -945,3 +1008,8 @@ def complete_srv6_usid(text, prev_text=None):
 def print_node_to_addr_mapping(nodes_filename):
     '''Print mapping node to IP address'''
     srv6_usid.print_node_to_addr_mapping(nodes_filename)
+
+
+def print_nodes(nodes_dict):
+    '''Print nodes'''
+    srv6_usid.print_nodes(nodes_dict=nodes_dict)
