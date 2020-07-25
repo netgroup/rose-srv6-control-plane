@@ -426,7 +426,7 @@ def insert_nodes_config(database, nodes):
     # Create a new 'nodes_config' collection
     nodes_config = database.create_collection(name='nodes_config')
     # Insert the nodes config
-    return nodes_config.insert(document=nodes.values(), silent=True)
+    return nodes_config.insert(document=list(nodes.values()), silent=True)
 
 
 def get_nodes_config(database):
