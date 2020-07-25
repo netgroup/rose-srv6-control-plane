@@ -46,7 +46,15 @@ def handle_srv6_usid_policy(
         nodes_rl=None,
         table=-1,
         metric=-1,
-        _id=None):
+        _id=None,
+        l_grpc_ip=None,
+        l_grpc_port=None,
+        l_fwd_engine=None,
+        r_grpc_ip=None,
+        r_grpc_port=None,
+        r_fwd_engine=None,
+        decap_sid=None,
+        locator=None):
     """Handle a SRv6 uSID policy"""
 
     # pylint: disable=too-many-arguments
@@ -60,9 +68,18 @@ def handle_srv6_usid_policy(
         nodes_rl=nodes_rl.split(',') if nodes_rl is not None else None,
         table=table,
         metric=metric,
-        _id=_id
+        _id=_id,
+        l_grpc_ip=l_grpc_ip,
+        l_grpc_port=l_grpc_port,
+        l_fwd_engine=l_fwd_engine,
+        r_grpc_ip=r_grpc_ip,
+        r_grpc_port=r_grpc_port,
+        r_fwd_engine=r_fwd_engine,
+        decap_sid=decap_sid,
+        locator=locator
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    if res is not None:
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_path(
@@ -261,6 +278,48 @@ def args_srv6_usid_policy():
             'args': ['--id'],
             'kwargs': {'dest': 'id', 'action': 'store',
                        'help': 'id', 'type': int, 'default': None}
+        }, {
+            'args': ['--l-grpc-ip'],
+            'kwargs': {'dest': 'l_grpc_ip', 'action': 'store',
+                       'help': 'gRPC IP address of the left node',
+                       'type': str, 'default': None}
+        }, {
+            'args': ['--l-grpc-port'],
+            'kwargs': {'dest': 'l_grpc_port', 'action': 'store',
+                       'help': 'gRPC port of the left node',
+                       'type': int, 'default': None}
+        }, {
+            'args': ['--l-fwd-engine'],
+            'kwargs': {'dest': 'l_fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine for the left node '
+                       '(e.g. Linux or VPP)',
+                       'type': str, 'default': None}
+        }, {
+            'args': ['--r-grpc-ip'],
+            'kwargs': {'dest': 'r_grpc_ip', 'action': 'store',
+                       'help': 'gRPC IP address of the right node',
+                       'type': str, 'default': None}
+        }, {
+            'args': ['--r-grpc-port'],
+            'kwargs': {'dest': 'r_grpc_port', 'action': 'store',
+                       'help': 'gRPC port of the right node',
+                       'type': int, 'default': None}
+        }, {
+            'args': ['--r-fwd-engine'],
+            'kwargs': {'dest': 'r_fwd_engine', 'action': 'store',
+                       'help': 'Forwarding engine for the right node '
+                       '(e.g. Linux or VPP)',
+                       'type': str, 'default': None}
+        }, {
+            'args': ['--decap-sid'],
+            'kwargs': {'dest': 'decap_sid', 'action': 'store',
+                       'help': 'SID used for decap',
+                       'type': str, 'default': None}
+        }, {
+            'args': ['--locator'],
+            'kwargs': {'dest': 'locator', 'action': 'store',
+                       'help': 'Locator',
+                       'type': str, 'default': None}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}

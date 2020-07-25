@@ -668,7 +668,23 @@ class ControllerCLISRv6USID(CustomCmd):
             self.nodes_filename = self.nodes_filename[1:-1]
         # Show the nodes available automatically when
         # the uSID subsection is opened
-        srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
+        # srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
+
+        from controller import arangodb_driver
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)     # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        arangodb_driver.get_nodes_config(database)
         CustomCmd.__init__(self, *args)
 
     def do_nodes(self, args):
@@ -709,7 +725,15 @@ class ControllerCLISRv6USID(CustomCmd):
             nodes_rl=args.nodes_rev,
             table=args.table,
             metric=args.metric,
-            _id=args.id
+            _id=args.id,
+            l_grpc_ip=args.l_grpc_ip,
+            l_grpc_port=args.l_grpc_port,
+            l_fwd_engine=args.l_fwd_engine,
+            r_grpc_ip=args.r_grpc_ip,
+            r_grpc_port=args.r_grpc_port,
+            r_fwd_engine=args.r_fwd_engine,
+            decap_sid=args.decap_sid,
+            locator=args.locator
         )
         # Print nodes available
         srv6_cli.print_node_to_addr_mapping(self.nodes_filename)
@@ -825,6 +849,22 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         try:
+            from controller import arangodb_driver
+            # ArangoDB params
+            arango_url = os.getenv('ARANGO_URL')
+            arango_user = os.getenv('ARANGO_USER')
+            arango_password = os.getenv('ARANGO_PASSWORD')
+            # Connect to ArangoDB
+            client = arangodb_driver.connect_arango(
+                url=arango_url)     # TODO keep arango connection open
+            # Connect to the db
+            database = arangodb_driver.connect_srv6_usid_db(
+                client=client,
+                username=arango_user,
+                password=arango_password
+            )
+            from controller import srv6_usid
+            arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(args.nodes_file)[0])
             sub_cmd = ControllerCLISRv6USID(
                 nodes_filename=args.nodes_file
             )
