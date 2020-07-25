@@ -89,6 +89,16 @@ class InvalidSIDError(srv6_utils.SRv6Exception):
     '''
 
 
+def print_nodes(nodes_dict):
+    '''
+    Print the nodes.
+
+    :param nodes_dict: Dict containing the nodes
+    :type nodes_dict: dict
+    '''
+    print(list(nodes_dict.keys()))
+
+
 def print_node_to_addr_mapping(nodes_filename):
     '''
     This function reads a YAML file containing the mapping
@@ -678,7 +688,7 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
             nodes_info[node_name] = node
 
 
-def handle_srv6_usid_policy(operation, nodes_filename=None,
+def handle_srv6_usid_policy(operation, nodes_dict=None,
                             lr_destination=None, rl_destination=None,
                             nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1,
@@ -692,9 +702,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
     :param operation: The operation to be performed on the uSID policy
                       (i.e. add, get, change, del)
     :type operation: str
-    :param nodes_filename: Name of the YAML file containing the
-                           mapping of node names to IP addresses
-    :type nodes_filename: str
+    :param nodes_dict: Dict containing the nodes configuration.
+    :type nodes_dict: dict
     :param destination: Destination of the SRv6 route
     :type destination: str
     :param nodes: Waypoints of the SRv6 route
@@ -767,7 +776,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
             return None
     if nodes_rl is None:
         pass
-    if nodes_filename is None:
+    if nodes_dict is None:
         if operation in ['add', 'del']:
             logger.error('"nodes_filename" argument is mandatory for %s '
                          'operation', operation)
@@ -810,7 +819,9 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         # mapping of node names to IPv6 addresses is required
         #
         # Read nodes from YAML file
-        nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
+        nodes_info = nodes_dict
+        locator_bits = DEFAULT_LOCATOR_BITS  # TODO configurable locator bits
+        usid_id_bits = DEFAULT_USID_ID_BITS  # TODO configurable uSID id bits
         # Add nodes list for the left-to-right path to the 'nodes_info' dict
         if nodes_lr is not None:
             fill_nodes_info(
@@ -872,7 +883,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
 
             policies = list(policies)
             for policy in policies:
-                # Add nodes list for the left-to-right path to the 'nodes_info' dict
+                # Add nodes list for the left-to-right path to the
+                # 'nodes_info' dict
                 if policy.get('lr_nodes') is not None:
                     fill_nodes_info(
                         nodes_info=nodes_info,
@@ -886,7 +898,8 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                         decap_sid=policy.get('decap_sid'),
                         locator=policy.get('locator')
                     )
-                # Add nodes list for the right-to-left path to the 'nodes_info' dict
+                # Add nodes list for the right-to-left path to the
+                # 'nodes_info' dict
                 if policy.get('rl_nodes') is not None:
                     fill_nodes_info(
                         nodes_info=nodes_info,
