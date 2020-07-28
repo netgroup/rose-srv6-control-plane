@@ -511,7 +511,7 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
         raise InvalidConfigurationError
     #
     # Compute uN SID starting from the provided node identifier
-    # Node identifier can be expressed as SID (an IPv6 address) or a 
+    # Node identifier can be expressed as SID (an IPv6 address) or a
     # uSID identifier. If it is a uSID identifier, we need to convert it
     # to a SID.
     un = node
@@ -567,7 +567,7 @@ def encode_intermediate_node(node, locator):
         raise InvalidConfigurationError
     #
     # Compute uN SID starting from the provided node identifier
-    # Node identifier can be expressed as SID (an IPv6 address) or a 
+    # Node identifier can be expressed as SID (an IPv6 address) or a
     # uSID identifier. If it is a uSID identifier, we need to convert it
     # to a SID.
     un = node
@@ -1212,14 +1212,14 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                             rl_nodes=nodes_rl,
                             table=table if table != -1 else None,
                             metric=metric if metric != -1 else None,
-                            l_grpc_ip = l_grpc_ip,
-                            l_grpc_port = l_grpc_port,
-                            l_fwd_engine = l_fwd_engine,
-                            r_grpc_ip = r_grpc_ip,
-                            r_grpc_port = r_grpc_port,
-                            r_fwd_engine = r_fwd_engine,
-                            decap_sid = decap_sid,
-                            locator = locator
+                            l_grpc_ip=l_grpc_ip,
+                            l_grpc_port=l_grpc_port,
+                            l_fwd_engine=l_fwd_engine,
+                            r_grpc_ip=r_grpc_ip,
+                            r_grpc_port=r_grpc_port,
+                            r_fwd_engine=r_fwd_engine,
+                            decap_sid=decap_sid,
+                            locator=locator
                         )
                     elif operation == 'del':
                         # TODO keep arango connection open
