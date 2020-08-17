@@ -28,6 +28,7 @@
 Topology Information Extraction utilities
 '''
 
+# General imports
 import errno
 import json
 import logging
@@ -67,17 +68,21 @@ except ImportError:
 # Global variables definition
 #
 #
-# Default topology file
+# The following parameters are the default arguments used by the functions
+# defined in this module. You can override the default values by providing
+# by providing the parameters to the function when you call them
+#
+# Filename for the exported topology
 DEFAULT_TOPOLOGY_FILE = '/tmp/topology.json'
-# Default nodes file
+# File containing the nodes
 DEFAULT_NODES_YAML_FILE = '/tmp/nodes.yaml'
-# Default edges file
+# File containing the edges
 DEFAULT_EDGES_YAML_FILE = '/tmp/edges.yaml'
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
-# In our experiment we use 'zebra' as default password
+# In our experiment we use 'zebra' as default password for isisd
 DEFAULT_ISISD_PASSWORD = 'zebra'
-# Dot file used to draw topology graph
+# Dot file used to draw the topology graph
 DOT_FILE_TOPO_GRAPH = '/tmp/topology.dot'
 # Define whether the verbose mode is enabled or not by default
 DEFAULT_VERBOSE = False
@@ -466,9 +471,9 @@ def parse_arguments():
     '''
     Command-line arguments parser
     '''
-    #
+    # Initialize parser
     parser = ArgumentParser(
-        description='Topology Information Ex+traction (from ISIS) '
+        description='Topology Information Extraction (from ISIS) '
         'module for SRv6 Controller'
     )
     # ip:port of the routers
@@ -536,7 +541,7 @@ def __main():
     args = parse_arguments()
     # Setup properly the logger
     if args.debug:
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
     else:
         logger.setLevel(logging.INFO)
     # Debug settings
