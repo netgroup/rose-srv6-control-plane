@@ -90,7 +90,7 @@ DEFAULT_VERBOSE = False
 
 class OptionalModuleNotLoadedError(Exception):
     '''
-    The requested feature depends on a optional module that has not been
+    The requested feature depends on an optional module that has not been
     loaded
     '''
 
@@ -99,7 +99,19 @@ class OptionalModuleNotLoadedError(Exception):
 def dump_topo_json(graph, topo_file):
     '''
     Dump the graph to a JSON file
+
+    :param graph: The graph to be exported
+    :type graph: class: `networkx.Graph`
+    :param topo_file: The path and the name of the JSON file
+    :type topo_file: str
+    :return: True
+    :rtype: bool
+    :raises OptionalModuleNotLoadedError: The NetworkX module required by
+                                          dump_topo_json has not has not been
+                                          loaded. Is it installed?
     '''
+    # Export the topology to a JSON file
+    logger.debug('*** Exporting topology to %s', topo_file)
     #
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
@@ -109,29 +121,31 @@ def dump_topo_json(graph, topo_file):
         logger.critical('NetworkX library required by dump_topo_json() '
                         'has not been imported. Is it installed?')
         raise OptionalModuleNotLoadedError
-    # Export NetworkX object into a json file
-    # Json dump of the topology
+    # Export NetworkX object into a json file (json dump of the topology)
     #
-    # Get json topology
+    # Convert the graph to a node-link format that is suitable for JSON
+    # serialization
     json_topology = json_graph.node_link_data(graph)
-    # Convert links
+    # Remove useless information from the links
     json_topology['links'] = [{
         'source': link['source'],
         'target': link['target'],
         'type': link.get('type')
     } for link in json_topology['links']]
-    # Convert nodes
+    # Remove useless information from the nodes
+    # IP address is unknown because it is not conrained in the nodes
+    # information, so we set it to None
     json_topology['nodes'] = [{
         'id': node['id'],
         'ip_address': None,
         'type': node.get('type'),
         'ext_reachability': node.get('ext_reachability')
     } for node in json_topology['nodes']]
-    # Dump the topology
-    logger.info('*** Exporting topology to %s', topo_file)
+    # Export the topology to a JSON file
     with open(topo_file, 'w') as outfile:
         json.dump(json_topology, outfile, sort_keys=True, indent=2)
-    logger.info('Topology exported\n')
+    logger.info('*** Topology exported\n')
+    return True
 
 
 def dump_topo_yaml(nodes, edges, node_to_systemid,
