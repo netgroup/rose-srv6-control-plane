@@ -88,6 +88,13 @@ DOT_FILE_TOPO_GRAPH = '/tmp/topology.dot'
 DEFAULT_VERBOSE = False
 
 
+class OptionalModuleNotLoadedError(Exception):
+    '''
+    The requested feature depends on a optional module that has not been
+    loaded
+    '''
+
+
 # Utility function to dump relevant information of the topology
 def dump_topo_json(graph, topo_file):
     '''
@@ -101,7 +108,7 @@ def dump_topo_json(graph, topo_file):
     if 'networkx' not in sys.modules:
         logger.critical('NetworkX library required by dump_topo_json() '
                         'has not been imported. Is it installed?')
-        return
+        raise OptionalModuleNotLoadedError
     # Export NetworkX object into a json file
     # Json dump of the topology
     #
