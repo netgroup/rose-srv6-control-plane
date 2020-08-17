@@ -36,7 +36,7 @@
     
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="SRv6 uSID Functions" href="srv6_usid.html" />
+    <link rel="next" title="SRv6 Performance Measurement Functions" href="srv6pm.html" />
     <link rel="prev" title="Command-Line Interface (CLI) Reference" href="cli.html" /> 
 </head>
 
@@ -95,7 +95,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#biditunnel"><code class="docutils literal notranslate"><span class="pre">biditunnel</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#path"><code class="docutils literal notranslate"><span class="pre">path</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#unitunnel"><code class="docutils literal notranslate"><span class="pre">unitunnel</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#usid"><code class="docutils literal notranslate"><span class="pre">usid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#usid-policy"><code class="docutils literal notranslate"><span class="pre">usid_policy</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exit"><code class="docutils literal notranslate"><span class="pre">exit</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#help"><code class="docutils literal notranslate"><span class="pre">help</span></code></a></li>
 </ul>
@@ -191,7 +191,7 @@ controller<span class="o">(</span>srv6<span class="o">)</span>&gt;
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">srv6</span></code> section supports the following commands:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>behavior  biditunnel  <span class="nb">exit</span>  <span class="nb">help</span>  path  unitunnel usid
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>behavior  biditunnel  <span class="nb">exit</span>  <span class="nb">help</span>  path  unitunnel usid_policy
 </pre></div>
 </div>
 </div>
@@ -984,16 +984,173 @@ optional arguments:
 </tbody>
 </table>
 </div>
-<div class="section" id="usid">
-<h2><code class="docutils literal notranslate"><span class="pre">usid</span></code><a class="headerlink" href="#usid" title="Permalink to this headline">¶</a></h2>
-<p>Enter the <code class="docutils literal notranslate"><span class="pre">usid</span></code> sub-section of the <code class="docutils literal notranslate"><span class="pre">srv6</span></code> CLI.
-This command requires the argument –addrs-file, that is a YAML file
-containing the mapping of node names to IP addresses.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; usid --nodes-file nodes.yml
+<div class="section" id="usid-policy">
+<h2><code class="docutils literal notranslate"><span class="pre">usid_policy</span></code><a class="headerlink" href="#usid-policy" title="Permalink to this headline">¶</a></h2>
+<p>Create, get, change or remove a SRv6 uSID policy in a node.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; policy --help
+usage: policy <span class="o">[</span>-h<span class="o">]</span> <span class="o">[</span>--secure<span class="o">]</span> <span class="o">[</span>--server-cert SERVER_CERT<span class="o">]</span> --op OP
+              <span class="o">[</span>--lr-destination LR_DESTINATION<span class="o">]</span>
+              <span class="o">[</span>--rl-destination RL_DESTINATION<span class="o">]</span> <span class="o">[</span>--nodes NODES<span class="o">]</span>
+              <span class="o">[</span>--nodes-rev NODES_REV<span class="o">]</span> <span class="o">[</span>--table TABLE<span class="o">]</span> <span class="o">[</span>--metric METRIC<span class="o">]</span>
+              <span class="o">[</span>--id ID<span class="o">]</span> <span class="o">[</span>--debug<span class="o">]</span>
+
+gRPC Southbound APIs <span class="k">for</span> SRv6 Controller
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --secure              Activate secure mode
+  --server-cert SERVER_CERT
+                        CA certificate file
+  --op OP               Operation
+  --lr-destination LR_DESTINATION
+                        Left to Right Destination
+  --rl-destination RL_DESTINATION
+                        Right to Left Destination
+  --nodes NODES         Nodes
+  --nodes-rev NODES_REV
+                        Reverse nodes list
+  --table TABLE         Table
+  --metric METRIC       Metric
+  --id ID               id
+  --debug               Activate debug logs
 </pre></div>
 </div>
-<p>See <a class="reference internal" href="srv6_usid.html#controller-cli-srv6-usid"><span class="std std-ref">SRv6 uSID Functions</span></a> for a description
-of the commands available in the <code class="docutils literal notranslate"><span class="pre">usid</span></code> section.</p>
+<table class="colwidths-given docutils align-default" id="id5">
+<caption><span class="caption-text">Arguments for the <code class="docutils literal notranslate"><span class="pre">policy</span></code> command</span><a class="headerlink" href="#id5" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 14%" />
+<col style="width: 9%" />
+<col style="width: 9%" />
+<col style="width: 55%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Optional</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>Show an help message and exit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--secure</span></code></p></td>
+<td><p>boolean</p></td>
+<td><p>False</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">If True, the Controller will use the TLS to</div>
+<div class="line">encrypt and authenticate the traffic sent</div>
+<div class="line">to the Node Manager on the gRPC</div>
+<div class="line">Channel.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--server-cert</span></code></p></td>
+<td><p>string</p></td>
+<td><p>None</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">Name of CA certificate for the TLS,</div>
+<div class="line">required if GRPC_SECURE is True.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--op</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>no</p></td>
+<td><p>Operation (add, change, get, del).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--lr-destination</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><p>Destination of the SRv6 left-to-right path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--rl-destination</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><p>Destination of the SRv6 right-to-left path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--nodes</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">The list of the waypoints (device names) of</div>
+<div class="line">the SRv6 path (left-to-right).</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--nodes-rev</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">The list of the waypoints (device names) of the</div>
+<div class="line">reverse SRv6 path (right-to-left).</div>
+<div class="line">If not provided, the same nodes of the</div>
+<div class="line">left-to-right path in reverse order</div>
+<div class="line">will be used.</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--device</span></code></p></td>
+<td><p>string</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">Device to be associated to the SRv6</div>
+<div class="line">path. If not specified, the Node</div>
+<div class="line">Manager will select an interface</div>
+<div class="line">automatically from the list of the</div>
+<div class="line">interfaces of the device.</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--encapmode</span></code></p></td>
+<td><p>string</p></td>
+<td><p>encap</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">The encap mode used for SRv6</div>
+<div class="line">(i.e. encap, inline or l2encap).</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--table</span></code></p></td>
+<td><p>integer</p></td>
+<td><p>254</p></td>
+<td><p>yes</p></td>
+<td><div class="line-block">
+<div class="line">The ID of the table where the SRv6</div>
+<div class="line">route must be created or removed</div>
+<div class="line">from. If not specified, the main table will</div>
+<div class="line">be used (table ID 254).</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--metric</span></code></p></td>
+<td><p>integer</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><p>The metric to be assigned to the route.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--debug</span></code></p></td>
+<td><p>–</p></td>
+<td><p>–</p></td>
+<td><p>yes</p></td>
+<td><p>If True, the debug logging is enabled.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="exit">
 <h2><code class="docutils literal notranslate"><span class="pre">exit</span></code><a class="headerlink" href="#exit" title="Permalink to this headline">¶</a></h2>
@@ -1008,8 +1165,6 @@ of the commands available in the <code class="docutils literal notranslate"><spa
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>srv6<span class="o">)</span>&gt; <span class="nb">help</span>
 </pre></div>
 </div>
-<div class="toctree-wrapper compound">
-</div>
 </div>
 </div>
 
@@ -1021,7 +1176,7 @@ of the commands available in the <code class="docutils literal notranslate"><spa
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="srv6_usid.html" class="btn btn-neutral float-right" title="SRv6 uSID Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="srv6pm.html" class="btn btn-neutral float-right" title="SRv6 Performance Measurement Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="cli.html" class="btn btn-neutral float-left" title="Command-Line Interface (CLI) Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

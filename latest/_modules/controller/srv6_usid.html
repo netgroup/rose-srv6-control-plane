@@ -241,6 +241,16 @@
 <span class="sd">    &#39;&#39;&#39;</span></div>
 
 
+<div class="viewcode-block" id="print_nodes"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.print_nodes">[docs]</a><span class="k">def</span> <span class="nf">print_nodes</span><span class="p">(</span><span class="n">nodes_dict</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Print the nodes.</span>
+
+<span class="sd">    :param nodes_dict: Dict containing the nodes</span>
+<span class="sd">    :type nodes_dict: dict</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nodes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
+
+
 <div class="viewcode-block" id="print_node_to_addr_mapping"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.print_node_to_addr_mapping">[docs]</a><span class="k">def</span> <span class="nf">print_node_to_addr_mapping</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    This function reads a YAML file containing the mapping</span>
@@ -568,20 +578,284 @@
     <span class="k">return</span> <span class="n">usid_list</span></div>
 
 
-<div class="viewcode-block" id="handle_srv6_usid_policy"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.handle_srv6_usid_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_usid_policy</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">nodes_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="validate_usid_id"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.validate_usid_id">[docs]</a><span class="k">def</span> <span class="nf">validate_usid_id</span><span class="p">(</span><span class="n">usid_id</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Validate a uSID identifier. A valid uSID id should be an integer in the</span>
+<span class="sd">    range (0, 0xffff).</span>
+
+<span class="sd">    :param usid_id: uSID idenfier to validate.</span>
+<span class="sd">    :type usid_id: str</span>
+<span class="sd">    :return: True if the uSID identifier is valid.</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># A valid uSID id should be an integer in the range (0, 0xffff)</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mh">0x0</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mh">0xffff</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c1"># The uSID id is invalid</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="usid_id_to_usid"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.usid_id_to_usid">[docs]</a><span class="k">def</span> <span class="nf">usid_id_to_usid</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="n">locator</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Convert a uSID identifier into a SID.</span>
+
+<span class="sd">    :param usid_id: uSID idenfier to convert.</span>
+<span class="sd">    :type usid_id: str</span>
+<span class="sd">    :param locator: Locator part to be used for the SID.</span>
+<span class="sd">    :type locator: str</span>
+<span class="sd">    :return: Generated SID.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">IPv6Address</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">IPv6Address</span><span class="p">(</span><span class="n">locator</span><span class="p">))</span> <span class="o">+</span>
+                           <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">80</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="encode_endpoint_node"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.encode_endpoint_node">[docs]</a><span class="k">def</span> <span class="nf">encode_endpoint_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">grpc_ip</span><span class="p">,</span> <span class="n">grpc_port</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span>
+                         <span class="n">udt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Get a dict-representation of a node (endpoint of the path), starting from</span>
+<span class="sd">    gRPC IP and port, uDT sid, forwarding engine and locator.</span>
+
+<span class="sd">    :param node: Node identifier. This could be a name, a SID (IPv6 address)</span>
+<span class="sd">                 or a number (uSID identifier).</span>
+<span class="sd">    :type node: str</span>
+<span class="sd">    :param grpc_ip: gRPC IP address of the node.</span>
+<span class="sd">    :type grpc_ip: str</span>
+<span class="sd">    :param grpc_port: Port number of the gRPC server.</span>
+<span class="sd">    :type grpc_port: int</span>
+<span class="sd">    :param udt: uDT SID of the node, used for the decap operation. If not</span>
+<span class="sd">                provided, the uDT SID is not added to the SID list.</span>
+<span class="sd">    :type udt: str, optional</span>
+<span class="sd">    :param fwd_engine: Forwarding engine to be used (e.g. Linux or VPP).</span>
+<span class="sd">    :type fwd_engine: str</span>
+<span class="sd">    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).</span>
+<span class="sd">    :type locator: str</span>
+<span class="sd">    :return: Dict representation of the node. The dict has the following</span>
+<span class="sd">             fields:</span>
+<span class="sd">             - name</span>
+<span class="sd">             - grpc_ip</span>
+<span class="sd">             - grpc_port</span>
+<span class="sd">             - uN</span>
+<span class="sd">             - uDT</span>
+<span class="sd">             - fwd_engine</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Validation checks</span>
+    <span class="c1">#</span>
+    <span class="c1"># Validate gRPC address</span>
+    <span class="k">if</span> <span class="n">grpc_ip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;grpc_ip is mandatory for node </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+    <span class="c1"># Validate gRPC port</span>
+    <span class="k">if</span> <span class="n">grpc_port</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;grpc_port is mandatory for node </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+    <span class="c1"># Validate forwarding engine</span>
+    <span class="k">if</span> <span class="n">fwd_engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;grpcfwd_engine_ip is mandatory for node </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+    <span class="c1"># Validate locator</span>
+    <span class="k">if</span> <span class="n">locator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;locator is mandatory for node </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+    <span class="c1">#</span>
+    <span class="c1"># Compute uN SID starting from the provided node identifier</span>
+    <span class="c1"># Node identifier can be expressed as SID (an IPv6 address) or a</span>
+    <span class="c1"># uSID identifier. If it is a uSID identifier, we need to convert it</span>
+    <span class="c1"># to a SID.</span>
+    <span class="n">un</span> <span class="o">=</span> <span class="n">node</span>
+    <span class="k">if</span> <span class="n">validate_usid_id</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="c1"># Node identifier is a integer, we need to convert it to a SID (IPv6</span>
+        <span class="c1"># address)</span>
+        <span class="n">un</span> <span class="o">=</span> <span class="n">usid_id_to_usid</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">locator</span><span class="p">)</span>
+    <span class="c1"># If the node is expressed as IPv6 address or uSID identifier, encode it</span>
+    <span class="c1"># Otherwise (if the node is expressed as node name), we return None and we</span>
+    <span class="c1"># expect to find the node info in the nodes configuration.</span>
+    <span class="k">if</span> <span class="n">utils</span><span class="o">.</span><span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">or</span> <span class="n">validate_usid_id</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="c1"># Return the dict</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+            <span class="s1">&#39;grpc_ip&#39;</span><span class="p">:</span> <span class="n">grpc_ip</span><span class="p">,</span>
+            <span class="s1">&#39;grpc_port&#39;</span><span class="p">:</span> <span class="n">grpc_port</span><span class="p">,</span>
+            <span class="s1">&#39;uN&#39;</span><span class="p">:</span> <span class="n">un</span><span class="p">,</span>
+            <span class="s1">&#39;uDT&#39;</span><span class="p">:</span> <span class="n">udt</span><span class="p">,</span>
+            <span class="s1">&#39;fwd_engine&#39;</span><span class="p">:</span> <span class="n">fwd_engine</span>
+        <span class="p">}</span>
+    <span class="c1"># &#39;Node&#39; is a name. Return None.</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="encode_intermediate_node"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.encode_intermediate_node">[docs]</a><span class="k">def</span> <span class="nf">encode_intermediate_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">locator</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Get a dict-representation of a node (intermediate node of the path),</span>
+<span class="sd">    starting from gRPC IP and port, uDT sid, forwarding engine and locator.</span>
+<span class="sd">    For the intermediate nodes, we don&#39;t need uDT, forwarding engine.</span>
+<span class="sd">    gRPC IP and gRPC address.</span>
+
+<span class="sd">    :param node: Node identifier. This could be a name, a SID (IPv6 address)</span>
+<span class="sd">                 or a number (uSID identifier).</span>
+<span class="sd">    :type node: str</span>
+<span class="sd">    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).</span>
+<span class="sd">    :type locator: str</span>
+<span class="sd">    :return: Dict representation of the node. The dict has the following</span>
+<span class="sd">             fields:</span>
+<span class="sd">             - name</span>
+<span class="sd">             - grpc_ip (set to None)</span>
+<span class="sd">             - grpc_port (set to None)</span>
+<span class="sd">             - uN</span>
+<span class="sd">             - uDT (set to None)</span>
+<span class="sd">             - fwd_engine (set to None)</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Validate params</span>
+    <span class="c1">#</span>
+    <span class="c1"># Validate locator</span>
+    <span class="k">if</span> <span class="n">locator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;locator is mandatory for node </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+    <span class="c1">#</span>
+    <span class="c1"># Compute uN SID starting from the provided node identifier</span>
+    <span class="c1"># Node identifier can be expressed as SID (an IPv6 address) or a</span>
+    <span class="c1"># uSID identifier. If it is a uSID identifier, we need to convert it</span>
+    <span class="c1"># to a SID.</span>
+    <span class="n">un</span> <span class="o">=</span> <span class="n">node</span>
+    <span class="c1"># Node identifier is a integer, we need to convert it to a SID (IPv6</span>
+    <span class="c1"># address)</span>
+    <span class="k">if</span> <span class="n">validate_usid_id</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="n">un</span> <span class="o">=</span> <span class="n">usid_id_to_usid</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">locator</span><span class="p">)</span>
+    <span class="c1"># If the node is expressed as IPv6 address or uSID identifier, encode it</span>
+    <span class="c1"># Otherwise (if the node is expressed as node name), we return None and we</span>
+    <span class="c1"># expect to find the node info in the nodes configuration.</span>
+    <span class="k">if</span> <span class="n">utils</span><span class="o">.</span><span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="ow">or</span> <span class="n">validate_usid_id</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+            <span class="s1">&#39;grpc_ip&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>    <span class="c1"># Useless for intermediate nodes</span>
+            <span class="s1">&#39;grpc_port&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>    <span class="c1"># Useless for intermediate nodes</span>
+            <span class="s1">&#39;uN&#39;</span><span class="p">:</span> <span class="n">un</span><span class="p">,</span>
+            <span class="s1">&#39;uDT&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>    <span class="c1"># Useless for intermediate nodes</span>
+            <span class="s1">&#39;fwd_engine&#39;</span><span class="p">:</span> <span class="kc">None</span>    <span class="c1"># Useless for intermediate nodes</span>
+        <span class="p">}</span>
+    <span class="c1"># &#39;Node&#39; is a name. Return None.</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="fill_nodes_info"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.fill_nodes_info">[docs]</a><span class="k">def</span> <span class="nf">fill_nodes_info</span><span class="p">(</span><span class="n">nodes_info</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">l_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">l_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">r_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decap_sid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Fill &#39;nodes_info&#39; dict with the nodes containined in the &#39;nodes&#39; list.</span>
+
+<span class="sd">    :param nodes_info: Dict containined the nodes information where to add the</span>
+<span class="sd">                       nodes.</span>
+<span class="sd">    :type nodes_info: dict</span>
+<span class="sd">    :param nodes: List of nodes. Each node can be expressed as SID (IPv6</span>
+<span class="sd">                  address), a uSID identifier (integer) or a name.</span>
+<span class="sd">    :type nodes: list</span>
+<span class="sd">    :param l_grpc_ip: gRPC address of the left node in the path.</span>
+<span class="sd">    :type l_grpc_ip: str, optional</span>
+<span class="sd">    :param l_grpc_port: Port number of the gRPC server on the left node of</span>
+<span class="sd">                        the path.</span>
+<span class="sd">    :type l_grpc_port: str, optional</span>
+<span class="sd">    :param l_fwd_engine: Forwarding engine to be used on the left node of</span>
+<span class="sd">                        the path (e.g. Linux or VPP).</span>
+<span class="sd">    :type l_fwd_engine: str, optional</span>
+<span class="sd">    :param r_grpc_ip: gRPC address of the right node in the path.</span>
+<span class="sd">    :type r_grpc_ip: str, optional</span>
+<span class="sd">    :param r_grpc_port: Port number of the gRPC server on the right node of</span>
+<span class="sd">                        the path.</span>
+<span class="sd">    :type r_grpc_port: str, optional</span>
+<span class="sd">    :param r_fwd_engine: Forwarding engine to be used on the right node of</span>
+<span class="sd">                        the path (e.g. Linux or VPP).</span>
+<span class="sd">    :type r_fwd_engine: str, optional</span>
+<span class="sd">    :param decap_sid: Decap SID. This could be a SID (IPv6 address) or a uSID</span>
+<span class="sd">                      identifier (an integer).</span>
+<span class="sd">    :type decap_sid: str, optional</span>
+<span class="sd">    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).</span>
+<span class="sd">    :type locator: str, optional</span>
+<span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Convert decap SID to uDT</span>
+    <span class="n">udt</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">decap_sid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Locator is required</span>
+        <span class="k">if</span> <span class="n">locator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;locator is mandatory&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidConfigurationError</span>
+        <span class="c1"># Check if decap SID is expressed as a SID (IPv6 address)</span>
+        <span class="c1"># or a uSID identifier (an integer)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">decap_sid</span><span class="p">):</span>
+            <span class="c1"># Integer, we need to convert it to a SID (IPv6 address)</span>
+            <span class="n">udt</span> <span class="o">=</span> <span class="n">usid_id_to_usid</span><span class="p">(</span><span class="n">decap_sid</span><span class="p">,</span> <span class="n">locator</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># IPv6 address</span>
+            <span class="n">udt</span> <span class="o">=</span> <span class="n">decap_sid</span>
+    <span class="c1"># Encode left node</span>
+    <span class="c1">#</span>
+    <span class="c1"># A node could be expressed as an integer, an IPv6 address (SID)</span>
+    <span class="c1"># or a name</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">encode_endpoint_node</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">grpc_ip</span><span class="o">=</span><span class="n">l_grpc_ip</span><span class="p">,</span>
+        <span class="n">grpc_port</span><span class="o">=</span><span class="n">l_grpc_port</span><span class="p">,</span>
+        <span class="n">udt</span><span class="o">=</span><span class="n">udt</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">l_fwd_engine</span><span class="p">,</span>
+        <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
+    <span class="p">)</span>
+    <span class="c1"># If we received a node info dict, we add it to the</span>
+    <span class="c1"># nodes info dictionary</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodes_info</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">node</span>
+    <span class="c1"># Encode right node</span>
+    <span class="c1">#</span>
+    <span class="c1"># A node could be expressed as an integer, an IPv6 address (SID)</span>
+    <span class="c1"># or a name</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">encode_endpoint_node</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">grpc_ip</span><span class="o">=</span><span class="n">r_grpc_ip</span><span class="p">,</span>
+        <span class="n">grpc_port</span><span class="o">=</span><span class="n">r_grpc_port</span><span class="p">,</span>
+        <span class="n">udt</span><span class="o">=</span><span class="n">udt</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">r_fwd_engine</span><span class="p">,</span>
+        <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
+    <span class="p">)</span>
+    <span class="c1"># If we received a node info dict, we add it to the</span>
+    <span class="c1"># nodes info dictionary</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodes_info</span><span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="n">node</span>
+    <span class="c1"># Encode intermediate nodes</span>
+    <span class="c1"># For the intermediate nodes, we don&#39;t need forwarding engine,</span>
+    <span class="c1"># uDT, gRPC IP and port</span>
+    <span class="k">for</span> <span class="n">node_name</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c1"># Encode the node</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">encode_intermediate_node</span><span class="p">(</span>
+            <span class="n">node</span><span class="o">=</span><span class="n">node_name</span><span class="p">,</span>
+            <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
+        <span class="p">)</span>
+        <span class="c1"># If we received a node info dict, we add it to the</span>
+        <span class="c1"># nodes info dictionary</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nodes_info</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span></div>
+
+
+<div class="viewcode-block" id="handle_srv6_usid_policy"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.handle_srv6_usid_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_usid_policy</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">nodes_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">lr_destination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rl_destination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">nodes_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">nodes_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                            <span class="n">persistency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                            <span class="n">persistency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">l_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">r_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">r_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decap_sid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 Policy using uSIDs</span>
 
 <span class="sd">    :param operation: The operation to be performed on the uSID policy</span>
 <span class="sd">                      (i.e. add, get, change, del)</span>
 <span class="sd">    :type operation: str</span>
-<span class="sd">    :param nodes_filename: Name of the YAML file containing the</span>
-<span class="sd">                           mapping of node names to IP addresses</span>
-<span class="sd">    :type nodes_filename: str</span>
+<span class="sd">    :param nodes_dict: Dict containing the nodes configuration.</span>
+<span class="sd">    :type nodes_dict: dict</span>
 <span class="sd">    :param destination: Destination of the SRv6 route</span>
 <span class="sd">    :type destination: str</span>
 <span class="sd">    :param nodes: Waypoints of the SRv6 route</span>
@@ -595,6 +869,29 @@
 <span class="sd">    :param metric: Metric for the SRv6 route. If not provided, the default</span>
 <span class="sd">                   metric will be used.</span>
 <span class="sd">    :type metric: int, optional</span>
+<span class="sd">    :param l_grpc_ip: gRPC IP address of the left node, required if the left</span>
+<span class="sd">                      node is expressed numerically in the nodes list.</span>
+<span class="sd">    :type l_grpc_ip: str, optional</span>
+<span class="sd">    :param l_grpc_port: gRPC port of the left node, required if the left</span>
+<span class="sd">                        node is expressed numerically in the nodes list.</span>
+<span class="sd">    :type l_grpc_port: str, optional</span>
+<span class="sd">    :param l_fwd_engine: forwarding engine of the left node, required if the</span>
+<span class="sd">                         left node is expressed numerically in the nodes list.</span>
+<span class="sd">    :type l_fwd_engine: str, optional</span>
+<span class="sd">    :param r_grpc_ip: gRPC IP address of the right node, required if the right</span>
+<span class="sd">                      node is expressed numerically in the nodes list.</span>
+<span class="sd">    :type r_grpc_ip: str, optional</span>
+<span class="sd">    :param r_grpc_port: gRPC port of the right node, required if the right</span>
+<span class="sd">                        node is expressed numerically in the nodes list.</span>
+<span class="sd">    :type r_grpc_port: str, optional</span>
+<span class="sd">    :param r_fwd_engine: Forwarding engine of the right node, required if the</span>
+<span class="sd">                         right node is expressed numerically in the nodes</span>
+<span class="sd">                         list.</span>
+<span class="sd">    :type r_fwd_engine: str, optional</span>
+<span class="sd">    :param decap_sid: uSID used for the decap behavior (End.DT6).</span>
+<span class="sd">    :type decap_sid: str, optional</span>
+<span class="sd">    :param locator: Locator prefix (e.g. &#39;fcbb:bbbb::&#39;).</span>
+<span class="sd">    :type locator: str, optional</span>
 <span class="sd">    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)</span>
 <span class="sd">    :rtype: int</span>
 <span class="sd">    :raises NodeNotFoundError: Node name not found in the mapping file</span>
@@ -631,7 +928,7 @@
             <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">nodes_rl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
-    <span class="k">if</span> <span class="n">nodes_filename</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">nodes_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">operation</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;del&#39;</span><span class="p">]:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;&quot;nodes_filename&quot; argument is mandatory for </span><span class="si">%s</span><span class="s1"> &#39;</span>
                          <span class="s1">&#39;operation&#39;</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
@@ -674,7 +971,37 @@
         <span class="c1"># mapping of node names to IPv6 addresses is required</span>
         <span class="c1">#</span>
         <span class="c1"># Read nodes from YAML file</span>
-        <span class="n">nodes_info</span><span class="p">,</span> <span class="n">locator_bits</span><span class="p">,</span> <span class="n">usid_id_bits</span> <span class="o">=</span> <span class="n">read_nodes</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">)</span>
+        <span class="n">nodes_info</span> <span class="o">=</span> <span class="n">nodes_dict</span>
+        <span class="n">locator_bits</span> <span class="o">=</span> <span class="n">DEFAULT_LOCATOR_BITS</span>  <span class="c1"># TODO configurable locator bits</span>
+        <span class="n">usid_id_bits</span> <span class="o">=</span> <span class="n">DEFAULT_USID_ID_BITS</span>  <span class="c1"># TODO configurable uSID id bits</span>
+        <span class="c1"># Add nodes list for the left-to-right path to the &#39;nodes_info&#39; dict</span>
+        <span class="k">if</span> <span class="n">nodes_lr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fill_nodes_info</span><span class="p">(</span>
+                <span class="n">nodes_info</span><span class="o">=</span><span class="n">nodes_info</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="o">=</span><span class="n">nodes_lr</span><span class="p">,</span>
+                <span class="n">l_grpc_ip</span><span class="o">=</span><span class="n">l_grpc_ip</span><span class="p">,</span>
+                <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">l_grpc_port</span><span class="p">,</span>
+                <span class="n">l_fwd_engine</span><span class="o">=</span><span class="n">l_fwd_engine</span><span class="p">,</span>
+                <span class="n">r_grpc_ip</span><span class="o">=</span><span class="n">r_grpc_ip</span><span class="p">,</span>
+                <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">r_grpc_port</span><span class="p">,</span>
+                <span class="n">r_fwd_engine</span><span class="o">=</span><span class="n">r_fwd_engine</span><span class="p">,</span>
+                <span class="n">decap_sid</span><span class="o">=</span><span class="n">decap_sid</span><span class="p">,</span>
+                <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
+            <span class="p">)</span>
+        <span class="c1"># Add nodes list for the right-to-left path to the &#39;nodes_info&#39; dict</span>
+        <span class="k">if</span> <span class="n">nodes_rl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fill_nodes_info</span><span class="p">(</span>
+                <span class="n">nodes_info</span><span class="o">=</span><span class="n">nodes_info</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="o">=</span><span class="n">nodes_rl</span><span class="p">,</span>
+                <span class="n">l_grpc_ip</span><span class="o">=</span><span class="n">r_grpc_ip</span><span class="p">,</span>
+                <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">r_grpc_port</span><span class="p">,</span>
+                <span class="n">l_fwd_engine</span><span class="o">=</span><span class="n">r_fwd_engine</span><span class="p">,</span>
+                <span class="n">r_grpc_ip</span><span class="o">=</span><span class="n">l_grpc_ip</span><span class="p">,</span>
+                <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">l_grpc_port</span><span class="p">,</span>
+                <span class="n">r_fwd_engine</span><span class="o">=</span><span class="n">l_fwd_engine</span><span class="p">,</span>
+                <span class="n">decap_sid</span><span class="o">=</span><span class="n">decap_sid</span><span class="p">,</span>
+                <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
+            <span class="p">)</span>
         <span class="c1"># Add</span>
         <span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;add&#39;</span><span class="p">:</span>
             <span class="n">policies</span> <span class="o">=</span> <span class="p">[{</span>
@@ -705,6 +1032,39 @@
                 <span class="n">table</span><span class="o">=</span><span class="n">table</span> <span class="k">if</span> <span class="n">table</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
                 <span class="n">metric</span><span class="o">=</span><span class="n">metric</span> <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="p">)</span>
+
+            <span class="n">policies</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">policies</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">policy</span> <span class="ow">in</span> <span class="n">policies</span><span class="p">:</span>
+                <span class="c1"># Add nodes list for the left-to-right path to the</span>
+                <span class="c1"># &#39;nodes_info&#39; dict</span>
+                <span class="k">if</span> <span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lr_nodes&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">fill_nodes_info</span><span class="p">(</span>
+                        <span class="n">nodes_info</span><span class="o">=</span><span class="n">nodes_info</span><span class="p">,</span>
+                        <span class="n">nodes</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;lr_nodes&#39;</span><span class="p">),</span>
+                        <span class="n">l_grpc_ip</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_grpc_ip&#39;</span><span class="p">),</span>
+                        <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">),</span>
+                        <span class="n">l_fwd_engine</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_fwd_engine&#39;</span><span class="p">),</span>
+                        <span class="n">r_grpc_ip</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_grpc_ip&#39;</span><span class="p">),</span>
+                        <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">),</span>
+                        <span class="n">r_fwd_engine</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_fwd_engine&#39;</span><span class="p">),</span>
+                        <span class="n">decap_sid</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;decap_sid&#39;</span><span class="p">),</span>
+                        <span class="n">locator</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;locator&#39;</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="c1"># Add nodes list for the right-to-left path to the</span>
+                <span class="c1"># &#39;nodes_info&#39; dict</span>
+                <span class="k">if</span> <span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rl_nodes&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">fill_nodes_info</span><span class="p">(</span>
+                        <span class="n">nodes_info</span><span class="o">=</span><span class="n">nodes_info</span><span class="p">,</span>
+                        <span class="n">nodes</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rl_nodes&#39;</span><span class="p">),</span>
+                        <span class="n">l_grpc_ip</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_grpc_ip&#39;</span><span class="p">),</span>
+                        <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">),</span>
+                        <span class="n">l_fwd_engine</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;r_fwd_engine&#39;</span><span class="p">),</span>
+                        <span class="n">r_grpc_ip</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_grpc_ip&#39;</span><span class="p">),</span>
+                        <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">),</span>
+                        <span class="n">r_fwd_engine</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;l_fwd_engine&#39;</span><span class="p">),</span>
+                        <span class="n">decap_sid</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;decap_sid&#39;</span><span class="p">),</span>
+                        <span class="n">locator</span><span class="o">=</span><span class="n">policy</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;locator&#39;</span><span class="p">)</span>
+                    <span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">policies</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Policy not found&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -1003,7 +1363,15 @@
                             <span class="n">lr_nodes</span><span class="o">=</span><span class="n">nodes_lr</span><span class="p">,</span>
                             <span class="n">rl_nodes</span><span class="o">=</span><span class="n">nodes_rl</span><span class="p">,</span>
                             <span class="n">table</span><span class="o">=</span><span class="n">table</span> <span class="k">if</span> <span class="n">table</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                            <span class="n">metric</span><span class="o">=</span><span class="n">metric</span> <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+                            <span class="n">metric</span><span class="o">=</span><span class="n">metric</span> <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">l_grpc_ip</span><span class="o">=</span><span class="n">l_grpc_ip</span><span class="p">,</span>
+                            <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">l_grpc_port</span><span class="p">,</span>
+                            <span class="n">l_fwd_engine</span><span class="o">=</span><span class="n">l_fwd_engine</span><span class="p">,</span>
+                            <span class="n">r_grpc_ip</span><span class="o">=</span><span class="n">r_grpc_ip</span><span class="p">,</span>
+                            <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">r_grpc_port</span><span class="p">,</span>
+                            <span class="n">r_fwd_engine</span><span class="o">=</span><span class="n">r_fwd_engine</span><span class="p">,</span>
+                            <span class="n">decap_sid</span><span class="o">=</span><span class="n">decap_sid</span><span class="p">,</span>
+                            <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
                         <span class="p">)</span>
                     <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;del&#39;</span><span class="p">:</span>
                         <span class="c1"># TODO keep arango connection open</span>

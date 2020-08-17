@@ -21,7 +21,9 @@ Section ``topology`` supports the following commands:
 
 .. code:: console
 
-  exit  extract  extract_and_load_on_arango  help  load_on_arango
+  extract                     help               load_on_arango  exit
+  extract_and_load_on_arango  load_nodes_config  print_nodes   
+
 
 
 ``extract``
@@ -140,6 +142,36 @@ Read the topology from a YAML file and load it on a ArangoDB database.
                           edges_yaml
     -v, --verbose         Enable verbose mode
     -d, --debug           Activate debug logs
+
+
+``load_nodes_config``
+---------------------
+
+Load nodes configuration to the database.
+
+.. code:: bash
+
+  controller(topology)> load_nodes_config --help
+  usage: load_nodes_config [-h] --nodes-file NODES_FILE
+
+  Load nodes configuration to the database
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --nodes-file NODES_FILE
+                          File containing the mapping of name nodes to IP
+                          addresses
+
+
+``show_nodes``
+--------------
+
+Print the list of the available nodes.
+
+.. code:: bash
+
+  controller(topology)> show_nodes
+  Show the list of the available devices
 
 
 ``exit``

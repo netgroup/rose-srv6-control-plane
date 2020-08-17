@@ -206,6 +206,109 @@
 </dd></dl>
 
 <dl class="function">
+<dt id="controller.srv6_usid.encode_endpoint_node">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">encode_endpoint_node</code><span class="sig-paren">(</span><em class="sig-param">node</em>, <em class="sig-param">grpc_ip</em>, <em class="sig-param">grpc_port</em>, <em class="sig-param">fwd_engine</em>, <em class="sig-param">locator</em>, <em class="sig-param">udt=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#encode_endpoint_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.encode_endpoint_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dict-representation of a node (endpoint of the path), starting from
+gRPC IP and port, uDT sid, forwarding engine and locator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Node identifier. This could be a name, a SID (IPv6 address)
+or a number (uSID identifier).</p></li>
+<li><p><strong>grpc_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – gRPC IP address of the node.</p></li>
+<li><p><strong>grpc_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Port number of the gRPC server.</p></li>
+<li><p><strong>udt</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – uDT SID of the node, used for the decap operation. If not
+provided, the uDT SID is not added to the SID list.</p></li>
+<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Forwarding engine to be used (e.g. Linux or VPP).</p></li>
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Locator part of the SIDs (e.g. fcbb:bbbb::).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict representation of the node. The dict has the following
+fields:
+- name
+- grpc_ip
+- grpc_port
+- uN
+- uDT
+- fwd_engine</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – If the node params are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.encode_intermediate_node">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">encode_intermediate_node</code><span class="sig-paren">(</span><em class="sig-param">node</em>, <em class="sig-param">locator</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#encode_intermediate_node"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.encode_intermediate_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dict-representation of a node (intermediate node of the path),
+starting from gRPC IP and port, uDT sid, forwarding engine and locator.
+For the intermediate nodes, we don’t need uDT, forwarding engine.
+gRPC IP and gRPC address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Node identifier. This could be a name, a SID (IPv6 address)
+or a number (uSID identifier).</p></li>
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Locator part of the SIDs (e.g. fcbb:bbbb::).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dict representation of the node. The dict has the following
+fields:
+- name
+- grpc_ip (set to None)
+- grpc_port (set to None)
+- uN
+- uDT (set to None)
+- fwd_engine (set to None)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)">dict</a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – If the node params are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.fill_nodes_info">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">fill_nodes_info</code><span class="sig-paren">(</span><em class="sig-param">nodes_info</em>, <em class="sig-param">nodes</em>, <em class="sig-param">l_grpc_ip=None</em>, <em class="sig-param">l_grpc_port=None</em>, <em class="sig-param">l_fwd_engine=None</em>, <em class="sig-param">r_grpc_ip=None</em>, <em class="sig-param">r_grpc_port=None</em>, <em class="sig-param">r_fwd_engine=None</em>, <em class="sig-param">decap_sid=None</em>, <em class="sig-param">locator=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#fill_nodes_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.fill_nodes_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill ‘nodes_info’ dict with the nodes containined in the ‘nodes’ list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nodes_info</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dict containined the nodes information where to add the
+nodes.</p></li>
+<li><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – List of nodes. Each node can be expressed as SID (IPv6
+address), a uSID identifier (integer) or a name.</p></li>
+<li><p><strong>l_grpc_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC address of the left node in the path.</p></li>
+<li><p><strong>l_grpc_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Port number of the gRPC server on the left node of
+the path.</p></li>
+<li><p><strong>l_fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine to be used on the left node of
+the path (e.g. Linux or VPP).</p></li>
+<li><p><strong>r_grpc_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC address of the right node in the path.</p></li>
+<li><p><strong>r_grpc_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Port number of the gRPC server on the right node of
+the path.</p></li>
+<li><p><strong>r_fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine to be used on the right node of
+the path (e.g. Linux or VPP).</p></li>
+<li><p><strong>decap_sid</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Decap SID. This could be a SID (IPv6 address) or a uSID
+identifier (an integer).</p></li>
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Locator part of the SIDs (e.g. fcbb:bbbb::).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#controller.srv6_usid.InvalidConfigurationError" title="controller.srv6_usid.InvalidConfigurationError"><strong>InvalidConfigurationError</strong></a> – If the node params are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
 <dt id="controller.srv6_usid.get_sid_locator">
 <code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">get_sid_locator</code><span class="sig-paren">(</span><em class="sig-param">sid_list</em>, <em class="sig-param">locator_bits=32</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#get_sid_locator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.get_sid_locator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the SID Locator (i.e. the first 32 bits) from a SID List.</p>
@@ -230,15 +333,14 @@
 
 <dl class="function">
 <dt id="controller.srv6_usid.handle_srv6_usid_policy">
-<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">handle_srv6_usid_policy</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">nodes_filename=None</em>, <em class="sig-param">lr_destination=None</em>, <em class="sig-param">rl_destination=None</em>, <em class="sig-param">nodes_lr=None</em>, <em class="sig-param">nodes_rl=None</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">persistency=True</em>, <em class="sig-param">_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#handle_srv6_usid_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.handle_srv6_usid_policy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">handle_srv6_usid_policy</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">nodes_dict=None</em>, <em class="sig-param">lr_destination=None</em>, <em class="sig-param">rl_destination=None</em>, <em class="sig-param">nodes_lr=None</em>, <em class="sig-param">nodes_rl=None</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">persistency=True</em>, <em class="sig-param">_id=None</em>, <em class="sig-param">l_grpc_ip=None</em>, <em class="sig-param">l_grpc_port=None</em>, <em class="sig-param">l_fwd_engine=None</em>, <em class="sig-param">r_grpc_ip=None</em>, <em class="sig-param">r_grpc_port=None</em>, <em class="sig-param">r_fwd_engine=None</em>, <em class="sig-param">decap_sid=None</em>, <em class="sig-param">locator=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#handle_srv6_usid_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.handle_srv6_usid_policy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle a SRv6 Policy using uSIDs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>operation</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The operation to be performed on the uSID policy
 (i.e. add, get, change, del)</p></li>
-<li><p><strong>nodes_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
-mapping of node names to IP addresses</p></li>
+<li><p><strong>nodes_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dict containing the nodes configuration.</p></li>
 <li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Destination of the SRv6 route</p></li>
 <li><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – Waypoints of the SRv6 route</p></li>
 <li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Device of the SRv6 route. If not provided, the device
@@ -247,6 +349,21 @@ is selected automatically by the node.</p></li>
 the main table (i.e. table 254) will be used.</p></li>
 <li><p><strong>metric</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Metric for the SRv6 route. If not provided, the default
 metric will be used.</p></li>
+<li><p><strong>l_grpc_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC IP address of the left node, required if the left
+node is expressed numerically in the nodes list.</p></li>
+<li><p><strong>l_grpc_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC port of the left node, required if the left
+node is expressed numerically in the nodes list.</p></li>
+<li><p><strong>l_fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – forwarding engine of the left node, required if the
+left node is expressed numerically in the nodes list.</p></li>
+<li><p><strong>r_grpc_ip</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC IP address of the right node, required if the right
+node is expressed numerically in the nodes list.</p></li>
+<li><p><strong>r_grpc_port</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – gRPC port of the right node, required if the right
+node is expressed numerically in the nodes list.</p></li>
+<li><p><strong>r_fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine of the right node, required if the
+right node is expressed numerically in the nodes
+list.</p></li>
+<li><p><strong>decap_sid</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – uSID used for the decap behavior (End.DT6).</p></li>
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Locator prefix (e.g. ‘fcbb:bbbb::’).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -307,6 +424,17 @@ of node names to IP addresses and pretty print it</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>node_to_addr_filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Name of the YAML file containing the
 mapping of node names to IP addresses</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.print_nodes">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">print_nodes</code><span class="sig-paren">(</span><em class="sig-param">nodes_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#print_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.print_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nodes_dict</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.8)"><em>dict</em></a>) – Dict containing the nodes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -389,6 +517,44 @@ All the segments must use the same SID Locator.</p></li>
 <li><p><a class="reference internal" href="#controller.srv6_usid.TooManySegmentsError" title="controller.srv6_usid.TooManySegmentsError"><strong>TooManySegmentsError</strong></a> – segments arg contains too many segments</p></li>
 <li><p><a class="reference internal" href="#controller.srv6_usid.SIDLocatorError" title="controller.srv6_usid.SIDLocatorError"><strong>SIDLocatorError</strong></a> – SID Locator is wrong for one or more segments</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.usid_id_to_usid">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">usid_id_to_usid</code><span class="sig-paren">(</span><em class="sig-param">usid_id</em>, <em class="sig-param">locator</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#usid_id_to_usid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.usid_id_to_usid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a uSID identifier into a SID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>usid_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – uSID idenfier to convert.</p></li>
+<li><p><strong>locator</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – Locator part to be used for the SID.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Generated SID.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="controller.srv6_usid.validate_usid_id">
+<code class="sig-prename descclassname">controller.srv6_usid.</code><code class="sig-name descname">validate_usid_id</code><span class="sig-paren">(</span><em class="sig-param">usid_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_usid.html#validate_usid_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_usid.validate_usid_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate a uSID identifier. A valid uSID id should be an integer in the
+range (0, 0xffff).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>usid_id</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – uSID idenfier to validate.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the uSID identifier is valid.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>

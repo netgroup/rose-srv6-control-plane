@@ -96,6 +96,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#extract"><code class="docutils literal notranslate"><span class="pre">extract</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#extract-and-load-on-arango"><code class="docutils literal notranslate"><span class="pre">extract_and_load_on_arango</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#load-on-arango"><code class="docutils literal notranslate"><span class="pre">load_on_arango</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#load-nodes-config"><code class="docutils literal notranslate"><span class="pre">load_nodes_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#show-nodes"><code class="docutils literal notranslate"><span class="pre">show_nodes</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exit"><code class="docutils literal notranslate"><span class="pre">exit</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#help"><code class="docutils literal notranslate"><span class="pre">help</span></code></a></li>
 </ul>
@@ -190,7 +192,8 @@ These functions are available under the section <code class="docutils literal no
 </pre></div>
 </div>
 <p>Section <code class="docutils literal notranslate"><span class="pre">topology</span></code> supports the following commands:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">exit  extract  extract_and_load_on_arango  help  load_on_arango</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">extract                     help               load_on_arango  exit</span>
+<span class="go">extract_and_load_on_arango  load_nodes_config  print_nodes</span>
 </pre></div>
 </div>
 </div>
@@ -300,6 +303,30 @@ as a JSON file, YAML file and image file.</p>
 <span class="go">                        edges_yaml</span>
 <span class="go">  -v, --verbose         Enable verbose mode</span>
 <span class="go">  -d, --debug           Activate debug logs</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="load-nodes-config">
+<h2><code class="docutils literal notranslate"><span class="pre">load_nodes_config</span></code><a class="headerlink" href="#load-nodes-config" title="Permalink to this headline">¶</a></h2>
+<p>Load nodes configuration to the database.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>topology<span class="o">)</span>&gt; load_nodes_config --help
+usage: load_nodes_config <span class="o">[</span>-h<span class="o">]</span> --nodes-file NODES_FILE
+
+Load nodes configuration to the database
+
+optional arguments:
+  -h, --help            show this <span class="nb">help</span> message and <span class="nb">exit</span>
+  --nodes-file NODES_FILE
+                        File containing the mapping of name nodes to IP
+                        addresses
+</pre></div>
+</div>
+</div>
+<div class="section" id="show-nodes">
+<h2><code class="docutils literal notranslate"><span class="pre">show_nodes</span></code><a class="headerlink" href="#show-nodes" title="Permalink to this headline">¶</a></h2>
+<p>Print the list of the available nodes.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>controller<span class="o">(</span>topology<span class="o">)</span>&gt; show_nodes
+Show the list of the available devices
 </pre></div>
 </div>
 </div>
