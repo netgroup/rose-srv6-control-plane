@@ -89,6 +89,16 @@ class InvalidSIDError(srv6_utils.SRv6Exception):
     '''
 
 
+def print_nodes(nodes_dict):
+    '''
+    Print the nodes.
+
+    :param nodes_dict: Dict containing the nodes
+    :type nodes_dict: dict
+    '''
+    print(list(nodes_dict.keys()))
+
+
 def print_node_to_addr_mapping(nodes_filename):
     '''
     This function reads a YAML file containing the mapping
@@ -416,20 +426,284 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     return usid_list
 
 
-def handle_srv6_usid_policy(operation, nodes_filename=None,
+def validate_usid_id(usid_id):
+    '''
+    Validate a uSID identifier. A valid uSID id should be an integer in the
+    range (0, 0xffff).
+
+    :param usid_id: uSID idenfier to validate.
+    :type usid_id: str
+    :return: True if the uSID identifier is valid.
+    :rtype: bool
+    '''
+    try:
+        # A valid uSID id should be an integer in the range (0, 0xffff)
+        return int(usid_id, 16) >= 0x0 and int(usid_id, 16) <= 0xffff
+    except ValueError:
+        # The uSID id is invalid
+        return False
+    return True
+
+
+def usid_id_to_usid(usid_id, locator):
+    '''
+    Convert a uSID identifier into a SID.
+
+    :param usid_id: uSID idenfier to convert.
+    :type usid_id: str
+    :param locator: Locator part to be used for the SID.
+    :type locator: str
+    :return: Generated SID.
+    :rtype: str
+    '''
+    return str(IPv6Address(int(IPv6Address(locator)) +
+                           (int(usid_id, 16) << 80)))
+
+
+def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
+                         udt=None):
+    '''
+    Get a dict-representation of a node (endpoint of the path), starting from
+    gRPC IP and port, uDT sid, forwarding engine and locator.
+
+    :param node: Node identifier. This could be a name, a SID (IPv6 address)
+                 or a number (uSID identifier).
+    :type node: str
+    :param grpc_ip: gRPC IP address of the node.
+    :type grpc_ip: str
+    :param grpc_port: Port number of the gRPC server.
+    :type grpc_port: int
+    :param udt: uDT SID of the node, used for the decap operation. If not
+                provided, the uDT SID is not added to the SID list.
+    :type udt: str, optional
+    :param fwd_engine: Forwarding engine to be used (e.g. Linux or VPP).
+    :type fwd_engine: str
+    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).
+    :type locator: str
+    :return: Dict representation of the node. The dict has the following
+             fields:
+             - name
+             - grpc_ip
+             - grpc_port
+             - uN
+             - uDT
+             - fwd_engine
+    :rtype: dict
+    :raises InvalidConfigurationError: If the node params are invalid.
+    '''
+    # Validation checks
+    #
+    # Validate gRPC address
+    if grpc_ip is None:
+        logger.error('grpc_ip is mandatory for node %s', node)
+        raise InvalidConfigurationError
+    # Validate gRPC port
+    if grpc_port is None:
+        logger.error('grpc_port is mandatory for node %s', node)
+        raise InvalidConfigurationError
+    # Validate forwarding engine
+    if fwd_engine is None:
+        logger.error('grpcfwd_engine_ip is mandatory for node %s', node)
+        raise InvalidConfigurationError
+    # Validate locator
+    if locator is None:
+        logger.error('locator is mandatory for node %s', node)
+        raise InvalidConfigurationError
+    #
+    # Compute uN SID starting from the provided node identifier
+    # Node identifier can be expressed as SID (an IPv6 address) or a
+    # uSID identifier. If it is a uSID identifier, we need to convert it
+    # to a SID.
+    un = node
+    if validate_usid_id(node):
+        # Node identifier is a integer, we need to convert it to a SID (IPv6
+        # address)
+        un = usid_id_to_usid(node, locator)
+    # If the node is expressed as IPv6 address or uSID identifier, encode it
+    # Otherwise (if the node is expressed as node name), we return None and we
+    # expect to find the node info in the nodes configuration.
+    if utils.validate_ipv6_address(node) or validate_usid_id(node):
+        # Return the dict
+        return {
+            'name': node,
+            'grpc_ip': grpc_ip,
+            'grpc_port': grpc_port,
+            'uN': un,
+            'uDT': udt,
+            'fwd_engine': fwd_engine
+        }
+    # 'Node' is a name. Return None.
+    return None
+
+
+def encode_intermediate_node(node, locator):
+    '''
+    Get a dict-representation of a node (intermediate node of the path),
+    starting from gRPC IP and port, uDT sid, forwarding engine and locator.
+    For the intermediate nodes, we don't need uDT, forwarding engine.
+    gRPC IP and gRPC address.
+
+    :param node: Node identifier. This could be a name, a SID (IPv6 address)
+                 or a number (uSID identifier).
+    :type node: str
+    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).
+    :type locator: str
+    :return: Dict representation of the node. The dict has the following
+             fields:
+             - name
+             - grpc_ip (set to None)
+             - grpc_port (set to None)
+             - uN
+             - uDT (set to None)
+             - fwd_engine (set to None)
+    :rtype: dict
+    :raises InvalidConfigurationError: If the node params are invalid.
+    '''
+    # Validate params
+    #
+    # Validate locator
+    if locator is None:
+        logger.error('locator is mandatory for node %s', node)
+        raise InvalidConfigurationError
+    #
+    # Compute uN SID starting from the provided node identifier
+    # Node identifier can be expressed as SID (an IPv6 address) or a
+    # uSID identifier. If it is a uSID identifier, we need to convert it
+    # to a SID.
+    un = node
+    # Node identifier is a integer, we need to convert it to a SID (IPv6
+    # address)
+    if validate_usid_id(node):
+        un = usid_id_to_usid(node, locator)
+    # If the node is expressed as IPv6 address or uSID identifier, encode it
+    # Otherwise (if the node is expressed as node name), we return None and we
+    # expect to find the node info in the nodes configuration.
+    if utils.validate_ipv6_address(node) or validate_usid_id(node):
+        return {
+            'name': node,
+            'grpc_ip': None,    # Useless for intermediate nodes
+            'grpc_port': None,    # Useless for intermediate nodes
+            'uN': un,
+            'uDT': None,    # Useless for intermediate nodes
+            'fwd_engine': None    # Useless for intermediate nodes
+        }
+    # 'Node' is a name. Return None.
+    return None
+
+
+def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
+                    l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
+                    r_fwd_engine=None, decap_sid=None, locator=None):
+    '''
+    Fill 'nodes_info' dict with the nodes containined in the 'nodes' list.
+
+    :param nodes_info: Dict containined the nodes information where to add the
+                       nodes.
+    :type nodes_info: dict
+    :param nodes: List of nodes. Each node can be expressed as SID (IPv6
+                  address), a uSID identifier (integer) or a name.
+    :type nodes: list
+    :param l_grpc_ip: gRPC address of the left node in the path.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: Port number of the gRPC server on the left node of
+                        the path.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: Forwarding engine to be used on the left node of
+                        the path (e.g. Linux or VPP).
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC address of the right node in the path.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: Port number of the gRPC server on the right node of
+                        the path.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine to be used on the right node of
+                        the path (e.g. Linux or VPP).
+    :type r_fwd_engine: str, optional
+    :param decap_sid: Decap SID. This could be a SID (IPv6 address) or a uSID
+                      identifier (an integer).
+    :type decap_sid: str, optional
+    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).
+    :type locator: str, optional
+    :raises InvalidConfigurationError: If the node params are invalid.
+    '''
+    # Convert decap SID to uDT
+    udt = None
+    if decap_sid is not None:
+        # Locator is required
+        if locator is None:
+            logger.error('locator is mandatory')
+            raise InvalidConfigurationError
+        # Check if decap SID is expressed as a SID (IPv6 address)
+        # or a uSID identifier (an integer)
+        if not utils.validate_ipv6_address(decap_sid):
+            # Integer, we need to convert it to a SID (IPv6 address)
+            udt = usid_id_to_usid(decap_sid, locator)
+        else:
+            # IPv6 address
+            udt = decap_sid
+    # Encode left node
+    #
+    # A node could be expressed as an integer, an IPv6 address (SID)
+    # or a name
+    node = encode_endpoint_node(
+        node=nodes[0],
+        grpc_ip=l_grpc_ip,
+        grpc_port=l_grpc_port,
+        udt=udt,
+        fwd_engine=l_fwd_engine,
+        locator=locator
+    )
+    # If we received a node info dict, we add it to the
+    # nodes info dictionary
+    if node is not None:
+        nodes_info[nodes[0]] = node
+    # Encode right node
+    #
+    # A node could be expressed as an integer, an IPv6 address (SID)
+    # or a name
+    node = encode_endpoint_node(
+        node=nodes[-1],
+        grpc_ip=r_grpc_ip,
+        grpc_port=r_grpc_port,
+        udt=udt,
+        fwd_engine=r_fwd_engine,
+        locator=locator
+    )
+    # If we received a node info dict, we add it to the
+    # nodes info dictionary
+    if node is not None:
+        nodes_info[nodes[-1]] = node
+    # Encode intermediate nodes
+    # For the intermediate nodes, we don't need forwarding engine,
+    # uDT, gRPC IP and port
+    for node_name in nodes[1:-1]:
+        # Encode the node
+        node = encode_intermediate_node(
+            node=node_name,
+            locator=locator
+        )
+        # If we received a node info dict, we add it to the
+        # nodes info dictionary
+        if node is not None:
+            nodes_info[node_name] = node
+
+
+def handle_srv6_usid_policy(operation, nodes_dict=None,
                             lr_destination=None, rl_destination=None,
                             nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1,
-                            persistency=True, _id=None):
+                            persistency=True, _id=None, l_grpc_ip=None,
+                            l_grpc_port=None, l_fwd_engine=None,
+                            r_grpc_ip=None, r_grpc_port=None,
+                            r_fwd_engine=None, decap_sid=None, locator=None):
     '''
     Handle a SRv6 Policy using uSIDs
 
     :param operation: The operation to be performed on the uSID policy
                       (i.e. add, get, change, del)
     :type operation: str
-    :param nodes_filename: Name of the YAML file containing the
-                           mapping of node names to IP addresses
-    :type nodes_filename: str
+    :param nodes_dict: Dict containing the nodes configuration.
+    :type nodes_dict: dict
     :param destination: Destination of the SRv6 route
     :type destination: str
     :param nodes: Waypoints of the SRv6 route
@@ -443,6 +717,29 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
     :param metric: Metric for the SRv6 route. If not provided, the default
                    metric will be used.
     :type metric: int, optional
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
     :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
     :rtype: int
     :raises NodeNotFoundError: Node name not found in the mapping file
@@ -479,7 +776,7 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
             return None
     if nodes_rl is None:
         pass
-    if nodes_filename is None:
+    if nodes_dict is None:
         if operation in ['add', 'del']:
             logger.error('"nodes_filename" argument is mandatory for %s '
                          'operation', operation)
@@ -522,7 +819,37 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
         # mapping of node names to IPv6 addresses is required
         #
         # Read nodes from YAML file
-        nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_filename)
+        nodes_info = nodes_dict
+        locator_bits = DEFAULT_LOCATOR_BITS  # TODO configurable locator bits
+        usid_id_bits = DEFAULT_USID_ID_BITS  # TODO configurable uSID id bits
+        # Add nodes list for the left-to-right path to the 'nodes_info' dict
+        if nodes_lr is not None:
+            fill_nodes_info(
+                nodes_info=nodes_info,
+                nodes=nodes_lr,
+                l_grpc_ip=l_grpc_ip,
+                l_grpc_port=l_grpc_port,
+                l_fwd_engine=l_fwd_engine,
+                r_grpc_ip=r_grpc_ip,
+                r_grpc_port=r_grpc_port,
+                r_fwd_engine=r_fwd_engine,
+                decap_sid=decap_sid,
+                locator=locator
+            )
+        # Add nodes list for the right-to-left path to the 'nodes_info' dict
+        if nodes_rl is not None:
+            fill_nodes_info(
+                nodes_info=nodes_info,
+                nodes=nodes_rl,
+                l_grpc_ip=r_grpc_ip,
+                l_grpc_port=r_grpc_port,
+                l_fwd_engine=r_fwd_engine,
+                r_grpc_ip=l_grpc_ip,
+                r_grpc_port=l_grpc_port,
+                r_fwd_engine=l_fwd_engine,
+                decap_sid=decap_sid,
+                locator=locator
+            )
         # Add
         if operation == 'add':
             policies = [{
@@ -553,6 +880,39 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                 table=table if table != -1 else None,
                 metric=metric if metric != -1 else None
             )
+
+            policies = list(policies)
+            for policy in policies:
+                # Add nodes list for the left-to-right path to the
+                # 'nodes_info' dict
+                if policy.get('lr_nodes') is not None:
+                    fill_nodes_info(
+                        nodes_info=nodes_info,
+                        nodes=policy.get('lr_nodes'),
+                        l_grpc_ip=policy.get('l_grpc_ip'),
+                        l_grpc_port=policy.get('l_grpc_port'),
+                        l_fwd_engine=policy.get('l_fwd_engine'),
+                        r_grpc_ip=policy.get('r_grpc_ip'),
+                        r_grpc_port=policy.get('r_grpc_port'),
+                        r_fwd_engine=policy.get('r_fwd_engine'),
+                        decap_sid=policy.get('decap_sid'),
+                        locator=policy.get('locator')
+                    )
+                # Add nodes list for the right-to-left path to the
+                # 'nodes_info' dict
+                if policy.get('rl_nodes') is not None:
+                    fill_nodes_info(
+                        nodes_info=nodes_info,
+                        nodes=policy.get('rl_nodes'),
+                        l_grpc_ip=policy.get('r_grpc_ip'),
+                        l_grpc_port=policy.get('r_grpc_port'),
+                        l_fwd_engine=policy.get('r_fwd_engine'),
+                        r_grpc_ip=policy.get('l_grpc_ip'),
+                        r_grpc_port=policy.get('l_grpc_port'),
+                        r_fwd_engine=policy.get('l_fwd_engine'),
+                        decap_sid=policy.get('decap_sid'),
+                        locator=policy.get('locator')
+                    )
         if len(policies) == 0:
             logger.error('Policy not found')
             return None
@@ -851,7 +1211,15 @@ def handle_srv6_usid_policy(operation, nodes_filename=None,
                             lr_nodes=nodes_lr,
                             rl_nodes=nodes_rl,
                             table=table if table != -1 else None,
-                            metric=metric if metric != -1 else None
+                            metric=metric if metric != -1 else None,
+                            l_grpc_ip=l_grpc_ip,
+                            l_grpc_port=l_grpc_port,
+                            l_fwd_engine=l_fwd_engine,
+                            r_grpc_ip=r_grpc_ip,
+                            r_grpc_port=r_grpc_port,
+                            r_fwd_engine=r_fwd_engine,
+                            decap_sid=decap_sid,
+                            locator=locator
                         )
                     elif operation == 'del':
                         # TODO keep arango connection open

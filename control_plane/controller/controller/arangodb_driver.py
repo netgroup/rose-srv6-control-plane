@@ -35,6 +35,12 @@ ArangoDB driver
 from arango import ArangoClient
 
 
+class NodesConfigNotLoadedError(Exception):
+    '''
+    NodesConfigNotLoadedError
+    '''
+
+
 def connect_arango(url):
     '''
     Initialize the ArangoDB client.
@@ -174,7 +180,10 @@ def init_usid_policies_collection(client, arango_username, arango_password,
 
 
 def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
-                       table=None, metric=None):
+                       table=None, metric=None, l_grpc_ip=None,
+                       l_grpc_port=None, l_fwd_engine=None,
+                       r_grpc_ip=None, r_grpc_port=None,
+                       r_fwd_engine=None, decap_sid=None, locator=None):
     '''
     Insert a uSID policy into the 'usid_policies' collection of a Arango
     database.
@@ -187,14 +196,39 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
     :param rl_dst: Destination (IP address or network prefix) for the
                    right-to-left path.
     :type rl_dst: str
-    :param lr_nodes: List of nodes making the left-to-right path.
+    :param lr_nodes: List of nodes (names or uN sids) making the left-to-right
+                     path.
     :type lr_nodes: list
-    :param rl_nodes: List of nodes making the right-to-left path.
+    :param rl_nodes: List of nodes (names or uN sids) making the right-to-left
+                     path.
     :type rl_nodes: list
     :param table: FIB table where the policy must be saved.
     :type table: int, optional
     :param metric: Metric (weight) to be used for the policy.
     :type metric: int, optional
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
     :return: True.
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
@@ -208,6 +242,14 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
         'rl_nodes': rl_nodes,
         'table': table,
         'metric': metric,
+        'l_grpc_ip': l_grpc_ip,
+        'l_grpc_port': l_grpc_port,
+        'l_fwd_engine': l_fwd_engine,
+        'r_grpc_ip': r_grpc_ip,
+        'r_grpc_port': r_grpc_port,
+        'r_fwd_engine': r_fwd_engine,
+        'decap_sid': decap_sid,
+        'locator': locator
     }
     # Get the uSID policy collection
     # This returns an API wrapper for "usid_policies" collection
@@ -359,3 +401,56 @@ def delete_usid_policy(database, key, lr_dst=None,
     # ignore_missing was set to True
     return usid_policies.delete(document=policy,
                                 ignore_missing=ignore_missing)
+
+
+def insert_nodes_config(database, nodes):
+    '''
+    Load nodes configuration on a database.
+
+    :param database: Database where the nodes configuration must be saved.
+    :type database: arango.database.StandardDatabase
+    :param nodes: Dictionary containing the nodes configuration. For each
+                  entry in the dict the following fields are expected:
+                  - name: name (or identifier) of the node
+                  - grpc_ip: IP address of the gRPC server
+                  - grpc_port: port of the gRPC server
+                  - uN: uN sid
+                  - uDT: uDT sid used for the decap
+                  - fwd_engine: forwarding engine (e.g. VPP or Linux)
+    :type nodes: dict
+    :return: True.
+    :rtype: bool
+    '''
+    # Delete the collection if it already exists
+    database.delete_collection(name='nodes_config', ignore_missing=True)
+    # Create a new 'nodes_config' collection
+    nodes_config = database.create_collection(name='nodes_config')
+    # Insert the nodes config
+    return nodes_config.insert(document=list(nodes.values()), silent=True)
+
+
+def get_nodes_config(database):
+    '''
+    Get the nodes configuration saved to a database.
+
+    :param database: Database where the nodes configuration is saved.
+    :type database: arango.database.StandardDatabase
+    :return: Dict reresentation of the nodes saved to the db. For a
+             of the node entries, see :func:`insert_nodes_config`.
+    :rtype: dict
+    :raises controller.arangodb_driver.NodesConfigNotLoadedError: If nodes are
+                                                                  not loaded
+                                                                  on db.
+    '''
+    # Does the collection 'nodes_config' exist?
+    if not database.has_collection('nodes_config'):
+        raise NodesConfigNotLoadedError
+    # Get the 'nodes_config' collection
+    nodes_config = database.collection(name='nodes_config')
+    # Have nodes been loaded loaded?
+    if nodes_config.count() == 0:
+        raise NodesConfigNotLoadedError
+    # Get the nodes
+    nodes = nodes_config.find(filters={})
+    # Convert the nodes list to a dict representation
+    return {node['name']: node for node in nodes}
