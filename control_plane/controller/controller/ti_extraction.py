@@ -91,20 +91,26 @@ DEFAULT_VERBOSE = False
 class OptionalModuleNotLoadedError(Exception):
     '''
     The requested feature depends on an optional module that has not been
-    loaded
+    loaded.
+    '''
+
+
+class NoISISNodesAvailable(Exception):
+    '''
+    No ISIS nodes available.
     '''
 
 
 # Utility function to dump relevant information of the topology
 def dump_topo_json(graph, topo_file):
     '''
-    Dump the graph to a JSON file
+    Dump the graph to a JSON file.
 
-    :param graph: The graph to be exported
+    :param graph: The graph to be exported.
     :type graph: class: `networkx.Graph`
-    :param topo_file: The path and the name of the JSON file
+    :param topo_file: The path and the name of the JSON file.
     :type topo_file: str
-    :return: True
+    :return: True.
     :rtype: bool
     :raises OptionalModuleNotLoadedError: The NetworkX module required by
                                           dump_topo_json has not has not been
@@ -152,7 +158,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
                    nodes_file_yaml=None, edges_file_yaml=None):
     '''
     Dump the provided set of nodes and edges to a dict representation.
-    Optionally, nodes and edges are exported as YAML file
+    Optionally, nodes and edges are exported as YAML file.
     '''
     #
     # This function depends on the pyaml library, which is a
@@ -279,78 +285,109 @@ def connect_and_extract_topology_isis(ips_ports,
                                       isisd_pwd=DEFAULT_ISISD_PASSWORD,
                                       verbose=DEFAULT_VERBOSE):
     '''
-    Establish a telnet connection to isisd process running on a router
-    and extract the network topology from the router
+    Establish a telnet connection to the isisd process running on a router
+    and extract the network topology from the router.
+    For redundancy purposes, this function takes a list of routers.
+
+    :param ips_ports: A list of pairs ip-port representing IP and port of
+                      the ISIS nodes you want to extract the topology from.
+    :type ips_ports: list
+    :param isisd_pwd: The password used to log in to isisd.
+    :type isisd_pwd: str
+    :param verbose: Define whether the verbose mode must be enable or not
+                    (default: False).
+    :type verbose: bool
+    :return: True.
+    :rtype: bool
+    :raises NoISISNodesAvailable: The provided set of nodes does no contain
+                                  any ISIS node.
     '''
-    #
     # pylint: disable=too-many-branches, too-many-locals, too-many-statements
-    # ISIS password
-    password = isisd_pwd
+    #
     # Let's parse the input
     routers = []
     ports = []
     # First create the chunk
     for ip_port in ips_ports:
         # Then parse the chunk
+        #
+        # Separate IP and port
         data = ip_port.split("-")
+        # Append IP to the routers list
         routers.append(data[0])
+        # Append port to the ports list
         ports.append(data[1])
     # Connect to a router and extract the topology
     for router, port in zip(routers, ports):
-        print("\n********* Connecting to %s-%s *********" % (router, port))
-        # Init telnet and try to establish a connection to the router
-        try:
-            telnet_conn = telnetlib.Telnet(router, port)
-        except socket.error:
-            print("Error: cannot establish a connection to " +
-                  str(router) + " on port " + str(port) + "\n")
-            continue
-        #
+        logger.debug("\n********* Connecting to %s-%s *********",
+                     router, port)
+        # ####################################################################
         # Extract router hostnames
-        #
-        # Insert isisd password
-        if password:
-            telnet_conn.read_until(b"Password: ")
-            telnet_conn.write(password.encode('ascii') + b"\r\n")
         try:
-            # terminal length set to 0 to not have interruptions
+            # Init telnet and try to establish a connection to the router
+            telnet_conn = telnetlib.Telnet(router, port)
+            # Insert isisd password
+            if isisd_pwd:
+                telnet_conn.read_until(b"Password: ")
+                telnet_conn.write(isisd_pwd.encode('ascii') + b"\r\n")
+            # Terminal length set to 0 to not have interruptions
             telnet_conn.write(b"terminal length 0" + b"\r\n")
-            # Get routing info from isisd database
+            # Show information about ISIS node
             telnet_conn.write(b"show isis hostname" + b"\r\n")
-            # Close
+            # Exit from the isisd console
             telnet_conn.write(b"q" + b"\r\n")
-            # Get results
+            # Convert the extracted information to a string
             hostname_details = telnet_conn.read_all().decode('ascii')
+        except socket.error:
+            # Cannot establish a connection to isisd
+            logger.warning("Cannot establish a connection to %s on port %s\n",
+                         router, port)
+            # Let's try to connect to the next router in the list
+            continue
         except BrokenPipeError:
+            # Telnetlib returned "BrokenPipeError"
+            # This can happen if you entered the wrong password
             logger.error('Broken pipe. Is the password correct?')
+            # Let's try to connect to the next router in the list
             continue
         finally:
             # Close telnet
             telnet_conn.close()
-        #
+        # ####################################################################
         # Extract router database
-        #
-        # Init telnet and try to establish a connection to the router
         try:
+            # Init telnet and try to establish a connection to the router
             telnet_conn = telnetlib.Telnet(router, port)
+            # Insert isisd password
+            if isisd_pwd:
+                telnet_conn.read_until(b"Password: ")
+                telnet_conn.write(isisd_pwd.encode('ascii') + b"\r\n")
+            # Terminal length set to 0 to not have interruptions
+            telnet_conn.write(b"terminal length 0" + b"\r\n")
+            # Show the ISIS database globally, with details.
+            telnet_conn.write(b"show isis database detail" + b"\r\n")
+            # Exit from the isisd console
+            telnet_conn.write(b"q" + b"\r\n")
+            # Convert the extracted information to a string
+            database_details = telnet_conn.read_all().decode('ascii')
         except socket.error:
-            print("Error: cannot establish a connection to " +
-                  str(router) + " on port " + str(port) + "\n")
+            # Cannot establish a connection to isisd
+            logger.warning("Cannot establish a connection to %s on port %s\n",
+                         router, port)
+            # Let's try to connect to the next router in the list
             continue
-        # Insert isisd password
-        if password:
-            telnet_conn.read_until(b"Password: ")
-            telnet_conn.write(password.encode('ascii') + b"\r\n")
-        # terminal length set to 0 to not have interruptions
-        telnet_conn.write(b"terminal length 0" + b"\r\n")
-        # Get routing info from isisd database
-        telnet_conn.write(b"show isis database detail" + b"\r\n")
-        # Close
-        telnet_conn.write(b"q" + b"\r\n")
-        # Get results
-        database_details = telnet_conn.read_all().decode('ascii')
-        # Close telnet
-        telnet_conn.close()
+        except BrokenPipeError:
+            # Telnetlib returned "BrokenPipeError"
+            # This can happen if you entered the wrong password
+            logger.error('Broken pipe. Is the password correct?')
+            # Let's try to connect to the next router in the list
+            continue
+        finally:
+            # Close telnet
+            telnet_conn.close()
+        # ####################################################################
+        # Process the extracted information
+        #
         # Set of System IDs
         system_ids = set()
         # Set of hostnames
@@ -359,6 +396,12 @@ def connect_and_extract_topology_isis(ips_ports,
         system_id_to_hostname = dict()
         # Mapping hostname to System ID
         hostname_to_system_id = dict()
+        # Reachability info dict: it maps each node hostname to the System IDs
+        # reachable from it
+        reachability_info = dict()
+        # IPv6 reachability dict: it maps IPv6 subnet addresses of the edges
+        # to the hostnames of the ISIS nodes that are able to reach them
+        ipv6_reachability = dict()
         # Process hostnames
         for line in hostname_details.splitlines():
             # Get System ID and hostname
@@ -375,72 +418,94 @@ def connect_and_extract_topology_isis(ips_ports,
                 # Update mappings
                 system_id_to_hostname[system_id] = hostname
                 hostname_to_system_id[hostname] = system_id
-        # Mapping hostname to reachability
-        reachability_info = dict()
-        # Process isis database
-        hostname = None
-        # IPv6 subnet addresses of edges
-        ipv6_reachability = dict()
+        # Process the ISIS database
         for line in database_details.splitlines():
-            # Get hostname
+            # Extract the hostname
             match = re.search('Hostname: (\\S+)', line)
             if match:
-                # Extract hostname
+                # Get the hostname
                 hostname = match.group(1)
-                # Update reachability info dict
+                # Add the hostname to the reachability info dict
                 reachability_info[hostname] = set()
-            # Get extended reachability
+            # Extract the extended reachability
             match = re.search(
                 'Extended Reachability: (\\d+.\\d+.\\d+).\\d+', line)
             if match:
-                # Extract extended reachability info
+                # Get the extended reachability info
                 reachability = match.group(1)
-                # Update reachability info dict
+                # Add reachability info to the dict
+                # We exclude the self reachability information from the dict
                 if reachability != hostname_to_system_id[hostname]:
                     reachability_info[hostname].add(reachability)
-            #   IPv6 Reachability: fcf0:0:6:8::/64 (Metric: 10)
+            # IPv6 Reachability, e.g. fcf0:0:6:8::/64 (Metric: 10)
             match = re.search('IPv6 Reachability: (.+/\\d{1,3})', line)
             if match:
+                # Extract the IPv6 address
                 ip_addr = match.group(1)
+                # If not initialized, init IPv6 reachability
                 if ip_addr not in ipv6_reachability:
-                    # Update IPv6 reachability dict
+                    # Add IPv6 address to the IPv6 reachability dict
                     ipv6_reachability[ip_addr] = list()
-                # add hostname to hosts list of the ip address in the ipv6
-                # reachability dict
+                # Add the hostname to the hosts list of the ip address in the
+                # ipv6 reachability dict
                 ipv6_reachability[ip_addr].append(hostname)
+        # ####################################################################
         # Build the topology graph
         #
-        # Nodes
+        # Nodes set
         nodes = hostnames
-        # Edges
-        _edges = set()
-        # Edges with subnet IP address
+        # Edges set used to store temporary information about the edges
+        edges_tmp = set()
+        # Edges set, containing tuple (node_left, node_right, ip_address)
+        # This set is obtained from the edges_tmp set by adding the IPv6
+        # address of the subnet for each edge
         edges = set()
+        # Process the reachability info dict and build a temporary set of
+        # edges
         for hostname, system_ids in reachability_info.items():
+            # 'system_ids' is a list containg all the System IDs that are 
+            # reachable from 'hostname'
             for system_id in system_ids:
-                _edges.add((hostname, system_id_to_hostname[system_id]))
+                # Translate System ID to hostname and append the edge to the
+                # edges set
+                # Each edge is represented as a pair (hostname1, hostname2), where
+                # the two hostnames are the endpoints of the edge
+                edges_tmp.add((hostname, system_id_to_hostname[system_id]))
+        # Process the IPv6 reachability info dict and build an edges set
+        # containing the edges (obtained from the edges_tmp set) enriched with
+        # the IPv6 addresses of their subnets
         for ip_addr in ipv6_reachability:
             # Edge link is bidirectional in this case
             # Only take IP addresses of links between 2 nodes
             if len(ipv6_reachability[ip_addr]) == 2:
+                # Take the edge
                 (node1, node2) = ipv6_reachability[ip_addr]
+                # Add the IP address of the subnet to the edge and append it to
+                # the edges set
                 edges.add((node1, node2, ip_addr))
-                _edges.remove((node1, node2))
-                _edges.remove((node2, node1))
-        for (node1, node2) in _edges.copy():
+                # Remove the edge from the temporary set
+                edges_tmp.remove((node1, node2))
+                edges_tmp.remove((node2, node1))
+        # For the remaining edges, we don't have IPv6 reachability information
+        # Therefore we set their IPv6 addresses to None
+        for (node1, node2) in edges_tmp.copy():
+            # Add the edge to the edges set
             edges.add((node1, node2, None))
-            _edges.remove((node1, node2))
-            _edges.remove((node2, node1))
-        # Print nodes and edges
+            # Remove the edge from the temporary set
+            edges_tmp.remove((node1, node2))
+            edges_tmp.remove((node2, node1))
+        # If the verbose mode is enabled, print nodes and edges extracted from
+        # the ISIS node
         if verbose:
-            print('Topology extraction completed\n')
-            print("Nodes:", nodes)
-            print("Edges:", edges)
-            print("***************************************")
+            logger.info('Topology extraction completed\n')
+            logger.info("Nodes:", nodes)
+            logger.info("Edges:", edges)
+            logger.info("***************************************")
         # Return topology information
         return nodes, edges, hostname_to_system_id
     # No router available to extract the topology
-    return None, None, None
+    logger.error('No ISIS node is available')
+    raise NoISISNodesAvailableError
 
 
 def topology_information_extraction_isis(routers, period, isisd_pwd,
@@ -450,19 +515,21 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          topo_graph=None,
                                          verbose=DEFAULT_VERBOSE):
     '''
-    Run Topology Information Extraction from a set of routers running the
+    Extract topological information from a set of routers running the
     ISIS protocol. The routers must execute an instance of isisd from the
-    routing suite FRRRouting.
-    Optionally export the topology to a JSON file, YAML file or SVG image.
+    routing suite FRRRouting. This function can be also instructed to repeat
+    the extraction at regular intervals.
+    Optionally the topology can be exported to a JSON file, YAML file or SVG
+    image.
 
-    :param routers: A list of pairs ip-port representing the IP and port of
-                    the routers running ISIS.
+    :param routers: A list of pairs ip-port representing IP and port of
+                    the routers you want to extract the topology from.
     :type routers: list
     :param period: The interval between two consecutive extractions. If this
                    arguments is set to 0, this function performs a single 
                    extraction and then it returns (default: 0).
     :type period: int
-    :param isisd_pwd: The password used to log in to the isisd.
+    :param isisd_pwd: The password used to log in to isisd.
     :type isisd_pwd: str
     :param topo_file_json: The path and the name of the JSON file where the
                            topology must be exported. If this parameter is not
@@ -479,36 +546,35 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                             provided, the edges are not exported to a YAML
                             file (default: None).
     :type edges_file_yaml: str
-    :param topo_graph: The path and the name of the SVG file where the
+    :param topo_graph: The path and the name of the SVG file (image) where the
                        topology must be exported. If this parameter is not
                        provided, the topology is not exported to a SVG
                        file (default: None).
     :type topo_graph: str
-    :param verbose: Define whether to enable or not the verbose mode
+    :param verbose: Define whether the verbose mode must be enable or not
                     (default: False).
     :type verbose: bool
     :return: True.
     :rtype: bool
     '''
-    #
     # pylint: disable=too-many-arguments
+    #
     # Topology Information Extraction
     while True:
         # Extract the topology information form ISIS
-        nodes, edges, node_to_systemid = \
-            connect_and_extract_topology_isis(
+        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
                 routers, isisd_pwd, verbose)
         # Build and export the topology graph
         if topo_file_json is not None or topo_graph is not None:
-            # Builg topology graph
+            # Build topology graph
             graph = build_topo_graph(nodes, edges)
-            # Dump relevant information of the network graph to a JSON file
+            # Export relevant information of the network graph to a JSON file
             if topo_file_json is not None:
                 dump_topo_json(graph, topo_file_json)
             # Export the network graph as an image file
             if topo_graph is not None:
                 draw_topo(graph, topo_graph)
-        # Dump relevant information of the network graph to a YAML file
+        # Export relevant information of the network graph to a YAML file
         if nodes_file_yaml is not None or edges_file_yaml:
             dump_topo_yaml(
                 nodes=nodes,
