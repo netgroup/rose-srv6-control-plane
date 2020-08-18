@@ -118,7 +118,6 @@ def dump_topo_json(graph, topo_file):
     '''
     # Export the topology to a JSON file
     logger.debug('*** Exporting topology to %s', topo_file)
-    #
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
     #
@@ -150,6 +149,7 @@ def dump_topo_json(graph, topo_file):
     # Export the topology to a JSON file
     with open(topo_file, 'w') as outfile:
         json.dump(json_topology, outfile, sort_keys=True, indent=2)
+    # Done, return
     logger.info('*** Topology exported\n')
     return True
 
@@ -157,10 +157,32 @@ def dump_topo_json(graph, topo_file):
 def dump_topo_yaml(nodes, edges, node_to_systemid,
                    nodes_file_yaml=None, edges_file_yaml=None):
     '''
-    Dump the provided set of nodes and edges to a dict representation.
+    Dump the provided set of nodes and edges.
     Optionally, nodes and edges are exported as YAML file.
+
+    :param nodes: List of nodes.
+    :type nodes: list
+    :param edges: List of edges. The edges are represented as tuple
+                  (node_left, node_right, ip_address).
+    :type edges: list
+    :param node_to_systemid: A dict mapping hostnames to System IDs.
+    :type node_to_systemid: dict
+    :param nodes_file_yaml: The path and the name of the YAML file where the
+                            nodes must be exported. If this argument is not
+                            provided, the nodes are not exported to a file.
+    :type nodes_file_yaml: str
+    :param edges_file_yaml: The path and the name of the YAML file where the
+                            edges must be exported. If this argument is not
+                            provided, the edges are not exported to a file.
+    :type edges_file_yaml: str
+    :return: A pair (nodes, edges), where nodes is a list containing the nodes
+             represented as dicts and edges is a list containing the edges
+             represented as dicts.
+    :rtype: tuple
+    :raises OptionalModuleNotLoadedError: The pyaml module required by
+                                          dump_topo_yaml has not has not been
+                                          loaded. Is it installed?
     '''
-    #
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
@@ -168,7 +190,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
     if 'pyaml' not in sys.modules:
         logger.critical('pyaml library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
-        return None, None
+        raise OptionalModuleNotLoadedError
     # Export nodes in YAML format
     nodes_yaml = [{
         '_key': node,
@@ -200,39 +222,30 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         logger.info('*** Exporting topology edges to %s', edges_file_yaml)
         with open(edges_file_yaml, 'w') as outfile:
             yaml.dump(edges_yaml, outfile)
+    # Done, return a tuple containing the nodes and the edges
     logger.info('Topology exported\n')
     return nodes_yaml, edges_yaml
-
-
-def connect_telnet(router, port):
-    '''
-    Establish a telnet connection to a router on a given port
-    '''
-    #
-    # Establish a telnet connection to the router
-    try:
-        # Init telnet
-        telnet_conn = telnetlib.Telnet(router, port, 3)
-        # Connection established
-        return telnet_conn
-    except socket.timeout:
-        # Timeout expired
-        logging.error('Error: cannot establish a connection '
-                      'to %s on port %s\n', str(router), str(port))
-    except socket.error as err:
-        # Socket error
-        if err.errno != errno.EINTR:
-            logging.error('Error: cannot establish a connection '
-                          'to %s on port %s\n', str(router), str(port))
-    return None
 
 
 # Build NetworkX Topology graph
 def build_topo_graph(nodes, edges):
     '''
-    Convert nodes and edges to a NetworkX graph
+    Convert nodes and edges to a NetworkX graph.
+
+    :param nodes: List of nodes.
+    :type nodes: list
+    :param edges: List of edges. The edges are represented as tuple
+                  (node_left, node_right, ip_address).
+    :type edges: list
+    :return: The network graph.
+    :rtype: class: `networkx.Graph`
+    :raises OptionalModuleNotLoadedError: The NetworkX module required by
+                                          build_topo_graph has not been
+                                          loaded. Is it installed?
     '''
-    #
+    # This function generates a NetworkX graph starting from a set of nodes
+    # and a set of edges
+    logger.debug('*** Building topology graph')
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
     #
@@ -241,44 +254,63 @@ def build_topo_graph(nodes, edges):
         logger.critical('NetworkX library required by build_topo_graph() '
                         'has not been imported. Is it installed?')
         return None
-    logger.info('*** Building topology graph')
-    # Topology graph
+    # Generate an empty NetworkX graph
     graph = nx.Graph()
     # Add nodes to the graph
     for node in nodes:
         graph.add_node(node)
     # Add edges to the graph
+    # Only node_left and node_right are added to the graph, ip_address is
+    # dropped
     for edge in edges:
         graph.add_edge(edge[0], edge[1])
     # Return the networkx graph
-    logger.info('Graph builded successfully\n')
+    logger.info('*** Graph builded successfully\n')
     return graph
 
 
 # Utility function to export the network graph as an image file
 def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
     '''
-    Export the NetworkX graph to a SVG image
+    Export the NetworkX graph to a SVG image.
+
+    :param graph: The graph to be exported.
+    :type graph: class: `networkx.Graph`
+    :param svg_topo_file: The path and the name of the .svg file where the
+                          graph must be exported as an image.
+    :type svg_topo_file: str
+    :param dot_topo_file: The path and the name of the .dot used to store
+                          intermediate information required to draw the graph.
+    :type dot_topo_file: str
+    :return: True.
+    :rtype: bool
+    :raises OptionalModuleNotLoadedError: NetworkX or pygraph modules required
+                                          by draw_topo has not been loaded.
+                                          Are they installed?
     '''
-    #
-    # This function depends on the NetworkX library, which is a
-    # optional dependency for this script
+    # This function exports the topology graph as an image file (in svg
+    # format)
+    logger.debug('*** Saving topology graph image to %s', svg_topo_file)
+    # This function depends on the NetworkX and pygraphviz libraries, which
+    # are optional dependencies for this script
     #
     # Check if the NetworkX library has been imported
     if 'networkx' not in sys.modules:
         logger.critical('NetworkX library required by draw_topo() '
                         'has not been imported. Is it installed?')
-        return
+        raise OptionalModuleNotLoadedError
     if 'pygraphviz' not in sys.modules:
-        logger.critical('pygraphviz library required by dump_topo_yaml() '
+        logger.critical('pygraphviz library required by draw_topo() '
                         'has not been imported. Is it installed?')
-        return
+        raise OptionalModuleNotLoadedError
     # Create dot topology file, an intermediate representation
     # of the topology used to export as an image
-    logger.info('*** Saving topology graph image to %s', svg_topo_file)
     write_dot(graph, dot_topo_file)
+    # Convert dot to svg
     os.system('dot -Tsvg %s -o %s' % (dot_topo_file, svg_topo_file))
-    logger.info('Topology exported\n')
+    logger.info('*** Topology exported\n')
+    # Return
+    return True
 
 
 def connect_and_extract_topology_isis(ips_ports,
@@ -297,8 +329,9 @@ def connect_and_extract_topology_isis(ips_ports,
     :param verbose: Define whether the verbose mode must be enable or not
                     (default: False).
     :type verbose: bool
-    :return: True.
-    :rtype: bool
+    :return: A tuple containing the nodes, the edges and the hostname to
+             System ID mapping.
+    :rtype: tuple
     :raises NoISISNodesAvailable: The provided set of nodes does no contain
                                   any ISIS node.
     '''
@@ -338,10 +371,15 @@ def connect_and_extract_topology_isis(ips_ports,
             telnet_conn.write(b"q" + b"\r\n")
             # Convert the extracted information to a string
             hostname_details = telnet_conn.read_all().decode('ascii')
-        except socket.error:
-            # Cannot establish a connection to isisd
-            logger.warning("Cannot establish a connection to %s on port %s\n",
-                         router, port)
+        except socket.timeout:
+            # Cannot establish a connection to isisd: timeout expired
+            logging.error('Error: cannot establish a connection '
+                        'to %s on port %s\n', router, port)
+        except socket.error as err:
+            # Cannot establish a connection to isisd: socket error
+            if err.errno != errno.EINTR:
+                logger.warning("Cannot establish a connection to %s on port %s\n",
+                            router, port)
             # Let's try to connect to the next router in the list
             continue
         except BrokenPipeError:
