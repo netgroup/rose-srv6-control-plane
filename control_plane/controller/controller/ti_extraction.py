@@ -105,7 +105,7 @@ class NoISISNodesAvailable(Exception):
 # Utility function to dump relevant information of the topology to a JSON file
 def dump_topo_json(graph, topo_file):
     '''
-    Dump the topology graph to a JSON file.
+    Export the topology graph to a JSON file.
 
     :param graph: The graph to be exported.
     :type graph: class: `networkx.Graph`
@@ -167,30 +167,46 @@ def dump_topo_json(graph, topo_file):
     return True
 
 
-def dump_topo_yaml(nodes, edges, node_to_systemid,
+def dump_topo_yaml(nodes, edges, node_to_systemid=None,
                    nodes_file_yaml=None, edges_file_yaml=None):
     '''
-    Dump the provided set of nodes and edges.
-    Optionally, nodes and edges are exported as YAML file.
+    Export the topology graph to a YAML file and return YAML-like
+    representations of the nodes and the edges.
 
-    :param nodes: List of nodes.
+    :param nodes: List of nodes. Each node is represented as a string (e.g.
+                  the hostname).
     :type nodes: list
-    :param edges: List of edges. The edges are represented as tuple
-                  (node_left, node_right, ip_address).
+    :param edges: List of edges. The edges are represented as tuples
+                  (node_left, node_right, ip_address), where node_left and
+                  node_right are the endpoints of the edge and ip_address is
+                  the IP address of the subnet associated to the edge.
     :type edges: list
-    :param node_to_systemid: A dict mapping hostnames to System IDs.
-    :type node_to_systemid: dict
+    :param node_to_systemid: A dict mapping hostnames to System IDs. If this
+                             argument is not provided, the System ID
+                             information is not exported.
+    :type node_to_systemid: dict, optional
     :param nodes_file_yaml: The path and the name of the YAML file where the
                             nodes must be exported. If this argument is not
                             provided, the nodes are not exported to a file.
-    :type nodes_file_yaml: str
+    :type nodes_file_yaml: str, optional
     :param edges_file_yaml: The path and the name of the YAML file where the
                             edges must be exported. If this argument is not
                             provided, the edges are not exported to a file.
-    :type edges_file_yaml: str
+    :type edges_file_yaml: str, optional
     :return: A pair (nodes, edges), where nodes is a list containing the nodes
              represented as dicts and edges is a list containing the edges
              represented as dicts.
+             A node has the following fields:
+                 - _key, an identifier for the node
+                 - ip_address, for the routers the loopback address, for the
+                               hosts the the IP address of an interface
+                 - type, the type of the node (i.e. 'router' or 'host')
+                 - ext_reachability, the System ID of the node
+             A link has the following fields:
+                 - _key, an identifier for the edge
+                 - _from, the source of the link
+                 - _to, the destination of the link
+                 - type, the type of the link (i.e. 'core' or 'edge')
     :rtype: tuple
     :raises OptionalModuleNotLoadedError: The pyaml module required by
                                           dump_topo_yaml has not has not been
@@ -206,6 +222,11 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         logger.critical('pyaml library required by dump_topo_yaml() '
                         'has not been imported. Is it installed?')
         raise OptionalModuleNotLoadedError
+    # node_to_systemid is a optional argument
+    # If not passed, we init it to an empty dict and the System ID information
+    # is not exported
+    if node_to_systemid is None:
+        node_to_systemid = dict()
     # Export nodes in YAML format
     # A node has the following properites:
     #    - _key, an identifier for the node
@@ -221,7 +242,7 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         '_key': node,
         'type': 'router',
         'ip_address': None,
-        'ext_reachability': node_to_systemid[node]
+        'ext_reachability': node_to_systemid.get(node)
     } for node in nodes]
     # Write nodes to a YAML file
     if nodes_file_yaml is not None:
