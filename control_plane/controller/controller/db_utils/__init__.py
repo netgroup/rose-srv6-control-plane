@@ -18,11 +18,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Controller
+# Collection of database utilities
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 '''
-This package contains an implementation of a SDN Controller.
+This package provides several utilities for interacting with a database.
 '''

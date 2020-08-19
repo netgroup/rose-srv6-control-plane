@@ -301,8 +301,8 @@ def connect_and_extract_topology_isis(ips_ports,
             edges_tmp.remove((node2, node1))
         # If the verbose mode is enabled, print nodes and edges extracted from
         # the ISIS node
+        logger.info('Topology extraction completed\n')
         if verbose:
-            logger.info('Topology extraction completed\n')
             logger.info('Nodes:', nodes)
             logger.info('Edges:', edges)
             logger.info('***************************************')

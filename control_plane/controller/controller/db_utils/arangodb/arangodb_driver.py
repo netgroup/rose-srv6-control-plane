@@ -25,7 +25,7 @@
 
 
 '''
-ArangoDB driver
+Python driver for ArangoDB.
 '''
 
 # pylint: disable=too-many-arguments
@@ -37,7 +37,7 @@ from arango import ArangoClient
 
 class NodesConfigNotLoadedError(Exception):
     '''
-    NodesConfigNotLoadedError
+    NodesConfigNotLoadedError.
     '''
 
 
@@ -47,7 +47,7 @@ def connect_arango(url):
 
     :param url: ArangoDB URL or list of URLs.
     :type url: str
-    :return: ArangoDB client
+    :return: ArangoDB client.
     :rtype: arango.client.ArangoClient
     '''
     return ArangoClient(hosts=url)
@@ -57,6 +57,8 @@ def connect_db(client, db_name, username, password):
     '''
     Connect to a Arango database.
 
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
     :param db_name: Database name.
     :type db_name: str
     :param username: Username for basic authentication.

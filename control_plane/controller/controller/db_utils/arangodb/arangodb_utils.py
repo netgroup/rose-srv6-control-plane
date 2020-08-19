@@ -25,7 +25,7 @@
 
 
 '''
-ArangoDB utilities
+ArangoDB utilities.
 '''
 
 # General imports
@@ -48,18 +48,39 @@ logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
+class TopologyInformationExtractionError(Exception):
+    '''
+    An error occurred while attempting to extract the network topology.
+    '''
+
+
 def save_yaml_dump(obj, filename):
     '''
-    Export an object to a YAML file
+    Export an object to a YAML file.
+
+    :param obj: The object to export.
+    :type obj: list or dict
+    :param filename: The path and the name of the output file.
+    :type filename: str
+    :return: True.
+    :rtype: bool
     '''
-    # Save file
+    # Export the object to a YAML file
     with open(filename, 'w') as outfile:
         yaml.dump(obj, outfile)
+    # Done, return
+    return True
 
 
 def load_yaml_dump(filename):
     '''
-    Load a YAML file and return a dict representation
+    Load a YAML file and return a list or dict representation.
+
+    :param filename: The path and the name of the input file.
+    :type filename: str
+    :return: A list or dict containing the information extracted from the
+             file.
+    :rtype: list or dict
     '''
     # Load YAML file
     with open(filename, 'r') as infile:
@@ -68,15 +89,25 @@ def load_yaml_dump(filename):
 
 def fill_ip_addresses(nodes, addresses_yaml):
     '''
-    Add addresses to a nodes dict
+    Read the IP addresses of the nodes from a YAML file and add the addresses
+    to a nodes list. The matching between the addresses and the nodes is based
+    on the nodes key which acts as node identifier.
+
+    :param nodes: List containing the nodes. Each node is represented as dict.
+    :type nodes: list
+    :param addresses_yaml: The path and name of the input YAML file.
+    :type addresses_yaml: str
+    :return: The list of the nodes enriched with the IP addresses read from the
+             YAML file.
+    :rtype: list
     '''
-    # Read IP addresses information from a YAML file and
-    # add addresses to the nodes
-    logger.info('*** Filling nodes YAML file with IP addresses')
-    # Open hosts file
+    # Read IP addresses information from a YAML file and add addresses to the
+    # nodes
+    logger.debug('*** Filling nodes YAML file with IP addresses')
+    # Open addresses file
     with open(addresses_yaml, 'r') as infile:
         addresses = yaml.safe_load(infile.read())
-    # Parse addresses
+    # Parse addresses and build mapping node to address
     node_to_addr = dict()
     for addr in addresses:
         node_to_addr[addr['node']] = addr['ip_address']
@@ -91,17 +122,28 @@ def fill_ip_addresses(nodes, addresses_yaml):
 
 def add_hosts(nodes, edges, hosts_yaml):
     '''
-    Add hosts to a topology
+    Read the hosts from a YAML file and add them to a topology. Topology is
+    expressed through its nodes and edges.
+
+    :param nodes: List containing the nodes. Each node is represented as dict.
+    :type nodes: list
+    :param edges: List containing the edges. Each edge is represented as dict.
+    :type edges: list
+    :param hosts_yaml: The path and name of the input YAML file.
+    :type hosts_yaml: str
+    :return: Tuple containing the list of nodes and edges enriched with the
+             hosts contained in the YAML file.
+    :rtype: tuple
     '''
-    # Read hosts information from a YAML file and
-    # add hosts to the nodes and edges lists
-    logger.info('*** Adding hosts to the topology')
+    # Read hosts information from a YAML file and add hosts to the nodes and
+    # edges lists
+    logger.debug('*** Adding hosts to the topology')
     # Open hosts file
     with open(hosts_yaml, 'r') as infile:
         hosts = yaml.safe_load(infile.read())
     # Add hosts and links
     for host in hosts:
-        # Add host
+        # Add host to the nodes list
         nodes.append({
             '_key': host['name'],
             'type': 'host',
@@ -127,17 +169,28 @@ def add_hosts(nodes, edges, hosts_yaml):
             '_from': 'nodes/%s' % host['name'],
             'type': 'edge'
         })
+    # Return the updated nodes and edges lists
     logger.info('*** Nodes YAML updated\n')
     logger.info('*** Edges YAML updated\n')
-    # Return the updated nodes and edges lists
     return nodes, edges
 
 
 def initialize_db(arango_url, arango_user, arango_password, verbose=False):
     '''
-    Initialize database
+    Initialize database.
+
+    :param arango_url: The URL of the ArangoDB.
+    :type arango_url: str
+    :param arango_user: The username used to access the ArangoDB.
+    :type arango_user: str
+    :param arango_password: The password used to access the ArangoDB.
+    :type arango_password: str
+    :param verbose: Define whether to enable the verbose mode or not
+                    (default: False).
+    :type verbose: bool, optional
+    :return: A tuple containing the nodes collection and the edges collection.
+    :rtype: tuple
     '''
-    #
     # pylint: disable=unused-argument
     #
     # Wrapper function
@@ -149,13 +202,46 @@ def initialize_db(arango_url, arango_user, arango_password, verbose=False):
 
 
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
-                           nodes_yaml, edges_yaml,
+                           nodes_yaml=None, edges_yaml=None,
                            addrs_yaml=None, hosts_yaml=None, verbose=False):
     '''
-    Extract the network topology
-    from a set of nodes running ISIS protocol
+    Extract the network topology from a set of nodes running ISIS protocol.
+    The extracted topology can be exported to a YAML file (two separate YAML
+    files for nodes and edges). Optionally, you can enrich the extracted
+    topology with IP addresses and other hosts by creating your own addresses
+    and hosts YAML files.
+
+    :param isis_nodes: A list of pairs ip-port representing IP and port of
+                       the ISIS nodes you want to extract the topology from
+                       (e.g. ['fcff:1::1-2608', 'fcff:2::1-2608']).
+    :type isis_nodes: list
+    :param isisd_pwd: The password used to log in to isisd.
+    :type isisd_pwd: str
+    :param nodes_yaml: The path and the name of the output YAML file
+                       containing the nodes. If this parameter is not
+                       provided, the nodes are not exported to a YAML file
+                       (default: None).
+    :type nodes_yaml: str, optional
+    :param edges_yaml: The path and the name of the output YAML file
+                       containing the edges. If this parameter is not
+                       provided, the edges are not exported to a YAML file
+                       (default: None).
+    :type edges_yaml: str, optional
+    :param addrs_yaml: The path and the name of the YAML file containing the
+                       addresses of the nodes. If this argument is not passed,
+                       the addresses are not added to the exported topology.
+    :type addrs_yaml: str, optional
+    :param hosts_yaml: The path and the name of the YAML file containing the
+                       hosts. If this argument is not passed, the hosts are
+                       not added to the exported topology.
+    :type hosts_yaml: str, optional
+    :param verbose: Define whether to enable the verbose mode or not
+                    (default: False).
+    :type verbose: bool, optional
+    :raises controller.db_utils.arangodb.arangodb_utils  \\
+            .TopologyInformationExtractionError: Error while attempting to
+                                                extract the topology.
     '''
-    #
     # pylint: disable=too-many-arguments
     #
     # Param isis_nodes: list of ip-port
@@ -169,7 +255,7 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
     )
     if nodes is None or edges is None or node_to_systemid is None:
         logger.error('Cannot extract topology')
-        return
+        raise TopologyInformationExtractionError
     # Export the topology in YAML format
     nodes, edges = dump_topo_yaml(
         nodes=nodes,
@@ -189,6 +275,8 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
     # Save edges YAML file
     if edges_yaml is not None:
         save_yaml_dump(edges, edges_yaml)
+    # Done, return
+    return True
 
 
 def load_topo_on_arango(arango_url, user, password,
@@ -196,9 +284,28 @@ def load_topo_on_arango(arango_url, user, password,
                         nodes_collection, edges_collection,
                         verbose=False):
     '''
-    Load a network topology on a database
+    Load a network topology on a database.
+
+    :param arango_url: The URL of the ArangoDB.
+    :type arango_url: str
+    :param user: The username used to access the ArangoDB.
+    :type user: str
+    :param password: The password used to access the ArangoDB.
+    :type password: str
+    :param nodes: Set of nodes.
+    :type nodes: set
+    :param edges: Set of edges.
+    :type edges: set
+    :param nodes_collection: Collection of nodes.
+    :type nodes_collection: arango.collection.StandardCollection
+    :param edges_collection: Collection of edges.
+    :type edges_collection: arango.collection.StandardCollection
+    :param verbose: Define whether to enable the verbose mode or not
+                    (default: False).
+    :type verbose: bool, optional
+    :return: True.
+    :rtype: bool
     '''
-    #
     # Current Arango arguments are not used,
     # so we can skip the check
     # pylint: disable=unused-argument, too-many-arguments
@@ -210,6 +317,8 @@ def load_topo_on_arango(arango_url, user, password,
         nodes_dict=nodes,
         edges_dict=edges
     )
+    # Done, return
+    return True
 
 
 def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
@@ -221,9 +330,51 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               period=0, verbose=False):
     '''
     Extract the network topology from a set of nodes running ISIS protocol
-    and upload it on a database
+    and upload it on a database. The extracted topology can be exported to a
+    YAML file (two separate YAML files for nodes and edges). Optionally, you
+    can enrich the extracted topology with IP addresses and other hosts by
+    creating your own addresses and hosts YAML files.
+
+    :param isis_nodes: A list of pairs ip-port representing IP and port of
+                       the ISIS nodes you want to extract the topology from
+                       (e.g. ['fcff:1::1-2608', 'fcff:2::1-2608']).
+    :type isis_nodes: list
+    :param isisd_pwd: The password used to log in to isisd.
+    :type isisd_pwd: str
+    :param arango_url: The URL of the ArangoDB.
+    :type arango_url: str
+    :param arango_user: The username used to access the ArangoDB.
+    :type arango_user: str
+    :param arango_password: The password used to access the ArangoDB.
+    :type arango_password: str
+    :param nodes_yaml: The path and the name of the output YAML file
+                       containing the nodes. If this parameter is not
+                       provided, the nodes are not exported to a YAML file
+                       (default: None).
+    :type nodes_yaml: str, optional
+    :param edges_yaml: The path and the name of the output YAML file
+                       containing the edges. If this parameter is not
+                       provided, the edges are not exported to a YAML file
+                       (default: None).
+    :type edges_yaml: str, optional
+    :param addrs_yaml: The path and the name of the YAML file containing the
+                       addresses of the nodes. If this argument is not passed,
+                       the addresses are not added to the exported topology.
+    :type addrs_yaml: str, optional
+    :param hosts_yaml: The path and the name of the YAML file containing the
+                       hosts. If this argument is not passed, the hosts are
+                       not added to the exported topology.
+    :type hosts_yaml: str, optional
+    :param period: The interval between two consecutive extractions. If this
+                   arguments is equals to 0, this function performs a single
+                   extraction and then returns (default: 0).
+    :type period: int, optional
+    :param verbose: Define whether to enable the verbose mode or not
+                    (default: False).
+    :type verbose: bool, optional
+    :return: True.
+    :rtype: bool
     '''
-    #
     # pylint: disable=too-many-arguments, too-many-locals
     #
     # Param isis_nodes: list of ip-port
@@ -292,3 +443,5 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
             break
         # Wait 'period' seconds between two extractions
         time.sleep(period)
+    # Done, return
+    return True
