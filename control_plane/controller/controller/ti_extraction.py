@@ -109,7 +109,7 @@ def dump_topo_json(graph, topo_file):
 
     :param graph: The graph to be exported.
     :type graph: class: `networkx.Graph`
-    :param topo_file: The path and the name of the JSON file.
+    :param topo_file: The path and the name of the output JSON file.
     :type topo_file: str
     :return: True.
     :rtype: bool
@@ -175,22 +175,22 @@ def dump_topo_yaml(nodes, edges, node_to_systemid=None,
 
     :param nodes: List of nodes. Each node is represented as a string (e.g.
                   the hostname).
-    :type nodes: list
+    :type nodes: set
     :param edges: List of edges. The edges are represented as tuples
                   (node_left, node_right, ip_address), where node_left and
                   node_right are the endpoints of the edge and ip_address is
                   the IP address of the subnet associated to the edge.
-    :type edges: list
+    :type edges: set
     :param node_to_systemid: A dict mapping hostnames to System IDs. If this
                              argument is not provided, the System ID
                              information is not exported.
     :type node_to_systemid: dict, optional
-    :param nodes_file_yaml: The path and the name of the YAML file where the
-                            nodes must be exported. If this argument is not
+    :param nodes_file_yaml: The path and the name of the output YAML file 
+                            containing the nodes. If this argument is not
                             provided, the nodes are not exported to a file.
     :type nodes_file_yaml: str, optional
-    :param edges_file_yaml: The path and the name of the YAML file where the
-                            edges must be exported. If this argument is not
+    :param edges_file_yaml: The path and the name of the output YAML file 
+                            containing the edges. If this argument is not
                             provided, the edges are not exported to a file.
     :type edges_file_yaml: str, optional
     :return: A pair (nodes, edges), where nodes is a list containing the nodes
@@ -285,13 +285,17 @@ def dump_topo_yaml(nodes, edges, node_to_systemid=None,
 # Build NetworkX Topology graph
 def build_topo_graph(nodes, edges):
     '''
-    Convert nodes and edges to a NetworkX graph.
+    Take a set of nodes and a set of edges and build a NetworkX topology
+    graph.
 
-    :param nodes: List of nodes.
-    :type nodes: list
-    :param edges: List of edges. The edges are represented as tuple
-                  (node_left, node_right, ip_address).
-    :type edges: list
+    :param nodes: List of nodes. Each node is represented as a string (e.g.
+                  the hostname).
+    :type nodes: set
+    :param edges: List of edges. The edges are represented as tuples
+                  (node_left, node_right, ip_address), where node_left and
+                  node_right are the endpoints of the edge and ip_address is
+                  the IP address of the subnet associated to the edge.
+    :type edges: set
     :return: The network graph.
     :rtype: class: `networkx.Graph`
     :raises OptionalModuleNotLoadedError: The NetworkX module required by
@@ -316,27 +320,28 @@ def build_topo_graph(nodes, edges):
         graph.add_node(node)
     # Add edges to the graph
     # Only node_left and node_right are added to the graph, ip_address is
-    # dropped
+    # ignored
     for edge in edges:
         graph.add_edge(edge[0], edge[1])
-    # Return the networkx graph
+    # Return the NetworkX graph
     logger.info('*** Graph builded successfully\n')
     return graph
 
 
-# Utility function to export the network graph as an image file
+# Utility function to export the NetworkX graph as an image file
 def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
     '''
     Export the NetworkX graph to a SVG image.
 
     :param graph: The graph to be exported.
     :type graph: class: `networkx.Graph`
-    :param svg_topo_file: The path and the name of the .svg file where the
-                          graph must be exported as an image.
+    :param svg_topo_file: The path and the name of the output .svg file.
     :type svg_topo_file: str
-    :param dot_topo_file: The path and the name of the .dot used to store
-                          intermediate information required to draw the graph.
-    :type dot_topo_file: str
+    :param dot_topo_file: The path and the name of the .dot file required to
+                          draw the graph. This is just a temporary file with
+                          containing an intermediate representation of the
+                          topology (default: /tmp/topology.dot).
+    :type dot_topo_file: str, optional
     :return: True.
     :rtype: bool
     :raises OptionalModuleNotLoadedError: NetworkX or pygraph modules required
@@ -354,6 +359,7 @@ def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
         logger.critical('NetworkX library required by draw_topo() '
                         'has not been imported. Is it installed?')
         raise OptionalModuleNotLoadedError
+    # Check if the pygraphviz library has been imported
     if 'pygraphviz' not in sys.modules:
         logger.critical('pygraphviz library required by draw_topo() '
                         'has not been imported. Is it installed?')
@@ -361,10 +367,10 @@ def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
     # Create dot topology file, an intermediate representation
     # of the topology used to export as an image
     write_dot(graph, dot_topo_file)
-    # Convert dot to svg
+    # Convert .dot to .svg
     os.system('dot -Tsvg %s -o %s' % (dot_topo_file, svg_topo_file))
     logger.info('*** Topology exported\n')
-    # Return
+    # Done, return
     return True
 
 
@@ -374,18 +380,25 @@ def connect_and_extract_topology_isis(ips_ports,
     '''
     Establish a telnet connection to the isisd process running on a router
     and extract the network topology from the router.
-    For redundancy purposes, this function takes a list of routers.
+    For redundancy purposes, this function accepts a list of routers.
 
     :param ips_ports: A list of pairs ip-port representing IP and port of
-                      the ISIS nodes you want to extract the topology from.
+                      the ISIS nodes you want to extract the topology from
+                      (e.g. ['fcff:1::1-2608', 'fcff:2::1-2608']).
     :type ips_ports: list
     :param isisd_pwd: The password used to log in to isisd.
     :type isisd_pwd: str
     :param verbose: Define whether the verbose mode must be enable or not
                     (default: False).
-    :type verbose: bool
-    :return: A tuple containing the nodes, the edges and the hostname to
-             System ID mapping.
+    :type verbose: bool, optional
+    :return: A tuple containing the nodes, the edges and the
+             hostname-to-SystemID mapping.
+             Each node is represented by its hostname.
+             The edges are represented as tuples
+             (node_left, node_right, ip_address), where node_left and
+             node_right are the endpoints of the edge and ip_address is
+             the IP address of the subnet associated to the edge.
+             The hostname-to-SystemID mapping is a dict.
     :rtype: tuple
     :raises NoISISNodesAvailable: The provided set of nodes does no contain
                                   any ISIS node.
@@ -616,37 +629,37 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
     image.
 
     :param routers: A list of pairs ip-port representing IP and port of
-                    the routers you want to extract the topology from.
+                    the ISIS nodes you want to extract the topology from
+                    (e.g. ['fcff:1::1-2608', 'fcff:2::1-2608']).
     :type routers: list
     :param period: The interval between two consecutive extractions. If this
-                   arguments is set to 0, this function performs a single 
-                   extraction and then it returns (default: 0).
-    :type period: int
+                   arguments is equals to 0, this function performs a single
+                   extraction and then returns (default: 0).
+    :type period: int, optional
     :param isisd_pwd: The password used to log in to isisd.
     :type isisd_pwd: str
-    :param topo_file_json: The path and the name of the JSON file where the
-                           topology must be exported. If this parameter is not
-                           provided, the topology is not exported to a JSON
-                           file (default: None).
-    :type topo_file_json: str
-    :param nodes_file_yaml: The path and the name of the YAML file where the
-                            nodes must be exported. If this parameter is not
+    :param topo_file_json: The path and the name of the output JSON file. If
+                           this parameter is not provided, the topology is not
+                           exported to a JSON file (default: None).
+    :type topo_file_json: str, optional
+    :param nodes_file_yaml: The path and the name of the output YAML file
+                            containing the nodes. If this parameter is not
                             provided, the nodes are not exported to a YAML
                             file (default: None).
-    :type nodes_file_yaml: str
-    :param edges_file_yaml: The path and the name of the YAML file where the
-                            edges must be exported. If this parameter is not
+    :type nodes_file_yaml: str, optional
+    :param edges_file_yaml: The path and the name of the output YAML file
+                            containing the edges. If this parameter is not
                             provided, the edges are not exported to a YAML
                             file (default: None).
-    :type edges_file_yaml: str
-    :param topo_graph: The path and the name of the SVG file (image) where the
-                       topology must be exported. If this parameter is not
-                       provided, the topology is not exported to a SVG
+    :type edges_file_yaml: str, optional
+    :param topo_graph: The path and the name of the output SVG file containing
+                       the topology graph exported as image. If this parameter
+                       is not provided, the topology is not exported to a SVG
                        file (default: None).
-    :type topo_graph: str
+    :type topo_graph: str, optional
     :param verbose: Define whether the verbose mode must be enable or not
                     (default: False).
-    :type verbose: bool
+    :type verbose: bool, optional
     :return: True.
     :rtype: bool
     '''
@@ -695,12 +708,12 @@ def parse_arguments():
         description='Topology Information Extraction (from ISIS) '
         'module for SRv6 Controller'
     )
-    # ip:port of the routers
+    # Comma-separated <ip-port> pairs of the routers
     parser.add_argument(
         '-n', '--node-ips', action='store', dest='nodes', required=True,
         help='Comma-separated <ip-port> pairs, where ip is the IP address of '
         'the router and port is the telnet port of the isisd daemon '
-        '(e.g. 2000::1-2606,2000::2-2606,2000::3-2606)'
+        '(e.g. 2000::1-2608,2000::2-2608,2000::3-2608)'
     )
     # Interval between two consecutive extractions
     parser.add_argument(
@@ -724,7 +737,7 @@ def parse_arguments():
     parser.add_argument(
         '-e', '--edges-yaml', dest='edges_file_yaml', action='store',
         default=DEFAULT_EDGES_YAML_FILE,
-        help='JSON file of the edges extracted from the topology'
+        help='YAML file of the edges extracted from the topology'
     )
     # Path of topology graph (SVG file)
     parser.add_argument(
@@ -755,7 +768,6 @@ def __main():
     '''
     Entry point for this module
     '''
-    #
     # Let's parse input parameters
     args = parse_arguments()
     # Setup properly the logger
@@ -766,13 +778,15 @@ def __main():
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
     logger.info('SERVER_DEBUG: %s', str(server_debug))
-    # Get name of the JSON file where the topology must be exported
+    # Get the name of the output JSON file
     topo_file_json = args.topo_file_json
-    # Get name of the YAML file where the nodes must be exported
+    # Get name of the output YAML file where we want to save the nodes of the
+    # extracted topology
     nodes_file_yaml = args.nodes_file_yaml
-    # Get name of the YAML file where the edges must be exported
+    # Get name of the output YAML file where we want to save the edges of the
+    # extracted topology
     edges_file_yaml = args.edges_file_yaml
-    # Get name of the image file where the topology graph must be exported
+    # Get name of the output image file
     # Currently we support only svg format
     topo_graph = args.topo_graph
     if topo_graph is not None and not topo_graph.endswith('.svg'):
@@ -790,6 +804,10 @@ def __main():
     # Password of isisd
     pwd = args.password
     # Extract the topology and build the network graph
+    # If period > 0, this function will block forever or until an exception
+    # is raised
+    # If period = 0, this function will perform a single topology extraction
+    # and then it returns
     topology_information_extraction_isis(
         routers=nodes,
         period=period,
