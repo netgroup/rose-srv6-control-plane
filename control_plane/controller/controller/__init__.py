@@ -22,9 +22,3 @@
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
-
-
-##
-#
-# This module contains all public symbols from the library
-#
