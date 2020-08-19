@@ -112,14 +112,14 @@ def connect_and_extract_topology_isis(ips_ports,
         # Then parse the chunk
         #
         # Separate IP and port
-        data = ip_port.split("-")
+        data = ip_port.split('-')
         # Append IP to the routers list
         routers.append(data[0])
         # Append port to the ports list
         ports.append(data[1])
     # Connect to a router and extract the topology
     for router, port in zip(routers, ports):
-        logger.debug("\n********* Connecting to %s-%s *********",
+        logger.debug('\n********* Connecting to %s-%s *********',
                      router, port)
         # ####################################################################
         # Extract router hostnames
@@ -128,14 +128,14 @@ def connect_and_extract_topology_isis(ips_ports,
             telnet_conn = telnetlib.Telnet(router, port)
             # Insert isisd password
             if isisd_pwd:
-                telnet_conn.read_until(b"Password: ")
-                telnet_conn.write(isisd_pwd.encode('ascii') + b"\r\n")
+                telnet_conn.read_until(b'Password: ')
+                telnet_conn.write(isisd_pwd.encode('ascii') + b'\r\n')
             # Terminal length set to 0 to not have interruptions
-            telnet_conn.write(b"terminal length 0" + b"\r\n")
+            telnet_conn.write(b'terminal length 0' + b'\r\n')
             # Show information about ISIS node
-            telnet_conn.write(b"show isis hostname" + b"\r\n")
+            telnet_conn.write(b'show isis hostname' + b'\r\n')
             # Exit from the isisd console
-            telnet_conn.write(b"q" + b"\r\n")
+            telnet_conn.write(b'q' + b'\r\n')
             # Convert the extracted information to a string
             hostname_details = telnet_conn.read_all().decode('ascii')
         except socket.timeout:
@@ -145,12 +145,12 @@ def connect_and_extract_topology_isis(ips_ports,
         except socket.error as err:
             # Cannot establish a connection to isisd: socket error
             if err.errno != errno.EINTR:
-                logger.warning("Cannot establish a connection to %s on port"
-                               "%s\n", router, port)
+                logger.warning('Cannot establish a connection to %s on port'
+                               '%s\n', router, port)
             # Let's try to connect to the next router in the list
             continue
         except BrokenPipeError:
-            # Telnetlib returned "BrokenPipeError"
+            # Telnetlib returned 'BrokenPipeError'
             # This can happen if you entered the wrong password
             logger.error('Broken pipe. Is the password correct?')
             # Let's try to connect to the next router in the list
@@ -165,24 +165,24 @@ def connect_and_extract_topology_isis(ips_ports,
             telnet_conn = telnetlib.Telnet(router, port)
             # Insert isisd password
             if isisd_pwd:
-                telnet_conn.read_until(b"Password: ")
-                telnet_conn.write(isisd_pwd.encode('ascii') + b"\r\n")
+                telnet_conn.read_until(b'Password: ')
+                telnet_conn.write(isisd_pwd.encode('ascii') + b'\r\n')
             # Terminal length set to 0 to not have interruptions
-            telnet_conn.write(b"terminal length 0" + b"\r\n")
+            telnet_conn.write(b'terminal length 0' + b'\r\n')
             # Show the ISIS database globally, with details.
-            telnet_conn.write(b"show isis database detail" + b"\r\n")
+            telnet_conn.write(b'show isis database detail' + b'\r\n')
             # Exit from the isisd console
-            telnet_conn.write(b"q" + b"\r\n")
+            telnet_conn.write(b'q' + b'\r\n')
             # Convert the extracted information to a string
             database_details = telnet_conn.read_all().decode('ascii')
         except socket.error:
             # Cannot establish a connection to isisd
-            logger.warning("Cannot establish a connection to %s on port %s\n",
+            logger.warning('Cannot establish a connection to %s on port %s\n',
                            router, port)
             # Let's try to connect to the next router in the list
             continue
         except BrokenPipeError:
-            # Telnetlib returned "BrokenPipeError"
+            # Telnetlib returned 'BrokenPipeError'
             # This can happen if you entered the wrong password
             logger.error('Broken pipe. Is the password correct?')
             # Let's try to connect to the next router in the list
@@ -303,9 +303,9 @@ def connect_and_extract_topology_isis(ips_ports,
         # the ISIS node
         if verbose:
             logger.info('Topology extraction completed\n')
-            logger.info("Nodes:", nodes)
-            logger.info("Edges:", edges)
-            logger.info("***************************************")
+            logger.info('Nodes:', nodes)
+            logger.info('Edges:', edges)
+            logger.info('***************************************')
         # Return topology information
         return nodes, edges, hostname_to_system_id
     # No router available to extract the topology
