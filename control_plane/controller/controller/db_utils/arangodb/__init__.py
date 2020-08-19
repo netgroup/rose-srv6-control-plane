@@ -18,11 +18,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Controller
+# Collection of ArangoDB database utilities
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 '''
-This package contains an implementation of a SDN Controller.
+This package provides a collection of utilities for interacting with a
+ArangoDB database.
 '''
