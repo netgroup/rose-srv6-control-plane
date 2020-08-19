@@ -69,20 +69,21 @@ except ImportError:
 #
 #
 # The following parameters are the default arguments used by the functions
-# defined in this module. You can override the default values by providing
-# by providing the parameters to the function when you call them
+# defined in this module. You can override the default values by passing
+# your custom argments to the functions
 #
-# Filename for the exported topology
+# JSON file containing the exported topology
 DEFAULT_TOPOLOGY_FILE = '/tmp/topology.json'
-# File containing the nodes
+# YAML file containing the exported nodes
 DEFAULT_NODES_YAML_FILE = '/tmp/nodes.yaml'
-# File containing the edges
+# YAML file containing the exported edges
 DEFAULT_EDGES_YAML_FILE = '/tmp/edges.yaml'
 # Interval between two consecutive extractions (in seconds)
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
 # In our experiment we use 'zebra' as default password for isisd
 DEFAULT_ISISD_PASSWORD = 'zebra'
-# Dot file used to draw the topology graph
+# DOT file containing an intermediate representation of the toplogy used to
+# draw the topology graph
 DOT_FILE_TOPO_GRAPH = '/tmp/topology.dot'
 # Define whether the verbose mode is enabled or not by default
 DEFAULT_VERBOSE = False
@@ -101,10 +102,10 @@ class NoISISNodesAvailable(Exception):
     '''
 
 
-# Utility function to dump relevant information of the topology
+# Utility function to dump relevant information of the topology to a JSON file
 def dump_topo_json(graph, topo_file):
     '''
-    Dump the graph to a JSON file.
+    Dump the topology graph to a JSON file.
 
     :param graph: The graph to be exported.
     :type graph: class: `networkx.Graph`
@@ -126,20 +127,32 @@ def dump_topo_json(graph, topo_file):
         logger.critical('NetworkX library required by dump_topo_json() '
                         'has not been imported. Is it installed?')
         raise OptionalModuleNotLoadedError
-    # Export NetworkX object into a json file (json dump of the topology)
+    # Export NetworkX object to a json file (json dump of the topology)
     #
     # Convert the graph to a node-link format that is suitable for JSON
     # serialization
     json_topology = json_graph.node_link_data(graph)
     # Remove useless information from the links
+    # In the JSON file, a link has the following properties:
+    #    - source, the source of the link
+    #    - target, the destination of the link
+    #    - type, the type of the link (i.e. 'core' or 'edge')
     json_topology['links'] = [{
         'source': link['source'],
         'target': link['target'],
         'type': link.get('type')
     } for link in json_topology['links']]
     # Remove useless information from the nodes
-    # IP address is unknown because it is not conrained in the nodes
-    # information, so we set it to None
+    # IP address is unknown because it is not contained in the nodes
+    # information, therefore we set it to None
+    # You can manually edit the JSON file to add the IP addresses of the
+    # nodes
+    # In the JSON file, a node has the following properites:
+    #    - id, an identifier for the node
+    #    - ip_address, for the routers the loopback address, for the hosts the
+    #                  the IP address of an interface
+    #    - type, the type of the node (i.e. 'router' or 'host')
+    #    - ext_reachability, the System ID of the node      # TODO check this!
     json_topology['nodes'] = [{
         'id': node['id'],
         'ip_address': None,
