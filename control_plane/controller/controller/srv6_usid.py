@@ -43,7 +43,7 @@ import commons_pb2
 from controller import srv6_utils
 from controller import utils
 try:
-    from controller import arangodb_driver
+    from controller.db_utils.arangodb import arangodb_driver
 except ImportError:
     print('ArangoDB modules not installed')
 
