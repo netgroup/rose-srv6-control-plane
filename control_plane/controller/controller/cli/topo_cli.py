@@ -32,7 +32,7 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import arangodb_utils
+from controller.db_utils.arangodb import arangodb_utils
 from controller.cli import utils as cli_utils
 
 # Interval between two consecutive extractions (in seconds)
