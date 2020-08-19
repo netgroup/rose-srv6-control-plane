@@ -133,7 +133,7 @@ def dump_topo_json(graph, topo_file):
     # serialization
     json_topology = json_graph.node_link_data(graph)
     # Remove useless information from the links
-    # In the JSON file, a link has the following properties:
+    # A link has the following properties:
     #    - source, the source of the link
     #    - target, the destination of the link
     #    - type, the type of the link (i.e. 'core' or 'edge')
@@ -145,9 +145,9 @@ def dump_topo_json(graph, topo_file):
     # Remove useless information from the nodes
     # IP address is unknown because it is not contained in the nodes
     # information, therefore we set it to None
-    # You can manually edit the JSON file to add the IP addresses of the
+    # You can do post-process on the JSON file to add the IP addresses of the
     # nodes
-    # In the JSON file, a node has the following properites:
+    # A node has the following properites:
     #    - id, an identifier for the node
     #    - ip_address, for the routers the loopback address, for the hosts the
     #                  the IP address of an interface
@@ -196,6 +196,8 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
                                           dump_topo_yaml has not has not been
                                           loaded. Is it installed?
     '''
+    # Export the topology to a YAML file
+    logger.debug('*** Exporting topology to YAML file')
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
     #
@@ -205,20 +207,37 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
                         'has not been imported. Is it installed?')
         raise OptionalModuleNotLoadedError
     # Export nodes in YAML format
+    # A node has the following properites:
+    #    - _key, an identifier for the node
+    #    - ip_address, for the routers the loopback address, for the hosts the
+    #                  the IP address of an interface
+    #    - type, the type of the node (i.e. 'router' or 'host')
+    #    - ext_reachability, the System ID of the node      # TODO check this!
+    # IP address is unknown because it is not contained in the nodes
+    # information, therefore we set it to None
+    # You can do post-process on the JSON file to add the IP addresses of the
+    # nodes
     nodes_yaml = [{
         '_key': node,
         'type': 'router',
         'ip_address': None,
         'ext_reachability': node_to_systemid[node]
     } for node in nodes]
-    # Write nodes to file
+    # Write nodes to a YAML file
     if nodes_file_yaml is not None:
-        logger.info('*** Exporting topology nodes to %s', nodes_file_yaml)
+        logger.debug('*** Exporting topology nodes to %s', nodes_file_yaml)
         with open(nodes_file_yaml, 'w') as outfile:
             yaml.dump(nodes_yaml, outfile)
     # Export edges in YAML format
+    # A link has the following properties:
+    #    - _key, an identifier for the edge
+    #    - _from, the source of the link
+    #    - _to, the destination of the link
+    #    - type, the type of the link (i.e. 'core' or 'edge')
     # Character '/' is not accepted in key string in arango, using
     # '-' instead
+    # Since the edges are unidirectional, for each link in the graph we need
+    # two separate edges
     edges_yaml = [{
         '_key': '%s-dir1' % edge[2].replace('/', '-'),
         '_from': 'nodes/%s' % edge[0],
@@ -230,12 +249,14 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
         '_to': 'nodes/%s' % edge[0],
         'type': 'core'
     } for edge in edges]
-    # Write edges to file
+    # Write edges to a YAML file
     if edges_file_yaml is not None:
-        logger.info('*** Exporting topology edges to %s', edges_file_yaml)
+        logger.debug('*** Exporting topology edges to %s', edges_file_yaml)
         with open(edges_file_yaml, 'w') as outfile:
             yaml.dump(edges_yaml, outfile)
-    # Done, return a tuple containing the nodes and the edges
+    # Done, return a YAML like representation of the nodes and the edges
+    # Both nodes and edges are lists of entities containing the properities
+    # described in the above comments
     logger.info('Topology exported\n')
     return nodes_yaml, edges_yaml
 
