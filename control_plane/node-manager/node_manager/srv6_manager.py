@@ -24,7 +24,10 @@
 #
 
 '''
-This module provides an implementation of a SRv6 Manager
+This module provides an implementation of a SRv6 Manager. Currently, it
+supports "Linux" and "VPP" as forwarding engine. However, the design of this
+module is modular and other forwarding engines can be easily added in the
+future.
 '''
 
 
@@ -273,7 +276,27 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
     '''
-    Start a gRPC server.
+    Start a gRPC server that implements the functionality of a SRv6 Manager.
+
+    :param grpc_ip: The IP address on which the gRPC server will listen for
+                    connections (default: "::").
+    :type grpc_ip: str, optional
+    :param grpc_port: The port number on which the gRPC server will listen for
+                    connections (default: 12345).
+    :type grpc_port: int, optional
+    :param secure: Define whether to enable the gRPC sercure mode; if secure
+                   mode is enabled, gRPC will use TLS secured channels instead
+                   of TCP channels (default: False).
+    :type secure: bool, optional
+    :param certificate: The file containing the certificate of the server to
+                        be used for the gRPC secure mode. If you don't use the
+                        secure mode, you can omit this argument (default:
+                        "cert_server.pem").
+    :type certificate: str, optional
+    :param key: The file containing the key of the server to be used for the
+                gRPC secure mode. If you don't use the secure mode, you can
+                omit this argument (default: "key_server.pem").
+    :type key: str, optional
     '''
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
