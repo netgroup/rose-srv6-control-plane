@@ -49,7 +49,7 @@ from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
 from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
 # Import constants file
-from node_manager.constants import FWD_ENGINE
+from node_manager.constants import FWD_ENGINE_STR_TO_INT
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -91,8 +91,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         srv6_mgr_vpp = SRv6ManagerVPP()
         # Store the forwarding engines
         self.fwd_engine = {
-            FWD_ENGINE['Linux']: srv6_mgr_linux,
-            FWD_ENGINE['VPP']: srv6_mgr_vpp
+            FWD_ENGINE_STR_TO_INT['Linux']: srv6_mgr_linux,
+            FWD_ENGINE_STR_TO_INT['VPP']: srv6_mgr_vpp
         }
 
     def handle_srv6_path_request(self, operation, request, context):
