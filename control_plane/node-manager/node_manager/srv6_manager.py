@@ -76,6 +76,8 @@ DEFAULT_SECURE = False
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 # Server key
 DEFAULT_KEY = 'key_server.pem'
+# Is VPP support enabled by default?
+DEFAULT_ENABLE_VPP = False
 
 
 class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
@@ -84,17 +86,17 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
     '''
 
     def __init__(self):
+        # Define a dict to map Forwarding Engines to their handlers
+        # The key of the dict is a numeric code corresponding to the
+        # Forwarding Engine, the value is an handler for the Forwarding Engine
+        self.fwd_engine = dict()
         # Init SRv6 Manager for Linux Forwarding Engine
         # It allows the SDN Controller to control the Linux Forwarding Engine
-        srv6_mgr_linux = SRv6ManagerLinux()
-        # Init SRv6 Manager for VPP Forwarding Engine
-        # It allows the SDN Controller to control the VPP Forwarding Engine
-        srv6_mgr_vpp = SRv6ManagerVPP()
-        # Store the forwarding engines
-        self.fwd_engine = {
-            FWD_ENGINE_STR_TO_INT['Linux']: srv6_mgr_linux,
-            FWD_ENGINE_STR_TO_INT['VPP']: srv6_mgr_vpp
-        }
+        self.fwd_engine[FWD_ENGINE_STR_TO_INT['Linux']] = SRv6ManagerLinux()
+        # Init SRv6 Manager for VPP Forwarding Engine, if VPP is enabled
+        if os.getenv('ENABLE_VPP', DEFAULT_ENABLE_VPP):
+            # It allows the SDN Controller to control the VPP Forwarding Engine
+            self.fwd_engine[FWD_ENGINE_STR_TO_INT['VPP']] = SRv6ManagerVPP()
 
     def handle_srv6_path_request(self, operation, request, context, ret_paths):
         '''
@@ -115,10 +117,12 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler and
         # return the result
-        return self.fwd_engine[fwd_engine].handle_srv6_path_request(operation,
-                                                                    request,
-                                                                    context,
-                                                                    ret_paths)
+        return self.fwd_engine[fwd_engine].handle_srv6_path_request(
+            operation=operation,
+            request=request,
+            context=context,
+            ret_paths=ret_paths
+        )
 
     def handle_srv6_policy_request(self, operation, request, context,
                                    ret_policies):
@@ -140,7 +144,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_policy_request(
-            operation, request, context, ret_policies)
+            operation=operation,
+            request=request,
+            context=context,
+            ret_policies=ret_policies
+        )
 
     def handle_srv6_behavior_request(self, operation, request, context,
                                      ret_behaviors):
@@ -162,7 +170,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_behavior_request(
-            operation, request, context, ret_behaviors)
+            peration=operation,
+            request=request,
+            context=context,
+            ret_behaviors=ret_behaviors
+        )
 
     def execute(self, operation, request, context):
         '''
