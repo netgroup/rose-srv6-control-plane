@@ -464,7 +464,6 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     :param pm_driver: The driver to use for the experiments (i.e. eBPF or
                       IPSet).
     '''
-    #
     # pylint: disable=too-many-arguments
     #
     # ########################################################################
@@ -498,7 +497,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     # Set the number of color
     request.color_options.numbers_of_color = \
         int(number_of_color)                  # pylint: disable=no-member
-    #
+    # ########################################################################
     # Set driver
     request.pm_driver = pm_driver
     # ########################################################################
@@ -643,8 +642,6 @@ def stop_experiment_reflector(channel, sidlist):
 
 def __start_measurement(measure_id, sender_channel, reflector_channel,
                         send_refl_sidlist, refl_send_sidlist,
-                        # send_in_interfaces, refl_in_interfaces,
-                        # send_out_interfaces, refl_out_interfaces,
                         measurement_protocol, measurement_type,
                         authentication_mode, authentication_key,
                         timestamp_format, delay_measurement_mode,
@@ -684,7 +681,6 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
                                   or Direct mode)
     :type loss_measurement_mode: str
     '''
-    #
     # pylint: disable=too-many-arguments, unused-argument
     #
     print("\n************** Start Measurement **************\n")
@@ -693,8 +689,6 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         channel=reflector_channel,
         sidlist=send_refl_sidlist,
         rev_sidlist=refl_send_sidlist,
-        # in_interfaces=refl_in_interfaces,
-        # out_interfaces=refl_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -717,8 +711,6 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         channel=sender_channel,
         sidlist=send_refl_sidlist,
         rev_sidlist=refl_send_sidlist,
-        # in_interfaces=send_in_interfaces,
-        # out_interfaces=send_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -866,7 +858,6 @@ def set_configuration(sender_channel, reflector_channel,
     :param number_of_color: The number of the color
     :type number_of_color: int
     '''
-    #
     # pylint: disable=too-many-arguments
     #
     # Set configuration on the sender
@@ -939,8 +930,6 @@ def reset_configuration(sender_channel, reflector_channel):
 
 def start_experiment(sender_channel, reflector_channel, send_refl_dest,
                      refl_send_dest, send_refl_sidlist, refl_send_sidlist,
-                     #  send_in_interfaces, refl_in_interfaces,
-                     #  send_out_interfaces, refl_out_interfaces,
                      measurement_protocol, measurement_type,
                      authentication_mode, authentication_key,
                      timestamp_format, delay_measurement_mode,
@@ -1005,7 +994,6 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
                   path is replaced with the new one (default is False).
     :type force: bool, optional
     '''
-    #
     # pylint: disable=too-many-arguments, too-many-locals
     #
     # If the force flag is set and SRv6 path already exists, remove
@@ -1044,10 +1032,6 @@ def start_experiment(sender_channel, reflector_channel, send_refl_dest,
         reflector_channel=reflector_channel,
         send_refl_sidlist=send_refl_sidlist,
         refl_send_sidlist=refl_send_sidlist,
-        # send_in_interfaces=send_in_interfaces,
-        # send_out_interfaces=send_out_interfaces,
-        # refl_in_interfaces=refl_in_interfaces,
-        # refl_out_interfaces=refl_out_interfaces,
         measurement_protocol=measurement_protocol,
         measurement_type=measurement_type,
         authentication_mode=authentication_mode,
@@ -1083,7 +1067,6 @@ def get_experiment_results(sender_channel, reflector_channel,
     :param kafka_servers: IP:port of Kafka server
     :type kafka_servers: str
     '''
-    #
     # pylint: disable=too-many-arguments, too-many-locals
     #
     # Get the results
@@ -1165,7 +1148,6 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
                               End.DT6 route is not removed.
     :type refl_send_localseg: str, optional
     '''
-    #
     # pylint: disable=too-many-arguments
     #
     # Stop the experiment
@@ -1296,62 +1278,69 @@ if ENABLE_GRPC_SERVER:
                 status=status)
 
 
-if ENABLE_GRPC_SERVER:
-    def __start_grpc_server(grpc_ip=DEFAULT_GRPC_SERVER_IP,
-                            grpc_port=DEFAULT_GRPC_SERVER_PORT,
-                            secure=DEFAULT_SERVER_SECURE,
-                            key=DEFAULT_SERVER_KEY,
-                            certificate=DEFAULT_SERVER_CERTIFICATE):
-        '''
-        Start gRPC on the controller
+def __start_grpc_server(grpc_ip=DEFAULT_GRPC_SERVER_IP,
+                        grpc_port=DEFAULT_GRPC_SERVER_PORT,
+                        secure=DEFAULT_SERVER_SECURE,
+                        key=DEFAULT_SERVER_KEY,
+                        certificate=DEFAULT_SERVER_CERTIFICATE):
+    '''
+    Start gRPC server on the controller.
 
-        :param grpc_ip: The IP address of the gRPC server
-        :type grpc_ip: str
-        :param grpc_port: the port of the gRPC server
-        :type grpc_port: int
-        :param secure: define whether to use SSL or not for the gRPC server
-                       (default is False)
-        :type secure: bool
-        :param certificate: The path of the server certificate required
-                            for the SSL (default is None)
-        :type certificate: str
-        :param key: the path of the server key required for the SSL
-                    (default is None)
-        :type key: str
-        '''
-        #
-        # pylint: disable=too-many-arguments
-        #
-        # Setup gRPC server
-        #
-        # Create the server and add the handler
-        grpc_server = grpc.server(futures.ThreadPoolExecutor())
-        (srv6pmServiceController_pb2_grpc
-         .add_SRv6PMControllerServicer_to_server(_SRv6PMService(),
-                                                 grpc_server))
-        # If secure mode is enabled, we need to create a secure endpoint
-        if secure:
-            # Read key and certificate
-            with open(key) as key_file:
-                key = key_file.read()
-            with open(certificate) as certificate_file:
-                certificate = certificate_file.read()
-            # Create server SSL credentials
-            grpc_server_credentials = grpc.ssl_server_credentials(
-                ((key, certificate,),)
-            )
-            # Create a secure endpoint
-            grpc_server.add_secure_port(
-                '[%s]:%s' % (grpc_ip, grpc_port),
-                grpc_server_credentials
-            )
-        else:
-            # Create an insecure endpoint
-            grpc_server.add_insecure_port(
-                '[%s]:%s' % (grpc_ip, grpc_port)
-            )
-        # Start the loop for gRPC
-        logger.info('Listening gRPC')
-        grpc_server.start()
-        while True:
-            time.sleep(5)
+    :param grpc_ip: The IP address of the gRPC server.
+    :type grpc_ip: str
+    :param grpc_port: The port of the gRPC server.
+    :type grpc_port: int
+    :param secure: define whether to use SSL or not for the gRPC server
+                    (default is False).
+    :type secure: bool
+    :param certificate: The path of the server certificate required
+                        for the SSL (default is None).
+    :type certificate: str
+    :param key: the path of the server key required for the SSL
+                (default is None).
+    :type key: str
+    :raises controller.utils.InvalidArgumentError: If gRPC server is disabled
+                                                   in the configuration.
+    '''
+    # pylint: disable=too-many-arguments
+    #
+    # To start a gRPC server on the Controller, ENABLE_GRPC_SERVER must be
+    # True
+    if not ENABLE_GRPC_SERVER:
+        logger.error('gRPC server is disabled. Check your configuration.')
+        raise utils.InvalidArgumentError
+    # ########################################################################
+    # Setup gRPC server
+    #
+    # Create the server and add the handler
+    grpc_server = grpc.server(futures.ThreadPoolExecutor())
+    (srv6pmServiceController_pb2_grpc
+        .add_SRv6PMControllerServicer_to_server(_SRv6PMService(),
+                                                grpc_server))
+    # If secure mode is enabled, we need to create a secure endpoint
+    if secure:
+        # Read key and certificate
+        with open(key) as key_file:
+            key = key_file.read()
+        with open(certificate) as certificate_file:
+            certificate = certificate_file.read()
+        # Create server SSL credentials
+        grpc_server_credentials = grpc.ssl_server_credentials(
+            ((key, certificate,),)
+        )
+        # Create a secure endpoint
+        grpc_server.add_secure_port(
+            '[%s]:%s' % (grpc_ip, grpc_port),
+            grpc_server_credentials
+        )
+    else:
+        # Create an insecure endpoint
+        grpc_server.add_insecure_port(
+            '[%s]:%s' % (grpc_ip, grpc_port)
+        )
+    # ###########################################################################
+    # Start the loop for gRPC
+    logger.info('Listening gRPC')
+    grpc_server.start()
+    while True:
+        time.sleep(5)
