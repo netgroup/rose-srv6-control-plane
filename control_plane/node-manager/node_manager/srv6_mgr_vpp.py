@@ -43,7 +43,6 @@ import sys
 #     sys.exit(-2)
 
 # Proto dependencies
-import srv6_manager_pb2
 from node_manager.constants import STATUS_CODE
 
 # Folder containing this script
@@ -115,8 +114,7 @@ class SRv6ManagerVPP():
         LOGGER.debug('Entering handle_srv6_src_addr_request')
         if operation in ['add', 'get', 'del']:
             LOGGER.error('Operation %s not supported', operation)
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED'])
+            return STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED']
         if operation in ['change']:
             # String representing the command to be sent to VPP
             cmd = 'set sr encaps source addr %s' % str(request.src_addr)
@@ -128,17 +126,16 @@ class SRv6ManagerVPP():
             if res != '':
                 # The operation failed
                 logging.error('VPP returned an error: %s', res)
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=STATUS_CODE['STATUS_INTERNAL_ERROR'])
+                return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # Return the result
             LOGGER.debug('Operation completed successfully')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('Unrecognized operation: %s', operation)
         sys.exit(-1)
 
-    def handle_srv6_policy_request(self, operation, request, context):
+    def handle_srv6_policy_request(self, operation, request, context,
+                                   ret_policies):
         '''
         This function is used to create, delete or change a SRv6 policy,
         equivalent to:
@@ -153,8 +150,7 @@ class SRv6ManagerVPP():
         if operation in ['change', 'get']:
             # Currently only "add" and "del" operations are supported
             LOGGER.error('Operation not yet supported: %s', operation)
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED'])
+            return STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED']
         if operation in ['add', 'del']:
             # Let's push the routes
             for policy in request.policies:
@@ -198,17 +194,15 @@ class SRv6ManagerVPP():
                 if res != '':
                     # The operation failed
                     logging.error('VPP returned an error: %s', res)
-                    return srv6_manager_pb2.SRv6ManagerReply(
-                        status=STATUS_CODE['STATUS_INTERNAL_ERROR'])
+                    return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # All the policies have been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('Unrecognized operation: %s', operation)
         sys.exit(-1)
 
-    def handle_srv6_path_request(self, operation, request, context):
+    def handle_srv6_path_request(self, operation, request, context, ret_paths):
         '''
         Handler for SRv6 paths
         '''
@@ -219,8 +213,7 @@ class SRv6ManagerVPP():
         if operation in ['change', 'get']:
             # Currently only "add" and "del" operations are supported
             LOGGER.error('Operation not yet supported: %s', operation)
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED'])
+            return STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED']
         if operation in ['add', 'del']:
             # Let's push the routes
             for path in request.paths:
@@ -271,12 +264,10 @@ class SRv6ManagerVPP():
                 if res != '':
                     # The operation failed
                     logging.error('VPP returned an error: %s', res)
-                    return srv6_manager_pb2.SRv6ManagerReply(
-                        status=STATUS_CODE['STATUS_INTERNAL_ERROR'])
+                    return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # All the paths have been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -329,8 +320,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -386,8 +376,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -441,8 +430,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -496,8 +484,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -552,8 +539,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -608,8 +594,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -663,8 +648,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -718,8 +702,7 @@ class SRv6ManagerVPP():
                 return STATUS_CODE['STATUS_INTERNAL_ERROR']
             # The behavior has been processed, create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=STATUS_CODE['STATUS_SUCCESS'])
+            return STATUS_CODE['STATUS_SUCCESS']
         # Unknown operation: this is a bug
         LOGGER.error('BUG - Unrecognized operation: %s', operation)
         sys.exit(-1)
@@ -916,7 +899,8 @@ class SRv6ManagerVPP():
         LOGGER.error('Error: Unrecognized action: %s', behavior.action)
         return STATUS_CODE['STATUS_INVALID_ACTION']
 
-    def handle_srv6_behavior_request(self, operation, request, context):
+    def handle_srv6_behavior_request(self, operation, request, context,
+                                     ret_behaviors):
         # pylint: disable=unused-argument
         """Handler for SRv6 behaviors"""
         LOGGER.debug('config received:\n%s', request)
@@ -924,15 +908,14 @@ class SRv6ManagerVPP():
         for behavior in request.behaviors:
             if operation == 'del':
                 res = self.handle_srv6_behavior_del_request(behavior)
-                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                return res
             if operation == 'get':
                 res = self.handle_srv6_behavior_get_request(behavior)
-                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                return res
             # Pass the request to the right handler
             res = self.dispatch_srv6_behavior(operation, behavior)
             if res != STATUS_CODE['STATUS_SUCCESS']:
-                return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                return res
         # and create the response
         LOGGER.debug('Send response: OK')
-        return srv6_manager_pb2.SRv6ManagerReply(
-            status=STATUS_CODE['STATUS_SUCCESS'])
+        return STATUS_CODE['STATUS_SUCCESS']
