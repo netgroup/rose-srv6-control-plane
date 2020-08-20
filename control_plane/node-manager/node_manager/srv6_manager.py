@@ -46,6 +46,7 @@ import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 # Node Manager dependencies
 from node_manager.utils import get_address_family
+from node_manager.srv6_manager.utils import check_root
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
 from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
 # Import constants file
@@ -279,16 +280,6 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     grpc_server.start()
     while True:
         time.sleep(5)
-
-
-# Check whether we have root permission or not
-# Return True if we have root permission, False otherwise
-def check_root():
-    '''
-    Return True if this program is executed as root,
-    False otherwise
-    '''
-    return os.getuid() == 0
 
 
 # Parse options
