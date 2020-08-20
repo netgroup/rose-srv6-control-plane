@@ -96,7 +96,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             FWD_ENGINE_STR_TO_INT['VPP']: srv6_mgr_vpp
         }
 
-    def handle_srv6_path_request(self, operation, request, context):
+    def handle_srv6_path_request(self, operation, request, context, ret_paths):
         '''
         Handler for SRv6 paths.
         '''
@@ -117,9 +117,11 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # return the result
         return self.fwd_engine[fwd_engine].handle_srv6_path_request(operation,
                                                                     request,
-                                                                    context)
+                                                                    context,
+                                                                    ret_paths)
 
-    def handle_srv6_policy_request(self, operation, request, context):
+    def handle_srv6_policy_request(self, operation, request, context,
+                                   ret_policies):
         '''
         Handler for SRv6 policies.
         '''
@@ -138,9 +140,10 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_policy_request(
-            operation, request, context)
+            operation, request, context, ret_policies)
 
-    def handle_srv6_behavior_request(self, operation, request, context):
+    def handle_srv6_behavior_request(self, operation, request, context,
+                                     ret_behaviors):
         '''
         Handler for SRv6 behaviors.
         '''
@@ -159,7 +162,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_behavior_request(
-            operation, request, context)
+            operation, request, context, ret_behaviors)
 
     def execute(self, operation, request, context):
         '''
@@ -170,31 +173,49 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         #
         # The operations to be executed depends on the entity carried by the
         # request message
-        res = srv6_manager_pb2.SRv6ManagerReply(
+        reply = srv6_manager_pb2.SRv6ManagerReply(
             status=commons_pb2.STATUS_SUCCESS)
         if request.HasField('srv6_path_request'):
             # The message contains at least one SRv6 Path request, so we pass
             # the request to the SRv6 Path handler
             res = self.handle_srv6_path_request(
-                operation, request.srv6_path_request, context)
-            if res.status != commons_pb2.STATUS_SUCCESS:
+                operation=operation,
+                request=request.srv6_path_request,
+                context=context,
+                ret_paths=reply.paths
+            )
+            if res != commons_pb2.STATUS_SUCCESS:
                 # An error occurred
-                return res
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=res)
         if request.HasField('srv6_policy_request'):
             # The message contains at least one SRv6 Path request, so we pass
             # the request to the SRv6 Policy handler
             res = self.handle_srv6_policy_request(
-                operation, request.srv6_policy_request, context)
-            if res.status != commons_pb2.STATUS_SUCCESS:
+                operation=operation,
+                request=request.srv6_policy_request,
+                context=context,
+                ret_policies=reply.policies
+            )
+            if res != commons_pb2.STATUS_SUCCESS:
                 # An error occurred
-                return res
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=res)
         if request.HasField('srv6_behavior_request'):
             # The message contains at least one SRv6 Path request, so we pass
             # the request to the SRv6 Behavior handler
             res = self.handle_srv6_behavior_request(
-                operation, request.srv6_behavior_request, context)
+                operation=operation,
+                request=request.srv6_behavior_request,
+                context=context,
+                ret_behaviors=reply.behaviors
+            )
+            if res != commons_pb2.STATUS_SUCCESS:
+                # An error occurred
+                return srv6_manager_pb2.SRv6ManagerReply(
+                    status=res)
         # Return the result
-        return res
+        return reply
 
     def Create(self, request, context):
         '''

@@ -39,7 +39,6 @@ from pyroute2.netlink.rtnl.ifinfmsg import IFF_LOOPBACK
 
 # Proto dependencies
 import commons_pb2
-import srv6_manager_pb2
 
 # Load environment variables from .env file
 # load_dotenv()
@@ -141,7 +140,7 @@ class SRv6ManagerLinux():
             'uN': self.handle_un_behavior_request,
         }
 
-    def handle_srv6_path_request(self, operation, request, context):
+    def handle_srv6_path_request(self, operation, request, context, ret_paths):
         # pylint: disable=unused-argument
         """Handler for SRv6 paths"""
 
@@ -178,19 +177,16 @@ class SRv6ManagerLinux():
                                                'mode': path.encapmode,
                                                'segs': segments})
             elif operation == 'get':
-                return srv6_manager_pb2.SRv6ManagerReply(
-                    status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+                return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             else:
                 # Operation unknown: this is a bug
                 LOGGER.error('Unrecognized operation: %s', operation)
                 sys.exit(-1)
             # and create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_SUCCESS)
+            return commons_pb2.STATUS_SUCCESS
         except NetlinkError as err:
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=parse_netlink_error(err))
+            return parse_netlink_error(err)
 
     def handle_end_behavior_request(self, operation, behavior):
         """Handle seg6local End behavior"""
@@ -675,7 +671,8 @@ class SRv6ManagerLinux():
         LOGGER.error('Error: Unrecognized action: %s', behavior.action)
         return commons_pb2.STATUS_INVALID_ACTION
 
-    def handle_srv6_behavior_request(self, operation, request, context):
+    def handle_srv6_behavior_request(self, operation, request, context,
+                                     ret_behaviors):
         # pylint: disable=unused-argument
         """Handler for SRv6 behaviors"""
 
@@ -685,18 +682,16 @@ class SRv6ManagerLinux():
             for behavior in request.behaviors:
                 if operation == 'del':
                     res = self.handle_srv6_behavior_del_request(behavior)
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                    return res
                 if operation == 'get':
                     res = self.handle_srv6_behavior_get_request(behavior)
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                    return res
                 # Pass the request to the right handler
                 res = self.dispatch_srv6_behavior(operation, behavior)
                 if res != commons_pb2.STATUS_SUCCESS:
-                    return srv6_manager_pb2.SRv6ManagerReply(status=res)
+                    return res
             # and create the response
             LOGGER.debug('Send response: OK')
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_SUCCESS)
+            return commons_pb2.STATUS_SUCCESS
         except NetlinkError as err:
-            return srv6_manager_pb2.SRv6ManagerReply(
-                status=parse_netlink_error(err))
+            return parse_netlink_error(err)
