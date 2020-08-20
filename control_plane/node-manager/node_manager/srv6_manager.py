@@ -2,7 +2,7 @@
 
 ##########################################################################
 # Copyright (C) 2020 Carmine Scarpitta
-# (Consortium GARR and University of Rome "Tor Vergata")
+# (Consortium GARR and University of Rome 'Tor Vergata')
 # www.garr.it - www.uniroma2.it/netgroup
 #
 #
@@ -13,7 +13,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
+# distributed under the License is distributed on an 'AS IS' BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -23,7 +23,9 @@
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-"""This module provides an implementation of a SRv6 Manager"""
+'''
+This module provides an implementation of a SRv6 Manager
+'''
 
 
 # General imports
@@ -42,15 +44,12 @@ import grpc
 import commons_pb2
 import srv6_manager_pb2
 import srv6_manager_pb2_grpc
-# Node manager dependencies
+# Node Manager dependencies
 from node_manager.utils import get_address_family
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
 from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
 # Import constants file
 from node_manager.constants import FWD_ENGINE
-
-# Load environment variables from .env file
-# load_dotenv()
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -59,21 +58,17 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Global variables definition
 #
 #
-# Netlink error codes
-NETLINK_ERROR_NO_SUCH_PROCESS = 3
-NETLINK_ERROR_FILE_EXISTS = 17
-NETLINK_ERROR_NO_SUCH_DEVICE = 19
-NETLINK_ERROR_OPERATION_NOT_SUPPORTED = 95
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 LOGGER = logging.getLogger(__name__)
 #
-# Default parameters for SRv6 manager
+# Default parameters for SRv6 Manager
 #
 # Server ip and port
 DEFAULT_GRPC_IP = '::'
 DEFAULT_GRPC_PORT = 12345
 # Debug option
-SERVER_DEBUG = False
+DEFAULT_DEBUG = False
 # Secure option
 DEFAULT_SECURE = False
 # Server certificate
@@ -83,85 +78,101 @@ DEFAULT_KEY = 'key_server.pem'
 
 
 class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
-    """gRPC request handler"""
+    '''
+    gRPC request handler
+    '''
 
     def __init__(self):
-        # SRv6 Manager for Linux Forwarding Engine
-        self.srv6_mgr_linux = SRv6ManagerLinux()
-        # SRv6 Manager for VPP Forwarding Engine
-        # self.srv6_mgr_vpp = None TODO remove
-        self.srv6_mgr_vpp = SRv6ManagerVPP()      # TODO
+        # Init SRv6 Manager for Linux Forwarding Engine
+        # It allows the SDN Controller to control the Linux Forwarding Engine
+        srv6_mgr_linux = SRv6ManagerLinux()
+        # Init SRv6 Manager for VPP Forwarding Engine
+        # It allows the SDN Controller to control the VPP Forwarding Engine
+        srv6_mgr_vpp = SRv6ManagerVPP()
+        # Store the forwarding engines
+        self.fwd_engine = {
+            'Linux': srv6_mgr_linux,
+            'VPP': srv6_mgr_vpp
+        }
 
     def handle_srv6_path_request(self, operation, request, context):
+        '''
+        Handler for SRv6 paths.
+        '''
         # pylint: disable=unused-argument
-        """Handler for SRv6 paths"""
-
+        #
+        # Process request
         LOGGER.debug('config received:\n%s', request)
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine == FWD_ENGINE['Linux']:
-            # Linux forwarding engine
-            return self.srv6_mgr_linux.handle_srv6_path_request(operation,
-                                                                request,
-                                                                context)
-        if fwd_engine == FWD_ENGINE['VPP']:
-            # VPP forwarding engine
-            # TODO gestire caso VPP non abilitato o non disponibile
-            return self.srv6_mgr_vpp.handle_srv6_path_request(
-                operation, request, context)
-        # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
-            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
-
-    def handle_srv6_policy_request(self, operation, request, context):
-        # pylint: disable=unused-argument
-        """Handler for SRv6 policies"""
-
-        LOGGER.debug('config received:\n%s', request)
-        # Extract forwarding engine
-        fwd_engine = request.fwd_engine
-        # Perform operation
-        if fwd_engine == FWD_ENGINE['Linux']:
-            # Linux forwarding engine does not support SRv6 policy
+        if fwd_engine not in FWD_ENGINE or \
+                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+            # Unknown forwarding engine
+            LOGGER.error('Unknown Forwarding Engine.'
+                         'Make sure that it is enabled in the configuration.')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
-        if fwd_engine == FWD_ENGINE['VPP']:
-            # VPP forwarding engine
-            # TODO gestire caso VPP non abilitato o non disponibile
-            return self.srv6_mgr_vpp.handle_srv6_policy_request(
-                operation, request, context)
-        # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
-            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
-
-    def handle_srv6_behavior_request(self, operation, request, context):
-        # pylint: disable=unused-argument
-        """Handler for SRv6 behaviors"""
-
-        LOGGER.debug('config received:\n%s', request)
-        # Extract forwarding engine
-        fwd_engine = request.fwd_engine
-        # Perform operation
-        if fwd_engine == FWD_ENGINE['Linux']:
-            # Linux forwarding engine
-            return self.srv6_mgr_linux.handle_srv6_behavior_request(operation,
+                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
+        # Convert numeric Forwarding Engine to its textual description
+        fwd_engine = FWD_ENGINE[fwd_engine]
+        # Dispatch the request to the right Forwarding Engine handler
+        return self.fwd_engine[fwd_engine].handle_srv6_path_request(operation,
                                                                     request,
                                                                     context)
-        if fwd_engine == FWD_ENGINE['VPP']:
-            # VPP forwarding engine
-            # TODO gestire caso VPP non abilitato o non disponibile
-            return self.srv6_mgr_vpp.handle_srv6_behavior_request(operation,
-                                                                  request,
-                                                                  context)
-        # Unknown forwarding engine
-        return srv6_manager_pb2.SRv6ManagerReply(status=commons_pb2.StatusCode.Value(
-            'STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
+
+    def handle_srv6_policy_request(self, operation, request, context):
+        '''
+        Handler for SRv6 policies
+        '''
+        # pylint: disable=unused-argument
+        #
+        # Process request
+        LOGGER.debug('config received:\n%s', request)
+        # Extract forwarding engine
+        fwd_engine = request.fwd_engine
+        # Perform operation
+        if fwd_engine not in FWD_ENGINE or \
+                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+            # Unknown forwarding engine
+            LOGGER.error('Unknown Forwarding Engine.'
+                         'Make sure that it is enabled in the configuration.')
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
+        # Convert numeric Forwarding Engine to its textual description
+        fwd_engine = FWD_ENGINE[fwd_engine]
+        # Dispatch the request to the right Forwarding Engine handler
+        return self.fwd_engine[fwd_engine].handle_srv6_policy_request(
+            operation, request, context)
+
+    def handle_srv6_behavior_request(self, operation, request, context):
+        '''
+        Handler for SRv6 behaviors
+        '''
+        # pylint: disable=unused-argument
+        #
+        # Process request
+        LOGGER.debug('config received:\n%s', request)
+        # Extract forwarding engine
+        fwd_engine = request.fwd_engine
+        # Perform operation
+        if fwd_engine not in FWD_ENGINE or \
+                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+            # Unknown forwarding engine
+            LOGGER.error('Unknown Forwarding Engine.'
+                         'Make sure that it is enabled in the configuration.')
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
+        # Convert numeric Forwarding Engine to its textual description
+        fwd_engine = FWD_ENGINE[fwd_engine]
+        # Dispatch the request to the right Forwarding Engine handler
+        return self.fwd_engine[fwd_engine].handle_srv6_behavior_request(
+            operation, request, context)
 
     def execute(self, operation, request, context):
-        """This function dispatch the gRPC requests based
-        on the entity carried in them"""
-
+        '''
+        This function dispatch the gRPC requests based
+        on the entity carried in them
+        '''
         # Handle operation
         # The operation to be executed depends on
         # the entity carried by the request message
@@ -183,30 +194,38 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return res
 
     def Create(self, request, context):
+        '''
+        RPC used to create a SRv6 entity
+        '''
         # pylint: disable=invalid-name
-        """RPC used to create a SRv6 entity"""
-
+        #
         # Handle Create operation
         return self.execute('add', request, context)
 
     def Get(self, request, context):
+        '''
+        RPC used to get a SRv6 entity
+        '''
         # pylint: disable=invalid-name
-        """RPC used to get a SRv6 entity"""
-
+        #
         # Handle Create operation
         return self.execute('get', request, context)
 
     def Update(self, request, context):
+        '''
+        RPC used to change a SRv6 entity
+        '''
         # pylint: disable=invalid-name
-        """RPC used to change a SRv6 entity"""
-
+        #
         # Handle Remove operation
         return self.execute('change', request, context)
 
     def Remove(self, request, context):
+        '''
+        RPC used to remove a SRv6 entity
+        '''
         # pylint: disable=invalid-name
-        """RPC used to remove a SRv6 entity"""
-
+        #
         # Handle Remove operation
         return self.execute('del', request, context)
 
@@ -217,8 +236,9 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  secure=DEFAULT_SECURE,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
-    """Start a gRPC server"""
-
+    '''
+    Start a gRPC server
+    '''
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
     # Build address depending on the family
@@ -262,16 +282,18 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
 # Check whether we have root permission or not
 # Return True if we have root permission, False otherwise
 def check_root():
-    """ Return True if this program is executed as root,
-    False otherwise"""
-
+    '''
+    Return True if this program is executed as root,
+    False otherwise
+    '''
     return os.getuid() == 0
 
 
 # Parse options
 def parse_arguments():
-    """Command-line arguments parser"""
-
+    '''
+    Command-line arguments parser
+    '''
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -296,7 +318,8 @@ def parse_arguments():
         action='store', default=DEFAULT_KEY, help='Server key file'
     )
     parser.add_argument(
-        '-d', '--debug', action='store_true', help='Activate debug logs'
+        '-d', '--debug', action='store_true', help='Activate debug logs',
+        default=DEFAULT_DEBUG
     )
     # Parse input parameters
     args = parser.parse_args()
@@ -305,8 +328,10 @@ def parse_arguments():
 
 
 def __main():
-    """Entry point for this script"""
-
+    '''
+    Entry point for this script
+    '''
+    # Parse the arguments
     args = parse_arguments()
     # Setup properly the secure mode
     secure = args.secure
