@@ -25,7 +25,8 @@
 
 
 '''
-ArangoDB utilities.
+This module provides several utilities that allow the Controller to interact
+with ArangoDB.
 '''
 
 # General imports
@@ -33,6 +34,7 @@ import ipaddress
 import logging
 import time
 
+# pyaml dependencies
 from pyaml import yaml
 
 # Import topology extraction utility functions
