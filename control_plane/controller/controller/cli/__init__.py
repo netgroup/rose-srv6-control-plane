@@ -18,7 +18,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Implementation of a CLI for the SRv6 Controller
+# Implementation of a CLI for the SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
+
+'''
+This package provides an implementation of a CLI for the SDN Controller.
+'''
