@@ -120,7 +120,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def handle_srv6_policy_request(self, operation, request, context):
         '''
-        Handler for SRv6 policies
+        Handler for SRv6 policies.
         '''
         # pylint: disable=unused-argument
         #
@@ -141,7 +141,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def handle_srv6_behavior_request(self, operation, request, context):
         '''
-        Handler for SRv6 behaviors
+        Handler for SRv6 behaviors.
         '''
         # pylint: disable=unused-argument
         #
@@ -162,32 +162,42 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def execute(self, operation, request, context):
         '''
-        This function dispatch the gRPC requests based
-        on the entity carried in them
+        This function dispatch the gRPC requests based on the entity carried
+        in them.
         '''
         # Handle operation
-        # The operation to be executed depends on
-        # the entity carried by the request message
+        #
+        # The operations to be executed depends on the entity carried by the
+        # request message
         res = srv6_manager_pb2.SRv6ManagerReply(
             status=commons_pb2.STATUS_SUCCESS)
         if request.HasField('srv6_path_request'):
+            # The message contains at least one SRv6 Path request, so we pass
+            # the request to the SRv6 Path handler
             res = self.handle_srv6_path_request(
                 operation, request.srv6_path_request, context)
             if res.status != commons_pb2.STATUS_SUCCESS:
+                # An error occurred
                 return res
         if request.HasField('srv6_policy_request'):
+            # The message contains at least one SRv6 Path request, so we pass
+            # the request to the SRv6 Policy handler
             res = self.handle_srv6_policy_request(
                 operation, request.srv6_policy_request, context)
             if res.status != commons_pb2.STATUS_SUCCESS:
+                # An error occurred
                 return res
         if request.HasField('srv6_behavior_request'):
+            # The message contains at least one SRv6 Path request, so we pass
+            # the request to the SRv6 Behavior handler
             res = self.handle_srv6_behavior_request(
                 operation, request.srv6_behavior_request, context)
+        # Return the result
         return res
 
     def Create(self, request, context):
         '''
-        RPC used to create a SRv6 entity
+        RPC used to create a SRv6 entity.
         '''
         # pylint: disable=invalid-name
         #
@@ -196,7 +206,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def Get(self, request, context):
         '''
-        RPC used to get a SRv6 entity
+        RPC used to get a SRv6 entity.
         '''
         # pylint: disable=invalid-name
         #
@@ -205,7 +215,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def Update(self, request, context):
         '''
-        RPC used to change a SRv6 entity
+        RPC used to change a SRv6 entity.
         '''
         # pylint: disable=invalid-name
         #
@@ -214,7 +224,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
 
     def Remove(self, request, context):
         '''
-        RPC used to remove a SRv6 entity
+        RPC used to remove a SRv6 entity.
         '''
         # pylint: disable=invalid-name
         #
@@ -229,7 +239,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY):
     '''
-    Start a gRPC server
+    Start a gRPC server.
     '''
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
