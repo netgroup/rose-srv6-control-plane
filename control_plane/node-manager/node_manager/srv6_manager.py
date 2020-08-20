@@ -91,8 +91,8 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         srv6_mgr_vpp = SRv6ManagerVPP()
         # Store the forwarding engines
         self.fwd_engine = {
-            'Linux': srv6_mgr_linux,
-            'VPP': srv6_mgr_vpp
+            FWD_ENGINE['Linux']: srv6_mgr_linux,
+            FWD_ENGINE['VPP']: srv6_mgr_vpp
         }
 
     def handle_srv6_path_request(self, operation, request, context):
@@ -106,16 +106,14 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine not in FWD_ENGINE or \
-                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+        if fwd_engine not in self.fwd_engine:
             # Unknown forwarding engine
-            LOGGER.error('Unknown Forwarding Engine.'
+            LOGGER.error('Unknown Forwarding Engine. '
                          'Make sure that it is enabled in the configuration.')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
-        # Convert numeric Forwarding Engine to its textual description
-        fwd_engine = FWD_ENGINE[fwd_engine]
-        # Dispatch the request to the right Forwarding Engine handler
+                status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
+        # Dispatch the request to the right Forwarding Engine handler and
+        # return the result
         return self.fwd_engine[fwd_engine].handle_srv6_path_request(operation,
                                                                     request,
                                                                     context)
@@ -137,9 +135,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             LOGGER.error('Unknown Forwarding Engine.'
                          'Make sure that it is enabled in the configuration.')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
-        # Convert numeric Forwarding Engine to its textual description
-        fwd_engine = FWD_ENGINE[fwd_engine]
+                status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_policy_request(
             operation, request, context)
@@ -161,9 +157,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
             LOGGER.error('Unknown Forwarding Engine.'
                          'Make sure that it is enabled in the configuration.')
             return srv6_manager_pb2.SRv6ManagerReply(
-                status=commons_pb2.StatusCode.Value('STATUS_INTERNAL_ERROR'))  # TODO creare un errore specifico
-        # Convert numeric Forwarding Engine to its textual description
-        fwd_engine = FWD_ENGINE[fwd_engine]
+                status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_behavior_request(
             operation, request, context)
