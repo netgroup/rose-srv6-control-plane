@@ -129,8 +129,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine not in FWD_ENGINE or \
-                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+        if fwd_engine not in self.fwd_engine:
             # Unknown forwarding engine
             LOGGER.error('Unknown Forwarding Engine.'
                          'Make sure that it is enabled in the configuration.')
@@ -151,8 +150,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Extract forwarding engine
         fwd_engine = request.fwd_engine
         # Perform operation
-        if fwd_engine not in FWD_ENGINE or \
-                FWD_ENGINE[fwd_engine] not in self.fwd_engine:
+        if fwd_engine not in self.fwd_engine:
             # Unknown forwarding engine
             LOGGER.error('Unknown Forwarding Engine.'
                          'Make sure that it is enabled in the configuration.')
