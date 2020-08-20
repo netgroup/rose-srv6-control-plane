@@ -748,6 +748,10 @@ def __get_measurement_results(sender_channel, reflector_channel,
     :type send_refl_sidlist: list
     :param refl_send_sidlist: The SID list used for reflector->sender path
     :type refl_send_sidlist: list
+    :raises controller.utils.NoMeasurementDataAvailableError: If an error
+                                                              occurred while
+                                                              retrieving the
+                                                              results.
     '''
     # pylint: disable=unused-argument
     #
@@ -765,23 +769,24 @@ def __get_measurement_results(sender_channel, reflector_channel,
         failure_msg='Error in retrieve_experiment_results_sender()'
     )
     # Collect the results
-    res = None
-    if sender_res.status == commons_pb2.STATUS_SUCCESS:
-        res = list()
-        for data in sender_res.measurement_data:
-            res.append({
-                'measure_id': data.meas_id,
-                'interval': data.interval,
-                'timestamp': data.timestamp,
-                'fw_color': data.fwColor,
-                'rv_color': data.rvColor,
-                'sender_seq_num': data.ssSeqNum,
-                'reflector_seq_num': data.rfSeqNum,
-                'sender_tx_counter': data.ssTxCounter,
-                'sender_rx_counter': data.ssRxCounter,
-                'reflector_tx_counter': data.rfTxCounter,
-                'reflector_rx_counter': data.rfRxCounter,
-            })
+    if sender_res.status != commons_pb2.STATUS_SUCCESS:
+        logger.warning('No measurement data available')
+        raise utils.NoMeasurementDataAvailableError
+    res = list()
+    for data in sender_res.measurement_data:
+        res.append({
+            'measure_id': data.meas_id,
+            'interval': data.interval,
+            'timestamp': data.timestamp,
+            'fw_color': data.fwColor,
+            'rv_color': data.rvColor,
+            'sender_seq_num': data.ssSeqNum,
+            'reflector_seq_num': data.rfSeqNum,
+            'sender_tx_counter': data.ssTxCounter,
+            'sender_rx_counter': data.ssRxCounter,
+            'reflector_tx_counter': data.rfTxCounter,
+            'reflector_rx_counter': data.rfRxCounter,
+        })
     # Return the results
     return res
 
@@ -802,7 +807,6 @@ def __stop_measurement(sender_channel, reflector_channel,
                               reflector->sender
     :type refl_send_sidlist: list
     '''
-    #
     print("\n************** Stop Measurement **************\n")
     # Stop the experiment on the sender
     sender_res = stop_experiment_sender(
@@ -909,7 +913,6 @@ def reset_configuration(sender_channel, reflector_channel):
     :param number_of_color: The number of the color
     :type number_of_color: int
     '''
-    #
     # Reset configuration on the sender
     res = reset_node_configuration(
         channel=sender_channel
@@ -1066,6 +1069,10 @@ def get_experiment_results(sender_channel, reflector_channel,
     :type refl_send_sidlist: list
     :param kafka_servers: IP:port of Kafka server
     :type kafka_servers: str
+    :raises controller.utils.NoMeasurementDataAvailableError: If an error
+                                                              occurred while
+                                                              retrieving the
+                                                              results.
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
@@ -1076,9 +1083,6 @@ def get_experiment_results(sender_channel, reflector_channel,
         send_refl_sidlist=send_refl_sidlist,
         refl_send_sidlist=refl_send_sidlist
     )
-    if results is None:
-        print('No measurement data available')
-        return None
     # Publish results to Kafka
     if ENABLE_KAFKA_INTEGRATION:
         for res in results:
@@ -1093,7 +1097,7 @@ def get_experiment_results(sender_channel, reflector_channel,
             sender_rx_counter = res['sender_rx_counter']
             reflector_tx_counter = res['reflector_tx_counter']
             reflector_rx_counter = res['reflector_rx_counter']
-            # Publish data to Kafka
+            # Publish data to Kafka topic "TOPIC_TWAMP"
             publish_to_kafka(
                 bootstrap_servers=kafka_servers,
                 topic=TOPIC_TWAMP,
@@ -1176,106 +1180,110 @@ def stop_experiment(sender_channel, reflector_channel, send_refl_dest,
     return commons_pb2.STATUS_SUCCESS
 
 
-if ENABLE_GRPC_SERVER:
-    class _SRv6PMService(
-            srv6pmServiceController_pb2_grpc.SRv6PMControllerServicer):
+class _SRv6PMService(
+        srv6pmServiceController_pb2_grpc.SRv6PMControllerServicer):
+    '''
+    Private class implementing methods exposed by the gRPC server
+    '''
+
+    def __init__(self, kafka_servers=KAFKA_SERVERS):
+        self.kafka_servers = kafka_servers
+
+    def SendMeasurementData(self, request, context):
         '''
-        Private class implementing methods exposed by the gRPC server
+        This RPC is invoked by a node to send measurement data to the
+        controller.
         '''
+        # pylint: disable=too-many-locals
+        #
+        # Request received
+        logger.debug('Measurement data received: %s', request)
+        # Extract data from the request
+        for data in request.measurement_data:
+            measure_id = data.meas_id
+            interval = data.interval
+            timestamp = data.timestamp
+            fw_color = data.fwColor
+            rv_color = data.rvColor
+            sender_seq_num = data.ssSeqNum
+            reflector_seq_num = data.rfSeqNum
+            sender_tx_counter = data.ssTxCounter
+            sender_rx_counter = data.ssRxCounter
+            reflector_tx_counter = data.rfTxCounter
+            reflector_rx_counter = data.rfRxCounter
+            # Publish data to Kafka topic "TOPIC_TWAMP"
+            if ENABLE_KAFKA_INTEGRATION:
+                publish_to_kafka(
+                    bootstrap_servers=self.kafka_servers,
+                    topic=TOPIC_TWAMP,
+                    measure_id=measure_id,
+                    interval=interval,
+                    timestamp=timestamp,
+                    fw_color=fw_color,
+                    rv_color=rv_color,
+                    sender_seq_num=sender_seq_num,
+                    reflector_seq_num=reflector_seq_num,
+                    sender_tx_counter=sender_tx_counter,
+                    sender_rx_counter=sender_rx_counter,
+                    reflector_tx_counter=reflector_tx_counter,
+                    reflector_rx_counter=reflector_rx_counter
+                )
+        # Done, send "OK" to the node
+        status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
+        return srv6pmServiceController_pb2.SendMeasurementDataResponse(
+            status=status)
 
-        def __init__(self, kafka_servers=KAFKA_SERVERS):
-            self.kafka_servers = kafka_servers
-
-        def SendMeasurementData(self, request, context):
-            '''
-            RPC used to send measurement data to the controller
-            '''
-            # pylint: disable=too-many-locals
-            #
-            logger.debug('Measurement data received: %s', request)
-            # Extract data from the request
-            for data in request.measurement_data:
-                measure_id = data.meas_id
-                interval = data.interval
-                timestamp = data.timestamp
-                fw_color = data.fwColor
-                rv_color = data.rvColor
-                sender_seq_num = data.ssSeqNum
-                reflector_seq_num = data.rfSeqNum
-                sender_tx_counter = data.ssTxCounter
-                sender_rx_counter = data.ssRxCounter
-                reflector_tx_counter = data.rfTxCounter
-                reflector_rx_counter = data.rfRxCounter
-                # Publish data to Kafka
-                if ENABLE_KAFKA_INTEGRATION:
-                    publish_to_kafka(
-                        bootstrap_servers=self.kafka_servers,
-                        topic=TOPIC_TWAMP,
-                        measure_id=measure_id,
-                        interval=interval,
-                        timestamp=timestamp,
-                        fw_color=fw_color,
-                        rv_color=rv_color,
-                        sender_seq_num=sender_seq_num,
-                        reflector_seq_num=reflector_seq_num,
-                        sender_tx_counter=sender_tx_counter,
-                        sender_rx_counter=sender_rx_counter,
-                        reflector_tx_counter=reflector_tx_counter,
-                        reflector_rx_counter=reflector_rx_counter
-                    )
-            status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
-            return srv6pmServiceController_pb2.SendMeasurementDataResponse(
-                status=status)
-
-        def SendIperfData(self, request, context):
-            '''
-            RPC used to send iperf data to the controller
-            '''
-            #
-            # pylint: disable=too-many-locals
-            #
-            logger.debug('Iperf data received: %s', request)
-            # Extract data from the request
-            for data in request.iperf_data:
-                # From client/server
-                _from = data._from      # pylint: disable=protected-access
-                # Measure ID
-                measure_id = data.measure_id
-                # Generator ID
-                generator_id = data.generator_id
-                # Interval
-                interval = data.interval.val
-                # Transfer
-                transfer = data.transfer.val
-                transfer_dim = data.transfer.dim
-                # Bitrate
-                bitrate = data.bitrate.val
-                bitrate_dim = data.bitrate.dim
-                # Retr
-                retr = data.retr.val
-                # Cwnd
-                cwnd = data.cwnd.val
-                cwnd_dim = data.cwnd.dim
-                # Publish data to Kafka
-                if ENABLE_KAFKA_INTEGRATION:
-                    publish_iperf_data_to_kafka(
-                        bootstrap_servers=self.kafka_servers,
-                        topic=TOPIC_IPERF,
-                        _from=_from,
-                        measure_id=measure_id,
-                        generator_id=generator_id,
-                        interval=interval,
-                        transfer=transfer,
-                        transfer_dim=transfer_dim,
-                        bitrate=bitrate,
-                        bitrate_dim=bitrate_dim,
-                        retr=retr,
-                        cwnd=cwnd,
-                        cwnd_dim=cwnd_dim,
-                    )
-            status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
-            return srv6pmServiceController_pb2.SendIperfDataResponse(
-                status=status)
+    def SendIperfData(self, request, context):
+        '''
+        This RPC is invoked by a node to send iperf data to the
+        controller.
+        '''
+        # pylint: disable=too-many-locals
+        #
+        # Request received
+        logger.debug('Iperf data received: %s', request)
+        # Extract data from the request
+        for data in request.iperf_data:
+            # From client/server
+            _from = data._from      # pylint: disable=protected-access
+            # Measure ID
+            measure_id = data.measure_id
+            # Generator ID
+            generator_id = data.generator_id
+            # Interval
+            interval = data.interval.val
+            # Transfer
+            transfer = data.transfer.val
+            transfer_dim = data.transfer.dim
+            # Bitrate
+            bitrate = data.bitrate.val
+            bitrate_dim = data.bitrate.dim
+            # Retr
+            retr = data.retr.val
+            # Cwnd
+            cwnd = data.cwnd.val
+            cwnd_dim = data.cwnd.dim
+            # Publish data to Kafka topic "TOPIC_IPERF"
+            if ENABLE_KAFKA_INTEGRATION:
+                publish_iperf_data_to_kafka(
+                    bootstrap_servers=self.kafka_servers,
+                    topic=TOPIC_IPERF,
+                    _from=_from,
+                    measure_id=measure_id,
+                    generator_id=generator_id,
+                    interval=interval,
+                    transfer=transfer,
+                    transfer_dim=transfer_dim,
+                    bitrate=bitrate,
+                    bitrate_dim=bitrate_dim,
+                    retr=retr,
+                    cwnd=cwnd,
+                    cwnd_dim=cwnd_dim,
+                )
+        # Done, send "OK" to the node
+        status = commons_pb2.StatusCode.Value('STATUS_SUCCESS')
+        return srv6pmServiceController_pb2.SendIperfDataResponse(
+            status=status)
 
 
 def __start_grpc_server(grpc_ip=DEFAULT_GRPC_SERVER_IP,
