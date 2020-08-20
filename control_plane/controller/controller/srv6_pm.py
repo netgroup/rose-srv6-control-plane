@@ -18,21 +18,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Control-Plane functionalities used for SRv6 PM
+# Control-Plane functionalities used for SRv6 Performance Monitoring
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 
 '''
-This module implements control-plane functionalities for SRv6 PM
+This module implements control-plane functionalities for SRv6 Performance
+Monitoring.
 '''
 
 # pylint: disable=too-many-lines
 
+# General imports
 import json
 import logging
-# General imports
 import os
 import sys
 import time
@@ -52,47 +53,46 @@ import srv6pmServiceController_pb2_grpc
 # Controller dependencies
 from controller import srv6_utils, utils
 
-# Configuration parameters
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
+
+# Read configuration parameters from the environment variables
 #
-# Kafka support
+# Kafka support (default: disabled)
 ENABLE_KAFKA_INTEGRATION = os.getenv('ENABLE_KAFKA_INTEGRATION', 'false')
 ENABLE_KAFKA_INTEGRATION = ENABLE_KAFKA_INTEGRATION.lower() == 'true'
-# gRPC sserver
+# gRPC server (default: disabled)
+# In the standard operation mode, the SDN Controller acts as gRPC client
+# sending requests to the gRPC servers executed on the nodes. In some project,
+# we need a gRPC server executed on the Controller and ready to accepts
+# commands sent by the nodes
 ENABLE_GRPC_SERVER = os.getenv('ENABLE_GRPC_SERVER', 'false')
 ENABLE_GRPC_SERVER = ENABLE_GRPC_SERVER.lower() == 'true'
-# Kafka server
-KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', 'kafka:9092')
+# Comma-separated Kafka servers (default: "kafka:9092")
+KAFKA_SERVERS = os.getenv('KAFKA_SERVERS', 'kafka:9092').split(',')
 
 # Kafka depedencies
-try:
-    if ENABLE_KAFKA_INTEGRATION:
+if ENABLE_KAFKA_INTEGRATION:
+    try:
         from kafka import KafkaProducer
         from kafka.errors import KafkaError
-except ImportError:
-    print('ENABLE_KAFKA_INTEGRATION is set in the configuration.')
-    print('kafka-python is required to run')
-    print('kafka-python not found.')
-    sys.exit(-2)
+    except ImportError:
+        logger.fatal('ENABLE_KAFKA_INTEGRATION is set in the configuration.')
+        logger.fatal('kafka-python is required to run')
+        logger.fatal('kafka-python not found.')
+        sys.exit(-2)
 
 
 # Global variables definition
 #
 #
-# Logger reference
-logging.basicConfig(level=logging.NOTSET)
-logger = logging.getLogger(__name__)
 # Default parameters for SRv6 controller
 #
 # Default IP address of the gRPC server
 DEFAULT_GRPC_SERVER_IP = '::'
 # Default port of the gRPC server
 DEFAULT_GRPC_SERVER_PORT = 12345
-# Default port of the gRPC client
-DEFAULT_GRPC_CLIENT_PORT = 12345
-# Define whether to use SSL or not for the gRPC client
-DEFAULT_CLIENT_SECURE = False
-# SSL certificate of the root CA
-DEFAULT_CLIENT_CERTIFICATE = 'client_cert.pem'
 # Define whether to use SSL or not for the gRPC server
 DEFAULT_SERVER_SECURE = False
 # SSL certificate of the gRPC server
@@ -100,14 +100,10 @@ DEFAULT_SERVER_CERTIFICATE = 'server_cert.pem'
 # SSL key of the gRPC server
 DEFAULT_SERVER_KEY = 'server_cert.pem'
 
-# Topic for TWAMP data
+# Kafka topic for TWAMP data
 TOPIC_TWAMP = 'twamp'
-# Topic for iperf data
+# Kafka topic for iperf data
 TOPIC_IPERF = 'iperf'
-
-# Kafka servers
-if KAFKA_SERVERS is not None:
-    KAFKA_SERVERS = KAFKA_SERVERS.split(',')
 
 
 def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
@@ -115,11 +111,50 @@ def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
                      reflector_seq_num, sender_tx_counter, sender_rx_counter,
                      reflector_tx_counter, reflector_rx_counter):
     '''
-    Publish the measurement data to Kafka
+    Publish the measurement data to a Kafka topic.
+
+    :param bootstrap_servers: Kafka servers ("host[:port]" string (or list of
+                              "host[:port]" strings).
+    :type bootstrap_servers: str or list
+    :param topic: Kafka topic.
+    :type topic: str
+    :param measure_id: An identifier for the measure.
+    :type measure_id: int
+    :param interval: The duration of the interval.
+    :type interval: int
+    :param timestamp: The timestamp of the measurement.
+    :type timestamp: str
+    :param fw_color: Color for the forward path.
+    :type fw_color: int
+    :param rv_color: Color for the reverse path.
+    :type rv_color: int
+    :param sender_seq_num: Sequence number of the sender (for the forward
+                           path).
+    :type sender_seq_num: int
+    :param reflector_seq_num: Sequence number of the reflector (for the
+                              reverse path).
+    :type reflector_seq_num: int
+    :param sender_tx_counter: Transmission counter of the sender (for the
+                              forward path).
+    :type sender_tx_counter: int
+    :param sender_rx_counter: Reception counter of the sender (for the
+                              reverse path)
+    :type sender_rx_counter: int
+    :param reflector_tx_counter: Transmission counter of the reflector (for the
+                                 reverse path).
+    :type reflector_tx_counter: int
+    :param reflector_rx_counter: Reception counter of the reflector (for the
+                                 forward path).
+    :type reflector_rx_counter: int
+    :return: Resolves to RecordMetadata.
+    :rtype: kafka.FutureRecordMetadata
+    :raises KafkaTimeoutError: If unable to fetch topic metadata, or unable to
+                               obtain memory buffer prior to configured
+                               max_block_ms.
     '''
-    #
     # pylint: disable=too-many-arguments, too-many-locals
     #
+    # Init producer and result
     producer = None
     result = None
     try:
@@ -132,14 +167,18 @@ def publish_to_kafka(bootstrap_servers, topic, measure_id, interval,
         # Publish measurement data to the provided topic
         result = producer.send(
             topic=topic,
-            value={'measure_id': measure_id, 'interval': interval,
-                   'timestamp': timestamp, 'fw_color': fw_color,
-                   'rv_color': rv_color, 'sender_seq_num': sender_seq_num,
-                   'reflector_seq_num': reflector_seq_num,
-                   'sender_tx_counter': sender_tx_counter,
-                   'sender_rx_counter': sender_rx_counter,
-                   'reflector_tx_counter': reflector_tx_counter,
-                   'reflector_rx_counter': reflector_rx_counter}
+            value={
+                'measure_id': measure_id,
+                'interval': interval,
+                'timestamp': timestamp,
+                'fw_color': fw_color,
+                'rv_color': rv_color,
+                'sender_seq_num': sender_seq_num,
+                'reflector_seq_num': reflector_seq_num,
+                'sender_tx_counter': sender_tx_counter,
+                'sender_rx_counter': sender_rx_counter,
+                'reflector_tx_counter': reflector_tx_counter,
+                'reflector_rx_counter': reflector_rx_counter}
         )
     except KafkaError as err:
         logger.error('Cannot publish data to Kafka: %s', err)
@@ -156,11 +195,45 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
                                 transfer_dim, bitrate, bitrate_dim,
                                 retr, cwnd, cwnd_dim):
     '''
-    Publish IPERF data to Kafka
+    Publish IPERF data to a Kafka topic.
+
+    :param bootstrap_servers: Kafka servers ("host[:port]" string (or list of
+                              "host[:port]" strings).
+    :type bootstrap_servers: str or list
+    :param topic: Kafka topic.
+    :type topic: str
+    :param _from: A string representing the originator of the iperf data
+                  (e.g "client")
+    :type _from: str
+    :param measure_id: An identifier for the measure.
+    :type measure_id: int
+    :param generator_id: Generator ID.
+    :type generator_id: int
+    :param interval: The duration of the interval.
+    :type interval: int
+    :param transfer: Transferred data (value).
+    :type transfer: int
+    :param transfer_dim: Transferred data (unit of measurement).
+    :type transfer_dim: str
+    :param bitrate: Bitrate (value).
+    :type bitrate: int
+    :param bitrate_dim: Bitrate (unit of measurement).
+    :type bitrate_dim: str
+    :param retr: Number of TCP segments retransmitted.
+    :type retr: int
+    :param cwnd: Congestion window (value)
+    :type cwnd: int
+    :param cwnd_dim: Congestion window (unit of measurement).
+    :type cwnd_dim: str
+    :return: Resolves to RecordMetadata.
+    :rtype: kafka.FutureRecordMetadata
+    :raises KafkaTimeoutError: If unable to fetch topic metadata, or unable to
+                               obtain memory buffer prior to configured
+                               max_block_ms.
     '''
-    #
     # pylint: disable=too-many-arguments
     #
+    # Init producer and result
     producer = None
     result = None
     try:
@@ -183,8 +256,7 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
                    'bitrate_dim': bitrate_dim,
                    'retr': retr,
                    'cwnd': cwnd,
-                   'cwnd_dim': cwnd_dim
-                   }
+                   'cwnd_dim': cwnd_dim}
         )
     except KafkaError as err:
         logger.error('Cannot publish data to Kafka: %s', err)
@@ -197,74 +269,102 @@ def publish_iperf_data_to_kafka(bootstrap_servers, topic, _from, measure_id,
 
 
 def start_experiment_sender(channel, sidlist, rev_sidlist,
-                            # in_interfaces, out_interfaces,
                             measurement_protocol,
                             measurement_type, authentication_mode,
                             authentication_key, timestamp_format,
                             delay_measurement_mode, padding_mbz,
                             loss_measurement_mode):
     '''
-    RPC used to start an experiment on the sender
+    RPC used to start an experiment on the sender.
+
+    :param channel: A gRPC channel to the sender.
+    :type channel: class: `grpc._channel.Channel`
+    :param sidlist: The SID list of the path to be tested with the experiment.
+    :type sidlist: list
+    :param rev_sidlist: The SID list of the reverse path to be tested with the
+                        experiment.
+    :type rev_sidlist: list
+    :param measurement_protocol: The measurement protocol (i.e. TWAMP or
+                                 STAMP)
+    :type measurement_protocol: str
+    :param measurement_type: The measurement type (i.e. delay or loss)
+    :type measurement_type: str
+    :param authentication_mode: The authentication mode (i.e. HMAC_SHA_256)
+    :type authentication_mode: str
+    :param authentication_key: The authentication key
+    :type authentication_key: str
+    :param timestamp_format: The Timestamp Format (i.e. PTPv2 or NTP)
+    :type timestamp_format: str
+    :param delay_measurement_mode: Delay measurement mode (i.e. one-way,
+                                   two-way or loopback mode)
+    :type delay_measurement_mode: str
+    :param padding_mbz: The padding size
+    :type padding_mbz: int
+    :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
+                                  or Direct mode)
+    :type loss_measurement_mode: str
     '''
-    #
     # pylint: disable=too-many-arguments, too-many-return-statements
     #
+    # ########################################################################
     # Convert string args to int
     #
     # Measurement Protocol
-    try:
-        if isinstance(measurement_protocol, str):
+    if isinstance(measurement_protocol, str):
+        try:
             measurement_protocol = \
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
-    except ValueError:
-        logger.error('Invalid Measurement protocol: %s', measurement_protocol)
-        return None
+        except ValueError:
+            logger.error('Invalid Measurement protocol: %s',
+                         measurement_protocol)
+            return None
     # Measurement Type
-    try:
-        if isinstance(measurement_type, str):
+    if isinstance(measurement_type, str):
+        try:
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
-    except ValueError:
-        logger.error('Invalid Measurement Type: %s', measurement_type)
-        return None
+        except ValueError:
+            logger.error('Invalid Measurement Type: %s', measurement_type)
+            return None
     # Authentication Mode
-    try:
-        if isinstance(authentication_mode, str):
+    if isinstance(authentication_mode, str):
+        try:
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
-    except ValueError:
-        logger.error('Invalid  Authentication Mode: %s', authentication_mode)
-        return None
+        except ValueError:
+            logger.error('Invalid  Authentication Mode: %s',
+                         authentication_mode)
+            return None
     # Timestamp Format
-    try:
-        if isinstance(timestamp_format, str):
+    if isinstance(timestamp_format, str):
+        try:
             timestamp_format = \
                 srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
-    except ValueError:
-        logger.error('Invalid Timestamp Format: %s', timestamp_format)
-        return None
+        except ValueError:
+            logger.error('Invalid Timestamp Format: %s', timestamp_format)
+            return None
     # Delay Measurement Mode
-    try:
-        if isinstance(delay_measurement_mode, str):
+    if isinstance(delay_measurement_mode, str):
+        try:
             delay_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementDelayMode.Value(
                     delay_measurement_mode)
-    except ValueError:
-        logger.error('Invalid Delay Measurement Mode: %s',
-                     delay_measurement_mode)
-        return None
+        except ValueError:
+            logger.error('Invalid Delay Measurement Mode: %s',
+                         delay_measurement_mode)
+            return None
     # Loss Measurement Mode
-    try:
-        if isinstance(loss_measurement_mode, str):
+    if isinstance(loss_measurement_mode, str):
+        try:
             loss_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
-    except ValueError:
-        logger.error('Invalid Loss Measurement Mode: %s',
-                     loss_measurement_mode)
-        return None
-    #
+        except ValueError:
+            logger.error('Invalid Loss Measurement Mode: %s',
+                         loss_measurement_mode)
+            return None
+    # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request
@@ -273,14 +373,10 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     request.sdlist = '/'.join(sidlist)
     # Set the reverse SID list
     request.sdlistreverse = '/'.join(rev_sidlist)
-    # Set the incoming interfaces
-    # request.in_interfaces.extend(in_interfaces)
-    # # Set the outgoing interfaces
-    # request.out_interfaces.extend(out_interfaces)
-    #
+    # ########################################################################
     # Set the sender options
     #
-    # Set the measureemnt protocol
+    # Set the measurement protocol
     (request.sender_options.measurement_protocol) = \
         measurement_protocol                # pylint: disable=no-member
     # Set the authentication mode
@@ -304,14 +400,19 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     # Set the measurement loss mode
     request.sender_options.measurement_loss_mode = \
         loss_measurement_mode               # pylint: disable=no-member
-    #
+    # ########################################################################
     # Start the experiment on the sender and return the response
     return stub.startExperimentSender(request=request)
 
 
 def stop_experiment_sender(channel, sidlist):
     '''
-    RPC used to stop an experiment on the sender
+    RPC used to stop an experiment on the sender.
+
+    :param channel: A gRPC channel to the sender.
+    :type channel: class: `grpc._channel.Channel`
+    :param sidlist: The SID list of the path under test.
+    :type sidlist: list
     '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
@@ -325,7 +426,12 @@ def stop_experiment_sender(channel, sidlist):
 
 def retrieve_experiment_results_sender(channel, sidlist):
     '''
-    RPC used to get the results of a running experiment
+    RPC used to get the results of a running experiment.
+
+    :param channel: A gRPC channel to the sender.
+    :type channel: class: `grpc._channel.Channel`
+    :param sidlist: The SID list of the path under test.
+    :type sidlist: list
     '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
@@ -341,21 +447,37 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
                            interval_duration, delay_margin,
                            number_of_color, pm_driver):
     '''
-    RPC used to set the configuration on a sender node
+    RPC used to set the configuration on a node (sender or reflector).
+
+    :param channel: A gRPC channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param send_udp_port: UDP port of the sender.
+    :type send_udp_port: int
+    :param send_udp_port: UDP port of the reflector.
+    :type send_udp_port: int
+    :param interval_duration: The duration of the interval.
+    :type interval_duration: int
+    :param delay_margin: The delay margin.
+    :type delay_margin: int
+    :param number_of_color: The number of the color.
+    :type number_of_color: int
+    :param pm_driver: The driver to use for the experiments (i.e. eBPF or
+                      IPSet).
     '''
     #
     # pylint: disable=too-many-arguments
     #
+    # ########################################################################
     # Convert string args to int
     #
     # PM Driver
-    try:
-        if isinstance(pm_driver, str):
+    if isinstance(pm_driver, str):
+        try:
             pm_driver = srv6pmCommons_pb2.PMDriver.Value(pm_driver)
-    except ValueError:
-        logger.error('Invalid PM Driver: %s', pm_driver)
-        return None
-    #
+        except ValueError:
+            logger.error('Invalid PM Driver: %s', pm_driver)
+            return None
+    # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -364,7 +486,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     request.ss_udp_port = int(send_udp_port)
     # Set the destination UDP port of the reflector
     request.refl_udp_port = int(refl_udp_port)
-    #
+    # ########################################################################
     # Set the color options
     #
     # Set the interval duration
@@ -379,13 +501,17 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     #
     # Set driver
     request.pm_driver = pm_driver
+    # ########################################################################
     # Start the experiment on the reflector and return the response
     return stub.setConfiguration(request=request)
 
 
 def reset_node_configuration(channel):
     '''
-    RPC used to clear the configuration on a sender node
+    RPC used to clear the configuration on a node (sender or reflector).
+
+    :param channel: A gRPC channel to the node.
+    :type channel: class: `grpc._channel.Channel`
     '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
@@ -396,53 +522,75 @@ def reset_node_configuration(channel):
 
 
 def start_experiment_reflector(channel, sidlist, rev_sidlist,
-                               # in_interfaces, out_interfaces,
                                measurement_protocol, measurement_type,
                                authentication_mode, authentication_key,
                                loss_measurement_mode):
     '''
-    RPC used to start an experiment on the reflector
+    RPC used to start an experiment on the reflector.
+
+    :param channel: A gRPC channel to the reflector.
+    :type channel: class: `grpc._channel.Channel`
+    :param sidlist: The SID list of the path to be tested with the experiment.
+    :type sidlist: list
+    :param rev_sidlist: The SID list of the reverse path to be tested with the
+                        experiment.
+    :type rev_sidlist: list
+    :param measurement_protocol: The measurement protocol (i.e. TWAMP or
+                                 STAMP)
+    :type measurement_protocol: str
+    :param measurement_type: The measurement type (i.e. delay or loss)
+    :type measurement_type: str
+    :param authentication_mode: The authentication mode (i.e. HMAC_SHA_256)
+    :type authentication_mode: str
+    :param authentication_key: The authentication key
+    :type authentication_key: str
+    :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
+                                  or Direct mode)
+    :type loss_measurement_mode: str
     '''
     # pylint: disable=too-many-arguments
     #
+    # ########################################################################
     # Convert string args to int
     #
     # Measurement Protocol
-    try:
-        if isinstance(measurement_protocol, str):
+    if isinstance(measurement_protocol, str):
+        try:
             measurement_protocol = \
                 srv6pmCommons_pb2.MeasurementProtocol.Value(
                     measurement_protocol)
-    except ValueError:
-        logger.error('Invalid Measurement protocol: %s', measurement_protocol)
-        return None
+        except ValueError:
+            logger.error('Invalid Measurement protocol: %s',
+                         measurement_protocol)
+            return None
     # Measurement Type
-    try:
-        if isinstance(measurement_type, str):
+    if isinstance(measurement_type, str):
+        try:
             measurement_type = \
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
-    except ValueError:
-        logger.error('Invalid Measurement Type: %s', measurement_type)
-        return None
+        except ValueError:
+            logger.error('Invalid Measurement Type: %s', measurement_type)
+            return None
     # Authentication Mode
-    try:
-        if isinstance(authentication_mode, str):
+    if isinstance(authentication_mode, str):
+        try:
             authentication_mode = \
                 srv6pmCommons_pb2.AuthenticationMode.Value(authentication_mode)
-    except ValueError:
-        logger.error('Invalid  Authentication Mode: %s', authentication_mode)
-        return None
+        except ValueError:
+            logger.error('Invalid  Authentication Mode: %s',
+                         authentication_mode)
+            return None
     # Loss Measurement Mode
-    try:
-        if isinstance(loss_measurement_mode, str):
+    if isinstance(loss_measurement_mode, str):
+        try:
             loss_measurement_mode = \
                 srv6pmCommons_pb2.MeasurementLossMode.Value(
                     loss_measurement_mode)
-    except ValueError:
-        logger.error('Invalid Loss Measurement Mode: %s',
-                     loss_measurement_mode)
-        return None
-    #
+        except ValueError:
+            logger.error('Invalid Loss Measurement Mode: %s',
+                         loss_measurement_mode)
+            return None
+    # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
     # Create the request message
@@ -451,11 +599,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     request.sdlist = '/'.join(sidlist)
     # Set the reverse SID list
     request.sdlistreverse = '/'.join(rev_sidlist)
-    # Set the incoming interfaces
-    # request.in_interfaces.extend(in_interfaces)
-    # # Set the outgoing interfaces
-    # request.out_interfaces.extend(out_interfaces)
-    #
+    # ########################################################################
     # Set the reflector options
     #
     # Set the measurement protocol
@@ -473,13 +617,19 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     # Set the measurement loss mode
     request.reflector_options.measurement_loss_mode = \
         loss_measurement_mode                   # pylint: disable=no-member
+    # ########################################################################
     # Start the experiment on the reflector and return the response
     return stub.startExperimentReflector(request=request)
 
 
 def stop_experiment_reflector(channel, sidlist):
     '''
-    RPC used to stop an experiment on the reflector
+    RPC used to stop an experiment on the reflector.
+
+    :param channel: A gRPC channel to the reflector.
+    :type channel: class: `grpc._channel.Channel`
+    :param sidlist: The SID list of the path under test.
+    :type sidlist: list
     '''
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
