@@ -35,6 +35,7 @@ import pprint
 import os
 from ipaddress import IPv6Address
 
+# pyaml dependencies
 from pyaml import yaml
 
 # Proto dependencies
@@ -42,17 +43,23 @@ import commons_pb2
 # Controller dependencies
 from controller import srv6_utils
 from controller import utils
+
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
+
+# Optional imports:
+#     arangodb_driver      - only required to read/write the topology from/to
+#                            a ArangoDB database
 try:
     from controller.db_utils.arangodb import arangodb_driver
 except ImportError:
-    print('ArangoDB modules not installed')
+    logger.warning('ArangoDB modules not installed')
+
 
 # Global variables definition
 #
 #
-# Logger reference
-logging.basicConfig(level=logging.NOTSET)
-logger = logging.getLogger(__name__)
 # Default number of bits for the SID Locator
 DEFAULT_LOCATOR_BITS = 32
 # Default number of bits for the uSID identifier
@@ -700,14 +707,20 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
     Handle a SRv6 Policy using uSIDs
 
     :param operation: The operation to be performed on the uSID policy
-                      (i.e. add, get, change, del)
+                      (i.e. add, get, change, del).
     :type operation: str
     :param nodes_dict: Dict containing the nodes configuration.
     :type nodes_dict: dict
-    :param destination: Destination of the SRv6 route
-    :type destination: str
-    :param nodes: Waypoints of the SRv6 route
-    :type nodes: list
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str
+    :param nodes_lr: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_lr: list
+    :param nodes_rl: Waypoints of the SRv6 route for the right to leftpath.
+    :type nodes_rl: list
     :param device: Device of the SRv6 route. If not provided, the device
                    is selected automatically by the node.
     :type device: str, optional
@@ -717,6 +730,13 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
     :param metric: Metric for the SRv6 route. If not provided, the default
                    metric will be used.
     :type metric: int, optional
+    :param persistency: Define if enable the policy persistency or not.
+                        Persistency requires to enable and configure ArangoDB
+                        (default: True).
+    :type persistency: bool, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string
     :param l_grpc_ip: gRPC IP address of the left node, required if the left
                       node is expressed numerically in the nodes list.
     :type l_grpc_ip: str, optional
@@ -740,14 +760,17 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
     :type decap_sid: str, optional
     :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
     :type locator: str, optional
-    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
     :rtype: int
-    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises NodeNotFoundError: Node name not found in the mapping file.
     :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    :raises InvalidSIDError: SID is wrong for one or more segments
+                                       YAML file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
+    :raises InvalidSIDError: SID is wrong for one or more segments.
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    :raises controller.utils.PolicyNotFoundError: Policy not found.
     '''
     # pylint: disable=too-many-locals, too-many-arguments
     # pylint: disable=too-many-return-statements, too-many-branches
@@ -763,31 +786,31 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
         if operation in ['add']:
             logger.error('"lr_destination" argument is mandatory for %s '
                          'operation', operation)
-            return None
+            raise utils.InvalidArgumentError
     if rl_destination is None:
         if operation in ['add']:
             logger.error('"rl_destination" argument is mandatory for %s '
                          'operation', operation)
-            return None
+            raise utils.InvalidArgumentError
     if nodes_lr is None:
         if operation in ['add']:
             logger.error('"nodes_lr" argument is mandatory for %s '
                          'operation', operation)
-            return None
+            raise utils.InvalidArgumentError
     if nodes_rl is None:
         pass
     if nodes_dict is None:
         if operation in ['add', 'del']:
             logger.error('"nodes_filename" argument is mandatory for %s '
                          'operation', operation)
-            return None
+            raise utils.InvalidArgumentError
     if operation == 'change':
         logger.error('Operation not yet implemented: %s', operation)
-        return None
+        raise utils.InvalidArgumentError
     if operation == 'get':
         if not persistency:
             logger.error('Error in get(): Persistency is disabled')
-            return None
+            raise utils.InvalidArgumentError
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
@@ -812,9 +835,8 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
         print('\n\n*** uSID policies:')
         pprint.PrettyPrinter(indent=4).pprint(list(policies))
         print('\n\n')
-        return 0
+        return commons_pb2.STATUS_SUCCESS
     if operation in ['add', 'del']:
-        #
         # In order to perform this translation, a file containing the
         # mapping of node names to IPv6 addresses is required
         #
@@ -915,7 +937,7 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                     )
         if len(policies) == 0:
             logger.error('Policy not found')
-            return None
+            raise utils.PolicyNotFoundError
         # Iterate on the policies
         for policy in policies:
             lr_destination = policy.get('lr_dst')
@@ -931,7 +953,7 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
             # The two SID lists must have the same endpoints
             if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
                 logger.error('Bad tunnel endpoints')
-                return None
+                raise utils.InvalidArgumentError
             # Create the SRv6 Policy
             try:
                 # # Prefix length for local segment
@@ -1251,4 +1273,4 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
         # Return the response
         return response
     logger.error('Unsupported operation: %s', operation)
-    return None
+    raise utils.InvalidArgumentError
