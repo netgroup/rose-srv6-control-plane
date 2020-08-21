@@ -75,7 +75,7 @@ def set_configuration(sender, reflector,
     :type pm_driver: str
     '''
     # pylint: disable=too-many-arguments
-
+    #
     # Establish a gRPC Channel to the sender and a gRPC Channel to the
     # reflector
     logger.debug('Trying to establish a connection to the sender %s on '
@@ -280,12 +280,13 @@ def get_experiment_results(sender, reflector,
     with utils.get_grpc_session(sender, sender_port) as sender_channel, \
             utils.get_grpc_session(reflector, reflector_port) as refl_channel:
         # Get and print the experiment results
-        logger.info(srv6_pm.get_experiment_results(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel,
-            send_refl_sidlist=send_refl_sidlist.split(','),
-            refl_send_sidlist=refl_send_sidlist.split(',')
-        ))
+        logger.info('start_experiment returned:\n\n%s',
+                    srv6_pm.get_experiment_results(
+                        sender_channel=sender_channel,
+                        reflector_channel=refl_channel,
+                        send_refl_sidlist=send_refl_sidlist.split(','),
+                        refl_send_sidlist=refl_send_sidlist.split(',')
+                    ))
 
 
 def stop_experiment(sender, reflector,
@@ -351,7 +352,7 @@ def stop_experiment(sender, reflector,
         )
         # Convert the status code to a human-readable textual description and
         # print the description
-        logger.info('start_experiment returned %s - %s\n\n', res,
+        logger.info('stop_experiment returned %s - %s\n\n', res,
                     utils.STATUS_CODE_TO_DESC[res])
 
 
