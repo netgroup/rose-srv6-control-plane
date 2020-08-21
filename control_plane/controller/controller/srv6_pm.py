@@ -708,8 +708,6 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         failure_msg='Error in start_experiment_reflector()'
     )
     # Check for errors
-    if refl_res is None:
-        return commons_pb2.STATUS_INTERNAL_ERROR
     if refl_res.status != commons_pb2.STATUS_SUCCESS:
         return refl_res.status
     # Start the experiment on the sender
@@ -733,8 +731,6 @@ def __start_measurement(measure_id, sender_channel, reflector_channel,
         failure_msg='Error in start_experiment_sender()'
     )
     # Check for errors
-    if sender_res is None:
-        return commons_pb2.STATUS_INTERNAL_ERROR
     if sender_res.status != commons_pb2.STATUS_SUCCESS:
         return sender_res.status
     # Success
