@@ -303,6 +303,8 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
     :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
                                   or Direct mode)
     :type loss_measurement_mode: str
+    :raises controller.utils.InvalidArgumentError: If you provided an invalid
+                                                   argument is invalid.
     '''
     # pylint: disable=too-many-arguments, too-many-return-statements
     #
@@ -318,7 +320,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid Measurement protocol: %s',
                          measurement_protocol)
-            return None
+            raise utils.InvalidArgumentError
     # Measurement Type
     if isinstance(measurement_type, str):
         try:
@@ -326,7 +328,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
         except ValueError:
             logger.error('Invalid Measurement Type: %s', measurement_type)
-            return None
+            raise utils.InvalidArgumentError
     # Authentication Mode
     if isinstance(authentication_mode, str):
         try:
@@ -335,7 +337,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid  Authentication Mode: %s',
                          authentication_mode)
-            return None
+            raise utils.InvalidArgumentError
     # Timestamp Format
     if isinstance(timestamp_format, str):
         try:
@@ -343,7 +345,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.TimestampFormat.Value(timestamp_format)
         except ValueError:
             logger.error('Invalid Timestamp Format: %s', timestamp_format)
-            return None
+            raise utils.InvalidArgumentError
     # Delay Measurement Mode
     if isinstance(delay_measurement_mode, str):
         try:
@@ -353,7 +355,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid Delay Measurement Mode: %s',
                          delay_measurement_mode)
-            return None
+            raise utils.InvalidArgumentError
     # Loss Measurement Mode
     if isinstance(loss_measurement_mode, str):
         try:
@@ -363,7 +365,7 @@ def start_experiment_sender(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid Loss Measurement Mode: %s',
                          loss_measurement_mode)
-            return None
+            raise utils.InvalidArgumentError
     # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
@@ -463,6 +465,8 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     :type number_of_color: int
     :param pm_driver: The driver to use for the experiments (i.e. eBPF or
                       IPSet).
+    :raises controller.utils.InvalidArgumentError: If you provided an invalid
+                                                   argument is invalid.
     '''
     # pylint: disable=too-many-arguments
     #
@@ -475,7 +479,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
             pm_driver = srv6pmCommons_pb2.PMDriver.Value(pm_driver)
         except ValueError:
             logger.error('Invalid PM Driver: %s', pm_driver)
-            return None
+            raise utils.InvalidArgumentError
     # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
@@ -546,6 +550,8 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
     :param loss_measurement_mode: The loss measurement mode (i.e. Inferred
                                   or Direct mode)
     :type loss_measurement_mode: str
+    :raises controller.utils.InvalidArgumentError: If you provided an invalid
+                                                   argument is invalid.
     '''
     # pylint: disable=too-many-arguments
     #
@@ -561,7 +567,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid Measurement protocol: %s',
                          measurement_protocol)
-            return None
+            raise utils.InvalidArgumentError
     # Measurement Type
     if isinstance(measurement_type, str):
         try:
@@ -569,7 +575,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
                 srv6pmCommons_pb2.MeasurementType.Value(measurement_type)
         except ValueError:
             logger.error('Invalid Measurement Type: %s', measurement_type)
-            return None
+            raise utils.InvalidArgumentError
     # Authentication Mode
     if isinstance(authentication_mode, str):
         try:
@@ -578,7 +584,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid  Authentication Mode: %s',
                          authentication_mode)
-            return None
+            raise utils.InvalidArgumentError
     # Loss Measurement Mode
     if isinstance(loss_measurement_mode, str):
         try:
@@ -588,7 +594,7 @@ def start_experiment_reflector(channel, sidlist, rev_sidlist,
         except ValueError:
             logger.error('Invalid Loss Measurement Mode: %s',
                          loss_measurement_mode)
-            return None
+            raise utils.InvalidArgumentError
     # ########################################################################
     # Get the reference of the stub
     stub = srv6pmService_pb2_grpc.SRv6PMStub(channel)
