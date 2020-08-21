@@ -465,6 +465,7 @@ def set_node_configuration(channel, send_udp_port, refl_udp_port,
     :type number_of_color: int
     :param pm_driver: The driver to use for the experiments (i.e. eBPF or
                       IPSet).
+    :type pm_driver: str
     :raises controller.utils.InvalidArgumentError: If you provided an invalid
                                                    argument is invalid.
     '''
@@ -847,7 +848,7 @@ def set_configuration(sender_channel, reflector_channel,
                       interval_duration, delay_margin,
                       number_of_color, pm_driver):
     '''
-    Set the configuration
+    Set the configuration for a SRv6 Performance Measurement experiment.
 
     :param sender_channel: The gRPC Channel to the sender
     :type sender_channel: class: `grpc._channel.Channel`
@@ -863,6 +864,9 @@ def set_configuration(sender_channel, reflector_channel,
     :type delay_margin: int
     :param number_of_color: The number of the color
     :type number_of_color: int
+    :param pm_driver: The driver to use for the experiments (i.e. eBPF or
+                      IPSet).
+    :type pm_driver: str
     '''
     # pylint: disable=too-many-arguments
     #
@@ -898,22 +902,12 @@ def set_configuration(sender_channel, reflector_channel,
 
 def reset_configuration(sender_channel, reflector_channel):
     '''
-    Reset the configuration
+    Reset the configuration for a SRv6 Performance Measurement experiment.
 
     :param sender_channel: The gRPC Channel to the sender node
     :type sender_channel: class: `grpc._channel.Channel`
     :param reflector_channel: The gRPC Channel to the reflector node
     :type reflector_channel: class: `grpc._channel.Channel`
-    :param send_dst_udp_port: The destination UDP port used by the sender
-    :type send_dst_udp_port: int
-    :param refl_dst_udp_port: The destination UDP port used by the reflector
-    :type refl_dst_udp_port: int
-    :param interval_duration: The duration of the interval
-    :type interval_duration: int
-    :param delay_margin: The delay margin
-    :type delay_margin: int
-    :param number_of_color: The number of the color
-    :type number_of_color: int
     '''
     # Reset configuration on the sender
     res = reset_node_configuration(
