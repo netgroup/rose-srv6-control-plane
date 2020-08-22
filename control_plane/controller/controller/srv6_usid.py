@@ -116,45 +116,8 @@ def print_node_to_addr_mapping(nodes_filename):
                                   of node names to IP addresses.
     :type node_to_addr_filename: str
     '''
-    # Read the mapping from the file
-    with open(nodes_filename, 'r') as nodes_file:
-        nodes = yaml.safe_load(nodes_file)
-    # Validate the IP addresses
-    for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(addr):
-            logger.error('Invalid IPv6 address %s in %s', addr,
-                         nodes_filename)
-            raise InvalidConfigurationError
-    # Validate the SIDs
-    for sid in [node['uN'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(sid):
-            logger.error('Invalid SID %s in %s', sid, nodes_filename)
-            raise InvalidConfigurationError
-    # Validate the forwarding engine
-    for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in SUPPORTED_FWD_ENGINES:
-            logger.error('Invalid forwarding engine %s in %s', fwd_engine,
-                         nodes_filename)
-            raise InvalidConfigurationError
-    # Get the #bits of the locator
-    # This parameter is optional and may be omitted in the nodes configuration
-    # file
-    locator_bits = nodes.get('locator_bits')
-    # Validate #bits for the SID Locator
-    if locator_bits is not None and \
-            (int(locator_bits) < 0 or int(locator_bits) > 128):
-        raise InvalidConfigurationError
-    # Get the #bits of the uSID identifier
-    # This parameter is optional and may be omitted in the nodes configuration
-    # file
-    usid_id_bits = nodes.get('usid_id_bits')
-    # Validate #bits for the uSID ID
-    if usid_id_bits is not None and \
-            (int(usid_id_bits) < 0 or int(usid_id_bits) > 128):
-        raise InvalidConfigurationError
-    if locator_bits is not None and usid_id_bits is not None and \
-            int(usid_id_bits) + int(locator_bits) > 128:
-        raise InvalidConfigurationError
+    # Read the nodes from the configuration file
+    nodes = read_nodes(nodes_filename)
     # Print the nodes available
     print('\nList of available devices:')
     pprint.PrettyPrinter(indent=4).pprint(list(nodes['nodes'].keys()))
@@ -196,12 +159,16 @@ def read_nodes(nodes_filename):
     # Validation checks passed
     #
     # Get the #bits of the locator
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     locator_bits = nodes.get('locator_bits')
     # Validate #bits for the SID Locator
     if locator_bits is not None and \
             (int(locator_bits) < 0 or int(locator_bits) > 128):
         raise InvalidConfigurationError
     # Get the #bits of the uSID identifier
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     usid_id_bits = nodes.get('usid_id_bits')
     # Validate #bits for the uSID ID
     if usid_id_bits is not None and \
