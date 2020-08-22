@@ -107,10 +107,10 @@ def print_nodes(nodes_dict):
     print(list(nodes_dict.keys()))
 
 
-def print_node_to_addr_mapping(nodes_filename):
+def print_nodes_from_config_file(nodes_filename):
     '''
-    This function reads a YAML file containing the mapping of node names to IP
-    addresses and pretty print it.
+    This function reads a YAML file containing the nodes configuration and
+    print the available nodes.
 
     :param node_to_addr_filename: Name of the YAML file containing the mapping
                                   of node names to IP addresses.
