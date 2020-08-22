@@ -40,6 +40,7 @@ import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 from controller import utils
 
+
 # Global variables definition
 #
 #
