@@ -122,7 +122,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                                                    argument.
     '''
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-
+    #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -191,7 +192,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             path.encapmode = text_type(encapmode)
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
@@ -228,11 +229,11 @@ def handle_srv6_path(operation, channel, destination, segments=None,
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                        table=-1, metric=-1, fwd_engine='Linux'):
     '''
-    Handle a SRv6 Path
+    Handle a SRv6 Policy.
     '''
-
     # pylint: disable=too-many-locals, too-many-arguments
-
+    #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
