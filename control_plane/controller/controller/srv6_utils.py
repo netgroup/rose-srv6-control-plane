@@ -55,18 +55,27 @@ DEFAULT_USID_ID_BITS = 16
 # Parser for gRPC errors
 def parse_grpc_error(err):
     '''
-    Parse a gRPC error
-    '''
+    Parse a gRPC error.
 
+    :param err: The error to parse.
+    :type err: grpc.RpcError
+    :return: A status code corresponding to the gRPC error.
+    :rtype: int
+    '''
+    # Extract the gRPC status code
     status_code = err.code()
+    # Extract the error description
     details = err.details()
     logger.error('gRPC client reported an error: %s, %s',
                  status_code, details)
     if grpc.StatusCode.UNAVAILABLE == status_code:
+        # gRPC server is not available
         code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
     elif grpc.StatusCode.UNAUTHENTICATED == status_code:
+        # Authentication problem
         code = commons_pb2.STATUS_GRPC_UNAUTHORIZED
     else:
+        # Generic gRPC error
         code = commons_pb2.STATUS_INTERNAL_ERROR
     # Return an error message
     return code
