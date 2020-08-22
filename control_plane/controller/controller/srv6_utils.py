@@ -18,19 +18,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Implementation of SRv6 Controller
+# SRv6 utilities for SRv6 SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 
 '''
-Control-Plane functionalities for SRv6 Manager
+This module provides a collection of SRv6 utilities for SRv6 SDN Controller.
 '''
 
 # General imports
 import logging
-
 import grpc
 from six import text_type
 
@@ -367,7 +366,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
                            bsid_addr='', fwd_engine='Linux'):
     '''
-    Create a unidirectional SRv6 tunnel from <ingress> to <egress>
+    Create a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
     :param ingress_channel: The gRPC Channel to the ingress node
     :type ingress_channel: class: `grpc._channel.Channel`
