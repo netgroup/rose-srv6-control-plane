@@ -190,6 +190,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         if operation == 'add':
             # Set encapmode
             path.encapmode = text_type(encapmode)
+            # At least one segment is required for add operation
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
                 raise utils.InvalidArgumentError
@@ -216,6 +217,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         elif operation == 'del':
             # Remove the SRv6 path
             response = stub.Remove(request)
+        else:
+            # The operation is unknown
+            logger.error('Invalid operation: %s', operation)
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -229,7 +234,31 @@ def handle_srv6_path(operation, channel, destination, segments=None,
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                        table=-1, metric=-1, fwd_engine='Linux'):
     '''
-    Handle a SRv6 Policy.
+    Handle a SRv6 policy on a node.
+
+    :param operation: The operation to be performed on the SRv6 policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param bsid_addr: The Binding SID to be used for the policy.
+    :type bsid_addr: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination (not required for "get" and "del"
+                     operations).
+    :type segments: list, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
     # pylint: disable=too-many-locals, too-many-arguments
     #
@@ -258,25 +287,26 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
             fwd_engine)
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
+            # At least one segment is required for add operation
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
                 srv6_segment.segment = text_type(segment)
-            # Create the SRv6 path
+            # Create the SRv6 policy
             response = stub.Create(request)
         elif operation == 'get':
-            # Get the SRv6 path
+            # Get the SRv6 policy
             response = stub.Get(request)
         elif operation == 'change':
             # Iterate on the segments and build the SID list
@@ -284,11 +314,15 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
                 srv6_segment.segment = text_type(segment)
-            # Update the SRv6 path
+            # Update the SRv6 policy
             response = stub.Update(request)
         elif operation == 'del':
-            # Remove the SRv6 path
+            # Remove the SRv6 policy
             response = stub.Remove(request)
+        else:
+            # The operation is unknown
+            logger.error('Invalid operation: %s', operation)
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -304,10 +338,48 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          interface="", segments=None, metric=-1,
                          fwd_engine='Linux'):
     '''
-    Handle a SRv6 behavior
+    Handle a SRv6 behavior on a node.
+
+    :param operation: The operation to be performed on the SRv6 path
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param segment: The local segment of the SRv6 behavior. It can be a IP
+                    address or a subnet.
+    :type segment: str
+    :param action: The SRv6 action associated to the behavior (e.g. End or
+                   End.DT6), (not required for "get" and "change").
+    :type action: str, optional
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param nexthop: The nexthop of cross-connect behaviors (e.g. End.DX4
+                    or End.DX6).
+    :type nexthop: str, optional
+    :param lookup_table: The lookup table for the decap behaviors (e.g.
+                         End.DT4 or End.DT6).
+    :type lookup_table: int, optional
+    :param interface: The outgoing interface for the End.DX2 behavior.
+    :type interface: str, optional
+    :param segments: The SID list to be applied for the End.B6 behavior.
+    :type segments: list, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -341,16 +413,17 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             fwd_engine)
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
+            # The argument "action" is mandatory for the "add" operation
             if action == '':
                 logger.error('*** Missing action for seg6local route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -397,8 +470,9 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             # Remove the SRv6 behavior
             response = stub.Remove(request)
         else:
+            # The operation is unknown
             logger.error('Invalid operation: %s', operation)
-            return None
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
