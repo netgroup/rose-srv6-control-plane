@@ -18,14 +18,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Controller
+# Implementation of SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 
-"""Entry point for controller CLI"""
+'''
+Entry point for controller CLI.
+'''
 
+# Controller dependencies
 from controller.cli import cli
 
 
