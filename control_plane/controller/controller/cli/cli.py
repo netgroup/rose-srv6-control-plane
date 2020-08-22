@@ -225,7 +225,7 @@ class ControllerCLITopology(CustomCmd):
         nodes.
 
         :param args: The argument passed to this command.
-        :type args: list
+        :type args: str
         :return: False in order to leave the CLI subsection open.
         :rtype: bool
         '''
@@ -253,7 +253,15 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_load_nodes_config(self, args):
-        '''Load node configuration to database'''
+        '''
+        Read the nodes configuration from a YAML file and load it to a Arango
+        database.
+
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
         #
         # Parse arguments
@@ -263,22 +271,28 @@ class ControllerCLITopology(CustomCmd):
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # ArangoDB params
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Extract the ArangoDB params from the environment variables
         arango_url = os.getenv('ARANGO_URL')
         arango_user = os.getenv('ARANGO_USER')
         arango_password = os.getenv('ARANGO_PASSWORD')
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
+        # Connect to the "srv6_usid" db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
             username=arango_user,
             password=arango_password
         )
+        # Push the nodes configuration to the database
         arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(
             args.nodes_file)[0])
+        return False
 
     def do_extract(self, args):
         '''Extract the network topology'''
