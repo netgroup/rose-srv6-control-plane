@@ -500,7 +500,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     :param egress_channel: The gRPC Channel to the egress node
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
-                  It can be a IP address or a subnet.
+                        It can be a IP address or a subnet.
     :type destination: str
     :param segments: The SID list to be applied to the packets going to
                      the destination
@@ -510,6 +510,9 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                      'localseg' isn't passed in, the End.DT6 function
                      is not created.
     :type localseg: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     '''
@@ -577,16 +580,16 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
-                           of the SRv6 tunnel
+                           of the SRv6 tunnel.
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC Channel to the right endpoint (node_r)
-                           of the SRv6 tunnel
+                           of the SRv6 tunnel.
     :type node_r_channel: class: `grpc._channel.Channel`
     :param sidlist_lr: The SID list to be installed on the packets going
-                       from <node_l> to <node_r>
+                       from <node_l> to <node_r>.
     :type sidlist_lr: list
     :param sidlist_rl: The SID list to be installed on the packets going
-                       from <node_r> to <node_l>
+                       from <node_r> to <node_l>.
     :type sidlist_rl: list
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -604,6 +607,9 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                         to <node_l>. If the argument 'localseg_rl' isn't
                         passed in, the End.DT6 function is not created.
     :type localseg_rl: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     '''
@@ -645,9 +651,9 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
-    :param ingress_channel: The gRPC Channel to the ingress node
+    :param ingress_channel: The gRPC Channel to the ingress node.
     :type ingress_channel: class: `grpc._channel.Channel`
-    :param egress_channel: The gRPC Channel to the egress node
+    :param egress_channel: The gRPC Channel to the egress node.
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
@@ -656,10 +662,13 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                      function on the egress node. If the argument 'localseg'
                      isn't passed in, the End.DT6 function is not removed.
     :type localseg: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False)
+                          (default is False).
     :type ignore_errors: bool, optional
     '''
     # pylint: disable=too-many-arguments
@@ -731,14 +740,14 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC channel to the left endpoint of the
-                           SRv6 tunnel (node_l)
+                           SRv6 tunnel (node_l).
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC channel to the right endpoint of the
-                           SRv6 tunnel (node_r)
+                           SRv6 tunnel (node_r).
     :type node_r_channel: class: `grpc._channel.Channel`
-    :param node_l: The IP address of the left endpoint of the SRv6 tunnel
+    :param node_l: The IP address of the left endpoint of the SRv6 tunnel.
     :type node_l: str
-    :param node_r: The IP address of the right endpoint of the SRv6 tunnel
+    :param node_r: The IP address of the right endpoint of the SRv6 tunnel.
     :type node_r: str
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -756,10 +765,13 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         If the argument 'localseg_r' isn't passed in, the
                         End.DT6 function is not removed.
     :type localseg_rl: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False)
+                          (default is False).
     :type ignore_errors: bool, optional
     '''
     # pylint: disable=too-many-arguments
