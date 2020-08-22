@@ -516,6 +516,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -613,6 +615,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -671,6 +675,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False).
     :type ignore_errors: bool, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -774,6 +780,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False).
     :type ignore_errors: bool, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
