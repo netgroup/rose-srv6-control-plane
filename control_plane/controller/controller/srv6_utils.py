@@ -85,9 +85,42 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
                      bsid_addr='', fwd_engine='Linux'):
     '''
-    Handle a SRv6 Path
-    '''
+    Handle a SRv6 path on a node.
 
+    :param operation: The operation to be performed on the SRv6 path
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param destination: The destination prefix of the SRv6 path.
+                        It can be a IP address or a subnet.
+    :type destination: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination (not required for "get" and "del"
+                     operations).
+    :type segments: list, optional
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param encapmode: The encap mode to use for the path, i.e. "inline" or
+                      "encap" (default: encap).
+    :type encapmode: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    '''
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 
     if segments is None:
@@ -114,11 +147,25 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     path.metric = int(metric)
     # Set the BSID address (required for VPP)
     path.bsid_addr = str(bsid_addr)
+    # Forwarding engine (Linux or VPP)
+    try:
+        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
     # Handle SRv6 policy for VPP
+    # A SRv6 path in VPP consists of:
+    #     - a SRv6 policy
+    #     - a rule to steer packets sent to a destination through the SRv6
+    #       policy.
+    # The steering rule matches the corresponding SRv6 policy through a
+    # Binding SID (BSID)
+    # Therefore, VPP requires some extra configuration with respect to Linux
     if fwd_engine == 'VPP':
+        # VPP requires BSID address
         if bsid_addr == '':
             logger.error('"bsid_addr" argument is mandatory for VPP')
-            return None
+            raise utils.InvalidArgumentError
         # Handle SRv6 policy
         res = handle_srv6_policy(
             operation=operation,
@@ -129,15 +176,11 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             metric=metric,
             fwd_engine=fwd_engine
         )
+        # Check for errors
         if res != commons_pb2.STATUS_SUCCESS:
             logger.error('Cannot create SRv6 policy: error %s', res)
-            return None
-    # Forwarding engine (Linux or VPP)
-    try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
-    except ValueError:
-        logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+            return res
+    # The following steps are common for Linux and VPP
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
