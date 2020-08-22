@@ -140,6 +140,13 @@ class SRv6ManagerLinux():
             'uN': self.handle_un_behavior_request,
         }
 
+    def handle_srv6_policy_request(self, operation, request, context,
+                                   ret_policies):
+        # Linux forwarding engine does not support SRv6 policies
+        LOGGER.error('SRv6 policy operation not supported by Linux forwarding '
+                     'engine')
+        return commons_pb2.STATUS_INTERNAL_ERROR
+
     def handle_srv6_path_request(self, operation, request, context, ret_paths):
         # pylint: disable=unused-argument
         """Handler for SRv6 paths"""
