@@ -64,7 +64,8 @@ except ImportError:
 DEFAULT_LOCATOR_BITS = 32
 # Default number of bits for the uSID identifier
 DEFAULT_USID_ID_BITS = 16
-
+# Supported forwarding engines
+SUPPORTED_FWD_ENGINES = ('Linux', 'VPP', 'P4')
 
 class InvalidConfigurationError(srv6_utils.SRv6Exception):
     '''
@@ -100,7 +101,7 @@ def print_nodes(nodes_dict):
     '''
     Print the nodes.
 
-    :param nodes_dict: Dict containing the nodes
+    :param nodes_dict: Dict containing the nodes.
     :type nodes_dict: dict
     '''
     print(list(nodes_dict.keys()))
@@ -108,11 +109,11 @@ def print_nodes(nodes_dict):
 
 def print_node_to_addr_mapping(nodes_filename):
     '''
-    This function reads a YAML file containing the mapping
-    of node names to IP addresses and pretty print it
+    This function reads a YAML file containing the mapping of node names to IP
+    addresses and pretty print it.
 
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
+    :param node_to_addr_filename: Name of the YAML file containing the mapping
+                                  of node names to IP addresses.
     :type node_to_addr_filename: str
     '''
     # Read the mapping from the file
@@ -121,28 +122,31 @@ def print_node_to_addr_mapping(nodes_filename):
     # Validate the IP addresses
     for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
         if not utils.validate_ipv6_address(addr):
-            logger.error('Invalid IPv6 address %s in %s',
-                         addr, nodes_filename)
+            logger.error('Invalid IPv6 address %s in %s', addr,
+                         nodes_filename)
             raise InvalidConfigurationError
     # Validate the SIDs
     for sid in [node['uN'] for node in nodes['nodes'].values()]:
         if not utils.validate_ipv6_address(sid):
-            logger.error('Invalid SID %s in %s',
-                         sid, nodes_filename)
+            logger.error('Invalid SID %s in %s', sid, nodes_filename)
             raise InvalidConfigurationError
     # Validate the forwarding engine
     for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
-            logger.error('Invalid forwarding engine %s in %s',
-                         fwd_engine, nodes_filename)
+        if fwd_engine not in SUPPORTED_FWD_ENGINES:
+            logger.error('Invalid forwarding engine %s in %s', fwd_engine,
+                         nodes_filename)
             raise InvalidConfigurationError
     # Get the #bits of the locator
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     locator_bits = nodes.get('locator_bits')
     # Validate #bits for the SID Locator
     if locator_bits is not None and \
             (int(locator_bits) < 0 or int(locator_bits) > 128):
         raise InvalidConfigurationError
     # Get the #bits of the uSID identifier
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     usid_id_bits = nodes.get('usid_id_bits')
     # Validate #bits for the uSID ID
     if usid_id_bits is not None and \
@@ -151,6 +155,7 @@ def print_node_to_addr_mapping(nodes_filename):
     if locator_bits is not None and usid_id_bits is not None and \
             int(usid_id_bits) + int(locator_bits) > 128:
         raise InvalidConfigurationError
+    # Print the nodes available
     print('\nList of available devices:')
     pprint.PrettyPrinter(indent=4).pprint(list(nodes['nodes'].keys()))
     print()
@@ -160,36 +165,36 @@ def read_nodes(nodes_filename):
     '''
     Convert a list of node names into a list of IP addresses.
 
-    :param nodes_filename: Name of the YAML file containing the
-                           IP addresses
+    :param nodes_filename: Name of the YAML file containing the IP addresses.
     :type nodes_filename: str
-    :return: Tuple (List of IP addresses, Locator bits, uSID ID bits)
+    :return: Tuple (List of IP addresses, Locator bits, uSID ID bits).
     :rtype: tuple
-    :raises NodeNotFoundError: Node name not found in the mapping file
-    :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid YAML
+                                       file.
     '''
     # Read the mapping from the file
     with open(nodes_filename, 'r') as nodes_file:
         nodes = yaml.safe_load(nodes_file)
-    # Validate the IP addresses
-    for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(addr):
-            logger.error('Invalid IPv6 address %s in %s',
-                         addr, nodes_filename)
+    # Validation checks
+    # Iterate on the nodes
+    for node in nodes['nodes'].values():
+        # Validate the IP address
+        if not utils.validate_ipv6_address(node['grpc_ip']):
+            logger.error('Invalid IPv6 address %s in %s', node['grpc_ip'],
+                         nodes_filename)
             raise InvalidConfigurationError
-    # Validate the SIDs
-    for sid in [node['uN'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(sid):
-            logger.error('Invalid SID %s in %s',
-                         sid, nodes_filename)
+        # Validate the SID
+        if not utils.validate_ipv6_address(node['uN']):
+            logger.error('Invalid SID %s in %s', node['uN'], nodes_filename)
             raise InvalidConfigurationError
-    # Validate the forwarding engine
-    for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
+        # Validate the forwarding engine
+        if node['fwd_engine'] not in SUPPORTED_FWD_ENGINES:
             logger.error('Invalid forwarding engine %s in %s',
-                         fwd_engine, nodes_filename)
+                         node['fwd_engine'], nodes_filename)
             raise InvalidConfigurationError
+    # Validation checks passed
+    #
     # Get the #bits of the locator
     locator_bits = nodes.get('locator_bits')
     # Validate #bits for the SID Locator
