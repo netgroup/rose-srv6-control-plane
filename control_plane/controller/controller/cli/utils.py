@@ -24,7 +24,9 @@
 #
 
 
-"""Utilities functions used by Controller CLI"""
+'''
+Utilities functions used by Controller CLI.
+'''
 
 # General imports
 import glob as gb
@@ -36,9 +38,15 @@ readline.set_completer_delims(' \t\n')
 
 
 def complete_path(path):
-    """Take a partial 'path' as argument and return a
-    list of path names that match the 'path'"""
+    '''
+    Take a partial 'path' as argument and return a list of path names that
+    match the 'path'.
 
+    :param path: The partial path.
+    :type path: str
+    :return: A list of path names that match the 'path'.
+    :rtype: list
+    '''
     if op.isdir(path):
         return gb.glob(op.join(path, '*'))
     return gb.glob(path + '*')
