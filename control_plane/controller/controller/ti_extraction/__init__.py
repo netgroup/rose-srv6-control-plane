@@ -22,3 +22,8 @@
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
+
+'''
+This package provides a collection of utilities implementing the extraction of
+the network topology from a set of nodes.
+'''

@@ -24,5 +24,7 @@
 #
 
 '''
-This package provides several utilities for interacting with a database.
+This package provides several utilities that allow a SDN Controller to
+interact with a database. This enables the support for the Controller
+persistency.
 '''
