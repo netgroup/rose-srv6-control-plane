@@ -70,48 +70,80 @@ logger = logging.getLogger(__name__)
 # Configure logging level for urllib3
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-# import utils
-# import srv6_controller
-# import ti_extraction
-# import srv6_pm
-
 # Default path to the .env file
 DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
 
+# Path where to save the history file
+# We save it to in the same folder of this script
+HISTORY_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 '.controller_history')
+# Maximum length (in lines) of the history file
+# If the history file exceeds this limit, it is truncated
+HISTORY_FILE_LENGTH = 1000
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
 
 
 class CustomCmd(Cmd):
-    '''This class extends the python class Cmd and implements a handler
-    for CTRL+C and CTRL+D'''
+    '''
+    This class extends the python class Cmd and implements a handler
+    for CTRL+C and CTRL+D
+    '''
 
-    histfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            '.controller_history')
-    histfile_size = 1000
+    # History file
+    histfile = os.path.join(HISTORY_FILE_PATH)
+    # History size
+    histfile_size = HISTORY_FILE_LENGTH
 
     def preloop(self):
+        '''
+        Hook method offered by the Cmd library, executed once when cmdloop()
+        is called.
+        '''
+        # If history persistency is enabled, readline library has been
+        # imported and the history file already exists...
         if readline and os.path.exists(self.histfile):
+            # ...read the history from the history file
             readline.read_history_file(self.histfile)
 
     def postloop(self):
+        '''
+        Hook method offered by the Cmd library executed once when cmdloop() is
+        about to return. In this method we write the history to the history
+        file.
+        '''
+        # If history persistency is enabled and readline library has been
+        # imported
         if readline:
+            # Set the number of lines to save in the history file
+            # If the history file exceeds the length limit, the history file
+            # is truncated
             readline.set_history_length(self.histfile_size)
+            # Write the history to the history file
             readline.write_history_file(self.histfile)
 
     def cmdloop(self, intro=None):
-        ''' Command loop'''
+        '''
+        CLI loop that accepts commands from the user and dispatch them to the
+        methods.
 
+        :param intro: Intro string to be issued before the first prompt.
+        :type intro: str, optional
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Loop implementing the interpreter for the commands
         while True:
             try:
+                # Start CLI loop that accepts commands from the user and
+                # dispatch them to the methods
                 super(CustomCmd, self).cmdloop(intro=intro)
                 break
             except KeyboardInterrupt:
+                # Handle CTRL+C
                 print('^C')
             except Exception as err:    # pylint: disable=broad-except
                 # When an exception is raised, we log the traceback
@@ -123,71 +155,98 @@ class CustomCmd(Cmd):
                 print()
 
     def emptyline(self):
-        '''Avoid to execute the last command if empty line is entered'''
-
+        '''
+        Method called when an empty line is entered in response to the prompt.
+        By default, it repeats the last nonempty command entered. To avoid the
+        execution of the last nonempty command, we override this method and
+        leave it blank.
+        '''
         # pylint: disable=no-self-use
 
     def default(self, line):
-        '''Default behavior'''
+        '''
+        Method called on an input line when the command prefix is not
+        recognized.
 
+        :param line: The command.
+        :type line: str
+        :return: True if the command is "quit", False if the command is
+                 unrecognized.
+        :rtype: bool
+        '''
+        # If the user entered "x" or "q", exit
         if line in ['x', 'q']:
             return self.do_exit(line)
-
+        # Command unrecognized
         print('Unrecognized command: {}'.format(line))
         return False
 
     def do_exit(self, args):
-        '''New line on exit'''
+        '''
+        Go new line on exit.
 
+        :param args: The arguments passed to the exit command.
+        :type args: str
+        :return: True.
+        :rtype: bool
+        '''
         # pylint: disable=unused-argument, no-self-use
-
-        print()     # New line
+        #
+        # Print new line and return
+        print()
         return True
 
     def help_exit(self):
-        '''Help message for exit callback'''
-
+        '''
+        Help message for exit callback.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help message
         print('exit the application. Shorthand: x q Ctrl-D.')
 
+    # Register handler for the "exit" command
     do_EOF = do_exit
+    # Register help for the "exit" command
     help_EOF = help_exit
 
 
 class ControllerCLITopology(CustomCmd):
-    '''Topology subsection'''
+    '''
+    Subsection of the CLI containing several topology related functions.
+    '''
 
+    # Prompt string
     prompt = 'controller(topology)> '
 
     def do_show_nodes(self, args):
-        '''Show nodes'''
+        '''
+        Retrieve the nodes from ArangoDB and print the list of the available
+        nodes.
 
+        :param args: The argument passed to this command.
+        :type args: list
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
-        try:
-            # args = (srv6_cli
-            #         .parse_arguments_print_nodes(
-            #             prog='print_nodes', args=args.split(' ')))
-            pass
-        except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # pylint: disable=no-self-use
         #
-        # ArangoDB params
+        # Extract the ArangoDB params from the environment variables
         arango_url = os.getenv('ARANGO_URL')
         arango_user = os.getenv('ARANGO_USER')
         arango_password = os.getenv('ARANGO_PASSWORD')
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
+        # Connect to the "srv6_usid" db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
             username=arango_user,
             password=arango_password
         )
+        # Extract the nodes configuration stored in the "srv6_usid" database
         nodes_dict = arangodb_driver.get_nodes_config(database)
+        # Print the available nodes
         srv6_cli.print_nodes(nodes_dict=nodes_dict)
         # Return False in order to keep the CLI subsection open
         # after the command execution
