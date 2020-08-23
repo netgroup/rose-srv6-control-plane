@@ -243,7 +243,7 @@ def segments_to_micro_segment(locator, segments,
     # one uSID is computed as follows:
     #
     #     |   128 - locator_bits    |
-    #     |   __________________    |
+    #     |   ------------------    |
     #     |_     usid_id_bits      _|
     #
     if len(segments) > math.floor((128 - locator_bits) / usid_id_bits):
@@ -357,24 +357,39 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
                         locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
-    Convert a SID List into a uSID List.
+    Convert a SID List into a uSID List. SID List may contain any number of
+    segments. The number of the uSIDs returned by this function (i.e. the
+    length of the uSID list) depends on the length of the SID List.
 
-    :param sid_list: SID List to be converted
+    :param sid_list: SID List to be converted.
     :type sid_list: list
+    :param udt_sids: List of uDT SIDs.
+    :type udt_sids: list
     :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
     :type locator_bits: int
-    :param usid_id_bits: Number of bits of the uSID identifiers
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
     :type usid_id_bits: int
-    :return: uSID List containing
+    :return: uSID List containing.
     :rtype: list
-    :raises TooManySegmentsError: segments arg contains too many segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises TooManySegmentsError: segments arg contains too many segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
+    # If udt_sids argument is not passed to this function, we initialize it to
+    # an empty list
     if udt_sids is None:
         udt_sids = list()
-    # Size of the group of SIDs to be compressed in one uSID
-    # The size depends on the locator bits and uSID ID bits
-    # Last slot should be always leaved free
+    # How many SIDs are we able to store in one uSID?
+    # The size of the group of SIDs to be compressed in one uSID depends on
+    # the locator bits and uSID ID bits
+    # The space available to store the segments is the non-locator part of an
+    # IPv6 address; each segment is encoded with usid_id_bits
+    # Last slot should be always free, so:
+    #
+    #     |   128 - locator_bits    |
+    #     |   -------------------   |  -  1
+    #     |_     usid_id_bits      _|
+    #
     sid_group_size = math.floor((128 - locator_bits) / usid_id_bits) - 1
     # Get the locator
     locator = get_sid_locator(sid_list=sid_list, locator_bits=locator_bits)
@@ -384,12 +399,19 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
     while len(sid_list) + len(udt_sids) > 0:
         # Extract the SIDs to be encoded in one uSID
         sids_group = sid_list[:sid_group_size]
-        # uDT list should not be broken into different SIDs
+        # uDT list cannot be broken into different SIDs
+        # All the uDT SIDs must put in the same uSID
         if len(sid_list) + len(udt_sids) <= sid_group_size:
+            # If there is enough space to store the uDT SIDs, we append them
+            # to group of SIDs to be encoded in the current uSID
+            # Else, we don't add them to the current uSID and we wait for a
+            # uSID that has more free space
             sids_group += udt_sids
+            # Since we have processed all the uDT SIDs, we empty the list
             udt_sids = []
-        # Segments are encoded in groups of X
-        # Take the first X SIDs, build the uSID and add it to the uSID list
+        # Segments are encoded in groups of "sid_group_size"
+        # Take the first "sid_group_size" SIDs, build the uSID and add it to
+        # the uSID list
         usid_list.append(
             segments_to_micro_segment(
                 locator=locator,
@@ -398,7 +420,7 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
                 usid_id_bits=usid_id_bits
             )
         )
-        # Advance SID list
+        # Advance SID list: drop the processed SIDs
         sid_list = sid_list[sid_group_size:]
     # Return the uSID list
     return usid_list
