@@ -657,7 +657,7 @@ def encode_intermediate_node(node, locator):
     return None
 
 
-def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
+def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                     l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
                     r_fwd_engine=None, decap_sid=None, locator=None):
     '''
@@ -914,7 +914,7 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
         usid_id_bits = DEFAULT_USID_ID_BITS  # TODO configurable uSID id bits
         # Add nodes list for the left-to-right path to the 'nodes_config' dict
         if nodes_lr is not None:
-            fill_nodes_info(
+            fill_nodes_config(
                 nodes_info=nodes_config,
                 nodes=nodes_lr,
                 l_grpc_ip=l_grpc_ip,
@@ -928,7 +928,7 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
             )
         # Add nodes list for the right-to-left path to the 'nodes_config' dict
         if nodes_rl is not None:
-            fill_nodes_info(
+            fill_nodes_config(
                 nodes_info=nodes_config,
                 nodes=nodes_rl,
                 l_grpc_ip=r_grpc_ip,
@@ -976,7 +976,7 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
                 # Add nodes list for the left-to-right path to the
                 # 'nodes_info' dict
                 if policy.get('lr_nodes') is not None:
-                    fill_nodes_info(
+                    fill_nodes_config(
                         nodes_info=nodes_config,
                         nodes=policy.get('lr_nodes'),
                         l_grpc_ip=policy.get('l_grpc_ip'),
@@ -991,7 +991,7 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
                 # Add nodes list for the right-to-left path to the
                 # 'nodes_info' dict
                 if policy.get('rl_nodes') is not None:
-                    fill_nodes_info(
+                    fill_nodes_config(
                         nodes_info=nodes_config,
                         nodes=policy.get('rl_nodes'),
                         l_grpc_ip=policy.get('r_grpc_ip'),
