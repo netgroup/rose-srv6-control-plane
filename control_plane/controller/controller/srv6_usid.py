@@ -426,38 +426,53 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
     return usid_list
 
 
-def nodes_to_micro_segments(nodes, node_addrs_filename):
+def nodes_to_micro_segments(nodes, nodes_config_filename):
     '''
-    Convert a list of nodes into a list of micro segments (uSID List)
+    Convert a list of nodes into a list of micro segments (uSID List).
 
-    :param nodes: List of node names
+    :param nodes: List of node names.
     :type node: list
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
-    :type node_to_addr_filename: str
-    :return: uSID List
+    :param nodes_config_filename: Name of the YAML file containing the
+                                  configuration of the nodes.
+    :type nodes_config_filename: str
+    :return: uSID List.
     :rtype: list
-    :raises NodeNotFoundError: Node name not found in the mapping file
-    :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid YAML
+                                       file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
-
-    # Convert the list of nodes into a list of IP addresses (SID list)
-    # Translation is based on a file containing the mapping
-    # of node names to IP addresses
-    nodes_info, locator_bits, usid_id_bits = read_nodes(node_addrs_filename)
+    # First, convert the list of nodes into a list of IP addresses (SID list)
+    # Translation is based on a YAML file containing the configuration of the
+    # nodes
+    # Read the nodes configuration and extract a dict containing the
+    # attributes of the nodes, the number of bits of the locator part and the
+    # number of bits of the uSID identifier part
+    nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_config_filename)
+    # We need to convert the list of node names passed as argument into a SID
+    # list; then the SID list will be converted to a uSID list
+    #
+    # Inizialize the SID list
     sid_list = list()
+    # Iterate on the nodes that we want include in the SID list
     for node in nodes:
         if node not in nodes_info:
+            # If the node does not figure in the configuration file, we don't
+            # know its SID and we cannot continue
+            # Raise an exception
             raise NodeNotFoundError
+        # Extract the SID of the node and add it to the SID list
         sid_list.append(nodes_info[node]['uN'])
+    # If "locator_bits" is not specified in the configuration file, we use the
+    # default value (i.e. 32 bits)
     if locator_bits is None:
         locator_bits = DEFAULT_LOCATOR_BITS
+    # If "usid_id_bits" is not specified in the configuration file, we use the
+    # default value (i.e. 32 bits)
     if usid_id_bits is None:
         usid_id_bits = DEFAULT_USID_ID_BITS
-    # Compress the SID list into a uSID list
+    # Now we are ready to convert the SID list into a uSID list
     usid_list = sidlist_to_usidlist(
         sid_list=sid_list,
         locator_bits=locator_bits,
