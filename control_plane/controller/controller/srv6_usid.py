@@ -302,21 +302,24 @@ def segments_to_micro_segment(locator, segments,
 
 def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     '''
-    Get the SID Locator (i.e. the first 32 bits) from a SID List.
+    Get the SID Locator from a SID List. By default, SID Locator part is 32
+    bits long. You can change this behavior by setting the locator_bits
+    argument of this function.
 
     :param sid_list: SID List
     :type sid_list: list
     :param locator_bits: Number of bits of the locator part of the SIDs
-    :type locator_bits: int
+                         (default: 32).
+    :type locator_bits: int, optional
     :return: SID Locator
     :rtype: str
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
     # Locator mask, used to extract the locator from the SIDs
     #
     # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111, then we put to zero
-    # the bits of the non-locator part
+    # We start from the IPv6 address 111...11111 (all "1"), then we put to
+    # zero the bits of the non-locator part
     # The remaining part is the locator, which is converted to an IPv6Address
     locator_mask = str(IPv6Address(int('1' * 128, 2) ^
                                    int('1' * (128 - locator_bits), 2)))
@@ -325,17 +328,22 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     for segment in sid_list:
         _sid_list.append(segment.lower())
     sid_list = _sid_list
-    # Locator
+    # Build the locator
     locator = ''
     # Iterate on the SID list
     for segment in sid_list:
-        # Split the segment in...
-        # ...segment locator
+        # The segment locator is obtained as an "and" between the segment and
+        # the locator mask that we have computed previously
         segment_locator = \
             str(IPv6Address(int(IPv6Address(locator_mask)) &
                             int(IPv6Address(segment))))
+        # We need to check that all the segments have the same segment locator
+        # If we found a segment with a different locator, we raise an
+        # exception
         if locator == '':
-            # Store the segment
+            # We don't have a locator yet because this is the first segment
+            # that we are processing
+            # Store the locator
             locator = segment_locator
         elif locator != segment_locator:
             # All the segments must have the same Locator
