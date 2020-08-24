@@ -561,7 +561,7 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
     :param grpc_port: Port number of the gRPC server.
     :type grpc_port: int
     :param udt: uDT SID of the node, used for the decap operation. If not
-                provided, the uDT SID is not added to the SID list.
+                provided, no uDT SID will be associated to the node.
     :type udt: str, optional
     :param fwd_engine: Forwarding engine to be used (e.g. Linux or VPP).
     :type fwd_engine: str
@@ -628,7 +628,7 @@ def encode_intermediate_node(node, locator):
     '''
     Get a dict-representation of a node (intermediate node of the path),
     starting from gRPC IP and port, uDT sid, forwarding engine and locator.
-    For the intermediate nodes, we don't need uDT, forwarding engine.
+    For the intermediate nodes, we don't need uDT, forwarding engine,
     gRPC IP and gRPC address.
 
     :param node: Node identifier. This could be a name, a SID (IPv6 address)
@@ -653,6 +653,7 @@ def encode_intermediate_node(node, locator):
     if locator is None:
         logger.error('locator is mandatory for node %s', node)
         raise InvalidConfigurationError
+    # All checks passed
     #
     # Compute uN SID starting from the provided node identifier
     # Node identifier can be expressed as SID (an IPv6 address) or a
@@ -679,17 +680,17 @@ def encode_intermediate_node(node, locator):
     return None
 
 
-def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
+def fill_nodes_config(nodes_config, nodes, l_grpc_ip=None, l_grpc_port=None,
                       l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
                       r_fwd_engine=None, decap_sid=None, locator=None):
     '''
-    Fill 'nodes_info' dict with the nodes containined in the 'nodes' list.
+    Fill 'nodes_config' dict with the nodes containined in the 'nodes' list.
 
-    :param nodes_info: Dict containined the nodes information where to add the
-                       nodes.
-    :type nodes_info: dict
-    :param nodes: List of nodes. Each node can be expressed as SID (IPv6
-                  address), a uSID identifier (integer) or a name.
+    :param nodes_config: Dict containing the nodes information to which the
+                         nodes must be added to.
+    :type nodes_config: dict
+    :param nodes: List of nodes to add. Each node can be expressed as a SID
+                  (IPv6 address), a uSID identifier (integer) or a name.
     :type nodes: list
     :param l_grpc_ip: gRPC address of the left node in the path.
     :type l_grpc_ip: str, optional
@@ -697,7 +698,7 @@ def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                         the path.
     :type l_grpc_port: str, optional
     :param l_fwd_engine: Forwarding engine to be used on the left node of
-                        the path (e.g. Linux or VPP).
+                         the path (e.g. Linux or VPP).
     :type l_fwd_engine: str, optional
     :param r_grpc_ip: gRPC address of the right node in the path.
     :type r_grpc_ip: str, optional
@@ -705,7 +706,7 @@ def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                         the path.
     :type r_grpc_port: str, optional
     :param r_fwd_engine: Forwarding engine to be used on the right node of
-                        the path (e.g. Linux or VPP).
+                         the path (e.g. Linux or VPP).
     :type r_fwd_engine: str, optional
     :param decap_sid: Decap SID. This could be a SID (IPv6 address) or a uSID
                       identifier (an integer).
@@ -731,8 +732,9 @@ def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
             udt = decap_sid
     # Encode left node
     #
-    # A node could be expressed as an integer, an IPv6 address (SID)
-    # or a name
+    # A node could be expressed as an integer (uSID identifier), an IPv6
+    # address (SID) or a name
+    # Process the node and get a dict representation
     node = encode_endpoint_node(
         node=nodes[0],
         grpc_ip=l_grpc_ip,
@@ -742,13 +744,19 @@ def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
         locator=locator
     )
     # If we received a node info dict, we add it to the
-    # nodes info dictionary
+    # nodes config dictionary
     if node is not None:
-        nodes_info[nodes[0]] = node
+        nodes_config[nodes[0]] = node
+    else:
+        # Node is expressed as name; in this case we expect that it is already
+        # in the configuration
+        if node not in nodes_config:
+            raise utils.InvalidArgumentError
     # Encode right node
     #
     # A node could be expressed as an integer, an IPv6 address (SID)
     # or a name
+    # Process the node and get a dict representation
     node = encode_endpoint_node(
         node=nodes[-1],
         grpc_ip=r_grpc_ip,
@@ -758,22 +766,32 @@ def fill_nodes_config(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
         locator=locator
     )
     # If we received a node info dict, we add it to the
-    # nodes info dictionary
+    # nodes config dictionary
     if node is not None:
-        nodes_info[nodes[-1]] = node
+        nodes_config[nodes[-1]] = node
+    else:
+        # Node is expressed as name; in this case we expect that it is already
+        # in the configuration
+        if node not in nodes_config:
+            raise utils.InvalidArgumentError
     # Encode intermediate nodes
     # For the intermediate nodes, we don't need forwarding engine,
     # uDT, gRPC IP and port
     for node_name in nodes[1:-1]:
-        # Encode the node
+        # Process the node and get a dict representation
         node = encode_intermediate_node(
             node=node_name,
             locator=locator
         )
         # If we received a node info dict, we add it to the
-        # nodes info dictionary
+        # nodes config dictionary
         if node is not None:
-            nodes_info[node_name] = node
+            nodes_config[node_name] = node
+        else:
+            # Node is expressed as name; in this case we expect that it is
+            # already in the configuration
+            if node not in nodes_config:
+                raise utils.InvalidArgumentError
 
 
 def generate_bsid_addr(destination):
@@ -786,6 +804,10 @@ def generate_bsid_addr(destination):
     :return: The BSID address.
     :rtype: str
     '''
+    # TODO: this function should be improved because some addresses could
+    # generate conflicts (e.g. fcff:1:: and fcff::1 return the same BSID
+    # address)
+    #
     # Start from an empty string
     bsid_addr = ''
     # Iterate on the chars composing the destination address
