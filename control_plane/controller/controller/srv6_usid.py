@@ -189,6 +189,47 @@ def read_nodes(nodes_filename):
     return nodes['nodes'], locator_bits, usid_id_bits
 
 
+def get_locator_mask(locator_bits):
+    '''
+    Return the locator mask.
+
+    :param locator_bits: The number of bits of the locator.
+    :type locator_bits: int
+    :return: The locator mask.
+    :rtype: str
+    '''
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 111...11111 (all "1"), then we put to
+    # zero the bits of the non-locator part
+    # The remaining part is the locator, which is converted to an IPv6Address
+    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                   int('1' * (128 - locator_bits), 2)))
+    # Done, return the locator mask
+    return locator_mask
+
+
+def get_usid_id_mask(locator_bits, usid_id_bits):
+    '''
+    Return the uSID identifier mask.
+
+    :param locator_bits: The number of bits of the locator.
+    :type locator_bits: int
+    :param usid_id_bits: The number of bits of the uSID identifier.
+    :type usid_id_bits: int
+    :return: The locator mask.
+    :rtype: str
+    '''
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 00...000111...11111 (#usid_id_bits of "1"
+    # in the less significant part of the address, the remaining bits set to
+    # "0"), then we perform a shift operation to move the "1" to the position
+    # corresponding to the uSID identifier part
+    usid_id_mask = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                   (128 - locator_bits - usid_id_bits)))
+    # Done, return
+    return usid_id_mask
+
+
 def segments_to_micro_segment(locator, segments,
                               locator_bits=DEFAULT_LOCATOR_BITS,
                               usid_id_bits=DEFAULT_USID_ID_BITS):
@@ -212,22 +253,9 @@ def segments_to_micro_segment(locator, segments,
     :raises InvalidSIDError: SID is wrong for one or more segments.
     '''
     # Locator mask, used to extract the locator from the SIDs
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111 (all "1"), then we put to
-    # zero the bits of the non-locator part
-    # The remaining part is the locator, which is converted to an IPv6Address
-    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                   int('1' * (128 - locator_bits), 2)))
+    locator_mask = get_locator_mask(locator_bits)
     # uSID identifier mask
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 00...000111...11111 (#usid_id_bits of "1"
-    # in the less significant part of the address, the remaining bits set to
-    # "0"), then we perform a shift operation to move the "1" to the position
-    # corresponding to the uSID identifier part
-    usid_id_mask = str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                   (128 - locator_bits - usid_id_bits)))
+    usid_id_mask = get_usid_id_mask(locator_bits, usid_id_bits)
     # Enforce case-sensitivity
     locator = locator.lower()
     _segments = list()
@@ -316,13 +344,7 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
     # Locator mask, used to extract the locator from the SIDs
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111 (all "1"), then we put to
-    # zero the bits of the non-locator part
-    # The remaining part is the locator, which is converted to an IPv6Address
-    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                   int('1' * (128 - locator_bits), 2)))
+    locator_mask = get_locator_mask(locator_bits)
     # Enforce case-sensitivity
     _sid_list = list()
     for segment in sid_list:
@@ -1130,9 +1152,7 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
 
                     udt_sids = list()
                     # Locator mask
-                    locator_mask = str(IPv6Address(
-                        int('1' * 128, 2) ^
-                        int('1' * (128 - locator_bits), 2)))
+                    locator_mask = get_locator_mask(locator_bits)
                     # uDT mask
                     udt_mask_1 = str(
                         IPv6Address(int('1' * usid_id_bits, 2) <<
@@ -1236,20 +1256,11 @@ def handle_srv6_usid_policy(operation, nodes_config=None,
                             '%s with fwd engine %s',
                             egress_node['name'], egress_node['fwd_engine'])
                         return commons_pb2.STATUS_INTERNAL_ERROR
-                    # VPP requires a BSID address
-                    bsid_addr = ''
-                    if egress_node['fwd_engine'] == 'VPP':
-                        for char in lr_destination:
-                            if char not in ('0', ':'):
-                                bsid_addr += char
-                        add_colon = False
-                        if len(bsid_addr) <= 28:
-                            add_colon = True
-                        bsid_addr = [(bsid_addr[i:i + 4])
-                                     for i in range(0, len(bsid_addr), 4)]
-                        bsid_addr = ':'.join(bsid_addr)
-                        if add_colon:
-                            bsid_addr += '::'
+                    # VPP policies and steering rules require a BSID address
+                    # BSID address can be any IPv6 address
+                    bsid_addr = (generate_bsid_addr(rl_destination)
+                                 if egress_node['fwd_engine'] == 'VPP'
+                                 else '')
                     # # Create the uN behavior
                     # response = handle_srv6_behavior(
                     #     operation=operation,
