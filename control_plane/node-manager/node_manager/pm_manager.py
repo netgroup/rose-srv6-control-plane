@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
 
-"""Implementation of SRv6 PM Manager"""
+'''
+Implementation of SRv6 PM Manager
+'''
 
+# General imports
 import atexit
 import logging
 import os
@@ -53,7 +56,7 @@ sys.path.append(SRV6_PFPLM_PATH)
 
 
 class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
-    """gRPC request handler"""
+    '''gRPC request handler'''
 
     def __init__(self, session_sender=None,
                  session_reflector=None, packet_receiver=None):
@@ -70,7 +73,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             self.configured = False
         elif self.sender is not None and self.reflector is not None and \
                 self.packet_receiver is not None:
-            # The node has be configured "statically"
+            # The node has be configured 'statically'
             self.configured = True
         else:
             # Partial configuration is not allowed
@@ -78,7 +81,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
             sys.exit(-2)
 
     def startExperimentSender(self, request, context):
-        """Start an experiment as sender"""
+        '''Start an experiment as sender'''
 
         print('GRPC CONTROLLER: startExperimentSender')
         # Check if the node has been configured
@@ -114,7 +117,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmSender_pb2.StartExperimentSenderReply(status=status)
 
     def stopExperimentSender(self, request, context):
-        """Stop an experiment running on sender"""
+        '''Stop an experiment running on sender'''
 
         print('GRPC CONTROLLER: stopExperimentSender')
         # Check if the node has been configured
@@ -131,7 +134,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
     def startExperimentReflector(self, request, context):
-        """Start an experiment as reflector"""
+        '''Start an experiment as reflector'''
 
         print('GRPC CONTROLLER: startExperimentReflector')
         # Check if the node has been configured
@@ -161,7 +164,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmReflector_pb2.StartExperimentReflectorReply(status=status)
 
     def stopExperimentReflector(self, request, context):
-        """Stop an experiment on the reflector"""
+        '''Stop an experiment on the reflector'''
 
         print('GRPC CONTROLLER: startExperimentReflector')
         # Check if the node has been configured
@@ -178,7 +181,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.StopExperimentReply(status=status)
 
     def retriveExperimentResults(self, request, context):
-        """Retrieve results from the sender"""
+        '''Retrieve results from the sender'''
 
         print('GRPC CONTROLLER: retriveExperimentResults')
         # Check if the node has been configured
@@ -219,7 +222,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return response
 
     def setConfiguration(self, request, context):
-        """Inject the configuration on the node"""
+        '''Inject the configuration on the node'''
 
         print('GRPC CONTROLLER: setConfiguration')
         # Check if this node is already configured
@@ -299,7 +302,7 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
         return srv6pmCommons_pb2.SetConfigurationReply(status=status)
 
     def resetConfiguration(self, request, context):
-        """Clear the current configuration"""
+        '''Clear the current configuration'''
 
         print('GRPC CONTROLLER: resetConfiguration')
         # Check if this node is not configured:
@@ -347,14 +350,14 @@ class TWAMPController(srv6pmService_pb2_grpc.SRv6PMServicer):
 
 
 def add_pm_manager_to_server(server):
-    """Attach PM Manager gRPC server to an existing server"""
+    '''Attach PM Manager gRPC server to an existing server'''
 
     srv6pmService_pb2_grpc.add_SRv6PMServicer_to_server(
         TWAMPController(), server)
 
 
 def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
-    """Start gRPC server"""
+    '''Start gRPC server'''
 
     driver = EbpfInterf(
         in_interfaces=epbf_in_interf,
@@ -383,7 +386,7 @@ def serve(ip_addr, gprc_port, recv_interf, epbf_out_interf, epbf_in_interf):
 
 
 def __main():
-    """Entry point for this module"""
+    '''Entry point for this module'''
 
     ip_addr = sys.argv[1]
     gprc_port = sys.argv[2]
