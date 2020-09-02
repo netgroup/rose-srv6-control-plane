@@ -177,6 +177,8 @@ def handle_srv6_path(operation, grpc_address, grpc_port, destination,
     :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
     :type fwd_engine: str, optional
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
     # pylint: disable=too-many-arguments
     #

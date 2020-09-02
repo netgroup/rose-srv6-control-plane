@@ -240,6 +240,8 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
     :param verbose: Define whether to enable the verbose mode or not
                     (default: False).
     :type verbose: bool, optional
+    :return: True.
+    :rtype: bool
     :raises controller.db_utils.arangodb.arangodb_utils  \\
             .TopologyInformationExtractionError: Error while attempting to
                                                 extract the topology.
