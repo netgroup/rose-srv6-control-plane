@@ -1213,7 +1213,7 @@ class ControllerCLISRv6(CustomCmd):
     def do_unitunnel(self, args):
         '''
         Handle a SRv6 unidirectional tunnel.
-        
+
         :param args: The arguments passed to the command.
         :type args: str
         :return: False.
@@ -1687,7 +1687,7 @@ class Config:
 
         :param env_file: The path and the name of the .env file containing the
                          nodes configuration.
-        :type env_file: str   
+        :type env_file: str
         '''
         # Load configuration from .env file
         logger.info('*** Loading configuration from %s', env_file)
