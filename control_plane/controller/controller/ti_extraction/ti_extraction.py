@@ -27,7 +27,8 @@
 # Topology Information Extraction dependencies
 from controller.ti_extraction.ti_extraction_utils import DEFAULT_VERBOSE
 from controller.ti_extraction.ti_extraction_isis import (
-    connect_and_extract_topology_isis
+    connect_and_extract_topology_isis,
+    topology_information_extraction_isis
 )
 
 
@@ -152,7 +153,7 @@ def topology_information_extraction(routers, protocol, period, password,
     # Which protocol?
     if protocol == 'isis':
         # ISIS protocol
-        res = topology_information_extraction(
+        res = topology_information_extraction_isis(
             routers=routers,
             period=period,
             password=password,

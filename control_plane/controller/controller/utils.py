@@ -18,7 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Utils for controller
+# Utils for SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
@@ -59,6 +59,18 @@ logger = logging.getLogger(__name__)
 class InvalidArgumentError(Exception):
     '''
     Invalid argument.
+    '''
+
+
+class PolicyNotFoundError(Exception):
+    '''
+    Policy not found.
+    '''
+
+
+class NoMeasurementDataAvailableError(Exception):
+    '''
+    No measurement data are available.
     '''
 
 
