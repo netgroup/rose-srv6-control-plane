@@ -172,8 +172,14 @@ class SRv6ManagerLinux():
                         segments = ['::']
                     oif = None
                     if path.device != '':
+                        if path.device not in self.interface_to_idx:
+                            LOGGER.error('No such device')
+                            return commons_pb2.STATUS_NO_SUCH_DEVICE
                         oif = self.interface_to_idx[path.device]
                     elif operation == 'add':
+                        if len(self.non_loopback_interfaces) == 0:
+                            LOGGER.error('No device found')
+                            return commons_pb2.STATUS_NO_SUCH_DEVICE
                         oif = self.interface_to_idx[
                             self.non_loopback_interfaces[0]]
                     self.ip_route.route(operation, dst=path.destination,
@@ -214,6 +220,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -253,6 +263,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -293,6 +307,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -333,6 +351,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -373,6 +395,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -413,6 +439,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -453,6 +483,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -493,6 +527,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -532,6 +570,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Rebuild segments
             segments = []
             for srv6_segment in behavior.segs:
@@ -577,6 +619,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Rebuild segments
             segments = []
             for srv6_segment in behavior.segs:
@@ -622,6 +668,10 @@ class SRv6ManagerLinux():
         if operation == 'get':
             return self.handle_srv6_behavior_get_request(behavior)
         if operation in ['add', 'change']:
+            # Check if the device exists
+            if device not in self.interface_to_idx:
+                LOGGER.error('No such device')
+                return commons_pb2.STATUS_NO_SUCH_DEVICE
             # Build encap info
             encap = {
                 'type': 'seg6local',
@@ -643,7 +693,10 @@ class SRv6ManagerLinux():
 
     def handle_srv6_behavior_del_request(self, behavior):
         """Delete a route"""
-
+        # Check if the device exists
+        if device not in self.interface_to_idx:
+            LOGGER.error('No such device')
+            return commons_pb2.STATUS_NO_SUCH_DEVICE
         # Extract params
         segment = behavior.segment
         device = behavior.device if behavior.device != '' \
@@ -662,7 +715,6 @@ class SRv6ManagerLinux():
         # pylint checks on this method are temporary disabled
         # pylint: disable=no-self-use, unused-argument
         """Get a route"""
-
         LOGGER.info('get opertion not yet implemented\n')
         return commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
 
