@@ -50,7 +50,7 @@ import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 # Node Manager dependencies
 from node_manager.utils import get_address_family
-from node_manager.srv6_manager.utils import check_root
+from node_manager.utils import check_root
 from node_manager.srv6_mgr_linux import SRv6ManagerLinux
 from node_manager.srv6_mgr_vpp import SRv6ManagerVPP  # TODO
 # Import constants file
@@ -174,7 +174,7 @@ class SRv6Manager(srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 status=commons_pb2.StatusCode.Value('INVALID_FWD_ENGINE'))
         # Dispatch the request to the right Forwarding Engine handler
         return self.fwd_engine[fwd_engine].handle_srv6_behavior_request(
-            peration=operation,
+            operation=operation,
             request=request,
             context=context,
             ret_behaviors=ret_behaviors
