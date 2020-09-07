@@ -86,6 +86,18 @@ HISTORY_FILE_LENGTH = 1000
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
 
+# Check if the history file can be read
+if readline and os.path.exists(HISTORY_FILE_PATH):
+    try:
+        # Let's try to read the history file
+        readline.read_history_file(HISTORY_FILE_PATH)
+    except IOError:
+        # If we are not able to read the history, we log a warning message and
+        # we disable the history; this could happen if we don't have the read
+        # permission over the history file
+        logger.warning('Cannot read the history file %s. Do '
+                       'you have the right permissions?', HISTORY_FILE_PATH)
+
 
 class CustomCmd(Cmd):
     '''
@@ -107,7 +119,13 @@ class CustomCmd(Cmd):
         # imported and the history file already exists...
         if readline and os.path.exists(self.histfile):
             # ...read the history from the history file
-            readline.read_history_file(self.histfile)
+            try:
+                readline.read_history_file(self.histfile)
+            except IOError:
+                # If we are not able to read the history, we ignore the
+                # exception; this could happen if we don't have the read
+                # permission over the history file
+                pass
 
     def postloop(self):
         '''
@@ -123,7 +141,13 @@ class CustomCmd(Cmd):
             # is truncated
             readline.set_history_length(self.histfile_size)
             # Write the history to the history file
-            readline.write_history_file(self.histfile)
+            try:
+                readline.write_history_file(self.histfile)
+            except IOError:
+                # If we are not able to read the history, we ignore the
+                # exception; this could happen if we don't have the read
+                # permission over the history file
+                pass
 
     def cmdloop(self, intro=None):
         '''
