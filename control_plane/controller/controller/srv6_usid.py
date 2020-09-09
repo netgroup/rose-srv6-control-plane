@@ -986,6 +986,7 @@ def get_srv6_usid_policy(lr_destination=None, rl_destination=None,
         logger.error('Error in get(): Persistency is disabled')
         raise utils.InvalidArgumentError
     # Connect to ArangoDB
+    # FIXME crash if arangodb_driver not imported
     client = arangodb_driver.connect_arango(
         url=arango_url)     # TODO keep arango connection open
     # Connect to the "srv6_usid" db
