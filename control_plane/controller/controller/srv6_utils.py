@@ -31,6 +31,7 @@ This module provides a collection of SRv6 utilities for SRv6 SDN Controller.
 # General imports
 import logging
 import grpc
+import os
 from six import text_type
 
 # Proto dependencies
@@ -39,6 +40,7 @@ import srv6_manager_pb2
 # Controller dependencies
 import srv6_manager_pb2_grpc
 from controller import utils
+from controller.db_utils.arangodb import arangodb_driver
 
 
 # Global variables definition
@@ -84,7 +86,7 @@ def parse_grpc_error(err):
 
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='Linux'):
+                     bsid_addr='', fwd_engine='Linux', store=False):
     '''
     Handle a SRv6 path on a node.
 
@@ -117,6 +119,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
     :type fwd_engine: str, optional
+    :param store: Define whether to save the SRv6 path to the database or not.
+                  This parameter require ENABLE_PERSISTENCY enabled in the
+                  configuration file. Default: False.
+    :type store: bool, optional
     :return: The status code of the operation.
     :rtype: int
     :raises controller.utils.InvalidArgumentError: You provided an invalid
@@ -202,6 +208,32 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 srv6_segment.segment = text_type(segment)
             # Create the SRv6 path
             response = stub.Create(request)
+            # Store the path to the database
+            if response.status == commons_pb2.STATUS_SUCCESS and store and \
+                    os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
+                # Connect to ArangoDB
+                # FIXME crash if arangodb_driver not imported
+                # TODO keep arango connection open
+                client = arangodb_driver.connect_arango(
+                    url=os.getenv('ARANGO_URL'))
+                # Connect to the "srv6_usid" db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=os.getenv('ARANGO_USER'),
+                    password=os.getenv('ARANGO_PASSWORD')
+                )
+                arangodb_driver.insert_srv6_path(
+                    database=database,
+                    grpc_address=channel._channel.target().decode(),
+                    destination=destination,
+                    segments=segments,
+                    device=device,
+                    encapmode=encapmode,
+                    table=table,
+                    metric=metric,
+                    bsid_addr=bsid_addr,
+                    fwd_engine=fwd_engine
+                )
         elif operation == 'get':
             # Get the SRv6 path
             response = stub.Get(request)
@@ -337,7 +369,7 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
                          interface="", segments=None, metric=-1,
-                         fwd_engine='Linux'):
+                         fwd_engine='Linux', store=False):
     '''
     Handle a SRv6 behavior on a node.
 
@@ -373,6 +405,10 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     :type metric: int, optional
     :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
     :type fwd_engine: str, optional
+    :param store: Define whether to save the SRv6 behavior to the database or
+                  not. This parameter require ENABLE_PERSISTENCY enabled in
+                  the configuration file. Default: False.
+    :type store: bool, optional
     :return: The status code of the operation.
     :rtype: int
     :raises controller.utils.InvalidArgumentError: You provided an invalid
@@ -444,6 +480,34 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 srv6_segment.segment = text_type(seg)
             # Create the SRv6 behavior
             response = stub.Create(request)
+            # Store the behavior to the database
+            if response.status == commons_pb2.STATUS_SUCCESS and store and \
+                    os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
+                # Connect to ArangoDB
+                # FIXME crash if arangodb_driver not imported
+                # TODO keep arango connection open
+                client = arangodb_driver.connect_arango(
+                    url=os.getenv('ARANGO_URL'))
+                # Connect to the "srv6_usid" db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=os.getenv('ARANGO_USER'),
+                    password=os.getenv('ARANGO_PASSWORD')
+                )
+                arangodb_driver.insert_srv6_behavior(
+                    database=database,
+                    grpc_address=channel._channel.target().decode(),
+                    segment=segment,
+                    action=action,
+                    device=device,
+                    table=table,
+                    nexthop=nexthop,
+                    lookup_table=lookup_table,
+                    interface=interface,
+                    segments=segments,
+                    metric=metric,
+                    fwd_engine=fwd_engine
+                )
         elif operation == 'get':
             # Get the SRv6 behavior
             response = stub.Get(request)
@@ -571,6 +635,33 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         # If an error occurred, abort the operation
         if res != commons_pb2.STATUS_SUCCESS:
             return res
+    # Store the tunnel to the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
+        # Connect to ArangoDB
+        # FIXME crash if arangodb_driver not imported
+        # TODO keep arango connection open
+        client = arangodb_driver.connect_arango(
+            url=os.getenv('ARANGO_URL'))
+        # Connect to the "srv6_usid" db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=os.getenv('ARANGO_USER'),
+            password=os.getenv('ARANGO_PASSWORD')
+        )
+        arangodb_driver.insert_srv6_path(
+            database=database,
+            l_grpc_address=ingress_channel._channel.target().decode(),
+            r_grpc_address=egress_channel._channel.target().decode(),
+            sidlist_lr=segments,
+            sidlist_rl=None,
+            dest_lr=destination,
+            dest_rl=None,
+            localseg_lr=localseg,
+            localseg_rl=None,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            is_unidirectional=True
+        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
@@ -646,6 +737,33 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
         return res
+    # Store the tunnel to the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
+        # Connect to ArangoDB
+        # FIXME crash if arangodb_driver not imported
+        # TODO keep arango connection open
+        client = arangodb_driver.connect_arango(
+            url=os.getenv('ARANGO_URL'))
+        # Connect to the "srv6_usid" db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=os.getenv('ARANGO_USER'),
+            password=os.getenv('ARANGO_PASSWORD')
+        )
+        arangodb_driver.insert_srv6_path(
+            database=database,
+            l_grpc_address=node_l_channel._channel.target().decode(),
+            r_grpc_address=node_r_channel._channel.target().decode(),
+            sidlist_lr=sidlist_lr,
+            sidlist_rl=sidlist_rl,
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            is_unidirectional=False
+        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
