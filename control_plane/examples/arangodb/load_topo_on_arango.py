@@ -29,7 +29,7 @@ import os
 import logging
 
 # Controller dependencies
-from controller.arangodb_utils import extract_topo_from_isis_and_load_on_arango
+from controller.db_utils.arangodb.arangodb_utils import extract_topo_from_isis_and_load_on_arango
 # from controller.arangodb_utils import extract_topo_from_isis
 # from controller.arangodb_utils import load_topo_on_arango
 

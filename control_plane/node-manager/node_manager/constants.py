@@ -45,7 +45,7 @@ from commons_pb2 import (STATUS_SUCCESS,
                          STATUS_NO_SUCH_DEVICE)
 
 # Forwarding Engine
-FWD_ENGINE = {
+FWD_ENGINE_STR_TO_INT = {
     'VPP': FwdEngine.Value('VPP'),
     'Linux': FwdEngine.Value('Linux'),
     'P4': FwdEngine.Value('P4'),

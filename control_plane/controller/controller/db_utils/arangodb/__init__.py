@@ -18,13 +18,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Node manager
+# Collection of ArangoDB database utilities
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 '''
-This package provides an implementation of a Node Manager. The Node Manager
-is a component that allows the SDN Controller to control a node (e.g. enforce
-configuration into the node or get some information aboout the node)
+This package provides a collection of utilities for interacting with a
+ArangoDB database.
 '''

@@ -18,13 +18,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Node manager
+# Collection of database utilities
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 '''
-This package provides an implementation of a Node Manager. The Node Manager
-is a component that allows the SDN Controller to control a node (e.g. enforce
-configuration into the node or get some information aboout the node)
+This package provides several utilities that allow a SDN Controller to
+interact with a database. This enables the support for the Controller
+persistency.
 '''

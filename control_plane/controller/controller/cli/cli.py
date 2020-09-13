@@ -24,7 +24,9 @@
 #
 
 
-"""Implementation of a CLI for the SRv6 Controller"""
+'''
+Implementation of a CLI for the SRv6 Controller.
+'''
 
 # This comment avoids the annoying warning "Too many lines in module"
 # of pylint. Maybe we should split this module in the future.
@@ -52,64 +54,97 @@ from dotenv import load_dotenv
 from pkg_resources import resource_filename
 
 # Controller dependencies
-from controller import arangodb_driver
+from controller.db_utils.arangodb import arangodb_driver
 from controller import srv6_usid
 from controller.cli import srv6_cli, srv6pm_cli, topo_cli
-from controller.init_db import init_srv6_usid_db
+from controller.db_utils.arangodb.init_db import init_srv6_usid_db
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 # Configure logging level for urllib3
 logging.getLogger('urllib3').setLevel(logging.WARNING)
-
-# import utils
-# import srv6_controller
-# import ti_extraction
-# import srv6_pm
 
 # Default path to the .env file
 DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
 
+# Path where to save the history file
+# We save it to in the same folder of this script
+HISTORY_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 '.controller_history')
+# Maximum length (in lines) of the history file
+# If the history file exceeds this limit, it is truncated
+HISTORY_FILE_LENGTH = 1000
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
 
 
 class CustomCmd(Cmd):
-    """This class extends the python class Cmd and implements a handler
-    for CTRL+C and CTRL+D"""
+    '''
+    This class extends the python class Cmd and implements a handler
+    for CTRL+C and CTRL+D
+    '''
 
-    histfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            '.controller_history')
-    histfile_size = 1000
+    # History file
+    histfile = os.path.join(HISTORY_FILE_PATH)
+    # History size
+    histfile_size = HISTORY_FILE_LENGTH
 
     def preloop(self):
+        '''
+        Hook method offered by the Cmd library, executed once when cmdloop()
+        is called.
+        '''
+        # If history persistency is enabled, readline library has been
+        # imported and the history file already exists...
         if readline and os.path.exists(self.histfile):
+            # ...read the history from the history file
             readline.read_history_file(self.histfile)
 
     def postloop(self):
+        '''
+        Hook method offered by the Cmd library executed once when cmdloop() is
+        about to return. In this method we write the history to the history
+        file.
+        '''
+        # If history persistency is enabled and readline library has been
+        # imported
         if readline:
+            # Set the number of lines to save in the history file
+            # If the history file exceeds the length limit, the history file
+            # is truncated
             readline.set_history_length(self.histfile_size)
+            # Write the history to the history file
             readline.write_history_file(self.histfile)
 
     def cmdloop(self, intro=None):
-        """ Command loop"""
+        '''
+        CLI loop that accepts commands from the user and dispatch them to the
+        methods.
 
+        :param intro: Intro string to be issued before the first prompt.
+        :type intro: str, optional
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Loop implementing the interpreter for the commands
         while True:
             try:
+                # Start CLI loop that accepts commands from the user and
+                # dispatch them to the methods
                 super(CustomCmd, self).cmdloop(intro=intro)
                 break
             except KeyboardInterrupt:
-                print("^C")
+                # Handle CTRL+C
+                print('^C')
             except Exception as err:    # pylint: disable=broad-except
                 # When an exception is raised, we log the traceback
                 # and keep the CLI open and ready to receive next comands
@@ -120,78 +155,114 @@ class CustomCmd(Cmd):
                 print()
 
     def emptyline(self):
-        """Avoid to execute the last command if empty line is entered"""
-
+        '''
+        Method called when an empty line is entered in response to the prompt.
+        By default, it repeats the last nonempty command entered. To avoid the
+        execution of the last nonempty command, we override this method and
+        leave it blank.
+        '''
         # pylint: disable=no-self-use
 
     def default(self, line):
-        """Default behavior"""
+        '''
+        Method called on an input line when the command prefix is not
+        recognized.
 
+        :param line: The command.
+        :type line: str
+        :return: True if the command is "quit", False if the command is
+                 unrecognized.
+        :rtype: bool
+        '''
+        # If the user entered "x" or "q", exit
         if line in ['x', 'q']:
             return self.do_exit(line)
-
-        print("Unrecognized command: {}".format(line))
+        # Command unrecognized
+        print('Unrecognized command: {}'.format(line))
         return False
 
     def do_exit(self, args):
-        """New line on exit"""
+        '''
+        Go new line on exit.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: True.
+        :rtype: bool
+        '''
         # pylint: disable=unused-argument, no-self-use
-
-        print()     # New line
+        #
+        # Print new line and return
+        print()
         return True
 
     def help_exit(self):
-        """Help message for exit callback"""
-
+        '''
+        Help message for exit callback.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help message
         print('exit the application. Shorthand: x q Ctrl-D.')
 
+    # Register handler for the "exit" command
     do_EOF = do_exit
+    # Register help for the "exit" command
     help_EOF = help_exit
 
 
 class ControllerCLITopology(CustomCmd):
-    """Topology subsection"""
+    '''
+    Topology subsection.
+    Subsection of the CLI containing several topology related functions.
+    '''
 
-    prompt = "controller(topology)> "
+    # Prompt string
+    prompt = 'controller(topology)> '
 
     def do_show_nodes(self, args):
-        """Show nodes"""
+        '''
+        Retrieve the nodes from ArangoDB and print the list of the available
+        nodes.
 
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
-        try:
-            # args = (srv6_cli
-            #         .parse_arguments_print_nodes(
-            #             prog='print_nodes', args=args.split(' ')))
-            pass
-        except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # pylint: disable=no-self-use
         #
-        # ArangoDB params
+        # Extract the ArangoDB params from the environment variables
         arango_url = os.getenv('ARANGO_URL')
         arango_user = os.getenv('ARANGO_USER')
         arango_password = os.getenv('ARANGO_PASSWORD')
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
+        # Connect to the "srv6_usid" db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
             username=arango_user,
             password=arango_password
         )
+        # Extract the nodes configuration stored in the "srv6_usid" database
         nodes_dict = arangodb_driver.get_nodes_config(database)
+        # Print the available nodes
         srv6_cli.print_nodes(nodes_dict=nodes_dict)
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_load_nodes_config(self, args):
-        '''Load node configuration to database'''
+        '''
+        Read the nodes configuration from a YAML file and load it to a Arango
+        database.
+
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
         #
         # Parse arguments
@@ -201,34 +272,55 @@ class ControllerCLITopology(CustomCmd):
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # ArangoDB params
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Extract the ArangoDB params from the environment variables
         arango_url = os.getenv('ARANGO_URL')
         arango_user = os.getenv('ARANGO_USER')
         arango_password = os.getenv('ARANGO_PASSWORD')
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
+        # Connect to the "srv6_usid" db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
             username=arango_user,
             password=arango_password
         )
+        # Push the nodes configuration to the database
         arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(
             args.nodes_file)[0])
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
+        return False
 
     def do_extract(self, args):
-        """Extract the network topology"""
+        '''
+        Extract the network topology from a set of nodes running the ISIS
+        protocol.
 
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = (topo_cli
                     .parse_arguments_topology_information_extraction_isis(
                         prog='extract', args=args.split(' ')))
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Extract the topology
         topo_cli.topology_information_extraction_isis(
             routers=args.routers.split(','),
             period=args.period,
@@ -241,23 +333,34 @@ class ControllerCLITopology(CustomCmd):
             topo_graph=args.topo_graph,
             verbose=args.verbose
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_load_on_arango(self, args):
-        """Read nodes and edges YAML files and upload the topology
-        on ArangoDB"""
+        '''
+        Read nodes and edges YAML files and upload the topology on ArangoDB.
 
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = topo_cli.parse_arguments_load_topo_on_arango(
                 prog='load_on_arango',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Load the topology on Arango database
         topo_cli.load_topo_on_arango(
             arango_url=args.arango_url,
             arango_user=args.arango_user,
@@ -266,23 +369,36 @@ class ControllerCLITopology(CustomCmd):
             edges_yaml=args.edges_yaml,
             verbose=args.verbose
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_extract_and_load_on_arango(self, args):
-        """Extract the network topology from a set of nodes running ISIS
-        and upload it on ArangoDB"""
+        '''
+        Extract the network topology from a set of nodes running ISIS
+        and upload it on ArangoDB.
 
+        :param args: The argument passed to this command.
+        :type args: str
+        :return: False in order to leave the CLI subsection open.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             arg = (topo_cli
                    .parse_arguments_extract_topo_from_isis_and_load_on_arango(
                        prog='extract_and_load_on_arango', args=args.split(' '))
                    )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Extract the topology from a set of nodes running the ISIS protocol
+        # and load the extracted topology on a Arango database
         topo_cli.extract_topo_from_isis_and_load_on_arango(
             isis_nodes=arg.isis_nodes.split(','),
             isisd_pwd=arg.isisd_pwd,
@@ -296,15 +412,28 @@ class ControllerCLITopology(CustomCmd):
             period=arg.period,
             verbose=arg.verbose
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def complete_show_nodes(self, text, line, start_idx, end_idx):
-        """Auto-completion for show_nodes command"""
+        '''
+        Auto-completion for show_nodes command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -315,15 +444,28 @@ class ControllerCLITopology(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_print_nodes(text, prev_text)
 
     def complete_load_nodes_config(self, text, line, start_idx, end_idx):
-        """Auto-completion for load_nodes_config command"""
+        '''
+        Auto-completion for load_nodes_config command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -334,15 +476,28 @@ class ControllerCLITopology(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_load_nodes_config(text, prev_text)
 
     def complete_extract(self, text, line, start_idx, end_idx):
-        """Auto-completion for extract command"""
+        '''
+        Auto-completion for extract command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -353,16 +508,29 @@ class ControllerCLITopology(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return topo_cli.complete_topology_information_extraction_isis(
             text, prev_text)
 
     def complete_load_on_arango(self, text, line, start_idx, end_idx):
-        """Auto-completion for load_on_arango command"""
+        '''
+        Auto-completion for load_on_arango command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -373,16 +541,29 @@ class ControllerCLITopology(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return topo_cli.complete_load_topo_on_arango(text, prev_text)
 
     def complete_extract_and_load_on_arango(self, text,
                                             line, start_idx, end_idx):
-        """Auto-completion for extract_and_load_on_arango command"""
+        '''
+        Auto-completion for extract_and_load_on_arango command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -393,57 +574,67 @@ class ControllerCLITopology(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return (topo_cli
                 .complete_extract_topo_from_isis_and_load_on_arango(
                     text, prev_text))
 
     def help_show_nodes(self):
-        """Show help usage for show_nodes config command"""
-        #
+        '''
+        Show help usage for show_nodes config command.
+        '''
         # pylint: disable=no-self-use
         #
+        # Print the help usage
         srv6_cli.parse_arguments_print_nodes(
             prog='show_nodes',
             args=['--help']
         )
 
     def help_load_nodes_config(self):
-        """Show help usage for load_nodes_config nodes command"""
-        #
+        '''
+        Show help usage for load_nodes_config command.
+        '''
         # pylint: disable=no-self-use
         #
+        # Print the help usage
         srv6_cli.parse_arguments_load_nodes_config(
             prog='load_nodes_config',
             args=['--help']
         )
 
     def help_extract(self):
-        """Show help usage for extract command"""
-
+        '''
+        Show help usage for extract command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         topo_cli.parse_arguments_topology_information_extraction_isis(
             prog='extract',
             args=['--help']
         )
 
     def help_load_on_arango(self):
-        """Show help usage for load_topo_on_arango"""
-
+        '''
+        Show help usage for load_topo_on_arango.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         topo_cli.parse_arguments_load_topo_on_arango(
             prog='load_on_arango',
             args=['--help']
         )
 
     def help_extract_and_load_on_arango(self):
-        """Show help usage for extract_and_load_on_arango"""
-
+        '''
+        Show help usage for extract_and_load_on_arango.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
             prog='extract_and_load_on_arango',
             args=['--help']
@@ -451,22 +642,40 @@ class ControllerCLITopology(CustomCmd):
 
 
 class ControllerCLISRv6PMConfiguration(CustomCmd):
-    """srv6pm->Configuration subsection"""
+    '''
+    srv6pm->Configuration subsection.
+    Subsection of the CLI containing several functions for SRv6 Performance
+    Monitoring configuration.
+    '''
 
-    prompt = "controller(srv6pm-configuration)> "
+    # Prompt string
+    prompt = 'controller(srv6pm-configuration)> '
 
     def do_set(self, args):
-        """Set configuation"""
+        '''
+        Set the configuation for an experiment. Before running an experiment
+        you need to set the configuration.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6pm_cli.parse_arguments_set_configuration(
                 prog='start',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Set the configuration
         srv6pm_cli.set_configuration(
             sender=args.sender_ip,
             reflector=args.reflector_ip,
@@ -479,37 +688,62 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
             number_of_color=args.number_of_color,
             pm_driver=args.pm_driver
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_reset(self, args):
-        """Clear configuration"""
+        '''
+        Clear the configuration and reset the nodes.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6pm_cli.parse_arguments_reset_configuration(
                 prog='start',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Clear the configuration
         srv6pm_cli.reset_configuration(
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
             reflector_port=args.reflector_port,
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def complete_set(self, text, line, start_idx, end_idx):
-        """Auto-completion for set command"""
+        '''
+        Auto-completion for set command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -525,10 +759,23 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return srv6pm_cli.complete_set_configuration(text, prev_text)
 
     def complete_reset(self, text, line, start_idx, end_idx):
-        """Auto-completion for reset command"""
+        '''
+        Auto-completion for reset command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -544,20 +791,24 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return srv6pm_cli.complete_reset_configuration(text, prev_text)
 
     def help_set(self):
-        """Show help usagte for set operation"""
-
+        '''
+        Show help usagte for set operation.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6pm_cli.parse_arguments_set_configuration(
             prog='start',
             args=['--help']
         )
 
     def help_reset(self):
-        """Show help usage for reset operation"""
-
+        '''
+        Show help usage for reset operation.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6pm_cli.parse_arguments_reset_configuration(
             prog='start',
             args=['--help']
@@ -565,22 +816,32 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
 
 
 class ControllerCLISRv6PMExperiment(CustomCmd):
-    """srv6pm->experiment subsection"""
+    '''
+    srv6pm->experiment subsection.
+    Subsection of the CLI containing several functions for SRv6 Performance
+    Monitoring experiments.
+    '''
 
-    prompt = "controller(srv6pm-experiment)> "
+    # Prompt string
+    prompt = 'controller(srv6pm-experiment)> '
 
     def do_start(self, args):
-        """Start an experiment"""
-
+        '''Start an experiment'''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6pm_cli.parse_arguments_start_experiment(
                 prog='start',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Start an experiment
         srv6pm_cli.start_experiment(
             sender=args.sender_ip,
             reflector=args.reflector_ip,
@@ -590,11 +851,6 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_dest=args.refl_send_dest,
             send_refl_sidlist=args.send_refl_sidlist,
             refl_send_sidlist=args.refl_send_sidlist,
-            # Interfaces moved to set_configuration
-            # send_in_interfaces=args.send_in_interfaces,
-            # refl_in_interfaces=args.refl_in_interfaces,
-            # send_out_interfaces=args.send_out_interfaces,
-            # refl_out_interfaces=args.refl_out_interfaces,
             measurement_protocol=args.measurement_protocol,
             measurement_type=args.measurement_type,
             authentication_mode=args.authentication_mode,
@@ -608,22 +864,34 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             refl_send_localseg=args.refl_send_localseg,
             force=args.force
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_show(self, args):
-        """Show results of a running experiment"""
+        '''
+        Show results of a running experiment.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6pm_cli.parse_arguments_get_experiment_results(
                 prog='show',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Get results
         srv6pm_cli.get_experiment_results(
             sender=args.sender_ip,
             reflector=args.reflector_ip,
@@ -632,22 +900,33 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_sidlist=args.send_refl_sidlist,
             refl_send_sidlist=args.refl_send_sidlist
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_stop(self, args):
-        """Stop a running experiment"""
+        '''
+        Stop a running experiment.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6pm_cli.parse_arguments_stop_experiment(
                 prog='stop',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
         srv6pm_cli.stop_experiment(
             sender=args.sender_ip,
             reflector=args.reflector_ip,
@@ -660,15 +939,28 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
             send_refl_localseg=args.send_refl_localseg,
             refl_send_localseg=args.refl_send_localseg
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def complete_start(self, text, line, start_idx, end_idx):
-        """Auto-completion for start command"""
+        '''
+        Auto-completion for start command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -679,15 +971,28 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6pm_cli.complete_start_experiment(text, prev_text)
 
     def complete_show(self, text, line, start_idx, end_idx):
-        """Auto-completion for show command"""
+        '''
+        Auto-completion for show command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -698,15 +1003,28 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6pm_cli.complete_get_experiment_results(text, prev_text)
 
     def complete_stop(self, text, line, start_idx, end_idx):
-        """Auto-completion for stop command"""
+        '''
+        Auto-completion for stop command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -717,35 +1035,41 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6pm_cli.complete_stop_experiment(text, prev_text)
 
     def help_start(self):
-        """Show help usage for start operation"""
-
+        '''
+        Show help usage for start operation.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         srv6pm_cli.parse_arguments_start_experiment(
             prog='start',
             args=['--help']
         )
 
     def help_show(self):
-        """Show help usasge for show operation"""
-
+        '''
+        Show help usasge for show operation.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         srv6pm_cli.parse_arguments_get_experiment_results(
             prog='show',
             args=['--help']
         )
 
     def help_stop(self):
-        """Show help usage for stop operation"""
-
+        '''
+        Show help usage for stop operation.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Print the help usage
         srv6pm_cli.parse_arguments_stop_experiment(
             prog='stop',
             args=['--help']
@@ -753,44 +1077,79 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
 
 
 class ControllerCLISRv6PM(CustomCmd):
-    """srv6pm subcommmand"""
+    '''
+    srv6pm subcommmand.
+    Subsection of the CLI containing several functions for SRv6 Performance
+    Monitoring.
+    '''
 
-    prompt = "controller(srv6pm)> "
+    # Prompt string
+    prompt = 'controller(srv6pm)> '
 
     def do_experiment(self, args):
-        """Enter srv6pm-experiment subsection"""
+        '''
+        Enter srv6pm-experiment subsection.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Start SRv6 PM Experiment command loop
         sub_cmd = ControllerCLISRv6PMExperiment()
         sub_cmd.cmdloop()
 
     def do_configuration(self, args):
-        """Enter srv6pm-configuration subsection"""
+        '''
+        Enter srv6pm-configuration subsection.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Start SRv6 PM Experiment command loop
         sub_cmd = ControllerCLISRv6PMConfiguration()
         sub_cmd.cmdloop()
 
 
 class ControllerCLISRv6(CustomCmd):
-    """srv6 subsection"""
+    '''
+    srv6 subsection.
+    Subsection of the CLI containing several functions for SRv6.
+    '''
 
-    prompt = "controller(srv6)> "
+    # Prompt string
+    prompt = 'controller(srv6)> '
 
     def do_path(self, args):
-        """Handle a SRv6 path"""
+        '''
+        Handle a SRv6 path.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6_cli.parse_arguments_srv6_path(
                 prog='path',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Handle the SRv6 path
         srv6_cli.handle_srv6_path(
             operation=args.op,
             grpc_address=args.grpc_ip,
@@ -804,22 +1163,34 @@ class ControllerCLISRv6(CustomCmd):
             bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_behavior(self, args):
-        """Handle a SRv6 behavior"""
+        '''
+        Handle a SRv6 behavior.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6_cli.parse_arguments_srv6_behavior(
                 prog='behavior',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Handle SRv6 behavior
         srv6_cli.handle_srv6_behavior(
             operation=args.op,
             grpc_address=args.grpc_ip,
@@ -835,22 +1206,34 @@ class ControllerCLISRv6(CustomCmd):
             metric=args.metric,
             fwd_engine=args.fwd_engine
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_unitunnel(self, args):
-        """Handle a SRv6 unidirectional tunnel"""
+        '''
+        Handle a SRv6 unidirectional tunnel.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6_cli.parse_arguments_srv6_unitunnel(
                 prog='unitunnel',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Handle SRv6 unidirectional tunnel
         srv6_cli.handle_srv6_unitunnel(
             operation=args.op,
             ingress_ip=args.ingress_grpc_ip,
@@ -863,22 +1246,34 @@ class ControllerCLISRv6(CustomCmd):
             bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_biditunnel(self, args):
-        """Handle a SRv6 bidirectional tunnel"""
+        '''
+        Handle a SRv6 bidirectional tunnel.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Parse the arguments
         try:
             args = srv6_cli.parse_arguments_srv6_biditunnel(
                 prog='biditunnel',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Handle SRv6 bidirectional tunnel
         srv6_cli.handle_srv6_biditunnel(
             operation=args.op,
             node_l_ip=args.l_grpc_ip,
@@ -894,30 +1289,41 @@ class ControllerCLISRv6(CustomCmd):
             bsid_addr=args.bsid_addr,
             fwd_engine=args.fwd_engine
         )
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def do_usid_policy(self, args):
-        """Handle a SRv6 uSID policy"""
+        '''
+        Handle a SRv6 uSID policy.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: False.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Parse the arguments
         try:
             args = srv6_cli.parse_arguments_srv6_usid_policy(
                 prog='usid_policy',
                 args=args.split(' ')
             )
         except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # ArangoDB params
+            # In case of errors during the parsing, SystemExit will be raised
+            # and the process will be terminated
+            # In order to avoid the process to be terminated, we handle this
+            # exception and we return "False" to leave the CLI subsection open
+            return False
+        # Extract the ArangoDB params from the environment variables
         arango_url = os.getenv('ARANGO_URL')
         arango_user = os.getenv('ARANGO_USER')
         arango_password = os.getenv('ARANGO_PASSWORD')
         # Connect to ArangoDB
         client = arangodb_driver.connect_arango(
             url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
+        # Connect to the "srv6_usid" db
         database = arangodb_driver.connect_srv6_usid_db(
             client=client,
             username=arango_user,
@@ -947,15 +1353,28 @@ class ControllerCLISRv6(CustomCmd):
         )
         # Print nodes available
         srv6_cli.print_nodes(nodes_dict=nodes_dict)
-        # Return False in order to keep the CLI subsection open
-        # after the command execution
+        # Return False in order to keep the CLI subsection open after the
+        # command execution
         return False
 
     def complete_path(self, text, line, start_idx, end_idx):
-        """Auto-completion for path command"""
+        '''
+        Auto-completion for path command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -966,15 +1385,28 @@ class ControllerCLISRv6(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_srv6_path(text, prev_text)
 
     def complete_behavior(self, text, line, start_idx, end_idx):
-        """Auto-completion for behavior command"""
+        '''
+        Auto-completion for behavior command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -985,15 +1417,28 @@ class ControllerCLISRv6(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_srv6_behavior(text, prev_text)
 
     def complete_unitunnel(self, text, line, start_idx, end_idx):
-        """Auto-completion for unitunnel command"""
+        '''
+        Auto-completion for unitunnel command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1004,15 +1449,28 @@ class ControllerCLISRv6(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_srv6_unitunnel(text, prev_text)
 
     def complete_biditunnel(self, text, line, start_idx, end_idx):
-        """Auto-completion for biditunnel command"""
+        '''
+        Auto-completion for biditunnel command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1023,15 +1481,28 @@ class ControllerCLISRv6(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_srv6_biditunnel(text, prev_text)
 
     def complete_usid_policy(self, text, line, start_idx, end_idx):
-        """Auto-completion for usid_policy command"""
+        '''
+        Auto-completion for usid_policy command.
 
+        :param text: The string prefix we are attempting to match: all
+                     returned matches begin with it.
+        :type text: str
+        :param line: The current input line with leading whitespace removed.
+        :type line: str
+        :param start_idx: The beginning index of the prefix text.
+        :type start_idx: int
+        :param end_idx: The ending index of the prefix text.
+        :type end_idx: int
+        :return: A list containing all the possible matches.
+        :rtype: list
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1042,55 +1513,65 @@ class ControllerCLISRv6(CustomCmd):
         prev_text = None
         if len(args) > 1:
             prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
+        # Call auto-completion function and return a list of possible
+        # arguments
         return srv6_cli.complete_usid_policy(text, prev_text)
 
     def help_path(self):
-        """Show help usage for path command"""
-
+        '''
+        Show help usage for path command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6_cli.parse_arguments_srv6_path(
             prog='path',
             args=['--help']
         )
 
     def help_behavior(self):
-        """Show help usage for behavior command"""
-
+        '''
+        Show help usage for behavior command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6_cli.parse_arguments_srv6_behavior(
             prog='behavior',
             args=['--help']
         )
 
     def help_unitunnel(self):
-        """Show help usage for unitunnel command"""
-
+        '''
+        Show help usage for unitunnel command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6_cli.parse_arguments_srv6_unitunnel(
             prog='unitunnel',
             args=['--help']
         )
 
     def help_biditunnel(self):
-        """Show help usage for biditunnel command"""
-
+        '''
+        Show help usage for biditunnel command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6_cli.parse_arguments_srv6_biditunnel(
             prog='biditunnel',
             args=['-help']
         )
 
     def help_usid_policy(self):
-        """Show help usage for usid_policy command"""
-
+        '''
+        Show help usage for usid_policy command.
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Show the help usage
         srv6_cli.parse_arguments_usid_policy(
             prog='usid_policy',
             args=['--help']
@@ -1098,58 +1579,95 @@ class ControllerCLISRv6(CustomCmd):
 
 
 class ControllerCLI(CustomCmd):
-    """Controller CLI entry point"""
+    '''
+    Controller CLI entry point.
+    '''
 
+    # Prompt string
     prompt = 'controller> '
-    intro = "Welcome! Type ? to list commands"
+    # Intro message
+    intro = 'Welcome! Type ? to list commands'
 
     def do_exit(self, args):
-        """Exit from the CLI"""
+        '''
+        Exit from the CLI.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        :return: True.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use, unused-argument
-
-        print("Bye")
+        #
+        # Print bye message and return
+        print('Bye')
         return True
 
     def do_srv6(self, args):
-        """Enter srv6 subsection"""
+        '''
+        Enter srv6 subsection.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Start the SRv6 command loop
         sub_cmd = ControllerCLISRv6()
         sub_cmd.cmdloop()
 
     def do_srv6pm(self, args):
-        """Enter srv6pm subsection"""
+        '''
+        Enter srv6pm subsection.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Start the SRv6 PM command loop
         sub_cmd = ControllerCLISRv6PM()
         sub_cmd.cmdloop()
 
     def do_topology(self, args):
-        """Enter topology subsection"""
+        '''
+        Enter topology subsection.
 
+        :param args: The arguments passed to the command.
+        :type args: str
+        '''
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Start the Topology command loop
         sub_cmd = ControllerCLITopology()
         sub_cmd.cmdloop()
 
     def default(self, line):
-        """Default behavior"""
+        '''
+        Default behavior.
 
+        :param line: The command.
+        :type line: str
+        :return: True if the command is "quit", False if the command is
+                 unrecognized.
+        :rtype: bool
+        '''
+        # If the user entered "x" or "q", exit
         if line in ['x', 'q']:
             return self.do_exit(line)
-
-        print("Unrecognized command: {}".format(line))
+        # Command unrecognized
+        print('Unrecognized command: {}'.format(line))
         return False
 
+    # Register handler for the "exit" command
     do_EOF = do_exit
 
 
 # Class representing the configuration
 class Config:
-    """Class implementing configuration for the Controller"""
+    '''
+    Class implementing configuration for the Controller.
+    '''
 
     # ArangoDB username
     arango_user = None
@@ -1164,8 +1682,14 @@ class Config:
 
     # Load configuration from .env file
     def load_config(self, env_file):
-        """Load configuration from a .env file"""
+        '''
+        Load configuration from a .env file
 
+        :param env_file: The path and the name of the .env file containing the
+                         nodes configuration.
+        :type env_file: str
+        '''
+        # Load configuration from .env file
         logger.info('*** Loading configuration from %s', env_file)
         # Path to the .env file
         env_path = Path(env_file)
@@ -1197,18 +1721,25 @@ class Config:
                 self.debug = None
 
     def validate_config(self):
-        """Validate current configuration"""
+        '''
+        Validate current configuration.
 
+        :return: True if the configuraation is valid, False otherwise.
+        :rtype: bool
+        '''
         # pylint: disable=no-self-use
-
+        #
+        # Validate configuration
+        # TODO
         logger.info('*** Validating configuration')
         success = True
         # Return result
         return success
 
     def print_config(self):
-        """Pretty print current configuration"""
-
+        '''
+        Pretty print current configuration.
+        '''
         print()
         print('****************** CONFIGURATION ******************')
         print()
@@ -1223,13 +1754,16 @@ class Config:
         print()
 
     def import_dependencies(self):
-        """Import dependencies"""
+        '''
+        Import dependencies.
+        '''
 
 
 # Parse options
 def parse_arguments():
-    """Command-line arguments parser"""
-
+    '''
+    Command-line arguments parser.
+    '''
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -1249,8 +1783,9 @@ def parse_arguments():
 
 
 def __main():
-    """Entry point for this module"""
-
+    '''
+    Entry point for this module.
+    '''
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'

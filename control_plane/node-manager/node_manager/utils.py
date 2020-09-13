@@ -26,6 +26,8 @@
 
 """This module contains several utility functions for node manager"""
 
+# General imports
+import os
 from ipaddress import AddressValueError, IPv4Interface, IPv6Interface
 from socket import AF_INET, AF_INET6
 
@@ -81,3 +83,13 @@ def validate_ip_address(ip_address):
 
     return validate_ipv4_address(ip_address) or \
         validate_ipv6_address(ip_address)
+
+
+# Check whether we have root permission or not
+# Return True if we have root permission, False otherwise
+def check_root():
+    '''
+    Return True if this program is executed as root,
+    False otherwise
+    '''
+    return os.getuid() == 0

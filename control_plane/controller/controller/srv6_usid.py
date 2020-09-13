@@ -35,6 +35,7 @@ import pprint
 import os
 from ipaddress import IPv6Address
 
+# pyaml dependencies
 from pyaml import yaml
 
 # Proto dependencies
@@ -42,21 +43,29 @@ import commons_pb2
 # Controller dependencies
 from controller import srv6_utils
 from controller import utils
+
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
+
+# Optional imports:
+#     arangodb_driver      - only required to read/write the topology from/to
+#                            a ArangoDB database
 try:
-    from controller import arangodb_driver
+    from controller.db_utils.arangodb import arangodb_driver
 except ImportError:
-    print('ArangoDB modules not installed')
+    logger.warning('ArangoDB modules not installed')
+
 
 # Global variables definition
 #
 #
-# Logger reference
-logging.basicConfig(level=logging.NOTSET)
-logger = logging.getLogger(__name__)
 # Default number of bits for the SID Locator
 DEFAULT_LOCATOR_BITS = 32
 # Default number of bits for the uSID identifier
 DEFAULT_USID_ID_BITS = 16
+# Supported forwarding engines
+SUPPORTED_FWD_ENGINES = ('Linux', 'VPP', 'P4')
 
 
 class InvalidConfigurationError(srv6_utils.SRv6Exception):
@@ -93,57 +102,24 @@ def print_nodes(nodes_dict):
     '''
     Print the nodes.
 
-    :param nodes_dict: Dict containing the nodes
+    :param nodes_dict: Dict containing the nodes.
     :type nodes_dict: dict
     '''
     print(list(nodes_dict.keys()))
 
 
-def print_node_to_addr_mapping(nodes_filename):
+def print_nodes_from_config_file(nodes_filename):
     '''
-    This function reads a YAML file containing the mapping
-    of node names to IP addresses and pretty print it
+    This function reads a YAML file containing the nodes configuration and
+    print the available nodes.
 
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
+    :param node_to_addr_filename: Name of the YAML file containing the mapping
+                                  of node names to IP addresses.
     :type node_to_addr_filename: str
     '''
-    # Read the mapping from the file
-    with open(nodes_filename, 'r') as nodes_file:
-        nodes = yaml.safe_load(nodes_file)
-    # Validate the IP addresses
-    for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(addr):
-            logger.error('Invalid IPv6 address %s in %s',
-                         addr, nodes_filename)
-            raise InvalidConfigurationError
-    # Validate the SIDs
-    for sid in [node['uN'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(sid):
-            logger.error('Invalid SID %s in %s',
-                         sid, nodes_filename)
-            raise InvalidConfigurationError
-    # Validate the forwarding engine
-    for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
-            logger.error('Invalid forwarding engine %s in %s',
-                         fwd_engine, nodes_filename)
-            raise InvalidConfigurationError
-    # Get the #bits of the locator
-    locator_bits = nodes.get('locator_bits')
-    # Validate #bits for the SID Locator
-    if locator_bits is not None and \
-            (int(locator_bits) < 0 or int(locator_bits) > 128):
-        raise InvalidConfigurationError
-    # Get the #bits of the uSID identifier
-    usid_id_bits = nodes.get('usid_id_bits')
-    # Validate #bits for the uSID ID
-    if usid_id_bits is not None and \
-            (int(usid_id_bits) < 0 or int(usid_id_bits) > 128):
-        raise InvalidConfigurationError
-    if locator_bits is not None and usid_id_bits is not None and \
-            int(usid_id_bits) + int(locator_bits) > 128:
-        raise InvalidConfigurationError
+    # Read the nodes from the configuration file
+    nodes = read_nodes(nodes_filename)
+    # Print the nodes available
     print('\nList of available devices:')
     pprint.PrettyPrinter(indent=4).pprint(list(nodes['nodes'].keys()))
     print()
@@ -151,45 +127,51 @@ def print_node_to_addr_mapping(nodes_filename):
 
 def read_nodes(nodes_filename):
     '''
-    Convert a list of node names into a list of IP addresses.
+    This function reads a YAML file containing the nodes configuration and
+    return the available nodes.
 
-    :param nodes_filename: Name of the YAML file containing the
-                           IP addresses
+    :param nodes_filename: Name of the YAML file containing the nodes
+                           configuration.
     :type nodes_filename: str
-    :return: Tuple (List of IP addresses, Locator bits, uSID ID bits)
+    :return: Tuple (List of IP addresses, Locator bits, uSID ID bits).
     :rtype: tuple
-    :raises NodeNotFoundError: Node name not found in the mapping file
-    :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid YAML
+                                       file.
     '''
     # Read the mapping from the file
     with open(nodes_filename, 'r') as nodes_file:
         nodes = yaml.safe_load(nodes_file)
-    # Validate the IP addresses
-    for addr in [node['grpc_ip'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(addr):
-            logger.error('Invalid IPv6 address %s in %s',
-                         addr, nodes_filename)
+    # Validation checks
+    # Iterate on the nodes
+    for node in nodes['nodes'].values():
+        # Validate the IP address
+        if not utils.validate_ipv6_address(node['grpc_ip']):
+            logger.error('Invalid IPv6 address %s in %s', node['grpc_ip'],
+                         nodes_filename)
             raise InvalidConfigurationError
-    # Validate the SIDs
-    for sid in [node['uN'] for node in nodes['nodes'].values()]:
-        if not utils.validate_ipv6_address(sid):
-            logger.error('Invalid SID %s in %s',
-                         sid, nodes_filename)
+        # Validate the SID
+        if not utils.validate_ipv6_address(node['uN']):
+            logger.error('Invalid SID %s in %s', node['uN'], nodes_filename)
             raise InvalidConfigurationError
-    # Validate the forwarding engine
-    for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
+        # Validate the forwarding engine
+        if node['fwd_engine'] not in SUPPORTED_FWD_ENGINES:
             logger.error('Invalid forwarding engine %s in %s',
-                         fwd_engine, nodes_filename)
+                         node['fwd_engine'], nodes_filename)
             raise InvalidConfigurationError
+    # Validation checks passed
+    #
     # Get the #bits of the locator
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     locator_bits = nodes.get('locator_bits')
     # Validate #bits for the SID Locator
     if locator_bits is not None and \
             (int(locator_bits) < 0 or int(locator_bits) > 128):
         raise InvalidConfigurationError
     # Get the #bits of the uSID identifier
+    # This parameter is optional and may be omitted in the nodes configuration
+    # file
     usid_id_bits = nodes.get('usid_id_bits')
     # Validate #bits for the uSID ID
     if usid_id_bits is not None and \
@@ -202,46 +184,78 @@ def read_nodes(nodes_filename):
     for node in nodes['nodes'].values():
         nodes['nodes'][node['name']]['grpc_ip'] = node['grpc_ip'].lower()
         nodes['nodes'][node['name']]['uN'] = node['uN'].lower()
-    # Return the nodes list
+    # Return the nodes list, the #bits for the locator and the #bits for the
+    # uSID identifier
     return nodes['nodes'], locator_bits, usid_id_bits
+
+
+def get_locator_mask(locator_bits):
+    '''
+    Return the locator mask.
+
+    :param locator_bits: The number of bits of the locator.
+    :type locator_bits: int
+    :return: The locator mask.
+    :rtype: str
+    '''
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 111...11111 (all "1"), then we put to
+    # zero the bits of the non-locator part
+    # The remaining part is the locator, which is converted to an IPv6Address
+    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
+                                   int('1' * (128 - locator_bits), 2)))
+    # Done, return the locator mask
+    return locator_mask
+
+
+def get_usid_id_mask(locator_bits, usid_id_bits):
+    '''
+    Return the uSID identifier mask.
+
+    :param locator_bits: The number of bits of the locator.
+    :type locator_bits: int
+    :param usid_id_bits: The number of bits of the uSID identifier.
+    :type usid_id_bits: int
+    :return: The locator mask.
+    :rtype: str
+    '''
+    # It is computed with a binary manipulation
+    # We start from the IPv6 address 00...000111...11111 (#usid_id_bits of "1"
+    # in the less significant part of the address, the remaining bits set to
+    # "0"), then we perform a shift operation to move the "1" to the position
+    # corresponding to the uSID identifier part
+    usid_id_mask = str(IPv6Address(int('1' * usid_id_bits, 2) <<
+                                   (128 - locator_bits - usid_id_bits)))
+    # Done, return
+    return usid_id_mask
 
 
 def segments_to_micro_segment(locator, segments,
                               locator_bits=DEFAULT_LOCATOR_BITS,
                               usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
-    Convert a SID list (with #segments <= 6) into a uSID.
+    Convert a SID list into a uSID. The uSID must have enough space to encode
+    all the segments that you want to insert. If not, an exception is raised.
 
-    :param locator: The SID Locator of the segments.
-                    All the segments must use the same SID Locator.
+    :param locator: The SID Locator of the segments. All the segments must use
+                    the same SID Locator.
     :type locator: str
-    :param segments: The SID List to be compressed
+    :param segments: The SID List to be compressed.
     :type segments: list
-    :param locator_bits: Number of bits of the locator part of the SIDs
+    :param locator_bits: Number of bits of the locator part of the SIDs.
     :type locator_bits: int
-    :param usid_id_bits: Number of bits of the uSID identifiers
+    :param usid_id_bits: Number of bits of the uSID identifiers.
     :type usid_id_bits: int
-    :return: The uSID containing all the segments
+    :return: The uSID containing all the segments.
     :rtype: str
-    :raises TooManySegmentsError: segments arg contains too many segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    :raises InvalidSIDError: SID is wrong for one or more segments
+    :raises TooManySegmentsError: segments arg contains too many segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
+    :raises InvalidSIDError: SID is wrong for one or more segments.
     '''
     # Locator mask, used to extract the locator from the SIDs
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111, then we put to zero
-    # the bits of the non-locator part
-    # The remaining part is the locator, which is converted to an IPv6Address
-    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                   int('1' * (128 - locator_bits), 2)))
+    locator_mask = get_locator_mask(locator_bits)
     # uSID identifier mask
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111, then we perform a shift
-    # operation
-    usid_id_mask = str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                   (128 - locator_bits - usid_id_bits)))
+    usid_id_mask = get_usid_id_mask(locator_bits, usid_id_bits)
     # Enforce case-sensitivity
     locator = locator.lower()
     _segments = list()
@@ -249,39 +263,64 @@ def segments_to_micro_segment(locator, segments,
         _segments.append(segment.lower())
     segments = _segments
     # Validation check
-    # We need to verify if there is space in the uSID for all the segments
+    # We need to verify if there is enough space in the uSID for all the
+    # segments
+    # The space available to store the segments is the non-locator part of an
+    # IPv6 address; each segment is encoded with usid_id_bits
+    # Therefore, the maximum number of segments that we are able to encode in
+    # one uSID is computed as follows:
+    #
+    #     |   128 - locator_bits    |
+    #     |   ------------------    |
+    #     |_     usid_id_bits      _|
+    #
     if len(segments) > math.floor((128 - locator_bits) / usid_id_bits):
         logger.error('Too many segments')
         raise TooManySegmentsError
+    # Build the uSID, encoded as an integer
+    #
     # uSIDs always start with the SID Locator
     usid_int = int(IPv6Address(locator))
-    # Offset of the uSIDs
+    # Offset of the uSID identifiers, used to put the uSID identifiers to the
+    # right position in the uSID
     offset = 0
     # Iterate on the segments
     for segment in segments:
         # Split the segment in...
         # ...segment locator
+        # The segment locator is obtained as an "and" between the segment and
+        # the locator mask that we have computed previously
         segment_locator = \
             str(IPv6Address(int(IPv6Address(locator_mask)) &
                             int(IPv6Address(segment))))
+        # We already know the locator, because it is passed as argument to
+        # this function; we only need to check that all the segments have
+        # the correct segment locator
+        # If we found a segment with a different locator, we raise an
+        # exception
         if locator != segment_locator:
             # All the segments must have the same Locator
             logger.error('Wrong locator for the SID %s', ''.join(segment))
             raise SIDLocatorError
         # ...and uSID identifier
+        # The uSID identifier is obtained as an "and" between the segment and
+        # the uSID identifier mask that we have computed previously
         usid_id = \
             str(IPv6Address(int(IPv6Address(usid_id_mask)) &
                             int(IPv6Address(segment))))
         # Other bits should be equal to zero
+        # If not, the segment is invalid and we raise an exception
         if int(IPv6Address(segment)) & (
                 0b1 * (128 - locator_bits - usid_id_bits)) != 0:
             # The SID is invalid
             logger.error('SID %s is invalid. Final bits should be zero',
                          segment)
             raise InvalidSIDError
-        # And append to the uSID
+        # Finally, append to the uSID identifier to the uSID, after shifting
+        # it to the right position in the uSID
         usid_int += int(IPv6Address(usid_id)) >> offset
-        # Increase offset
+        # Increase offset to take into account the uSID identifier that we
+        # added to the uSID
         offset += usid_id_bits
     # Get a string representation of the uSID
     usid = str(IPv6Address(usid_int))
@@ -291,40 +330,42 @@ def segments_to_micro_segment(locator, segments,
 
 def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     '''
-    Get the SID Locator (i.e. the first 32 bits) from a SID List.
+    Get the SID Locator from a SID List. By default, SID Locator part is 32
+    bits long. You can change this behavior by setting the locator_bits
+    argument of this function.
 
     :param sid_list: SID List
     :type sid_list: list
     :param locator_bits: Number of bits of the locator part of the SIDs
-    :type locator_bits: int
+                         (default: 32).
+    :type locator_bits: int, optional
     :return: SID Locator
     :rtype: str
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
     # Locator mask, used to extract the locator from the SIDs
-    #
-    # It is computed with a binary manipulation
-    # We start from the IPv6 address 111...11111, then we put to zero
-    # the bits of the non-locator part
-    # The remaining part is the locator, which is converted to an IPv6Address
-    locator_mask = str(IPv6Address(int('1' * 128, 2) ^
-                                   int('1' * (128 - locator_bits), 2)))
+    locator_mask = get_locator_mask(locator_bits)
     # Enforce case-sensitivity
     _sid_list = list()
     for segment in sid_list:
         _sid_list.append(segment.lower())
     sid_list = _sid_list
-    # Locator
+    # Build the locator
     locator = ''
     # Iterate on the SID list
     for segment in sid_list:
-        # Split the segment in...
-        # ...segment locator
+        # The segment locator is obtained as an "and" between the segment and
+        # the locator mask that we have computed previously
         segment_locator = \
             str(IPv6Address(int(IPv6Address(locator_mask)) &
                             int(IPv6Address(segment))))
+        # We need to check that all the segments have the same segment locator
+        # If we found a segment with a different locator, we raise an
+        # exception
         if locator == '':
-            # Store the segment
+            # We don't have a locator yet because this is the first segment
+            # that we are processing
+            # Store the locator
             locator = segment_locator
         elif locator != segment_locator:
             # All the segments must have the same Locator
@@ -338,24 +379,39 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
                         locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
-    Convert a SID List into a uSID List.
+    Convert a SID List into a uSID List. SID List may contain any number of
+    segments. The number of the uSIDs returned by this function (i.e. the
+    length of the uSID list) depends on the length of the SID List.
 
-    :param sid_list: SID List to be converted
+    :param sid_list: SID List to be converted.
     :type sid_list: list
+    :param udt_sids: List of uDT SIDs.
+    :type udt_sids: list
     :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
     :type locator_bits: int
-    :param usid_id_bits: Number of bits of the uSID identifiers
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
     :type usid_id_bits: int
-    :return: uSID List containing
+    :return: uSID List containing.
     :rtype: list
-    :raises TooManySegmentsError: segments arg contains too many segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises TooManySegmentsError: segments arg contains too many segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
+    # If udt_sids argument is not passed to this function, we initialize it to
+    # an empty list
     if udt_sids is None:
         udt_sids = list()
-    # Size of the group of SIDs to be compressed in one uSID
-    # The size depends on the locator bits and uSID ID bits
-    # Last slot should be always leaved free
+    # How many SIDs are we able to store in one uSID?
+    # The size of the group of SIDs to be compressed in one uSID depends on
+    # the locator bits and uSID ID bits
+    # The space available to store the segments is the non-locator part of an
+    # IPv6 address; each segment is encoded with usid_id_bits
+    # Last slot should be always free, so:
+    #
+    #     |   128 - locator_bits    |
+    #     |   -------------------   |  -  1
+    #     |_     usid_id_bits      _|
+    #
     sid_group_size = math.floor((128 - locator_bits) / usid_id_bits) - 1
     # Get the locator
     locator = get_sid_locator(sid_list=sid_list, locator_bits=locator_bits)
@@ -365,12 +421,19 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
     while len(sid_list) + len(udt_sids) > 0:
         # Extract the SIDs to be encoded in one uSID
         sids_group = sid_list[:sid_group_size]
-        # uDT list should not be broken into different SIDs
+        # uDT list cannot be broken into different SIDs
+        # All the uDT SIDs must put in the same uSID
         if len(sid_list) + len(udt_sids) <= sid_group_size:
+            # If there is enough space to store the uDT SIDs, we append them
+            # to group of SIDs to be encoded in the current uSID
+            # Else, we don't add them to the current uSID and we wait for a
+            # uSID that has more free space
             sids_group += udt_sids
+            # Since we have processed all the uDT SIDs, we empty the list
             udt_sids = []
-        # Segments are encoded in groups of X
-        # Take the first X SIDs, build the uSID and add it to the uSID list
+        # Segments are encoded in groups of "sid_group_size"
+        # Take the first "sid_group_size" SIDs, build the uSID and add it to
+        # the uSID list
         usid_list.append(
             segments_to_micro_segment(
                 locator=locator,
@@ -379,44 +442,59 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
                 usid_id_bits=usid_id_bits
             )
         )
-        # Advance SID list
+        # Advance SID list: drop the processed SIDs
         sid_list = sid_list[sid_group_size:]
     # Return the uSID list
     return usid_list
 
 
-def nodes_to_micro_segments(nodes, node_addrs_filename):
+def nodes_to_micro_segments(nodes, nodes_config_filename):
     '''
-    Convert a list of nodes into a list of micro segments (uSID List)
+    Convert a list of nodes into a list of micro segments (uSID List).
 
-    :param nodes: List of node names
+    :param nodes: List of node names.
     :type node: list
-    :param node_to_addr_filename: Name of the YAML file containing the
-                                  mapping of node names to IP addresses
-    :type node_to_addr_filename: str
-    :return: uSID List
+    :param nodes_config_filename: Name of the YAML file containing the
+                                  configuration of the nodes.
+    :type nodes_config_filename: str
+    :return: uSID List.
     :rtype: list
-    :raises NodeNotFoundError: Node name not found in the mapping file
-    :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid YAML
+                                       file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
     '''
-
-    # Convert the list of nodes into a list of IP addresses (SID list)
-    # Translation is based on a file containing the mapping
-    # of node names to IP addresses
-    nodes_info, locator_bits, usid_id_bits = read_nodes(node_addrs_filename)
+    # First, convert the list of nodes into a list of IP addresses (SID list)
+    # Translation is based on a YAML file containing the configuration of the
+    # nodes
+    # Read the nodes configuration and extract a dict containing the
+    # attributes of the nodes, the number of bits of the locator part and the
+    # number of bits of the uSID identifier part
+    nodes_info, locator_bits, usid_id_bits = read_nodes(nodes_config_filename)
+    # We need to convert the list of node names passed as argument into a SID
+    # list; then the SID list will be converted to a uSID list
+    #
+    # Inizialize the SID list
     sid_list = list()
+    # Iterate on the nodes that we want include in the SID list
     for node in nodes:
         if node not in nodes_info:
+            # If the node does not figure in the configuration file, we don't
+            # know its SID and we cannot continue
+            # Raise an exception
             raise NodeNotFoundError
+        # Extract the SID of the node and add it to the SID list
         sid_list.append(nodes_info[node]['uN'])
+    # If "locator_bits" is not specified in the configuration file, we use the
+    # default value (i.e. 32 bits)
     if locator_bits is None:
         locator_bits = DEFAULT_LOCATOR_BITS
+    # If "usid_id_bits" is not specified in the configuration file, we use the
+    # default value (i.e. 32 bits)
     if usid_id_bits is None:
         usid_id_bits = DEFAULT_USID_ID_BITS
-    # Compress the SID list into a uSID list
+    # Now we are ready to convert the SID list into a uSID list
     usid_list = sidlist_to_usidlist(
         sid_list=sid_list,
         locator_bits=locator_bits,
@@ -426,38 +504,47 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
     return usid_list
 
 
-def validate_usid_id(usid_id):
+def validate_usid_id(usid_id, usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
-    Validate a uSID identifier. A valid uSID id should be an integer in the
-    range (0, 0xffff).
+    Validate a uSID identifier.
 
     :param usid_id: uSID idenfier to validate.
     :type usid_id: str
+    :param usid_id_bits: The number of bits used to represent a uSID
+                         identifier (default: 16).
     :return: True if the uSID identifier is valid.
     :rtype: bool
     '''
+    # A valid uSID id should be an integer in the range
+    #     (0, 2 ^ usid_id_bits - 1)
+    min_usid_id = 0
+    max_usid_id = (2 ** usid_id_bits) - 1
     try:
-        # A valid uSID id should be an integer in the range (0, 0xffff)
-        return int(usid_id, 16) >= 0x0 and int(usid_id, 16) <= 0xffff
+        # Check if the uSID identifier falls into the range
+        return usid_id >= min_usid_id and usid_id <= max_usid_id
     except ValueError:
-        # The uSID id is invalid
+        # The uSID id argument is invalid
         return False
     return True
 
 
-def usid_id_to_usid(usid_id, locator):
+def usid_id_to_usid(usid_id, locator, locator_bits=DEFAULT_LOCATOR_BITS,
+                    usid_id_bits=DEFAULT_USID_ID_BITS):
     '''
-    Convert a uSID identifier into a SID.
+    Convert a uSID identifier into a uSID.
 
-    :param usid_id: uSID idenfier to convert.
+    :param usid_id: uSID identifier to convert.
     :type usid_id: str
-    :param locator: Locator part to be used for the SID.
+    :param locator: Locator part to be used for the uSID.
     :type locator: str
-    :return: Generated SID.
+    :return: Generated uSID.
     :rtype: str
     '''
+    # Compute the offset for the uSID identifier
+    offset = 128 - locator_bits - usid_id_bits
+    # Build and return the uSID
     return str(IPv6Address(int(IPv6Address(locator)) +
-                           (int(usid_id, 16) << 80)))
+                           (int(usid_id, 16) << offset)))
 
 
 def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
@@ -474,7 +561,7 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
     :param grpc_port: Port number of the gRPC server.
     :type grpc_port: int
     :param udt: uDT SID of the node, used for the decap operation. If not
-                provided, the uDT SID is not added to the SID list.
+                provided, no uDT SID will be associated to the node.
     :type udt: str, optional
     :param fwd_engine: Forwarding engine to be used (e.g. Linux or VPP).
     :type fwd_engine: str
@@ -503,12 +590,13 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
         raise InvalidConfigurationError
     # Validate forwarding engine
     if fwd_engine is None:
-        logger.error('grpcfwd_engine_ip is mandatory for node %s', node)
+        logger.error('fwd_engine is mandatory for node %s', node)
         raise InvalidConfigurationError
     # Validate locator
     if locator is None:
         logger.error('locator is mandatory for node %s', node)
         raise InvalidConfigurationError
+    # All checks passed
     #
     # Compute uN SID starting from the provided node identifier
     # Node identifier can be expressed as SID (an IPv6 address) or a
@@ -540,7 +628,7 @@ def encode_intermediate_node(node, locator):
     '''
     Get a dict-representation of a node (intermediate node of the path),
     starting from gRPC IP and port, uDT sid, forwarding engine and locator.
-    For the intermediate nodes, we don't need uDT, forwarding engine.
+    For the intermediate nodes, we don't need uDT, forwarding engine,
     gRPC IP and gRPC address.
 
     :param node: Node identifier. This could be a name, a SID (IPv6 address)
@@ -565,6 +653,7 @@ def encode_intermediate_node(node, locator):
     if locator is None:
         logger.error('locator is mandatory for node %s', node)
         raise InvalidConfigurationError
+    # All checks passed
     #
     # Compute uN SID starting from the provided node identifier
     # Node identifier can be expressed as SID (an IPv6 address) or a
@@ -591,17 +680,17 @@ def encode_intermediate_node(node, locator):
     return None
 
 
-def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
-                    l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
-                    r_fwd_engine=None, decap_sid=None, locator=None):
+def fill_nodes_config(nodes_config, nodes, l_grpc_ip=None, l_grpc_port=None,
+                      l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
+                      r_fwd_engine=None, decap_sid=None, locator=None):
     '''
-    Fill 'nodes_info' dict with the nodes containined in the 'nodes' list.
+    Fill 'nodes_config' dict with the nodes containined in the 'nodes' list.
 
-    :param nodes_info: Dict containined the nodes information where to add the
-                       nodes.
-    :type nodes_info: dict
-    :param nodes: List of nodes. Each node can be expressed as SID (IPv6
-                  address), a uSID identifier (integer) or a name.
+    :param nodes_config: Dict containing the nodes information to which the
+                         nodes must be added to.
+    :type nodes_config: dict
+    :param nodes: List of nodes to add. Each node can be expressed as a SID
+                  (IPv6 address), a uSID identifier (integer) or a name.
     :type nodes: list
     :param l_grpc_ip: gRPC address of the left node in the path.
     :type l_grpc_ip: str, optional
@@ -609,7 +698,7 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                         the path.
     :type l_grpc_port: str, optional
     :param l_fwd_engine: Forwarding engine to be used on the left node of
-                        the path (e.g. Linux or VPP).
+                         the path (e.g. Linux or VPP).
     :type l_fwd_engine: str, optional
     :param r_grpc_ip: gRPC address of the right node in the path.
     :type r_grpc_ip: str, optional
@@ -617,7 +706,7 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                         the path.
     :type r_grpc_port: str, optional
     :param r_fwd_engine: Forwarding engine to be used on the right node of
-                        the path (e.g. Linux or VPP).
+                         the path (e.g. Linux or VPP).
     :type r_fwd_engine: str, optional
     :param decap_sid: Decap SID. This could be a SID (IPv6 address) or a uSID
                       identifier (an integer).
@@ -643,8 +732,9 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
             udt = decap_sid
     # Encode left node
     #
-    # A node could be expressed as an integer, an IPv6 address (SID)
-    # or a name
+    # A node could be expressed as an integer (uSID identifier), an IPv6
+    # address (SID) or a name
+    # Process the node and get a dict representation
     node = encode_endpoint_node(
         node=nodes[0],
         grpc_ip=l_grpc_ip,
@@ -654,13 +744,19 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
         locator=locator
     )
     # If we received a node info dict, we add it to the
-    # nodes info dictionary
+    # nodes config dictionary
     if node is not None:
-        nodes_info[nodes[0]] = node
+        nodes_config[nodes[0]] = node
+    else:
+        # Node is expressed as name; in this case we expect that it is already
+        # in the configuration
+        if node not in nodes_config:
+            raise utils.InvalidArgumentError
     # Encode right node
     #
     # A node could be expressed as an integer, an IPv6 address (SID)
     # or a name
+    # Process the node and get a dict representation
     node = encode_endpoint_node(
         node=nodes[-1],
         grpc_ip=r_grpc_ip,
@@ -670,53 +766,292 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
         locator=locator
     )
     # If we received a node info dict, we add it to the
-    # nodes info dictionary
+    # nodes config dictionary
     if node is not None:
-        nodes_info[nodes[-1]] = node
+        nodes_config[nodes[-1]] = node
+    else:
+        # Node is expressed as name; in this case we expect that it is already
+        # in the configuration
+        if node not in nodes_config:
+            raise utils.InvalidArgumentError
     # Encode intermediate nodes
     # For the intermediate nodes, we don't need forwarding engine,
     # uDT, gRPC IP and port
     for node_name in nodes[1:-1]:
-        # Encode the node
+        # Process the node and get a dict representation
         node = encode_intermediate_node(
             node=node_name,
             locator=locator
         )
         # If we received a node info dict, we add it to the
-        # nodes info dictionary
+        # nodes config dictionary
         if node is not None:
-            nodes_info[node_name] = node
+            nodes_config[node_name] = node
+        else:
+            # Node is expressed as name; in this case we expect that it is
+            # already in the configuration
+            if node not in nodes_config:
+                raise utils.InvalidArgumentError
 
 
-def handle_srv6_usid_policy(operation, nodes_dict=None,
-                            lr_destination=None, rl_destination=None,
-                            nodes_lr=None,
-                            nodes_rl=None, table=-1, metric=-1,
-                            persistency=True, _id=None, l_grpc_ip=None,
-                            l_grpc_port=None, l_fwd_engine=None,
-                            r_grpc_ip=None, r_grpc_port=None,
-                            r_fwd_engine=None, decap_sid=None, locator=None):
+def generate_bsid_addr(destination):
     '''
-    Handle a SRv6 Policy using uSIDs
+    This function generates a BSID address for VPP forwarding engine.
+
+    :param destination: The destination of the path related to the BSID
+                        address.
+    :type destination: str
+    :return: The BSID address.
+    :rtype: str
+    '''
+    # TODO: this function should be improved because some addresses could
+    # generate conflicts (e.g. fcff:1:: and fcff::1 return the same BSID
+    # address)
+    #
+    # Start from an empty string
+    bsid_addr = ''
+    # Iterate on the chars composing the destination address
+    for char in destination:
+        # Remove "0" and ":" chars from the BSID address
+        if char not in ('0', ':'):
+            bsid_addr += char
+    # If the last byte of the resulting BSID address is 0, the address must be
+    # terminated with "::" in order to be a valid IPv6 address; in this case,
+    # we set add_colon flag and then we add the "::" at the end of the address
+    add_colon = False
+    if len(bsid_addr) <= 28:
+        add_colon = True
+    # Separate the chars composing the BSID address in groups of 4
+    bsid_addr = [(bsid_addr[i:i + 4])
+                 for i in range(0, len(bsid_addr), 4)]
+    # Join the groups in a single string by using a ":" to separate them
+    bsid_addr = ':'.join(bsid_addr)
+    # Add "::" if required, as established previously
+    if add_colon:
+        bsid_addr += '::'
+    # This results in a valid IPv6 address
+    return bsid_addr
+
+
+def add_del_srv6_usid_policy_ingress(operation, grpc_ip, grpc_port, node_name,
+                                     fwd_engine, egress_udt, destination,
+                                     segments, table, metric,
+                                     locator_bits=DEFAULT_LOCATOR_BITS,
+                                     usid_id_bits=DEFAULT_USID_ID_BITS):
+    '''
+    Handle a SRv6 Policy using uSIDs on the ingress node.
 
     :param operation: The operation to be performed on the uSID policy
-                      (i.e. add, get, change, del)
+                      (i.e. add, get, change, del).
     :type operation: str
-    :param nodes_dict: Dict containing the nodes configuration.
-    :type nodes_dict: dict
-    :param destination: Destination of the SRv6 route
+    :param grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type grpc_ip: str
+    :param grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type grpc_port: str
+    :param node_name: The name of the ingress node.
+    :type node_name: str
+    :param fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type fwd_engine: str
+    :param egress_udt: uDT SID of the egress node.
+    :type egress_udt: str
+    :param destination: Destination of the SRv6 route.
     :type destination: str
-    :param nodes: Waypoints of the SRv6 route
-    :type nodes: list
-    :param device: Device of the SRv6 route. If not provided, the device
-                   is selected automatically by the node.
-    :type device: str, optional
+    :param segments: Waypoints of the SRv6 route.
+    :type segments: list
     :param table: Routing table containing the SRv6 route. If not provided,
                   the main table (i.e. table 254) will be used.
     :type table: int, optional
     :param metric: Metric for the SRv6 route. If not provided, the default
                    metric will be used.
     :type metric: int, optional
+    :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
+    :type usid_id_bits: int
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    '''
+    # Establish a gRPC channel to the ingress node
+    with utils.get_grpc_session(grpc_ip, grpc_port) as channel:
+        # The intermediate nodes can use Linux, VPP or P4 as
+        # forwarding engine; for the encap nodes, currently only
+        # Linux and VPP are suppoted
+        if fwd_engine not in ['Linux', 'VPP']:
+            logger.error(
+                'Encap operation is not supported for '
+                '%s with fwd engine %s', node_name, fwd_engine)
+            return commons_pb2.STATUS_INTERNAL_ERROR
+        # VPP policies and steering rules require a BSID address
+        # BSID address can be any IPv6 address
+        bsid_addr = (generate_bsid_addr(destination)
+                     if fwd_engine == 'VPP' else '')
+
+        udt_sids = list()
+        # Locator mask
+        locator_mask = get_locator_mask(locator_bits)
+        # uDT mask
+        udt_mask_1 = str(
+            IPv6Address(int('1' * usid_id_bits, 2) <<
+                        (128 - locator_bits - usid_id_bits)))
+        udt_mask_2 = str(
+            IPv6Address(int('1' * usid_id_bits, 2) <<
+                        (128 - locator_bits - 2 * usid_id_bits)))
+        # Build uDT sid list
+        locator_int = int(IPv6Address(egress_udt)) & \
+            int(IPv6Address(locator_mask))
+        udt_mask_1_int = int(IPv6Address(egress_udt)) & \
+            int(IPv6Address(udt_mask_1))
+        udt_mask_2_int = int(IPv6Address(egress_udt)) & \
+            int(IPv6Address(udt_mask_2))
+        udt_sids += [str(IPv6Address(locator_int +
+                                     udt_mask_1_int))]
+        udt_sids += [str(IPv6Address(locator_int +
+                                     (udt_mask_2_int <<
+                                      usid_id_bits)))]
+        # We need to convert the SID list into a uSID list
+        #  before creating the SRv6 policy
+        usid_list = sidlist_to_usidlist(
+            sid_list=segments[1:][:-1],
+            udt_sids=[segments[1:][-1]] + udt_sids,
+            locator_bits=locator_bits,
+            usid_id_bits=usid_id_bits
+        )
+        # Handle a SRv6 path
+        response = srv6_utils.handle_srv6_path(
+            operation=operation,
+            channel=channel,
+            destination=destination,
+            segments=usid_list,
+            encapmode='encap.red',
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        # Done, return the response
+        return response
+
+
+def get_srv6_usid_policy(lr_destination=None, rl_destination=None,
+                         nodes_lr=None, nodes_rl=None, table=-1, metric=-1,
+                         _id=None):
+    '''
+    Search for SRv6 uSID policies saved to the database that match the
+    provided arguments.
+
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str, optional
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str, optional
+    :param nodes_lr: Waypoints of the SRv6 route for the left to right path.
+    :type nodes_lr: list, optional
+    :param nodes_rl: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_rl: list, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string, optional
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
+    :rtype: int
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
+    :raises InvalidSIDError: SID is wrong for one or more segments.
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    :raises controller.utils.PolicyNotFoundError: Policy not found.
+    '''
+    # Extract the ArangoDB params from the environment variables
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Controller persistency must be enabled to support the "get"
+    # operation
+    if os.getenv('ENABLE_PERSISTENCY') not in ['True', 'true']:
+        logger.error('Error in get(): Persistency is disabled')
+        raise utils.InvalidArgumentError
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)     # TODO keep arango connection open
+    # Connect to the "srv6_usid" db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Get the policy from the db
+    policies = arangodb_driver.find_usid_policy(
+        database=database,
+        key=_id,
+        lr_dst=lr_destination,
+        rl_dst=rl_destination,
+        lr_nodes=nodes_lr,
+        rl_nodes=nodes_rl,
+        table=table if table != -1 else None,
+        metric=metric if metric != -1 else None
+    )
+    # Done, return
+    return list(policies)
+
+
+def add_del_srv6_usid_policy_fill_nodes_config(
+        operation, nodes_config=None,
+        lr_destination=None,
+        rl_destination=None,
+        nodes_lr=None,
+        nodes_rl=None, table=-1,
+        metric=-1,
+        _id=None, l_grpc_ip=None,
+        l_grpc_port=None,
+        l_fwd_engine=None,
+        r_grpc_ip=None,
+        r_grpc_port=None,
+        r_fwd_engine=None,
+        decap_sid=None, locator=None,
+        locator_bits=DEFAULT_LOCATOR_BITS,
+        usid_id_bits=DEFAULT_USID_ID_BITS):
+    '''
+    Add or delete SRv6 uSID Policy.
+
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param nodes_config: Dict containing the nodes configuration.
+    :type nodes_config: dict
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str
+    :param nodes_lr: Waypoints of the SRv6 route for the left to right path.
+    :type nodes_lr: list
+    :param nodes_rl: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_rl: list
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string
     :param l_grpc_ip: gRPC IP address of the left node, required if the left
                       node is expressed numerically in the nodes list.
     :type l_grpc_ip: str, optional
@@ -740,65 +1075,427 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
     :type decap_sid: str, optional
     :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
     :type locator: str, optional
-    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS)
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
     :rtype: int
-    :raises NodeNotFoundError: Node name not found in the mapping file
+    :raises NodeNotFoundError: Node name not found in the mapping file.
     :raises InvalidConfigurationError: The mapping file is not a valid
-                                       YAML file
-    :raises TooManySegmentsError: segments arg contains more than 6 segments
-    :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    :raises InvalidSIDError: SID is wrong for one or more segments
+                                       YAML file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
+    :raises InvalidSIDError: SID is wrong for one or more segments.
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    :raises controller.utils.PolicyNotFoundError: Policy not found.
     '''
-    # pylint: disable=too-many-locals, too-many-arguments
-    # pylint: disable=too-many-return-statements, too-many-branches
-    # pylint: disable=too-many-statements
+    # The SID list may contain one or more nodes that are not in the nodes
+    # configuration dict; if one of these nodes is used as endpoint of the
+    # SRv6 path, the configuration must be specified by setting the arguments
+    # l_grpc_ip, l_grpc_port, l_fwd_engine, r_grpc_ip, r_grpc_port and
+    # r_fwd_engine
     #
-    # ArangoDB params
+    # We need to add the configuration of these nodes to the "nodes_config"
+    # dict
+    #
+    # Add nodes list for the left-to-right path to the 'nodes_config' dict
+    if nodes_lr is not None:
+        fill_nodes_config(
+            nodes_info=nodes_config,
+            nodes=nodes_lr,
+            l_grpc_ip=l_grpc_ip,
+            l_grpc_port=l_grpc_port,
+            l_fwd_engine=l_fwd_engine,
+            r_grpc_ip=r_grpc_ip,
+            r_grpc_port=r_grpc_port,
+            r_fwd_engine=r_fwd_engine,
+            decap_sid=decap_sid,
+            locator=locator
+        )
+    # Add nodes list for the right-to-left path to the 'nodes_config' dict
+    if nodes_rl is not None:
+        fill_nodes_config(
+            nodes_info=nodes_config,
+            nodes=nodes_rl,
+            l_grpc_ip=r_grpc_ip,
+            l_grpc_port=r_grpc_port,
+            l_fwd_engine=r_fwd_engine,
+            r_grpc_ip=l_grpc_ip,
+            r_grpc_port=l_grpc_port,
+            r_fwd_engine=l_fwd_engine,
+            decap_sid=decap_sid,
+            locator=locator
+        )
+    # Now all the nodes of our SRv6 path are contained in the nodes
+    # configuration
+    # We are ready to add/delete the policy
+    #
+    # We build a list of the policies to be added or removed
+    #
+    # For the "add" operation, "lr_destination", "rl_destination" and
+    # "nodes_lr" are passed as argument
+    # "nodes_rl" is an optional argument; if not provided, "nodes_rl"
+    # will be the reverse of "nodes_lr" (symmetric SRv6 path)
+    if operation == 'add':
+        policies = [{
+            'lr_dst': lr_destination,
+            'rl_dst': rl_destination,
+            'lr_nodes': nodes_lr,
+            'rl_nodes': nodes_rl
+        }]
+    # For the "del" operation, we perform a lookup in the database to get
+    # the policies matching the provided arguments
+    if operation == 'del':
+        policies = get_srv6_usid_policy(
+            lr_destination=lr_destination,
+            rl_destination=rl_destination,
+            nodes_lr=nodes_lr,
+            nodes_rl=nodes_rl,
+            table=table if table != -1 else None,
+            metric=metric if metric != -1 else None,
+            _id=_id
+        )
+        for policy in policies:
+            # For the policies stored to the db, the same rules apply as
+            # described above and reported here
+            #
+            # The SID list may contain one or more nodes that are not in the
+            # nodes configuration dict; if one of these nodes is used as
+            # endpoint of the SRv6 path, the configuration must be specified
+            # by setting the arguments l_grpc_ip, l_grpc_port, l_fwd_engine,
+            # r_grpc_ip, r_grpc_port and r_fwd_engine
+            #
+            # Add nodes list for the left-to-right path to the
+            # 'nodes_config' dict
+            if policy.get('lr_nodes') is not None:
+                fill_nodes_config(
+                    nodes_info=nodes_config,
+                    nodes=policy.get('lr_nodes'),
+                    l_grpc_ip=policy.get('l_grpc_ip'),
+                    l_grpc_port=policy.get('l_grpc_port'),
+                    l_fwd_engine=policy.get('l_fwd_engine'),
+                    r_grpc_ip=policy.get('r_grpc_ip'),
+                    r_grpc_port=policy.get('r_grpc_port'),
+                    r_fwd_engine=policy.get('r_fwd_engine'),
+                    decap_sid=policy.get('decap_sid'),
+                    locator=policy.get('locator')
+                )
+            # Add nodes list for the right-to-left path to the
+            # 'nodes_info' dict
+            if policy.get('rl_nodes') is not None:
+                fill_nodes_config(
+                    nodes_info=nodes_config,
+                    nodes=policy.get('rl_nodes'),
+                    l_grpc_ip=policy.get('r_grpc_ip'),
+                    l_grpc_port=policy.get('r_grpc_port'),
+                    l_fwd_engine=policy.get('r_fwd_engine'),
+                    r_grpc_ip=policy.get('l_grpc_ip'),
+                    r_grpc_port=policy.get('l_grpc_port'),
+                    r_fwd_engine=policy.get('l_fwd_engine'),
+                    decap_sid=policy.get('decap_sid'),
+                    locator=policy.get('locator')
+                )
+    # Check if you have at least one policy to add/delete
+    # If not, raise an exception
+    if len(policies) == 0:
+        logger.error('Policy not found')
+        raise utils.PolicyNotFoundError
+
+
+def add_del_srv6_usid_policy(operation, policies, nodes_config=None,
+                             lr_destination=None, rl_destination=None,
+                             nodes_lr=None, nodes_rl=None, table=-1,
+                             metric=-1, _id=None, l_grpc_ip=None,
+                             l_grpc_port=None, l_fwd_engine=None,
+                             r_grpc_ip=None, r_grpc_port=None,
+                             r_fwd_engine=None, decap_sid=None, locator=None,
+                             locator_bits=DEFAULT_LOCATOR_BITS,
+                             usid_id_bits=DEFAULT_USID_ID_BITS):
+    '''
+    Add or remove a SRv6 uSID policy.
+
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param policies: The policies to add or delete.
+    :type policies: list
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str
+    :param nodes_lr: Waypoints of the SRv6 route for the left to right path.
+    :type nodes_lr: list
+    :param nodes_rl: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_rl: list
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param persistency: Define if enable the policy persistency or not.
+                        Persistency requires to enable and configure ArangoDB
+                        (default: True).
+    :type persistency: bool, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
+    :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
+    :type usid_id_bits: int
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
+    :rtype: int
+    '''
+    # Prepare response
+    response = commons_pb2.STATUS_SUCCESS
+    # Fill nodes configuration
+    add_del_srv6_usid_policy_fill_nodes_config(
+        operation=operation,
+        nodes_config=nodes_config,
+        lr_destination=lr_destination,
+        rl_destination=rl_destination,
+        nodes_lr=nodes_lr,
+        nodes_rl=nodes_rl,
+        table=table,
+        metric=metric,
+        _id=_id,
+        l_grpc_ip=l_grpc_ip,
+        l_grpc_port=l_grpc_port,
+        l_fwd_engine=l_fwd_engine,
+        r_grpc_ip=r_grpc_ip,
+        r_grpc_port=r_grpc_port,
+        r_fwd_engine=r_fwd_engine,
+        decap_sid=decap_sid,
+        locator=locator,
+        locator_bits=locator_bits,
+        usid_id_bits=usid_id_bits
+    )
+    # ####################################################################
+    # Iterate on the policies
+    for policy in policies:
+        # Extract the attributes
+        lr_destination = policy.get('lr_dst')
+        rl_destination = policy.get('rl_dst')
+        nodes_lr = policy.get('lr_nodes')
+        nodes_rl = policy.get('rl_nodes')
+        _id = policy.get('_key')
+        # If right to left nodes list is not provided, we use the reverse
+        # left to right SID list (symmetric path)
+        if nodes_rl is None:
+            nodes_rl = nodes_lr[::-1]
+        # The two SID lists must have the same endpoints
+        if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
+            logger.error('Bad tunnel endpoints')
+            raise utils.InvalidArgumentError
+        # Create the SRv6 Policy
+        try:
+            # Extract the configuration of the nodes
+            #
+            # Ingress node
+            ingress_node = nodes_config[nodes_lr[0]]
+            # Intermediate nodes
+            intermediate_nodes_lr = list()
+            for node in nodes_lr[1:-1]:
+                intermediate_nodes_lr.append(nodes_config[node])
+            intermediate_nodes_rl = list()
+            for node in nodes_rl[1:-1]:
+                intermediate_nodes_rl.append(nodes_config[node])
+            # Egress node
+            egress_node = nodes_config[nodes_lr[-1]]
+            # Build the SID lists, made of the uN SIDs extracted from the
+            # nodes configuration
+            #
+            # SID list for the left-to-right path
+            segments_lr = list()
+            for node in nodes_lr:
+                segments_lr.append(nodes_config[node]['uN'])
+            # SID list for the right-to-left path
+            segments_rl = list()
+            for node in nodes_rl:
+                segments_rl.append(nodes_config[node]['uN'])
+            # Add the uSID policy in the ingress node
+            add_del_srv6_usid_policy_ingress(
+                operation=operation,
+                grpc_ip=ingress_node['grpc_ip'],
+                grpc_port=ingress_node['grpc_port'],
+                node_name=ingress_node['name'],
+                fwd_engine=ingress_node['fwd_engine'],
+                egress_udt=egress_node['uDT'],
+                destination=lr_destination,
+                segments=nodes_lr,
+                table=table,
+                metric=metric,
+                locator_bits=locator_bits,
+                usid_id_bits=usid_id_bits
+            )
+            # Check for errors
+            if response != commons_pb2.STATUS_SUCCESS:
+                return response
+            # Add the uSID policy in the egress node
+            add_del_srv6_usid_policy_ingress(
+                operation=operation,
+                grpc_ip=egress_node['grpc_ip'],
+                grpc_port=egress_node['grpc_port'],
+                node_name=egress_node['name'],
+                fwd_engine=egress_node['fwd_engine'],
+                egress_udt=ingress_node['uDT'],
+                destination=rl_destination,
+                segments=nodes_rl,
+                table=table,
+                metric=metric,
+                locator_bits=locator_bits,
+                usid_id_bits=usid_id_bits
+            )
+            # Check for errors
+            if response != commons_pb2.STATUS_SUCCESS:
+                return response
+            # Persist uSID policy to database
+            handle_srv6_usid_policy_persistency()
+        except (InvalidConfigurationError, NodeNotFoundError,
+                TooManySegmentsError, SIDLocatorError, InvalidSIDError):
+            return commons_pb2.STATUS_INTERNAL_ERROR
+    # Return the response
+    return response
+
+
+def handle_srv6_usid_policy_persistency(operation, lr_destination=None,
+                                        rl_destination=None, nodes_lr=None,
+                                        nodes_rl=None, table=-1, metric=-1,
+                                        _id=None, l_grpc_ip=None,
+                                        l_grpc_port=None, l_fwd_engine=None,
+                                        r_grpc_ip=None, r_grpc_port=None,
+                                        r_fwd_engine=None, decap_sid=None,
+                                        locator=None,
+                                        locator_bits=DEFAULT_LOCATOR_BITS,
+                                        usid_id_bits=DEFAULT_USID_ID_BITS):
+    '''
+    Save or remove a policy from the database.
+
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str
+    :param nodes_lr: Waypoints of the SRv6 route for the left to right path.
+    :type nodes_lr: list
+    :param nodes_rl: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_rl: list
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param persistency: Define if enable the policy persistency or not.
+                        Persistency requires to enable and configure ArangoDB
+                        (default: True).
+    :type persistency: bool, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
+    :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
+    :type usid_id_bits: int
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
+    :rtype: int
+    '''
+    # ########################################################################
+    # Extract the ArangoDB params from the environment variables
     arango_url = os.getenv('ARANGO_URL')
     arango_user = os.getenv('ARANGO_USER')
     arango_password = os.getenv('ARANGO_PASSWORD')
-    #
-    # Validate arguments
-    if lr_destination is None:
-        if operation in ['add']:
-            logger.error('"lr_destination" argument is mandatory for %s '
-                         'operation', operation)
-            return None
-    if rl_destination is None:
-        if operation in ['add']:
-            logger.error('"rl_destination" argument is mandatory for %s '
-                         'operation', operation)
-            return None
-    if nodes_lr is None:
-        if operation in ['add']:
-            logger.error('"nodes_lr" argument is mandatory for %s '
-                         'operation', operation)
-            return None
-    if nodes_rl is None:
-        pass
-    if nodes_dict is None:
-        if operation in ['add', 'del']:
-            logger.error('"nodes_filename" argument is mandatory for %s '
-                         'operation', operation)
-            return None
-    if operation == 'change':
-        logger.error('Operation not yet implemented: %s', operation)
-        return None
-    if operation == 'get':
-        if not persistency:
-            logger.error('Error in get(): Persistency is disabled')
-            return None
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the "srv6_usid" db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Perform the operation
+    if operation == 'add':
+        # Save the policy to the db
+        arangodb_driver.insert_usid_policy(
+            database=database,
+            lr_dst=lr_destination,
+            rl_dst=rl_destination,
+            lr_nodes=nodes_lr,
+            rl_nodes=nodes_rl,
+            table=table if table != -1 else None,
+            metric=metric if metric != -1 else None,
+            l_grpc_ip=l_grpc_ip,
+            l_grpc_port=l_grpc_port,
+            l_fwd_engine=l_fwd_engine,
+            r_grpc_ip=r_grpc_ip,
+            r_grpc_port=r_grpc_port,
+            r_fwd_engine=r_fwd_engine,
+            decap_sid=decap_sid,
+            locator=locator
         )
-        # Get the policy from the db
-        policies = arangodb_driver.find_usid_policy(
+    elif operation == 'del':
+        # Remove the policy from the db
+        arangodb_driver.delete_usid_policy(
             database=database,
             key=_id,
             lr_dst=lr_destination,
@@ -808,447 +1505,154 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
             table=table if table != -1 else None,
             metric=metric if metric != -1 else None
         )
+    else:
+        logger.error('Unsupported operation: %s', operation)
+
+
+def handle_srv6_usid_policy(operation, nodes_config=None,
+                            lr_destination=None, rl_destination=None,
+                            nodes_lr=None,
+                            nodes_rl=None, table=-1, metric=-1,
+                            persistency=True, _id=None, l_grpc_ip=None,
+                            l_grpc_port=None, l_fwd_engine=None,
+                            r_grpc_ip=None, r_grpc_port=None,
+                            r_fwd_engine=None, decap_sid=None, locator=None,
+                            locator_bits=DEFAULT_LOCATOR_BITS,
+                            usid_id_bits=DEFAULT_USID_ID_BITS):
+    '''
+    Handle a SRv6 Policy using uSIDs.
+
+    :param operation: The operation to be performed on the uSID policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param nodes_config: Dict containing the nodes configuration.
+    :type nodes_config: dict
+    :param lr_destination: Destination of the SRv6 route for the left to right
+                           path.
+    :type lr_destination: str
+    :param rl_destination: Destination of the SRv6 route for the right to left
+                           path.
+    :type rl_destination: str
+    :param nodes_lr: Waypoints of the SRv6 route for the left to right path.
+    :type nodes_lr: list
+    :param nodes_rl: Waypoints of the SRv6 route for the right to left path.
+    :type nodes_rl: list
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param persistency: Define if enable the policy persistency or not.
+                        Persistency requires to enable and configure ArangoDB
+                        (default: True).
+    :type persistency: bool, optional
+    :param _id: The identifier assigned to a policy, used to get or delete
+                a policy by id.
+    :type _id: string
+    :param l_grpc_ip: gRPC IP address of the left node, required if the left
+                      node is expressed numerically in the nodes list.
+    :type l_grpc_ip: str, optional
+    :param l_grpc_port: gRPC port of the left node, required if the left
+                        node is expressed numerically in the nodes list.
+    :type l_grpc_port: str, optional
+    :param l_fwd_engine: forwarding engine of the left node, required if the
+                         left node is expressed numerically in the nodes list.
+    :type l_fwd_engine: str, optional
+    :param r_grpc_ip: gRPC IP address of the right node, required if the right
+                      node is expressed numerically in the nodes list.
+    :type r_grpc_ip: str, optional
+    :param r_grpc_port: gRPC port of the right node, required if the right
+                        node is expressed numerically in the nodes list.
+    :type r_grpc_port: str, optional
+    :param r_fwd_engine: Forwarding engine of the right node, required if the
+                         right node is expressed numerically in the nodes
+                         list.
+    :type r_fwd_engine: str, optional
+    :param decap_sid: uSID used for the decap behavior (End.DT6).
+    :type decap_sid: str, optional
+    :param locator: Locator prefix (e.g. 'fcbb:bbbb::').
+    :type locator: str, optional
+    :param locator_bits: Number of bits of the locator part of the SIDs
+                         (default: 32).
+    :type locator_bits: int
+    :param usid_id_bits: Number of bits of the uSID identifiers (default: 16).
+    :type usid_id_bits: int
+    :return: Status Code of the operation (e.g. 0 for STATUS_SUCCESS).
+    :rtype: int
+    :raises NodeNotFoundError: Node name not found in the mapping file.
+    :raises InvalidConfigurationError: The mapping file is not a valid
+                                       YAML file.
+    :raises TooManySegmentsError: segments arg contains more than 6 segments.
+    :raises SIDLocatorError: SID Locator is wrong for one or more segments.
+    :raises InvalidSIDError: SID is wrong for one or more segments.
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
+    :raises controller.utils.PolicyNotFoundError: Policy not found.
+    '''
+    # pylint: disable=too-many-locals, too-many-arguments
+    # pylint: disable=too-many-return-statements, too-many-branches
+    # pylint: disable=too-many-statements
+    #
+    # ########################################################################
+    # Validate arguments
+    if lr_destination is None:
+        # "lr_destination" is mandatory for the add operation
+        if operation in ['add']:
+            logger.error('"lr_destination" argument is mandatory for %s '
+                         'operation', operation)
+            raise utils.InvalidArgumentError
+    if rl_destination is None:
+        # "rl_destination" is mandatory for the add operation
+        if operation in ['add']:
+            logger.error('"rl_destination" argument is mandatory for %s '
+                         'operation', operation)
+            raise utils.InvalidArgumentError
+    if nodes_lr is None:
+        # "nodes_lr" is mandatory for the add operation
+        if operation in ['add']:
+            logger.error('"nodes_lr" argument is mandatory for %s '
+                         'operation', operation)
+            raise utils.InvalidArgumentError
+    if nodes_rl is None:
+        # "nodes_rl" is optional; if not provided, "nodes_rl" is set to the
+        # reverse of "nodes_rl" (forward and reverse paths are symmetric)
+        pass
+    if nodes_config is None:
+        # "nodes_config" is required for "add" and "del" operations
+        if operation in ['add', 'del']:
+            logger.error('"nodes_config" argument is mandatory for %s '
+                         'operation', operation)
+            raise utils.InvalidArgumentError
+    # ########################################################################
+    # Perform the operation
+    if operation == 'change':
+        # TODO: Change operation not yet implemented
+        logger.error('Operation not yet implemented: %s', operation)
+        raise utils.InvalidArgumentError
+    if operation == 'get':
+        # Get SRv6 uSID policy
+        policies = get_srv6_usid_policy(
+            lr_destination=lr_destination,
+            rl_destination=rl_destination,
+            nodes_lr=nodes_lr,
+            nodes_rl=nodes_rl,
+            table=table,
+            metric=metric,
+            _id=_id
+        )
         # Print policies
         print('\n\n*** uSID policies:')
-        pprint.PrettyPrinter(indent=4).pprint(list(policies))
+        pprint.PrettyPrinter(indent=4).pprint(policies)
         print('\n\n')
-        return 0
+        # Return the status code
+        return commons_pb2.STATUS_SUCCESS
     if operation in ['add', 'del']:
-        #
-        # In order to perform this translation, a file containing the
-        # mapping of node names to IPv6 addresses is required
-        #
-        # Read nodes from YAML file
-        nodes_info = nodes_dict
-        locator_bits = DEFAULT_LOCATOR_BITS  # TODO configurable locator bits
-        usid_id_bits = DEFAULT_USID_ID_BITS  # TODO configurable uSID id bits
-        # Add nodes list for the left-to-right path to the 'nodes_info' dict
-        if nodes_lr is not None:
-            fill_nodes_info(
-                nodes_info=nodes_info,
-                nodes=nodes_lr,
-                l_grpc_ip=l_grpc_ip,
-                l_grpc_port=l_grpc_port,
-                l_fwd_engine=l_fwd_engine,
-                r_grpc_ip=r_grpc_ip,
-                r_grpc_port=r_grpc_port,
-                r_fwd_engine=r_fwd_engine,
-                decap_sid=decap_sid,
-                locator=locator
-            )
-        # Add nodes list for the right-to-left path to the 'nodes_info' dict
-        if nodes_rl is not None:
-            fill_nodes_info(
-                nodes_info=nodes_info,
-                nodes=nodes_rl,
-                l_grpc_ip=r_grpc_ip,
-                l_grpc_port=r_grpc_port,
-                l_fwd_engine=r_fwd_engine,
-                r_grpc_ip=l_grpc_ip,
-                r_grpc_port=l_grpc_port,
-                r_fwd_engine=l_fwd_engine,
-                decap_sid=decap_sid,
-                locator=locator
-            )
-        # Add
-        if operation == 'add':
-            policies = [{
-                'lr_dst': lr_destination,
-                'rl_dst': rl_destination,
-                'lr_nodes': nodes_lr,
-                'rl_nodes': nodes_rl
-            }]
-        if operation == 'del':
-            #
-            # Connect to ArangoDB
-            client = arangodb_driver.connect_arango(
-                url=arango_url)     # TODO keep arango connection open
-            # Connect to the db
-            database = arangodb_driver.connect_srv6_usid_db(
-                client=client,
-                username=arango_user,
-                password=arango_password
-            )
-            # Get the policy from the db
-            policies = arangodb_driver.find_usid_policy(
-                database=database,
-                key=_id,
-                lr_dst=lr_destination,
-                rl_dst=rl_destination,
-                lr_nodes=nodes_lr,
-                rl_nodes=nodes_rl,
-                table=table if table != -1 else None,
-                metric=metric if metric != -1 else None
-            )
-
-            policies = list(policies)
-            for policy in policies:
-                # Add nodes list for the left-to-right path to the
-                # 'nodes_info' dict
-                if policy.get('lr_nodes') is not None:
-                    fill_nodes_info(
-                        nodes_info=nodes_info,
-                        nodes=policy.get('lr_nodes'),
-                        l_grpc_ip=policy.get('l_grpc_ip'),
-                        l_grpc_port=policy.get('l_grpc_port'),
-                        l_fwd_engine=policy.get('l_fwd_engine'),
-                        r_grpc_ip=policy.get('r_grpc_ip'),
-                        r_grpc_port=policy.get('r_grpc_port'),
-                        r_fwd_engine=policy.get('r_fwd_engine'),
-                        decap_sid=policy.get('decap_sid'),
-                        locator=policy.get('locator')
-                    )
-                # Add nodes list for the right-to-left path to the
-                # 'nodes_info' dict
-                if policy.get('rl_nodes') is not None:
-                    fill_nodes_info(
-                        nodes_info=nodes_info,
-                        nodes=policy.get('rl_nodes'),
-                        l_grpc_ip=policy.get('r_grpc_ip'),
-                        l_grpc_port=policy.get('r_grpc_port'),
-                        l_fwd_engine=policy.get('r_fwd_engine'),
-                        r_grpc_ip=policy.get('l_grpc_ip'),
-                        r_grpc_port=policy.get('l_grpc_port'),
-                        r_fwd_engine=policy.get('l_fwd_engine'),
-                        decap_sid=policy.get('decap_sid'),
-                        locator=policy.get('locator')
-                    )
-        if len(policies) == 0:
-            logger.error('Policy not found')
-            return None
-        # Iterate on the policies
-        for policy in policies:
-            lr_destination = policy.get('lr_dst')
-            rl_destination = policy.get('rl_dst')
-            nodes_lr = policy.get('lr_nodes')
-            nodes_rl = policy.get('rl_nodes')
-            _id = policy.get('_key')
-            #
-            # If right to left nodes list is not provided, we use the reverse
-            # left to right SID list (symmetric path)
-            if nodes_rl is None:
-                nodes_rl = nodes_lr[::-1]
-            # The two SID lists must have the same endpoints
-            if nodes_lr[0] != nodes_rl[-1] or nodes_rl[0] != nodes_lr[-1]:
-                logger.error('Bad tunnel endpoints')
-                return None
-            # Create the SRv6 Policy
-            try:
-                # # Prefix length for local segment
-                # prefix_len = locator_bits + usid_id_bits
-                # Ingress node
-                ingress_node = nodes_info[nodes_lr[0]]
-                # Intermediate nodes
-                intermediate_nodes_lr = list()
-                for node in nodes_lr[1:-1]:
-                    intermediate_nodes_lr.append(nodes_info[node])
-                intermediate_nodes_rl = list()
-                for node in nodes_rl[1:-1]:
-                    intermediate_nodes_rl.append(nodes_info[node])
-                # Egress node
-                egress_node = nodes_info[nodes_lr[-1]]
-                # Extract the segments
-                segments_lr = list()
-                for node in nodes_lr:
-                    segments_lr.append(nodes_info[node]['uN'])
-                segments_rl = list()
-                for node in nodes_rl:
-                    segments_rl.append(nodes_info[node]['uN'])
-
-                # Ingress node
-                with utils.get_grpc_session(ingress_node['grpc_ip'],
-                                            ingress_node['grpc_port']
-                                            ) as channel:
-                    # Currently ony Linux and VPP are suppoted for the encap
-                    if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                        logger.error(
-                            'Encap operation is not supported for '
-                            '%s with fwd engine %s',
-                            ingress_node['name'],
-                            ingress_node['fwd_engine'])
-                        return commons_pb2.STATUS_INTERNAL_ERROR
-                    # VPP requires a BSID address
-                    bsid_addr = ''
-                    if ingress_node['fwd_engine'] == 'VPP':
-                        for char in lr_destination:
-                            if char not in ('0', ':'):
-                                bsid_addr += char
-                        add_colon = False
-                        if len(bsid_addr) <= 28:
-                            add_colon = True
-                        bsid_addr = [(bsid_addr[i:i + 4])
-                                     for i in range(0, len(bsid_addr), 4)]
-                        bsid_addr = ':'.join(bsid_addr)
-                        if add_colon:
-                            bsid_addr += '::'
-
-                    udt_sids = list()
-                    # Locator mask
-                    locator_mask = str(IPv6Address(
-                        int('1' * 128, 2) ^
-                        int('1' * (128 - locator_bits), 2)))
-                    # uDT mask
-                    udt_mask_1 = str(
-                        IPv6Address(int('1' * usid_id_bits, 2) <<
-                                    (128 - locator_bits - usid_id_bits)))
-                    udt_mask_2 = str(
-                        IPv6Address(int('1' * usid_id_bits, 2) <<
-                                    (128 - locator_bits - 2 * usid_id_bits)))
-                    # Build uDT sid list
-                    locator_int = int(IPv6Address(egress_node['uDT'])) & \
-                        int(IPv6Address(locator_mask))
-                    udt_mask_1_int = int(IPv6Address(egress_node['uDT'])) & \
-                        int(IPv6Address(udt_mask_1))
-                    udt_mask_2_int = int(IPv6Address(egress_node['uDT'])) & \
-                        int(IPv6Address(udt_mask_2))
-                    udt_sids += [str(IPv6Address(locator_int +
-                                                 udt_mask_1_int))]
-                    udt_sids += [str(IPv6Address(locator_int +
-                                                 (udt_mask_2_int <<
-                                                  usid_id_bits)))]
-                    # We need to convert the SID list into a uSID list
-                    #  before creating the SRv6 policy
-                    usid_list = sidlist_to_usidlist(
-                        sid_list=segments_lr[1:][:-1],
-                        udt_sids=[segments_lr[1:][-1]] + udt_sids,
-                        locator_bits=locator_bits,
-                        usid_id_bits=usid_id_bits
-                    )
-                    # Handle a SRv6 path
-                    response = srv6_utils.handle_srv6_path(
-                        operation=operation,
-                        channel=channel,
-                        destination=lr_destination,
-                        segments=usid_list,
-                        encapmode='encap.red',
-                        table=table,
-                        metric=metric,
-                        bsid_addr=bsid_addr,
-                        fwd_engine=ingress_node['fwd_engine']
-                    )
-                    if response != commons_pb2.STATUS_SUCCESS:
-                        # Error
-                        return response
-                    # # Create the uN behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (ingress_node['uN'], prefix_len),
-                    #     action='uN',
-                    #     fwd_engine=ingress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                    # # Create the End behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (ingress_node['uN'], 64),
-                    #     action='End',
-                    #     fwd_engine=ingress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                    # # Create the decap behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (ingress_node['uDT'], 64),
-                    #     action='End.DT6',
-                    #     lookup_table=254,
-                    #     fwd_engine=ingress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                # # Intermediate nodes
-                # for node in intermediate_nodes:
-                #     with utils.get_grpc_session(node['grpc_ip'],
-                #                                 node['grpc_port']
-                #                                 ) as channel:
-                #         # Create the uN behavior
-                #         response = handle_srv6_behavior(
-                #             operation=operation,
-                #             channel=channel,
-                #             segment='%s/%s' % (node['uN'], prefix_len),
-                #             action='uN',
-                #             fwd_engine=node['fwd_engine']
-                #         )
-                #         if response != commons_pb2.STATUS_SUCCESS:
-                #             # Error
-                #             return response
-                # Egress node
-                with utils.get_grpc_session(egress_node['grpc_ip'],
-                                            egress_node['grpc_port']
-                                            ) as channel:
-                    # Currently ony Linux and VPP are suppoted for the encap
-                    if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
-                        logger.error(
-                            'Encap operation is not supported for '
-                            '%s with fwd engine %s',
-                            egress_node['name'], egress_node['fwd_engine'])
-                        return commons_pb2.STATUS_INTERNAL_ERROR
-                    # VPP requires a BSID address
-                    bsid_addr = ''
-                    if egress_node['fwd_engine'] == 'VPP':
-                        for char in lr_destination:
-                            if char not in ('0', ':'):
-                                bsid_addr += char
-                        add_colon = False
-                        if len(bsid_addr) <= 28:
-                            add_colon = True
-                        bsid_addr = [(bsid_addr[i:i + 4])
-                                     for i in range(0, len(bsid_addr), 4)]
-                        bsid_addr = ':'.join(bsid_addr)
-                        if add_colon:
-                            bsid_addr += '::'
-                    # # Create the uN behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (egress_node['uN'], prefix_len),
-                    #     action='uN',
-                    #     fwd_engine=egress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                    # # Create the End behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (egress_node['uN'], 64),
-                    #     action='End',
-                    #     fwd_engine=egress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                    # # Create the decap behavior
-                    # response = handle_srv6_behavior(
-                    #     operation=operation,
-                    #     channel=channel,
-                    #     segment='%s/%s' % (egress_node['uDT'], 64),
-                    #     action='End.DT6',
-                    #     lookup_table=254,
-                    #     fwd_engine=egress_node['fwd_engine']
-                    # )
-                    # if response != commons_pb2.STATUS_SUCCESS:
-                    #     # Error
-                    #     return response
-                    udt_sids = list()
-                    # Locator mask
-                    locator_mask = str(IPv6Address(
-                        int('1' * 128, 2) ^
-                        int('1' * (128 - locator_bits), 2)))
-                    # uDT mask
-                    udt_mask_1 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                 (128 - locator_bits -
-                                                  usid_id_bits)))
-                    udt_mask_2 = str(IPv6Address(int('1' * usid_id_bits, 2) <<
-                                                 (128 - locator_bits -
-                                                  2 * usid_id_bits)))
-                    # Build uDT sid list
-                    locator_int = int(
-                        IPv6Address(
-                            ingress_node['uDT'])) & int(
-                                IPv6Address(locator_mask))
-                    udt_mask_1_int = int(
-                        IPv6Address(
-                            ingress_node['uDT'])) & int(
-                                IPv6Address(udt_mask_1))
-                    udt_mask_2_int = int(
-                        IPv6Address(
-                            ingress_node['uDT'])) & int(
-                                IPv6Address(udt_mask_2))
-                    udt_sids += [str(IPv6Address(locator_int +
-                                                 udt_mask_1_int))]
-                    udt_sids += [str(IPv6Address(locator_int +
-                                                 (udt_mask_2_int <<
-                                                  usid_id_bits)))]
-                    # We need to convert the SID list into a uSID list
-                    #  before creating the SRv6 policy
-                    usid_list = sidlist_to_usidlist(
-                        sid_list=segments_rl[1:][:-1],
-                        udt_sids=[segments_rl[1:][-1]] + udt_sids,
-                        locator_bits=locator_bits,
-                        usid_id_bits=usid_id_bits
-                    )
-                    # Handle a SRv6 path
-                    response = srv6_utils.handle_srv6_path(
-                        operation=operation,
-                        channel=channel,
-                        destination=rl_destination,
-                        segments=usid_list,
-                        encapmode='encap.red',
-                        table=table,
-                        metric=metric,
-                        bsid_addr=bsid_addr,
-                        fwd_engine=egress_node['fwd_engine']
-                    )
-                    if response != commons_pb2.STATUS_SUCCESS:
-                        # Error
-                        return response
-                # Persist uSID policy to database
-                if persistency:
-                    if operation == 'add':
-                        # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(
-                            url=arango_url)  # TODO keep arango connection open
-                        # Connect to the db
-                        database = arangodb_driver.connect_srv6_usid_db(
-                            client=client,
-                            username=arango_user,
-                            password=arango_password
-                        )
-                        # Save the policy to the db
-                        arangodb_driver.insert_usid_policy(
-                            database=database,
-                            lr_dst=lr_destination,
-                            rl_dst=rl_destination,
-                            lr_nodes=nodes_lr,
-                            rl_nodes=nodes_rl,
-                            table=table if table != -1 else None,
-                            metric=metric if metric != -1 else None,
-                            l_grpc_ip=l_grpc_ip,
-                            l_grpc_port=l_grpc_port,
-                            l_fwd_engine=l_fwd_engine,
-                            r_grpc_ip=r_grpc_ip,
-                            r_grpc_port=r_grpc_port,
-                            r_fwd_engine=r_fwd_engine,
-                            decap_sid=decap_sid,
-                            locator=locator
-                        )
-                    elif operation == 'del':
-                        # TODO keep arango connection open
-                        # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(
-                            url=arango_url)
-                        # Connect to the db
-                        database = arangodb_driver.connect_srv6_usid_db(
-                            client=client,
-                            username=arango_user,
-                            password=arango_password
-                        )
-                        # Save the policy to the db
-                        arangodb_driver.delete_usid_policy(
-                            database=database,
-                            key=_id,
-                            lr_dst=lr_destination,
-                            rl_dst=rl_destination,
-                            lr_nodes=nodes_lr,
-                            rl_nodes=nodes_rl,
-                            table=table if table != -1 else None,
-                            metric=metric if metric != -1 else None
-                        )
-                    else:
-                        logger.error('Unsupported operation: %s', operation)
-            except (InvalidConfigurationError, NodeNotFoundError,
-                    TooManySegmentsError, SIDLocatorError, InvalidSIDError):
-                return commons_pb2.STATUS_INTERNAL_ERROR
-        # Return the response
-        return response
+        # Add/delete the SRv6 uSID policy
+        return add_del_srv6_usid_policy()
+    # Operation unknown
     logger.error('Unsupported operation: %s', operation)
-    return None
+    raise utils.InvalidArgumentError

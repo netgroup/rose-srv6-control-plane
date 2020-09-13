@@ -18,19 +18,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Implementation of SRv6 Controller
+# SRv6 utilities for SRv6 SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
 
 '''
-Control-Plane functionalities for SRv6 Manager
+This module provides a collection of SRv6 utilities for SRv6 SDN Controller.
 '''
 
 # General imports
 import logging
-
 import grpc
 from six import text_type
 
@@ -40,6 +39,7 @@ import srv6_manager_pb2
 # Controller dependencies
 import srv6_manager_pb2_grpc
 from controller import utils
+
 
 # Global variables definition
 #
@@ -56,18 +56,27 @@ DEFAULT_USID_ID_BITS = 16
 # Parser for gRPC errors
 def parse_grpc_error(err):
     '''
-    Parse a gRPC error
-    '''
+    Parse a gRPC error.
 
+    :param err: The error to parse.
+    :type err: grpc.RpcError
+    :return: A status code corresponding to the gRPC error.
+    :rtype: int
+    '''
+    # Extract the gRPC status code
     status_code = err.code()
+    # Extract the error description
     details = err.details()
     logger.error('gRPC client reported an error: %s, %s',
                  status_code, details)
     if grpc.StatusCode.UNAVAILABLE == status_code:
+        # gRPC server is not available
         code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
     elif grpc.StatusCode.UNAUTHENTICATED == status_code:
+        # Authentication problem
         code = commons_pb2.STATUS_GRPC_UNAUTHORIZED
     else:
+        # Generic gRPC error
         code = commons_pb2.STATUS_INTERNAL_ERROR
     # Return an error message
     return code
@@ -77,11 +86,45 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
                      bsid_addr='', fwd_engine='Linux'):
     '''
-    Handle a SRv6 Path
+    Handle a SRv6 path on a node.
+
+    :param operation: The operation to be performed on the SRv6 path
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param destination: The destination prefix of the SRv6 path.
+                        It can be a IP address or a subnet.
+    :type destination: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination (not required for "get" and "del"
+                     operations).
+    :type segments: list, optional
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param encapmode: The encap mode to use for the path, i.e. "inline" or
+                      "encap" (default: encap).
+    :type encapmode: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
-
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-
+    #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -106,11 +149,25 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     path.metric = int(metric)
     # Set the BSID address (required for VPP)
     path.bsid_addr = str(bsid_addr)
+    # Forwarding engine (Linux or VPP)
+    try:
+        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
+    except ValueError:
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
     # Handle SRv6 policy for VPP
+    # A SRv6 path in VPP consists of:
+    #     - a SRv6 policy
+    #     - a rule to steer packets sent to a destination through the SRv6
+    #       policy.
+    # The steering rule matches the corresponding SRv6 policy through a
+    # Binding SID (BSID)
+    # Therefore, VPP requires some extra configuration with respect to Linux
     if fwd_engine == 'VPP':
+        # VPP requires BSID address
         if bsid_addr == '':
             logger.error('"bsid_addr" argument is mandatory for VPP')
-            return None
+            raise utils.InvalidArgumentError
         # Handle SRv6 policy
         res = handle_srv6_policy(
             operation=operation,
@@ -121,15 +178,11 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             metric=metric,
             fwd_engine=fwd_engine
         )
+        # Check for errors
         if res != commons_pb2.STATUS_SUCCESS:
             logger.error('Cannot create SRv6 policy: error %s', res)
-            return None
-    # Forwarding engine (Linux or VPP)
-    try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
-    except ValueError:
-        logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+            return res
+    # The following steps are common for Linux and VPP
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -138,9 +191,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         if operation == 'add':
             # Set encapmode
             path.encapmode = text_type(encapmode)
+            # At least one segment is required for add operation
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
@@ -164,6 +218,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         elif operation == 'del':
             # Remove the SRv6 path
             response = stub.Remove(request)
+        else:
+            # The operation is unknown
+            logger.error('Invalid operation: %s', operation)
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -177,11 +235,35 @@ def handle_srv6_path(operation, channel, destination, segments=None,
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                        table=-1, metric=-1, fwd_engine='Linux'):
     '''
-    Handle a SRv6 Path
+    Handle a SRv6 policy on a node.
+
+    :param operation: The operation to be performed on the SRv6 policy
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param bsid_addr: The Binding SID to be used for the policy.
+    :type bsid_addr: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination (not required for "get" and "del"
+                     operations).
+    :type segments: list, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
-
     # pylint: disable=too-many-locals, too-many-arguments
-
+    #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -206,25 +288,26 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
             fwd_engine)
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
+            # At least one segment is required for add operation
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
                 srv6_segment.segment = text_type(segment)
-            # Create the SRv6 path
+            # Create the SRv6 policy
             response = stub.Create(request)
         elif operation == 'get':
-            # Get the SRv6 path
+            # Get the SRv6 policy
             response = stub.Get(request)
         elif operation == 'change':
             # Iterate on the segments and build the SID list
@@ -232,11 +315,15 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
                 srv6_segment.segment = text_type(segment)
-            # Update the SRv6 path
+            # Update the SRv6 policy
             response = stub.Update(request)
         elif operation == 'del':
-            # Remove the SRv6 path
+            # Remove the SRv6 policy
             response = stub.Remove(request)
+        else:
+            # The operation is unknown
+            logger.error('Invalid operation: %s', operation)
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -252,10 +339,48 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          interface="", segments=None, metric=-1,
                          fwd_engine='Linux'):
     '''
-    Handle a SRv6 behavior
+    Handle a SRv6 behavior on a node.
+
+    :param operation: The operation to be performed on the SRv6 path
+                      (i.e. add, get, change, del).
+    :type operation: str
+    :param channel: The gRPC Channel to the node.
+    :type channel: class: `grpc._channel.Channel`
+    :param segment: The local segment of the SRv6 behavior. It can be a IP
+                    address or a subnet.
+    :type segment: str
+    :param action: The SRv6 action associated to the behavior (e.g. End or
+                   End.DT6), (not required for "get" and "change").
+    :type action: str, optional
+    :param device: Device of the SRv6 route. If not provided, the device
+                   is selected automatically by the node.
+    :type device: str, optional
+    :param table: Routing table containing the SRv6 route. If not provided,
+                  the main table (i.e. table 254) will be used.
+    :type table: int, optional
+    :param nexthop: The nexthop of cross-connect behaviors (e.g. End.DX4
+                    or End.DX6).
+    :type nexthop: str, optional
+    :param lookup_table: The lookup table for the decap behaviors (e.g.
+                         End.DT4 or End.DT6).
+    :type lookup_table: int, optional
+    :param interface: The outgoing interface for the End.DX2 behavior.
+    :type interface: str, optional
+    :param segments: The SID list to be applied for the End.B6 behavior.
+    :type segments: list, optional
+    :param metric: Metric for the SRv6 route. If not provided, the default
+                   metric will be used.
+    :type metric: int, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
+    :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
+    :raises controller.utils.InvalidArgumentError: You provided an invalid
+                                                   argument.
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
+    # If segments argument is not provided, we initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -289,16 +414,17 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             fwd_engine)
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
+            # The argument "action" is mandatory for the "add" operation
             if action == '':
                 logger.error('*** Missing action for seg6local route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                raise utils.InvalidArgumentError
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -345,8 +471,9 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             # Remove the SRv6 behavior
             response = stub.Remove(request)
         else:
+            # The operation is unknown
             logger.error('Invalid operation: %s', operation)
-            return None
+            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -367,14 +494,14 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
                            bsid_addr='', fwd_engine='Linux'):
     '''
-    Create a unidirectional SRv6 tunnel from <ingress> to <egress>
+    Create a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
     :param ingress_channel: The gRPC Channel to the ingress node
     :type ingress_channel: class: `grpc._channel.Channel`
     :param egress_channel: The gRPC Channel to the egress node
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
-                  It can be a IP address or a subnet.
+                        It can be a IP address or a subnet.
     :type destination: str
     :param segments: The SID list to be applied to the packets going to
                      the destination
@@ -384,8 +511,13 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                      'localseg' isn't passed in, the End.DT6 function
                      is not created.
     :type localseg: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -451,16 +583,16 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
-                           of the SRv6 tunnel
+                           of the SRv6 tunnel.
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC Channel to the right endpoint (node_r)
-                           of the SRv6 tunnel
+                           of the SRv6 tunnel.
     :type node_r_channel: class: `grpc._channel.Channel`
     :param sidlist_lr: The SID list to be installed on the packets going
-                       from <node_l> to <node_r>
+                       from <node_l> to <node_r>.
     :type sidlist_lr: list
     :param sidlist_rl: The SID list to be installed on the packets going
-                       from <node_r> to <node_l>
+                       from <node_r> to <node_l>.
     :type sidlist_rl: list
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -478,8 +610,13 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                         to <node_l>. If the argument 'localseg_rl' isn't
                         passed in, the End.DT6 function is not created.
     :type localseg_rl: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -519,9 +656,9 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
-    :param ingress_channel: The gRPC Channel to the ingress node
+    :param ingress_channel: The gRPC Channel to the ingress node.
     :type ingress_channel: class: `grpc._channel.Channel`
-    :param egress_channel: The gRPC Channel to the egress node
+    :param egress_channel: The gRPC Channel to the egress node.
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
@@ -530,11 +667,16 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                      function on the egress node. If the argument 'localseg'
                      isn't passed in, the End.DT6 function is not removed.
     :type localseg: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False)
+                          (default is False).
     :type ignore_errors: bool, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -605,14 +747,14 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC channel to the left endpoint of the
-                           SRv6 tunnel (node_l)
+                           SRv6 tunnel (node_l).
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC channel to the right endpoint of the
-                           SRv6 tunnel (node_r)
+                           SRv6 tunnel (node_r).
     :type node_r_channel: class: `grpc._channel.Channel`
-    :param node_l: The IP address of the left endpoint of the SRv6 tunnel
+    :param node_l: The IP address of the left endpoint of the SRv6 tunnel.
     :type node_l: str
-    :param node_r: The IP address of the right endpoint of the SRv6 tunnel
+    :param node_r: The IP address of the right endpoint of the SRv6 tunnel.
     :type node_r: str
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -630,11 +772,16 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         If the argument 'localseg_r' isn't passed in, the
                         End.DT6 function is not removed.
     :type localseg_rl: str, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False)
+                          (default is False).
     :type ignore_errors: bool, optional
+    :return: The status code of the operation.
+    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #

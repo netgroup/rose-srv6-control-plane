@@ -18,13 +18,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Controller
+# Implementation of a SDN Controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
 
-
-##
-#
-# This module contains all public symbols from the library
-#
+'''
+This package contains an implementation of a SDN Controller.
+'''
