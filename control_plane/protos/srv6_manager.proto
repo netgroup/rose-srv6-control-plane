@@ -94,7 +94,7 @@ message SRv6Behavior {
   // Active segment to match
   string segment = 1;
   // Action to perform
-  string action = 2;
+  SRv6Action action = 2;
    // Nexthop
   string nexthop = 3;
   // Lookup table used by some behaviors
@@ -119,4 +119,18 @@ enum FwdEngine {
   Linux = 0;
   VPP = 1;
   P4 = 2;
+}
+
+enum SRv6Action {
+  UNSPEC = 0;
+  END = 1;
+  END_X = 2;
+  END_T = 3;
+  END_DX4 = 4;
+  END_DX6 = 5;
+  END_DX2 = 6;
+  END_DT4 = 7;
+  END_DT6 = 8;
+  END_B6 = 9;
+  END_B6_ENCAPS = 10;
 }

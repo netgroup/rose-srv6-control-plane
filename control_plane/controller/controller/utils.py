@@ -31,6 +31,8 @@ This module contains a collection of utilities used by Controller
 # General imports
 import logging
 from ipaddress import AddressValueError, IPv4Interface, IPv6Interface
+from ipaddress import ip_address
+import os
 from socket import AF_INET, AF_INET6
 
 # gRPC dependencies
@@ -71,6 +73,12 @@ class PolicyNotFoundError(Exception):
 class NoMeasurementDataAvailableError(Exception):
     '''
     No measurement data are available.
+    '''
+
+
+class EntityNotFoundError(Exception):
+    '''
+    Entity not found.
     '''
 
 
@@ -275,3 +283,42 @@ STATUS_CODE_TO_DESC = {
     STATUS_ALREADY_CONFIGURED: 'Error: Already configured',
     STATUS_NO_SUCH_DEVICE: 'Error: Device not found',
 }
+
+
+def compare_addresses(addr_a, addr_b):
+    addr_a = ip_address(addr_a)
+    addr_b = ip_address(addr_b)
+    return addr_a == addr_b
+
+
+def persistency_enabled():
+    return os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']
+
+
+def raise_exception_on_error(error_code):
+    if error_code == STATUS_SUCCESS:
+        return
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise InvalidArgumentError
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_BAD_REQUEST
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_INTERNAL_ERROR
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_INVALID_GRPC_REQUEST
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_FILE_EXISTS
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_NO_SUCH_PROCESS
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_INVALID_ACTION
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_GRPC_SERVICE_UNAVAILABLE
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_GRPC_UNAUTHORIZED
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_NOT_CONFIGURED
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_ALREADY_CONFIGURED
+    if error_code == STATUS_OPERATION_NOT_SUPPORTED:
+        raise STATUS_NO_SUCH_DEVICE

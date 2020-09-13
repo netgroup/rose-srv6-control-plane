@@ -41,7 +41,7 @@ from pyaml import yaml
 # Proto dependencies
 import commons_pb2
 # Controller dependencies
-from controller import srv6_utils
+from controller import srv6_utils, srv6_path
 from controller import utils
 
 # Logger reference
@@ -923,8 +923,7 @@ def add_del_srv6_usid_policy_ingress(operation, grpc_ip, grpc_port, node_name,
             usid_id_bits=usid_id_bits
         )
         # Handle a SRv6 path
-        response = srv6_utils.handle_srv6_path(
-            operation=operation,
+        path = srv6_path.SRv6Path(
             channel=channel,
             destination=destination,
             segments=usid_list,
@@ -933,6 +932,11 @@ def add_del_srv6_usid_policy_ingress(operation, grpc_ip, grpc_port, node_name,
             metric=metric,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
+        )
+        response = srv6_utils.handle_srv6_entities(
+            operation='add',
+            srv6_entities=[path],
+            grpc_channels=[channel]
         )
         # Done, return the response
         return response

@@ -29,18 +29,19 @@ This module provides a collection of SRv6 utilities for SRv6 SDN Controller.
 '''
 
 # General imports
+from ipaddress import ip_address
 import logging
 import grpc
-import os
-from six import text_type
 
 # Proto dependencies
 import commons_pb2
-import srv6_manager_pb2
 # Controller dependencies
+import srv6_manager_pb2
 import srv6_manager_pb2_grpc
 from controller import utils
-from controller.db_utils.arangodb import arangodb_driver
+from controller import srv6_path
+from controller import srv6_behavior
+from controller import srv6_tunnel
 
 
 # Global variables definition
@@ -53,6 +54,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_LOCATOR_BITS = 32
 # Default number of bits for the uSID identifier
 DEFAULT_USID_ID_BITS = 16
+
+
+# Initialize the list of the SRv6 handlers
+srv6_handlers = list()
 
 
 # Parser for gRPC errors
@@ -84,218 +89,459 @@ def parse_grpc_error(err):
     return code
 
 
+def add_srv6_entities(srv6_entities, grpc_channels=None):
+    '''
+    Add a set of SRv6 entities (e.g. paths, behaviors, tunnels).
+
+    :param srv6_entities: A set containing the entities to add.
+    :type srv6_entities: set
+    :param grpc_channels: A list containing references to open gRPC channels.
+                          This parameter can be used to reuse open channels
+                          in order to improve the efficiency. To add a
+                          SRv6 entity from a node, we first check if we have
+                          an active gRPC channel to the node. If a channel is
+                          available can use it, otherwise we need to open a
+                          new channel to the node.
+    :type grpc_channels: list, optional
+    :return: A set of added entities.
+    :rtype: set
+    '''
+    # If the persistency is enabled on the controller,  check some entities
+    # already exist
+    if utils.persistency_enabled():
+        # Iterate on the entity handlers
+        for handlers in srv6_handlers:
+            # Extract the verifier
+            #verifier = handlers['check_entities']  TODO
+            # Check for the entities existency
+            #verifier(srv6_entities) TODO
+            pass
+    # Initialize grpc_channels, if it is None
+    grpc_channels = grpc_channels if grpc_channels is not None else []
+    # Convert the grpc_channels list to a dict
+    # This allows to make the access to the data structure simpler
+    address_to_channel = dict()
+    for grpc_channel in grpc_channels:
+        # Extract the IP address of the target of the gRPC channel from the
+        # channel
+        import re
+        search_results = re.finditer(r'\[.*?\]', grpc_channel._channel.target().decode())
+        for item in search_results:
+            grpc_address = \
+                str(item.group(0))
+            if grpc_address[0] == '[':
+                grpc_address = grpc_address[1:]
+            if grpc_address[-1] == ']':
+                grpc_address = grpc_address[:-1]
+            grpc_address = \
+                str(ip_address(grpc_address))
+            break
+        # Add the mapping IP address - channel to the address_to_channel dict
+        address_to_channel[grpc_address] = grpc_channel
+    # Dict containing the SRv6ManagerRequest objects indexed by the IP address
+    # of the target
+    requests = dict()
+    # Iterate on the entity handlers
+    for handlers in srv6_handlers:
+        # Extract the encoder
+        encoder = handlers['encode_entities']
+        # Encode the entities
+        # This will convert the SRv6 entities to gRPC representations and will
+        # add these representation to the request message
+        encoder(srv6_entities, requests)
+    # The entities processed by the encoder are removed from the srv6_entities
+    # set; as we expect that all the entities have been processed by the
+    # encoders, we chack that the srv6_entities is empty
+    if len(srv6_entities) != 0:
+        logger.error('Not all the entities have been processed')
+        raise utils.InvalidArgumentError
+    # Send the requests
+    for grpc_address, request in requests.items():
+        # Retrieve the channel to the gRPC address from the address_to_channel
+        # dict; if no channel is present, grpc_channel will be set to None
+        grpc_channel = address_to_channel.get(ip_address(grpc_address))
+        # Flag used to indicate whether the channel must be closed or not
+        # after the RPC
+        close_channel = False
+        try:
+            # If no channel is available we need to open a new one
+            if grpc_channel is None:
+                # Get the channel
+                grpc_channel = utils.get_grpc_session(grpc_address, 12345)  # FIXME
+                # Enable the close flag to state that the channel must be
+                # closed after the RPC
+                close_channel = True
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(grpc_channel)
+            # Create the SRv6 entities
+            response = stub.Create(request)
+            # Get the status code of the gRPC operation
+            response = response.status
+        except grpc.RpcError as err:
+            # An error occurred during the gRPC operation
+            # Parse the error and return it
+            response = parse_grpc_error(err)
+        finally:
+            # Close the channel, if required
+            if close_channel:
+                grpc_channel.close()
+        # Check if response is success; if not, we raise an exception
+        utils.raise_exception_on_error(response)
+    # Iterate on the entity handlers
+    for handlers in srv6_handlers:
+        # Extract the db remover
+        db_saver = handlers['save_entities_to_db']
+        # Save the entities to the database
+        db_saver(srv6_entities)        # TODO This set is empty
+    # No exception raised, so the operation completed successfully and
+    # we return the entities added to the nodes
+    return srv6_entities
+
+
+def get_srv6_entities(srv6_entities, grpc_channels=None, first_match=False):
+    '''
+    Retrieve a set of SRv6 entities (e.g. paths, behaviors, tunnels).
+
+    :param srv6_entities: A set containing the entities to get.
+    :type srv6_entities: set
+    :param grpc_channels: A list containing references to open gRPC channels.
+                          This parameter can be used to reuse open channels
+                          in order to improve the efficiency. To update a
+                          SRv6 entity from a node, we first check if we have
+                          an active gRPC channel to the node. If a channel is
+                          available can use it, otherwise we need to open a
+                          new channel to the node.
+    :type grpc_channels: list, optional
+    :return: A set of retrieved entities.
+    :rtype: set
+    '''
+    # If the persistency is enabled on the controller, we first look up the
+    # entities in the database
+    # If an entity does not exist an exception will be raised
+    # The entities are augmented with the information contained into the db
+    if utils.persistency_enabled():
+        # Iterate on the entity handlers
+        for handlers in srv6_handlers:
+            # Take the augmenter
+            augmenter = handlers['augment_entities']
+            # Augment the entities
+            augmenter(srv6_entities, first_match=first_match)
+        # Done, we have retrieved the results from the database
+        return srv6_entities
+    # Initialize grpc_channels, if it is None
+    grpc_channels = grpc_channels if grpc_channels is not None else []
+    # Convert the grpc_channels list to a dict
+    # This allows to make the access to the data structure simpler
+    address_to_channel = dict()
+    for grpc_channel in grpc_channels:
+        # Extract the IP address of the target of the gRPC channel from the
+        # channel
+        import re
+        search_results = re.finditer(r'\[.*?\]', grpc_channel._channel.target().decode())
+        for item in search_results:
+            grpc_address = \
+                str(item.group(0))
+            if grpc_address[0] == '[':
+                grpc_address = grpc_address[1:]
+            if grpc_address[-1] == ']':
+                grpc_address = grpc_address[:-1]
+            grpc_address = \
+                str(ip_address(grpc_address))
+            break
+        # Add the mapping IP address - channel to the address_to_channel dict
+        address_to_channel[grpc_address] = grpc_channel
+    # Dict containing the SRv6ManagerRequest objects indexed by the IP address
+    # of the target
+    requests = dict()
+    # Iterate on the entity handlers
+    for handlers in srv6_handlers:
+        # Extract the encoder
+        encoder = handlers['encode_entities']
+        # Encode the entities
+        # This will convert the SRv6 entities to gRPC representations and will
+        # add these representation to the request message
+        encoder(srv6_entities, requests)
+    # The entities processed by the encoder are removed from the srv6_entities
+    # set; as we expect that all the entities have been processed by the
+    # encoders, we chack that the srv6_entities is empty
+    if len(srv6_entities) != 0:
+        logger.error('Not all the entities have been processed')
+        raise utils.InvalidArgumentError
+    # Initialize the set of the retrieved entities
+    srv6_entities = set()
+    # Send the requests
+    for grpc_address, request in requests.items():
+        # Retrieve the channel to the gRPC address from the address_to_channel
+        # dict; if no channel is present, grpc_channel will be set to None
+        grpc_channel = address_to_channel.get(ip_address(grpc_address))
+        # Flag used to indicate whether the channel must be closed or not
+        # after the RPC
+        close_channel = False
+        try:
+            # If no channel is available we need to open a new one
+            if grpc_channel is None:
+                # Get the channel
+                grpc_channel = utils.get_grpc_session(grpc_address, 12345)  # FIXME
+                # Enable the close flag to state that the channel must be
+                # closed after the RPC
+                close_channel = True
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(grpc_channel)
+            # Get the SRv6 entities
+            res = stub.Get(request)
+            # Get the status code of the gRPC operation
+            response = res.status
+        except grpc.RpcError as err:
+            # An error occurred during the gRPC operation
+            # Parse the error and return it
+            response = parse_grpc_error(err)
+        finally:
+            # Close the channel, if required
+            if close_channel:
+                grpc_channel.close()
+        # Check if response is success; if not, we raise an exception
+        utils.raise_exception_on_error(response)
+        # No exception raised, so the operation completed successfully and
+        # we return the entities retrieved from the nodes
+        #
+        # Decode the entities
+        #
+        # Iterate on the entity handlers
+        for handlers in srv6_handlers:
+            # Extract the decoder
+            decoder = handlers['decode_entities']
+            # Decode the entities
+            # This will convert the gRPC represnetation to SRv6 entities and
+            # will add these representation to the srv6_entities set
+            decoder(srv6_entities, res)
+    # Return the entities
+    return srv6_entities
+
+
+def change_srv6_entities(srv6_entities, grpc_channels=None):
+    '''
+    Update a set of SRv6 entities (e.g. paths, behaviors, tunnels).
+
+    :param srv6_entities: A set containing the entities to update.
+    :type srv6_entities: set
+    :param grpc_channels: A list containing references to open gRPC channels.
+                          This parameter can be used to reuse open channels
+                          in order to improve the efficiency. To update a
+                          SRv6 entity from a node, we first check if we have
+                          an active gRPC channel to the node. If a channel is
+                          available can use it, otherwise we need to open a
+                          new channel to the node.
+    :type grpc_channels: list, optional
+    :return: A set of updated entities.
+    :rtype: set
+    '''
+    raise NotImplementedError
+
+
+def del_srv6_entities(srv6_entities, grpc_channels=None, first_match=False):
+    '''
+    Delete a set of SRv6 entities (e.g. paths, behaviors, tunnels).
+
+    :param srv6_entities: A set containing the entities to remove.
+    :type srv6_entities: set
+    :param grpc_channels: A list containing references to open gRPC channels.
+                          This parameter can be used to reuse open channels
+                          in order to improve the efficiency. To remove a
+                          SRv6 entity from a node, we first check if we have
+                          an active gRPC channel to the node. If a channel is
+                          available can use it, otherwise we need to open a
+                          new channel to the node.
+    :type grpc_channels: list, optional
+    :param first_match: If set, only the first match will be removed
+                        (default: False).
+    :type first_match: bool, optional
+    :return: A set of removed entities.
+    :rtype: set
+    '''
+    # If the persistency is enabled on the controller, we first look up the
+    # entities in the database
+    # If an entity does not exist an exception will be raised
+    # The entities are augmented with the information contained into the db
+    if utils.persistency_enabled():
+        # Iterate on the entity handlers
+        for handlers in srv6_handlers:
+            # Take the augmenter
+            augmenter = handlers['augment_entities']
+            # Augment the entities
+            augmenter(srv6_entities, first_match=first_match)
+    # Initialize grpc_channels, if it is None
+    grpc_channels = grpc_channels if grpc_channels is not None else []
+    # Convert the grpc_channels list to a dict
+    # This allows to make the access to the data structure simpler
+    address_to_channel = dict()
+    for grpc_channel in grpc_channels:
+        # Extract the IP address of the target of the gRPC channel from the
+        # channel
+        import re
+        search_results = re.finditer(r'\[.*?\]', grpc_channel._channel.target().decode())
+        for item in search_results:
+            grpc_address = \
+                str(item.group(0))
+            if grpc_address[0] == '[':
+                grpc_address = grpc_address[1:]
+            if grpc_address[-1] == ']':
+                grpc_address = grpc_address[:-1]
+            grpc_address = \
+                str(ip_address(grpc_address))
+            break
+        # Add the mapping IP address - channel to the address_to_channel dict
+        address_to_channel[grpc_address] = grpc_channel
+    # Dict containing the SRv6ManagerRequest objects indexed by the IP address
+    # of the target
+    requests = dict()
+    # Iterate on the entity handlers
+    for handlers in srv6_handlers:
+        # Extract the encoder
+        encoder = handlers['encode_entities']
+        # Encode the entities
+        # This will convert the SRv6 entities to gRPC representations and will
+        # add these representation to the request message
+        encoder(srv6_entities, requests)
+    # The entities processed by the encoder are removed from the srv6_entities
+    # set; as we expect that all the entities have been processed by the
+    # encoders, we chack that the srv6_entities is empty
+    if len(srv6_entities) != 0:
+        logger.error('Not all the entities have been processed')
+        raise utils.InvalidArgumentError
+    # Send the requests
+    for grpc_address, request in requests.items():
+        # Retrieve the channel to the gRPC address from the address_to_channel
+        # dict; if no channel is present, grpc_channel will be set to None
+        grpc_channel = address_to_channel.get(ip_address(grpc_address))
+        # Flag used to indicate whether the channel must be closed or not
+        # after the RPC
+        close_channel = False
+        try:
+            # If no channel is available we need to open a new one
+            if grpc_channel is None:
+                # Get the channel
+                grpc_channel = utils.get_grpc_session(grpc_address, 12345)  # FIXME
+                # Enable the close flag to state that the channel must be
+                # closed after the RPC
+                close_channel = True
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(grpc_channel)
+            # Remove the SRv6 entities
+            response = stub.Remove(request)
+            # Get the status code of the gRPC operation
+            response = response.status
+        except grpc.RpcError as err:
+            # An error occurred during the gRPC operation
+            # Parse the error and return it
+            response = parse_grpc_error(err)
+        finally:
+            # Close the channel, if required
+            if close_channel:
+                grpc_channel.close()
+        # Check if response is success; if not, we raise an exception
+        utils.raise_exception_on_error(response)
+    # Iterate on the entity handlers
+    for handlers in srv6_handlers:
+        # Extract the db remover
+        db_remover = handlers['remove_entities_from_db']
+        # Remove the entities from the database
+        db_remover(srv6_entities)        # TODO
+    # No exception raised, so the operation completed successfully and
+    # we return the entities removed from the nodes
+    return srv6_entities
+
+
+def handle_srv6_entities(operation, srv6_entities, grpc_channels=None,
+                         first_match=False):
+    '''
+    Create, get, change or delete a set of SRv6 entities (e.g. paths,
+    behaviors, tunnels).
+
+    :param operation: The operation to perform (i.e. add, get, change or del)
+    :type: str
+    :param srv6_entities: A set containing the entities to create or
+                          manipulate.
+    :type srv6_entities: set
+    :param grpc_channels: A list containing references to open gRPC channels.
+                          This parameter can be used to reuse open channels
+                          in order to improve the efficiency. To install a
+                          SRv6 entity in a node, we first check if we have an
+                          active gRPC channel to the node. If a channel is
+                          available can use it, otherwise we need to open a
+                          new channel to the node.
+    :type grpc_channels: list, optional
+    :param first_match: If set, only the first match will be returned by the
+                        get operation or removed by the del operation
+                        (default: False).
+    :type first_match: bool, optional
+    :return: A set of entities added, retrieved, updated or removed.
+    :rtype: set
+    '''
+    # Dispatch the operation
+    if operation == 'add':
+        # "Add" operation
+        return add_srv6_entities(srv6_entities, grpc_channels)
+    if operation == 'get':
+        # "Get" operation
+        return get_srv6_entities(srv6_entities, grpc_channels, first_match)
+    if operation == 'change':
+        # "Change" operation
+        return change_srv6_entities(srv6_entities, grpc_channels)
+    if operation == 'del':
+        # "Delete" operation
+        return del_srv6_entities(srv6_entities, grpc_channels, first_match)
+    # If we reach this point, the operation is unknown
+    logger.error('Invalid action')
+    raise utils.InvalidArgumentError
+
+
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='Linux', store=False):
+                     bsid_addr='', fwd_engine='Linux'):
     '''
-    Handle a SRv6 path on a node.
-
-    :param operation: The operation to be performed on the SRv6 path
-                      (i.e. add, get, change, del).
-    :type operation: str
-    :param channel: The gRPC Channel to the node.
-    :type channel: class: `grpc._channel.Channel`
-    :param destination: The destination prefix of the SRv6 path.
-                        It can be a IP address or a subnet.
-    :type destination: str
-    :param segments: The SID list to be applied to the packets going to
-                     the destination (not required for "get" and "del"
-                     operations).
-    :type segments: list, optional
-    :param device: Device of the SRv6 route. If not provided, the device
-                   is selected automatically by the node.
-    :type device: str, optional
-    :param encapmode: The encap mode to use for the path, i.e. "inline" or
-                      "encap" (default: encap).
-    :type encapmode: str, optional
-    :param table: Routing table containing the SRv6 route. If not provided,
-                  the main table (i.e. table 254) will be used.
-    :type table: int, optional
-    :param metric: Metric for the SRv6 route. If not provided, the default
-                   metric will be used.
-    :type metric: int, optional
-    :param bsid_addr: The Binding SID to be used for the route (only required
-                      for VPP).
-    :type bsid_addr: str, optional
-    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
-    :type fwd_engine: str, optional
-    :param store: Define whether to save the SRv6 path to the database or not.
-                  This parameter require ENABLE_PERSISTENCY enabled in the
-                  configuration file. Default: False.
-    :type store: bool, optional
-    :return: The status code of the operation.
-    :rtype: int
-    :raises controller.utils.InvalidArgumentError: You provided an invalid
-                                                   argument.
+    Handle a SRv6 Path.
+    This function has been deprecated. Use handle_srv6_entities instead.
     '''
-    # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-    #
-    # If segments argument is not provided, we initialize it to an empty list
-    if segments is None:
-        segments = []
-    # Create request message
-    request = srv6_manager_pb2.SRv6ManagerRequest()
-    # Create a new SRv6 path request
-    path_request = request.srv6_path_request       # pylint: disable=no-member
-    # Create a new path
-    path = path_request.paths.add()
-    # Set destination
-    path.destination = text_type(destination)
-    # Set device
-    # If the device is not specified (i.e. empty string),
-    # it will be chosen by the gRPC server
-    path.device = text_type(device)
-    # Set table ID
-    # If the table ID is not specified (i.e. table=-1),
-    # the main table will be used
-    path.table = int(table)
-    # Set metric (i.e. preference value of the route)
-    # If the metric is not specified (i.e. metric=-1),
-    # the decision is left to the Linux kernel
-    path.metric = int(metric)
-    # Set the BSID address (required for VPP)
-    path.bsid_addr = str(bsid_addr)
-    # Forwarding engine (Linux or VPP)
-    try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
-    except ValueError:
-        logger.error('Invalid forwarding engine: %s', fwd_engine)
-        raise utils.InvalidArgumentError
-    # Handle SRv6 policy for VPP
-    # A SRv6 path in VPP consists of:
-    #     - a SRv6 policy
-    #     - a rule to steer packets sent to a destination through the SRv6
-    #       policy.
-    # The steering rule matches the corresponding SRv6 policy through a
-    # Binding SID (BSID)
-    # Therefore, VPP requires some extra configuration with respect to Linux
-    if fwd_engine == 'VPP':
-        # VPP requires BSID address
-        if bsid_addr == '':
-            logger.error('"bsid_addr" argument is mandatory for VPP')
-            raise utils.InvalidArgumentError
-        # Handle SRv6 policy
-        res = handle_srv6_policy(
-            operation=operation,
-            channel=channel,
-            bsid_addr=bsid_addr,
-            segments=segments,
-            table=table,
-            metric=metric,
-            fwd_engine=fwd_engine
-        )
-        # Check for errors
-        if res != commons_pb2.STATUS_SUCCESS:
-            logger.error('Cannot create SRv6 policy: error %s', res)
-            return res
-    # The following steps are common for Linux and VPP
-    try:
-        # Get the reference of the stub
-        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-        # Fill the request depending on the operation
-        # and send the request
-        if operation == 'add':
-            # Set encapmode
-            path.encapmode = text_type(encapmode)
-            # At least one segment is required for add operation
-            if len(segments) == 0:
-                logger.error('*** Missing segments for seg6 route')
-                raise utils.InvalidArgumentError
-            # Iterate on the segments and build the SID list
-            for segment in segments:
-                # Append the segment to the SID list
-                srv6_segment = path.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Create the SRv6 path
-            response = stub.Create(request)
-            # Store the path to the database
-            if response.status == commons_pb2.STATUS_SUCCESS and store and \
-                    os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
-                # Connect to ArangoDB
-                # FIXME crash if arangodb_driver not imported
-                # TODO keep arango connection open
-                client = arangodb_driver.connect_arango(
-                    url=os.getenv('ARANGO_URL'))
-                # Connect to the "srv6_usid" db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=os.getenv('ARANGO_USER'),
-                    password=os.getenv('ARANGO_PASSWORD')
-                )
-                arangodb_driver.insert_srv6_path(
-                    database=database,
-                    grpc_address=channel._channel.target().decode(),
-                    destination=destination,
-                    segments=segments,
-                    device=device,
-                    encapmode=encapmode,
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=fwd_engine
-                )
-        elif operation == 'get':
-            # Get the SRv6 path
-            response = stub.Get(request)
-        elif operation == 'change':
-            # Set encapmode
-            path.encapmode = text_type(encapmode)
-            # Iterate on the segments and build the SID list
-            for segment in segments:
-                # Append the segment to the SID list
-                srv6_segment = path.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Update the SRv6 path
-            response = stub.Update(request)
-        elif operation == 'del':
-            # Remove the SRv6 path
-            response = stub.Remove(request)
-        else:
-            # The operation is unknown
-            logger.error('Invalid operation: %s', operation)
-            raise utils.InvalidArgumentError
-        # Get the status code of the gRPC operation
-        response = response.status
-    except grpc.RpcError as err:
-        # An error occurred during the gRPC operation
-        # Parse the error and return it
-        response = parse_grpc_error(err)
-    # Return the response
-    return response
+    import re
+    search_results = re.finditer(r'\[.*?\]', channel._channel.target().decode())
+    for item in search_results:
+        grpc_address = \
+            str(item.group(0))
+        if grpc_address[0] == '[':
+            grpc_address = grpc_address[1:]
+        if grpc_address[-1] == ']':
+            grpc_address = grpc_address[:-1]
+        grpc_address = \
+            str(ip_address(grpc_address))
+        break
+    sr_path = srv6_path.SRv6Path(
+        grpc_address=grpc_address,
+        destination=destination,
+        segments=segments,
+        device=device,
+        encapmode=encapmode,
+        table=table,
+        metric=metric,
+        bsid_addr=bsid_addr,
+        fwd_engine=srv6_manager_pb2.FwdEngine.Value(fwd_engine)
+    )
+    handle_srv6_entities(
+        operation=operation,
+        srv6_entities=[sr_path],
+        grpc_channels=[channel]
+    )
+    return commons_pb2.STATUS_SUCCESS
 
 
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
                        table=-1, metric=-1, fwd_engine='Linux'):
     '''
-    Handle a SRv6 policy on a node.
-
-    :param operation: The operation to be performed on the SRv6 policy
-                      (i.e. add, get, change, del).
-    :type operation: str
-    :param channel: The gRPC Channel to the node.
-    :type channel: class: `grpc._channel.Channel`
-    :param bsid_addr: The Binding SID to be used for the policy.
-    :type bsid_addr: str
-    :param segments: The SID list to be applied to the packets going to
-                     the destination (not required for "get" and "del"
-                     operations).
-    :type segments: list, optional
-    :param table: Routing table containing the SRv6 route. If not provided,
-                  the main table (i.e. table 254) will be used.
-    :type table: int, optional
-    :param metric: Metric for the SRv6 route. If not provided, the default
-                   metric will be used.
-    :type metric: int, optional
-    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
-    :type fwd_engine: str, optional
-    :return: The status code of the operation.
-    :rtype: int
-    :raises controller.utils.InvalidArgumentError: You provided an invalid
-                                                   argument.
+    Handle a SRv6 Policy.
+    This function has been deprecated. Use handle_srv6_entities instead.
     '''
+
     # pylint: disable=too-many-locals, too-many-arguments
-    #
-    # If segments argument is not provided, we initialize it to an empty list
+
     if segments is None:
         segments = []
     # Create request message
@@ -320,42 +566,37 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
             fwd_engine)
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        raise utils.InvalidArgumentError
+        return None
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
-            # At least one segment is required for add operation
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                raise utils.InvalidArgumentError
+                return commons_pb2.STATUS_INTERNAL_ERROR
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Create the SRv6 policy
+                srv6_segment.segment = segment
+            # Create the SRv6 path
             response = stub.Create(request)
         elif operation == 'get':
-            # Get the SRv6 policy
+            # Get the SRv6 path
             response = stub.Get(request)
         elif operation == 'change':
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
                 srv6_segment = policy.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Update the SRv6 policy
+                srv6_segment.segment = segment
+            # Update the SRv6 path
             response = stub.Update(request)
         elif operation == 'del':
-            # Remove the SRv6 policy
+            # Remove the SRv6 path
             response = stub.Remove(request)
-        else:
-            # The operation is unknown
-            logger.error('Invalid operation: %s', operation)
-            raise utils.InvalidArgumentError
         # Get the status code of the gRPC operation
         response = response.status
     except grpc.RpcError as err:
@@ -369,183 +610,70 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
                          interface="", segments=None, metric=-1,
-                         fwd_engine='Linux', store=False):
+                         fwd_engine='Linux'):
     '''
-    Handle a SRv6 behavior on a node.
-
-    :param operation: The operation to be performed on the SRv6 path
-                      (i.e. add, get, change, del).
-    :type operation: str
-    :param channel: The gRPC Channel to the node.
-    :type channel: class: `grpc._channel.Channel`
-    :param segment: The local segment of the SRv6 behavior. It can be a IP
-                    address or a subnet.
-    :type segment: str
-    :param action: The SRv6 action associated to the behavior (e.g. End or
-                   End.DT6), (not required for "get" and "change").
-    :type action: str, optional
-    :param device: Device of the SRv6 route. If not provided, the device
-                   is selected automatically by the node.
-    :type device: str, optional
-    :param table: Routing table containing the SRv6 route. If not provided,
-                  the main table (i.e. table 254) will be used.
-    :type table: int, optional
-    :param nexthop: The nexthop of cross-connect behaviors (e.g. End.DX4
-                    or End.DX6).
-    :type nexthop: str, optional
-    :param lookup_table: The lookup table for the decap behaviors (e.g.
-                         End.DT4 or End.DT6).
-    :type lookup_table: int, optional
-    :param interface: The outgoing interface for the End.DX2 behavior.
-    :type interface: str, optional
-    :param segments: The SID list to be applied for the End.B6 behavior.
-    :type segments: list, optional
-    :param metric: Metric for the SRv6 route. If not provided, the default
-                   metric will be used.
-    :type metric: int, optional
-    :param fwd_engine: Forwarding engine for the SRv6 route (default: Linux).
-    :type fwd_engine: str, optional
-    :param store: Define whether to save the SRv6 behavior to the database or
-                  not. This parameter require ENABLE_PERSISTENCY enabled in
-                  the configuration file. Default: False.
-    :type store: bool, optional
-    :return: The status code of the operation.
-    :rtype: int
-    :raises controller.utils.InvalidArgumentError: You provided an invalid
-                                                   argument.
+    Handle a SRv6 behavior.
+    This function has been deprecated. Use handle_srv6_entities instead.
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
-    # If segments argument is not provided, we initialize it to an empty list
-    if segments is None:
-        segments = []
-    # Create request message
-    request = srv6_manager_pb2.SRv6ManagerRequest()
-    # Create a new SRv6 behavior request
-    behavior_request = (request               # pylint: disable=no-member
-                        .srv6_behavior_request)
-    # Create a new SRv6 behavior
-    behavior = behavior_request.behaviors.add()
-    # Set local segment for the seg6local route
-    behavior.segment = text_type(segment)
-    # Set the device
-    # If the device is not specified (i.e. empty string),
-    # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
-    # Set the table where the seg6local must be inserted
-    # If the table ID is not specified (i.e. table=-1),
-    # the main table will be used
-    behavior.table = int(table)
-    # Set device
-    # If the device is not specified (i.e. empty string),
-    # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
-    # Set metric (i.e. preference value of the route)
-    # If the metric is not specified (i.e. metric=-1),
-    # the decision is left to the Linux kernel
-    behavior.metric = int(metric)
-    # Forwarding engine (Linux or VPP)
-    try:
-        behavior_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-            fwd_engine)
-    except ValueError:
-        logger.error('Invalid forwarding engine: %s', fwd_engine)
+    if action == 'End':
+        action = srv6_manager_pb2.SRv6Action.Value('END')
+        behavior = srv6_behavior.SRv6EndBehavior()
+    elif action == 'End.X':
+        action = srv6_manager_pb2.SRv6Action.Value('END_X')
+        behavior = srv6_behavior.SRv6EndXBehavior()
+        behavior.nexthop = nexthop
+    elif action == 'End.T':
+        action = srv6_manager_pb2.SRv6Action.Value('END_T')
+        behavior = srv6_behavior.SRv6EndTBehavior()
+        behavior.lookup_table = lookup_table
+    elif action == 'End.DX4':
+        action = srv6_manager_pb2.SRv6Action.Value('END_DX4')
+        behavior = srv6_behavior.SRv6EndDX4Behavior()
+        behavior.nexthop = nexthop
+    elif action == 'End.DX6':
+        action = srv6_manager_pb2.SRv6Action.Value('END_DX6')
+        behavior = srv6_behavior.SRv6EndDX6Behavior()
+        behavior.nexthop = nexthop
+    elif action == 'End.DX2':
+        action = srv6_manager_pb2.SRv6Action.Value('END_DX2')
+        behavior = srv6_behavior.SRv6EndDX2Behavior()
+        behavior.interface = interface
+    elif action == 'End.DT4':
+        action = srv6_manager_pb2.SRv6Action.Value('END_DT4')
+        behavior = srv6_behavior.SRv6EndDT4Behavior()
+        behavior.lookup_table = lookup_table
+    elif action == 'End.DT6':
+        action = srv6_manager_pb2.SRv6Action.Value('END_DT6')
+        behavior = srv6_behavior.SRv6EndDT6Behavior()
+        behavior.lookup_table = lookup_table
+    elif action == 'End.B6':
+        action = srv6_manager_pb2.SRv6Action.Value('END_B6')
+        behavior = srv6_behavior.SRv6EndB6Behavior()
+        behavior.segments = segments
+    elif action == 'End.B6.Encaps':
+        action = srv6_manager_pb2.SRv6Action.Value('END_B6_ENCAPS')
+        behavior = srv6_behavior.SRv6EndB6EncapsBehavior()
+        behavior.segments = segments
+    else:
+        logger.error('Unrecognizer action: %s', action)
         raise utils.InvalidArgumentError
-    try:
-        # Get the reference of the stub
-        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-        # Fill the request depending on the operation
-        # and send the request
-        if operation == 'add':
-            # The argument "action" is mandatory for the "add" operation
-            if action == '':
-                logger.error('*** Missing action for seg6local route')
-                raise utils.InvalidArgumentError
-            # Set the action for the seg6local route
-            behavior.action = text_type(action)
-            # Set the nexthop for the L3 cross-connect actions
-            # (e.g. End.DX4, End.DX6)
-            behavior.nexthop = text_type(nexthop)
-            # Set the table for the "decap and table lookup" actions
-            # (e.g. End.DT4, End.DT6)
-            behavior.lookup_table = int(lookup_table)
-            # Set the inteface for the L2 cross-connect actions
-            # (e.g. End.DX2)
-            behavior.interface = text_type(interface)
-            # Set the segments for the binding SID actions
-            # (e.g. End.B6, End.B6.Encaps)
-            for seg in segments:
-                # Create a new segment
-                srv6_segment = behavior.segs.add()
-                srv6_segment.segment = text_type(seg)
-            # Create the SRv6 behavior
-            response = stub.Create(request)
-            # Store the behavior to the database
-            if response.status == commons_pb2.STATUS_SUCCESS and store and \
-                    os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
-                # Connect to ArangoDB
-                # FIXME crash if arangodb_driver not imported
-                # TODO keep arango connection open
-                client = arangodb_driver.connect_arango(
-                    url=os.getenv('ARANGO_URL'))
-                # Connect to the "srv6_usid" db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=os.getenv('ARANGO_USER'),
-                    password=os.getenv('ARANGO_PASSWORD')
-                )
-                arangodb_driver.insert_srv6_behavior(
-                    database=database,
-                    grpc_address=channel._channel.target().decode(),
-                    segment=segment,
-                    action=action,
-                    device=device,
-                    table=table,
-                    nexthop=nexthop,
-                    lookup_table=lookup_table,
-                    interface=interface,
-                    segments=segments,
-                    metric=metric,
-                    fwd_engine=fwd_engine
-                )
-        elif operation == 'get':
-            # Get the SRv6 behavior
-            response = stub.Get(request)
-        elif operation == 'change':
-            # Set the action for the seg6local route
-            behavior.action = text_type(action)
-            # Set the nexthop for the L3 cross-connect actions
-            # (e.g. End.DX4, End.DX6)
-            behavior.nexthop = text_type(nexthop)
-            # Set the table for the "decap and table lookup" actions
-            # (e.g. End.DT4, End.DT6)
-            behavior.lookup_table = int(lookup_table)
-            # Set the inteface for the L2 cross-connect actions
-            # (e.g. End.DX2)
-            behavior.interface = text_type(interface)
-            # Set the segments for the binding SID actions
-            # (e.g. End.B6, End.B6.Encaps)
-            for seg in segments:
-                # Create a new segment
-                srv6_segment = behavior.segs.add()
-                srv6_segment.segment = text_type(seg)
-            # Update the SRv6 behavior
-            response = stub.Update(request)
-        elif operation == 'del':
-            # Remove the SRv6 behavior
-            response = stub.Remove(request)
-        else:
-            # The operation is unknown
-            logger.error('Invalid operation: %s', operation)
-            raise utils.InvalidArgumentError
-        # Get the status code of the gRPC operation
-        response = response.status
-    except grpc.RpcError as err:
-        # An error occurred during the gRPC operation
-        # Parse the error and return it
-        response = parse_grpc_error(err)
+    # Fill the remaining fields
+    behavior.segment = segment
+    behavior.action = action
+    behavior.device: device
+    behavior.table: table
+    behavior.metric: metric
+    behavior.fwd_engine = fwd_engine
+    # Handle the entities
+    handle_srv6_entities(
+        operation=operation,
+        srv6_entities=[behavior],
+        grpc_channels=[channel]
+    )
     # Return the response
-    return response
+    return commons_pb2.STATUS_SUCCESS
 
 
 class SRv6Exception(Exception):
@@ -559,13 +687,14 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            bsid_addr='', fwd_engine='Linux'):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>.
+    This function has been deprecated. Use handle_srv6_entities instead.
 
     :param ingress_channel: The gRPC Channel to the ingress node
     :type ingress_channel: class: `grpc._channel.Channel`
     :param egress_channel: The gRPC Channel to the egress node
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
-                        It can be a IP address or a subnet.
+                  It can be a IP address or a subnet.
     :type destination: str
     :param segments: The SID list to be applied to the packets going to
                      the destination
@@ -575,13 +704,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                      'localseg' isn't passed in, the End.DT6 function
                      is not created.
     :type localseg: str, optional
-    :param bsid_addr: The Binding SID to be used for the route (only required
-                      for VPP).
-    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    :return: The status code of the operation.
-    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -635,33 +759,6 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         # If an error occurred, abort the operation
         if res != commons_pb2.STATUS_SUCCESS:
             return res
-    # Store the tunnel to the database
-    if os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
-        # Connect to ArangoDB
-        # FIXME crash if arangodb_driver not imported
-        # TODO keep arango connection open
-        client = arangodb_driver.connect_arango(
-            url=os.getenv('ARANGO_URL'))
-        # Connect to the "srv6_usid" db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=os.getenv('ARANGO_USER'),
-            password=os.getenv('ARANGO_PASSWORD')
-        )
-        arangodb_driver.insert_srv6_path(
-            database=database,
-            l_grpc_address=ingress_channel._channel.target().decode(),
-            r_grpc_address=egress_channel._channel.target().decode(),
-            sidlist_lr=segments,
-            sidlist_rl=None,
-            dest_lr=destination,
-            dest_rl=None,
-            localseg_lr=localseg,
-            localseg_rl=None,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            is_unidirectional=True
-        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
@@ -672,18 +769,19 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                        bsid_addr='', fwd_engine='Linux'):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
+    This function has been deprecated. Use handle_srv6_entities instead.
 
     :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
-                           of the SRv6 tunnel.
+                           of the SRv6 tunnel
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC Channel to the right endpoint (node_r)
-                           of the SRv6 tunnel.
+                           of the SRv6 tunnel
     :type node_r_channel: class: `grpc._channel.Channel`
     :param sidlist_lr: The SID list to be installed on the packets going
-                       from <node_l> to <node_r>.
+                       from <node_l> to <node_r>
     :type sidlist_lr: list
     :param sidlist_rl: The SID list to be installed on the packets going
-                       from <node_r> to <node_l>.
+                       from <node_r> to <node_l>
     :type sidlist_rl: list
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -701,13 +799,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                         to <node_l>. If the argument 'localseg_rl' isn't
                         passed in, the End.DT6 function is not created.
     :type localseg_rl: str, optional
-    :param bsid_addr: The Binding SID to be used for the route (only required
-                      for VPP).
-    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    :return: The status code of the operation.
-    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -737,33 +830,6 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
         return res
-    # Store the tunnel to the database
-    if os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
-        # Connect to ArangoDB
-        # FIXME crash if arangodb_driver not imported
-        # TODO keep arango connection open
-        client = arangodb_driver.connect_arango(
-            url=os.getenv('ARANGO_URL'))
-        # Connect to the "srv6_usid" db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=os.getenv('ARANGO_USER'),
-            password=os.getenv('ARANGO_PASSWORD')
-        )
-        arangodb_driver.insert_srv6_path(
-            database=database,
-            l_grpc_address=node_l_channel._channel.target().decode(),
-            r_grpc_address=node_r_channel._channel.target().decode(),
-            sidlist_lr=sidlist_lr,
-            sidlist_rl=sidlist_rl,
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            is_unidirectional=False
-        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
@@ -773,10 +839,11 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                             ignore_errors=False):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
+    This function has been deprecated. Use handle_srv6_entities instead.
 
-    :param ingress_channel: The gRPC Channel to the ingress node.
+    :param ingress_channel: The gRPC Channel to the ingress node
     :type ingress_channel: class: `grpc._channel.Channel`
-    :param egress_channel: The gRPC Channel to the egress node.
+    :param egress_channel: The gRPC Channel to the egress node
     :type egress_channel: class: `grpc._channel.Channel`
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
@@ -785,16 +852,11 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                      function on the egress node. If the argument 'localseg'
                      isn't passed in, the End.DT6 function is not removed.
     :type localseg: str, optional
-    :param bsid_addr: The Binding SID to be used for the route (only required
-                      for VPP).
-    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False).
+                          (default is False)
     :type ignore_errors: bool, optional
-    :return: The status code of the operation.
-    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -863,16 +925,17 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         ignore_errors=False):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
+    This function has been deprecated. Use handle_srv6_entities instead.
 
     :param node_l_channel: The gRPC channel to the left endpoint of the
-                           SRv6 tunnel (node_l).
+                           SRv6 tunnel (node_l)
     :type node_l_channel: class: `grpc._channel.Channel`
     :param node_r_channel: The gRPC channel to the right endpoint of the
-                           SRv6 tunnel (node_r).
+                           SRv6 tunnel (node_r)
     :type node_r_channel: class: `grpc._channel.Channel`
-    :param node_l: The IP address of the left endpoint of the SRv6 tunnel.
+    :param node_l: The IP address of the left endpoint of the SRv6 tunnel
     :type node_l: str
-    :param node_r: The IP address of the right endpoint of the SRv6 tunnel.
+    :param node_r: The IP address of the right endpoint of the SRv6 tunnel
     :type node_r: str
     :param dest_lr: The destination prefix of the SRv6 path from <node_l>
                     to <node_r>. It can be a IP address or a subnet.
@@ -890,16 +953,11 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         If the argument 'localseg_r' isn't passed in, the
                         End.DT6 function is not removed.
     :type localseg_rl: str, optional
-    :param bsid_addr: The Binding SID to be used for the route (only required
-                      for VPP).
-    :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
     :param ignore_errors: Whether to ignore "No such process" errors or not
-                          (default is False).
+                          (default is False)
     :type ignore_errors: bool, optional
-    :return: The status code of the operation.
-    :rtype: int
     '''
     # pylint: disable=too-many-arguments
     #
@@ -931,3 +989,16 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         return res
     # Success
     return commons_pb2.STATUS_SUCCESS
+
+
+def register_handlers():
+    '''
+    This function will register the handlers for the different SRv6 entities
+    '''
+    srv6_path.register_handlers(srv6_handlers)
+    srv6_behavior.register_handlers(srv6_handlers)
+    srv6_tunnel.register_handlers(srv6_handlers)
+
+
+# Register the handlers when this module is imported/loaded
+register_handlers()
