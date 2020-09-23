@@ -180,6 +180,7 @@
 <span class="sd">Topology Information Extraction utilities</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
+<span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -219,27 +220,50 @@
 <span class="c1"># Global variables definition</span>
 <span class="c1">#</span>
 <span class="c1">#</span>
-<span class="c1"># Default topology file</span>
+<span class="c1"># The following parameters are the default arguments used by the functions</span>
+<span class="c1"># defined in this module. You can override the default values by providing</span>
+<span class="c1"># by providing the parameters to the function when you call them</span>
+<span class="c1">#</span>
+<span class="c1"># Filename for the exported topology</span>
 <span class="n">DEFAULT_TOPOLOGY_FILE</span> <span class="o">=</span> <span class="s1">&#39;/tmp/topology.json&#39;</span>
-<span class="c1"># Default nodes file</span>
+<span class="c1"># File containing the nodes</span>
 <span class="n">DEFAULT_NODES_YAML_FILE</span> <span class="o">=</span> <span class="s1">&#39;/tmp/nodes.yaml&#39;</span>
-<span class="c1"># Default edges file</span>
+<span class="c1"># File containing the edges</span>
 <span class="n">DEFAULT_EDGES_YAML_FILE</span> <span class="o">=</span> <span class="s1">&#39;/tmp/edges.yaml&#39;</span>
 <span class="c1"># Interval between two consecutive extractions (in seconds)</span>
 <span class="n">DEFAULT_TOPO_EXTRACTION_PERIOD</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="c1"># In our experiment we use &#39;zebra&#39; as default password</span>
+<span class="c1"># In our experiment we use &#39;zebra&#39; as default password for isisd</span>
 <span class="n">DEFAULT_ISISD_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;zebra&#39;</span>
-<span class="c1"># Dot file used to draw topology graph</span>
+<span class="c1"># Dot file used to draw the topology graph</span>
 <span class="n">DOT_FILE_TOPO_GRAPH</span> <span class="o">=</span> <span class="s1">&#39;/tmp/topology.dot&#39;</span>
 <span class="c1"># Define whether the verbose mode is enabled or not by default</span>
 <span class="n">DEFAULT_VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="OptionalModuleNotLoadedError"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.OptionalModuleNotLoadedError">[docs]</a><span class="k">class</span> <span class="nc">OptionalModuleNotLoadedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    The requested feature depends on an optional module that has not been</span>
+<span class="sd">    loaded</span>
+<span class="sd">    &#39;&#39;&#39;</span></div>
 
 
 <span class="c1"># Utility function to dump relevant information of the topology</span>
 <div class="viewcode-block" id="dump_topo_json"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.dump_topo_json">[docs]</a><span class="k">def</span> <span class="nf">dump_topo_json</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">topo_file</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Dump the graph to a JSON file</span>
+
+<span class="sd">    :param graph: The graph to be exported</span>
+<span class="sd">    :type graph: class: `networkx.Graph`</span>
+<span class="sd">    :param topo_file: The path and the name of the JSON file</span>
+<span class="sd">    :type topo_file: str</span>
+<span class="sd">    :return: True</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    :raises OptionalModuleNotLoadedError: The NetworkX module required by</span>
+<span class="sd">                                          dump_topo_json has not has not been</span>
+<span class="sd">                                          loaded. Is it installed?</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Export the topology to a JSON file</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;*** Exporting topology to </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">topo_file</span><span class="p">)</span>
     <span class="c1">#</span>
     <span class="c1"># This function depends on the NetworkX library, which is a</span>
     <span class="c1"># optional dependency for this script</span>
@@ -248,30 +272,32 @@
     <span class="k">if</span> <span class="s1">&#39;networkx&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s1">&#39;NetworkX library required by dump_topo_json() &#39;</span>
                         <span class="s1">&#39;has not been imported. Is it installed?&#39;</span><span class="p">)</span>
-        <span class="k">return</span>
-    <span class="c1"># Export NetworkX object into a json file</span>
-    <span class="c1"># Json dump of the topology</span>
+        <span class="k">raise</span> <span class="n">OptionalModuleNotLoadedError</span>
+    <span class="c1"># Export NetworkX object into a json file (json dump of the topology)</span>
     <span class="c1">#</span>
-    <span class="c1"># Get json topology</span>
+    <span class="c1"># Convert the graph to a node-link format that is suitable for JSON</span>
+    <span class="c1"># serialization</span>
     <span class="n">json_topology</span> <span class="o">=</span> <span class="n">json_graph</span><span class="o">.</span><span class="n">node_link_data</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
-    <span class="c1"># Convert links</span>
+    <span class="c1"># Remove useless information from the links</span>
     <span class="n">json_topology</span><span class="p">[</span><span class="s1">&#39;links&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span>
         <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="n">link</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">],</span>
         <span class="s1">&#39;target&#39;</span><span class="p">:</span> <span class="n">link</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">],</span>
         <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">json_topology</span><span class="p">[</span><span class="s1">&#39;links&#39;</span><span class="p">]]</span>
-    <span class="c1"># Convert nodes</span>
+    <span class="c1"># Remove useless information from the nodes</span>
+    <span class="c1"># IP address is unknown because it is not conrained in the nodes</span>
+    <span class="c1"># information, so we set it to None</span>
     <span class="n">json_topology</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[{</span>
         <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
         <span class="s1">&#39;ip_address&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
         <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">),</span>
         <span class="s1">&#39;ext_reachability&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ext_reachability&#39;</span><span class="p">)</span>
     <span class="p">}</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">json_topology</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">]]</span>
-    <span class="c1"># Dump the topology</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Exporting topology to </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">topo_file</span><span class="p">)</span>
+    <span class="c1"># Export the topology to a JSON file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">topo_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_topology</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Topology exported</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Topology exported</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="dump_topo_yaml"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.dump_topo_yaml">[docs]</a><span class="k">def</span> <span class="nf">dump_topo_yaml</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">node_to_systemid</span><span class="p">,</span>
@@ -618,9 +644,9 @@
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Command-line arguments parser</span>
 <span class="sd">    &#39;&#39;&#39;</span>
-    <span class="c1">#</span>
+    <span class="c1"># Initialize parser</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
-        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Topology Information Ex+traction (from ISIS) &#39;</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Topology Information Extraction (from ISIS) &#39;</span>
         <span class="s1">&#39;module for SRv6 Controller&#39;</span>
     <span class="p">)</span>
     <span class="c1"># ip:port of the routers</span>
@@ -688,7 +714,7 @@
     <span class="n">args</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">()</span>
     <span class="c1"># Setup properly the logger</span>
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
     <span class="c1"># Debug settings</span>
