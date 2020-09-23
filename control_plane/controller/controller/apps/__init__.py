@@ -18,21 +18,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Controller
+# Applications for SDN controller
 #
 # @author Carmine Scarpitta <carmine.scarpitta@uniroma2.it>
 #
-
-
-"""Entry point for controller CLI"""
-
-from apps.cli import cli
-
-
-def __main():
-    cli.__main()        # pylint: disable=protected-access
-
-
-if __name__ == '__main__':
-    # Start the interactive CLI
-    __main()

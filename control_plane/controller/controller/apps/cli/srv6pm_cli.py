@@ -31,7 +31,7 @@ from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import srv6_pm, utils
-from controller.cli import utils as cli_utils
+from apps.cli import utils as cli_utils
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'

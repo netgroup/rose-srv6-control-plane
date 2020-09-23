@@ -54,7 +54,7 @@ from pkg_resources import resource_filename
 # Controller dependencies
 from controller import arangodb_driver
 from controller import srv6_usid
-from controller.cli import srv6_cli, srv6pm_cli, topo_cli
+from apps.cli import srv6_cli, srv6pm_cli, topo_cli
 from controller.init_db import init_srv6_usid_db
 
 # Folder containing this script
