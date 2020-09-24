@@ -87,7 +87,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             locator=request.locator
         )
         if res is not None:
-            logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # TODO return value
 
     def HandleSRv6PathPolicy(self, request, context):
         '''
@@ -109,7 +110,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 fwd_engine=nb_srv6_manager_pb2.Name(
                     request.fwd_engine).lower()
             )
-            logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
 
     def HandleSRv6BehaviorPolicy(self, request, context):
         '''
@@ -133,7 +134,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 fwd_engine=nb_srv6_manager_pb2.Name(
                     request.fwd_engine).lower()
             )
-            logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
 
     def HandleSRv6UniTunnel(self, request, context):
         '''
@@ -154,7 +155,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     fwd_engine=nb_srv6_manager_pb2.Name(
                         request.fwd_engine).lower()
                 )
-                logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
             elif request.operation == 'del':
                 res = srv6_utils.destroy_uni_srv6_tunnel(
                     ingress_channel=ingress_channel,
@@ -165,9 +166,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     fwd_engine=nb_srv6_manager_pb2.Name(
                         request.fwd_engine).lower()
                 )
-                logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
             else:
-                logger.error('Invalid operation %s' % request.operation)
+                logger.error('Invalid operation %s', request.operation)
 
     def handle_srv6_biditunnel(self, request, context):
         '''
@@ -191,7 +192,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     fwd_engine=nb_srv6_manager_pb2.Name(
                         request.fwd_engine).lower()
                 )
-                logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
             elif request.operation == 'del':
                 res = srv6_utils.destroy_srv6_tunnel(
                     node_l_channel=node_l_channel,
@@ -204,9 +205,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     fwd_engine=nb_srv6_manager_pb2.Name(
                         request.fwd_engine).lower()
                 )
-                logger.debug('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
             else:
-                logger.error('Invalid operation %s' % request.operation)
+                logger.error('Invalid operation %s', request.operation)
 
     def GetNodes(self, request, context):
         '''
