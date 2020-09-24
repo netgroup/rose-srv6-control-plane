@@ -87,7 +87,7 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
     request.nodes_config = None     # TODO
     #
     # Get the reference of the stub
-    stub = nb_srv6_manager_pb2_grpc.SRv6MicroSIDRequest(controller_channel)
+    stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6MicroSIDPolicy(request)
     # Check the status code
@@ -106,7 +106,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # pylint: disable=too-many-arguments
     #
     # Create request message
-    request = nb_srv6_manager_pb2.SRv6ManagerRequest()
+    request = nb_srv6_manager_pb2.SRv6PathRequest()
     # Set the operation
     request.operation = operation
     # Set the gRPC address
@@ -131,7 +131,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
-    stub = nb_srv6_manager_pb2_grpc.SRv6PathRequest(controller_channel)
+    stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6Path(request)
     # Check the status code
@@ -151,7 +151,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     # pylint: disable=too-many-arguments
     #
     # Create request message
-    request = nb_srv6_manager_pb2.SRv6ManagerRequest()
+    request = nb_srv6_manager_pb2.SRv6BehaviorRequest()
     # Set the operation
     request.operation = operation
     # Set the gRPC address
@@ -180,7 +180,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
-    stub = nb_srv6_manager_pb2_grpc.SRv6BehaviorRequest(controller_channel)
+    stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6Behavior(request)
     # Check the status code
@@ -200,7 +200,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     # pylint: disable=too-many-arguments
     #
     # Create request message
-    request = nb_srv6_manager_pb2.SRv6ManagerRequest()
+    request = nb_srv6_manager_pb2.SRv6UniTunnelRequest()
     # Set the operation
     request.operation = operation
     # Set the gRPC IP address of the ingress node
@@ -223,7 +223,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
-    stub = nb_srv6_manager_pb2_grpc.SRv6UniTunnelRequest(controller_channel)
+    stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6UniTunnel(request)
     # Check the status code
