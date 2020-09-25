@@ -83,7 +83,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     Handle a SRv6 path.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_utils.handle_srv6_path(
+    res = srv6_manager.handle_srv6_path(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -108,7 +108,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     Handle a SRv6 behavior.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_utils.handle_srv6_behavior(
+    res = srv6_manager.handle_srv6_behavior(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -136,7 +136,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     '''
     # pylint: disable=too-many-arguments
     if operation == 'add':
-        res = srv6_utils.create_uni_srv6_tunnel(
+        res = srv6_manager.handle_srv6_unitunnel(
             controller_channel=controller_channel,
             operation='add',
             ingress_ip=ingress_ip,
@@ -151,7 +151,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
         )
         print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
     elif operation == 'del':
-        res = srv6_utils.destroy_uni_srv6_tunnel(
+        res = srv6_manager.handle_srv6_unitunnel(
             controller_channel=controller_channel,
             operation='del',
             ingress_ip=ingress_ip,
@@ -178,7 +178,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     '''
     # pylint: disable=too-many-arguments,too-many-locals
     if operation == 'add':
-        res = srv6_utils.create_srv6_tunnel(
+        res = srv6_manager.handle_srv6_biditunnel(
             controller_channel=controller_channel,
             operation='add',
             node_l_ip=node_l_ip,
@@ -196,7 +196,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
         )
         print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
     elif operation == 'del':
-        res = srv6_utils.destroy_srv6_tunnel(
+        res = srv6_manager.handle_srv6_biditunnel(
             controller_channel=controller_channel,
             operation='del',
             node_l_ip=node_l_ip,

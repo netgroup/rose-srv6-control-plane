@@ -41,7 +41,7 @@ from apps.cli import utils as cli_utils
 DEFAULT_TOPO_EXTRACTION_PERIOD = 0
 
 
-def extract_topo_from_isis(isis_nodes, isisd_pwd,
+def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None,
                            verbose=False):
@@ -50,7 +50,8 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
     ISIS protocol.
     '''
     # pylint: disable=too-many-arguments
-    arangodb_utils.extract_topo_from_isis(
+    topo_manager.extract_topo_from_isis(
+        controller_channel=controller_channel,
         isis_nodes=isis_nodes.split(','),
         isisd_pwd=isisd_pwd,
         nodes_yaml=nodes_yaml,
@@ -61,8 +62,9 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
     )
 
 
-def load_topo_on_arango(arango_url, arango_user, arango_password,
-                        nodes_yaml, edges_yaml, verbose=False):
+def load_topo_on_arango(controller_channel, arango_url, arango_user,
+                        arango_password, nodes_yaml, edges_yaml,
+                        verbose=False):
     '''
     Load a network topology on a Arango database.
     '''
@@ -79,7 +81,8 @@ def load_topo_on_arango(arango_url, arango_user, arango_password,
     # Read edges YAML
     edges = arangodb_utils.load_yaml_dump(edges_yaml)
     # Load nodes and edges on ArangoDB
-    arangodb_utils.load_topo_on_arango(
+    topo_manager.load_topo_on_arango(
+        controller_channel=controller_channel,
         arango_url=arango_url,
         user=arango_user,
         password=arango_password,
@@ -91,7 +94,8 @@ def load_topo_on_arango(arango_url, arango_user, arango_password,
     )
 
 
-def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
+def extract_topo_from_isis_and_load_on_arango(controller_channel,
+                                              isis_nodes, isisd_pwd,
                                               arango_url=None,
                                               arango_user=None,
                                               arango_password=None,
@@ -103,7 +107,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
     and load it on a Arango database.
     '''
     # pylint: disable=too-many-arguments
-    arangodb_utils.extract_topo_from_isis_and_load_on_arango(
+    topo_manager.extract_topo_from_isis_and_load_on_arango(
+        controller_channel=controller_channel,
         isis_nodes=isis_nodes,
         isisd_pwd=isisd_pwd,
         arango_url=arango_url,
@@ -118,7 +123,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
     )
 
 
-def topology_information_extraction_isis(routers, period, isisd_pwd,
+def topology_information_extraction_isis(controller_channel,
+                                         routers, period, isisd_pwd,
                                          topo_file_json=None,
                                          nodes_file_yaml=None,
                                          edges_file_yaml=None,
@@ -128,7 +134,8 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
     Run periodical topology extraction.
     '''
     # pylint: disable=too-many-arguments, unused-argument
-    arangodb_utils.extract_topo_from_isis_and_load_on_arango(
+    topo_manager.extract_topo_from_isis_and_load_on_arango(
+        controller_channel=controller_channel,
         isis_nodes=routers,
         isisd_pwd=isisd_pwd,
         nodes_yaml=nodes_file_yaml,

@@ -40,44 +40,49 @@ from apps.cli import utils as cli_utils
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def set_configuration(sender, reflector,
+def set_configuration(controller_channel, sender, reflector,
                       sender_port, reflector_port, send_udp_port,
                       refl_udp_port, interval_duration, delay_margin,
-                      number_of_color, pm_driver):
+                      number_of_color, pm_driver, in_interfaces=None,
+                      out_interfaces=None):
     '''
     Configure a node.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
-        res = srv6_pm.set_configuration(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel,
-            send_udp_port=send_udp_port,
-            refl_udp_port=refl_udp_port,
-            interval_duration=interval_duration,
-            delay_margin=delay_margin,
-            number_of_color=number_of_color,
-            pm_driver=pm_driver
-        )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    res = srv6pm_manager.set_configuration(
+        controller_channel=controller_channel,
+        sender=sender,
+        sender_port=sender_port,
+        reflector=reflector,
+        reflector_port=reflector_port,
+        send_udp_port=send_udp_port,
+        refl_udp_port=refl_udp_port,
+        interval_duration=interval_duration,
+        delay_margin=delay_margin,
+        number_of_color=number_of_color,
+        pm_driver=pm_driver,
+        in_interfaces=in_interfaces,
+        out_interfaces=out_interfaces
+    )
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def reset_configuration(sender, reflector,
+def reset_configuration(controller_channel, sender, reflector,
                         sender_port, reflector_port):
     '''
     Clear node configuration.
     '''
-    with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
-        res = srv6_pm.reset_configuration(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel
-        )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    res = srv6pm_manager.reset_configuration(
+        controller_channel=controller_channel,
+        sender=sender,
+        sender_port=sender_port,
+        reflector=reflector,
+        reflector_port=reflector_port
+    )
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def start_experiment(sender, reflector,
+def start_experiment(controller_channel, sender, reflector,
                      sender_port, reflector_port, send_refl_dest,
                      refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                      measurement_protocol, measurement_type,
@@ -90,49 +95,51 @@ def start_experiment(sender, reflector,
     Start an experiment.
     '''
     # pylint: disable=too-many-arguments, too-many-locals
-    with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
-        res = srv6_pm.start_experiment(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel,
-            send_refl_dest=send_refl_dest,
-            refl_send_dest=refl_send_dest,
-            send_refl_sidlist=send_refl_sidlist.split(','),
-            refl_send_sidlist=refl_send_sidlist.split(','),
-            measurement_protocol=measurement_protocol,
-            measurement_type=measurement_type,
-            authentication_mode=authentication_mode,
-            authentication_key=authentication_key,
-            timestamp_format=timestamp_format,
-            delay_measurement_mode=delay_measurement_mode,
-            padding_mbz=padding_mbz,
-            loss_measurement_mode=loss_measurement_mode,
-            measure_id=measure_id,
-            send_refl_localseg=send_refl_localseg,
-            refl_send_localseg=refl_send_localseg,
-            force=force
-        )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    res = srv6pm_manager.start_experiment(
+        controller_channel=controller_channel,
+        sender=sender,
+        reflector=reflector,
+        sender_port=sender_port,
+        reflector_port=reflector_port,
+        send_refl_dest=send_refl_dest,
+        refl_send_dest=refl_send_dest,
+        send_refl_sidlist=send_refl_sidlist.split(','),
+        refl_send_sidlist=refl_send_sidlist.split(','),
+        measurement_protocol=measurement_protocol,
+        measurement_type=measurement_type,
+        authentication_mode=authentication_mode,
+        authentication_key=authentication_key,
+        timestamp_format=timestamp_format,
+        delay_measurement_mode=delay_measurement_mode,
+        padding_mbz=padding_mbz,
+        loss_measurement_mode=loss_measurement_mode,
+        measure_id=measure_id,
+        send_refl_localseg=send_refl_localseg,
+        refl_send_localseg=refl_send_localseg,
+        force=force
+    )
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def get_experiment_results(sender, reflector,
+def get_experiment_results(controller_channel, sender, reflector,
                            sender_port, reflector_port,
                            send_refl_sidlist, refl_send_sidlist):
     '''
     Get the results of a running experiment.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
-        print(srv6_pm.get_experiment_results(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel,
-            send_refl_sidlist=send_refl_sidlist.split(','),
-            refl_send_sidlist=refl_send_sidlist.split(',')
-        ))
+    print(srv6pm_manager.get_experiment_results(
+        controller_channel=controller_channel,
+        sender=sender,
+        reflector=reflector,
+        sender_port=sender_port,
+        reflector_port=reflector_port,
+        send_refl_sidlist=send_refl_sidlist.split(','),
+        refl_send_sidlist=refl_send_sidlist.split(',')
+    ))
 
 
-def stop_experiment(sender, reflector,
+def stop_experiment(controller_channel, sender, reflector,
                     sender_port, reflector_port, send_refl_dest,
                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                     send_refl_localseg=None, refl_send_localseg=None):
@@ -140,18 +147,19 @@ def stop_experiment(sender, reflector,
     Stop a running experiment.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(sender, sender_port) as sender_channel, \
-            utils.get_grpc_session(reflector, reflector_port) as refl_channel:
-        srv6_pm.stop_experiment(
-            sender_channel=sender_channel,
-            reflector_channel=refl_channel,
-            send_refl_dest=send_refl_dest,
-            refl_send_dest=refl_send_dest,
-            send_refl_sidlist=send_refl_sidlist.split(','),
-            refl_send_sidlist=refl_send_sidlist.split(','),
-            send_refl_localseg=send_refl_localseg,
-            refl_send_localseg=refl_send_localseg
-        )
+    srv6pm_manager.stop_experiment(
+        controller_channel=controller_channel,
+        sender=sender,
+        reflector=reflector,
+        sender_port=sender_port,
+        reflector_port=reflector_port,
+        send_refl_dest=send_refl_dest,
+        refl_send_dest=refl_send_dest,
+        send_refl_sidlist=send_refl_sidlist.split(','),
+        refl_send_sidlist=refl_send_sidlist.split(','),
+        send_refl_localseg=send_refl_localseg,
+        refl_send_localseg=refl_send_localseg
+    )
 
 
 def args_set_configuration():
