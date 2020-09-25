@@ -24,7 +24,9 @@
 #
 
 
-"""ArangoDB utilities for Controller CLI"""
+'''
+ArangoDB utilities for Controller CLI.
+'''
 
 # General imports
 import os
@@ -43,11 +45,11 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None,
                            verbose=False):
-    """Extract the network topology from a set of nodes running
-    ISIS protocol"""
-
+    '''
+    Extract the network topology from a set of nodes running
+    ISIS protocol.
+    '''
     # pylint: disable=too-many-arguments
-
     arangodb_utils.extract_topo_from_isis(
         isis_nodes=isis_nodes.split(','),
         isisd_pwd=isisd_pwd,
@@ -61,10 +63,11 @@ def extract_topo_from_isis(isis_nodes, isisd_pwd,
 
 def load_topo_on_arango(arango_url, arango_user, arango_password,
                         nodes_yaml, edges_yaml, verbose=False):
-    """Load a network topology on a Arango database"""
-
+    '''
+    Load a network topology on a Arango database.
+    '''
     # pylint: disable=too-many-arguments
-
+    #
     # Init database
     nodes_collection, edges_collection = arangodb_utils.initialize_db(
         arango_url=arango_url,
@@ -95,11 +98,11 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
                                               period=0, verbose=False):
-    """Extract the topology from a set of nodes running ISIS protocol
-    and load it on a Arango database"""
-
+    '''
+    Extract the topology from a set of nodes running ISIS protocol
+    and load it on a Arango database.
+    '''
     # pylint: disable=too-many-arguments
-
     arangodb_utils.extract_topo_from_isis_and_load_on_arango(
         isis_nodes=isis_nodes,
         isisd_pwd=isisd_pwd,
@@ -121,10 +124,10 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          edges_file_yaml=None,
                                          addrs_yaml=None, hosts_yaml=None,
                                          topo_graph=None, verbose=False):
-    """Run periodical topology extraction"""
-
+    '''
+    Run periodical topology extraction.
+    '''
     # pylint: disable=too-many-arguments, unused-argument
-
     arangodb_utils.extract_topo_from_isis_and_load_on_arango(
         isis_nodes=routers,
         isisd_pwd=isisd_pwd,
@@ -145,7 +148,6 @@ def args_extract_topo_from_isis():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--isis-nodes'],
@@ -187,8 +189,9 @@ def args_extract_topo_from_isis():
 
 # Parse options
 def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for topolgy extraction function"""
-
+    '''
+    Command-line arguments parser for topolgy extraction function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -204,9 +207,10 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
 
 # TAB-completion for extract_topo_from_isis
 def complete_extract_topo_from_isis(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments from extract_topo_from_isis
     args = args_extract_topo_from_isis()
     # Paths auto-completion
@@ -244,7 +248,6 @@ def args_load_topo_on_arango():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--arango-url'],
@@ -283,8 +286,9 @@ def args_load_topo_on_arango():
 
 # Parse options
 def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for load on Arango function"""
-
+    '''
+    Command-line arguments parser for load on Arango function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -300,9 +304,10 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
 
 # TAB-completion for load_topo_on_arango
 def complete_load_topo_on_arango(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for load_topo_on_arango
     args = args_load_topo_on_arango()
     # Paths auto-completion
@@ -338,7 +343,6 @@ def args_extract_topo_from_isis_and_load_on_arango():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--isis-nodes'],
@@ -401,9 +405,10 @@ def args_extract_topo_from_isis_and_load_on_arango():
 # Parse options
 def parse_arguments_extract_topo_from_isis_and_load_on_arango(
         prog=sys.argv[0], args=None):
-    """Command-line arguments parser for
-    extract_topo_from_isis_and_load_on_arango function"""
-
+    '''
+    Command-line arguments parser for
+    extract_topo_from_isis_and_load_on_arango function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -419,9 +424,10 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
 
 # TAB-completion for extract_topo_from_isis_and_load_on_arango
 def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for extract_topo_from_isis_and_load_on_arango
     args = args_extract_topo_from_isis_and_load_on_arango()
     # Paths auto-completion
@@ -458,7 +464,6 @@ def args_topology_information_extraction_isis():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--routers'],
@@ -516,9 +521,10 @@ def args_topology_information_extraction_isis():
 # Parse options
 def parse_arguments_topology_information_extraction_isis(
         prog=sys.argv[0], args=None):
-    """Command-line arguments parser for topology
-    information extraction function"""
-
+    '''
+    Command-line arguments parser for topology information extraction
+    function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -534,9 +540,10 @@ def parse_arguments_topology_information_extraction_isis(
 
 # TAB-completion for topology_information_extraction_isis
 def complete_topology_information_extraction_isis(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for topology_information_extraction_isis
     args = args_topology_information_extraction_isis()
     # Paths auto-completion

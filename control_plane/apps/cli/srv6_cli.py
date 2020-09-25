@@ -28,28 +28,32 @@
 SRv6 utilities for Controller CLI.
 '''
 
+# General imports
 import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import srv6_utils, srv6_usid, utils
 from apps.cli import utils as cli_utils
+from apps.nb_grpc_client import srv6_manager
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def handle_srv6_usid_policy(operation, nodes_dict, lr_destination,
-                            rl_destination, nodes_lr=None, nodes_rl=None,
-                            table=-1, metric=-1, _id=None, l_grpc_ip=None,
-                            l_grpc_port=None, l_fwd_engine=None,
-                            r_grpc_ip=None, r_grpc_port=None,
-                            r_fwd_engine=None, decap_sid=None, locator=None):
+def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
+                            lr_destination, rl_destination, nodes_lr=None,
+                            nodes_rl=None, table=-1, metric=-1, _id=None,
+                            l_grpc_ip=None, l_grpc_port=None,
+                            l_fwd_engine=None, r_grpc_ip=None,
+                            r_grpc_port=None, r_fwd_engine=None,
+                            decap_sid=None, locator=None):
     '''
     Handle a SRv6 uSID policy.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_usid.handle_srv6_usid_policy(
+    res = srv6_manager.handle_srv6_usid_policy(
+        controller_channel=controller_channel,
         operation=operation,
         nodes_dict=nodes_dict,
         lr_destination=lr_destination,
@@ -69,95 +73,103 @@ def handle_srv6_usid_policy(operation, nodes_dict, lr_destination,
         locator=locator
     )
     if res is not None:
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])        # FIXME fix return value
 
 
-def handle_srv6_path(operation, grpc_address, grpc_port, destination,
-                     segments="", device='', encapmode="encap", table=-1,
-                     metric=-1, bsid_addr='', fwd_engine='Linux'):
+def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
+                     destination, segments="", device='', encapmode="encap",
+                     table=-1, metric=-1, bsid_addr='', fwd_engine='Linux'):
     '''
     Handle a SRv6 path.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(grpc_address, grpc_port) as channel:
-        res = srv6_utils.handle_srv6_path(
-            operation=operation,
-            channel=channel,
-            destination=destination,
-            segments=segments.split(','),
-            device=device,
-            encapmode=encapmode,
-            table=table,
-            metric=metric,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
-        )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    res = srv6_utils.handle_srv6_path(
+        controller_channel=controller_channel,
+        operation=operation,
+        grpc_address=grpc_address,
+        grpc_port=grpc_port,
+        destination=destination,
+        segments=segments.split(','),
+        device=device,
+        encapmode=encapmode,
+        table=table,
+        metric=metric,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
+    )
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
-                         action='', device='', table=-1, nexthop="",
-                         lookup_table=-1, interface="", segments="",
-                         metric=-1, fwd_engine='Linux'):
+def handle_srv6_behavior(controller_channel, operation, grpc_address,
+                         grpc_port, segment, action='', device='', table=-1,
+                         nexthop="", lookup_table=-1, interface="",
+                         segments="", metric=-1, fwd_engine='Linux'):
     '''
     Handle a SRv6 behavior.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(grpc_address, grpc_port) as channel:
-        res = srv6_utils.handle_srv6_behavior(
-            operation=operation,
-            channel=channel,
-            segment=segment,
-            action=action,
-            device=device,
-            table=table,
-            nexthop=nexthop,
-            lookup_table=lookup_table,
-            interface=interface,
-            segments=segments.split(','),
-            metric=metric,
-            fwd_engine=fwd_engine
-        )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    res = srv6_utils.handle_srv6_behavior(
+        controller_channel=controller_channel,
+        operation=operation,
+        grpc_address=grpc_address,
+        grpc_port=grpc_port,
+        segment=segment,
+        action=action,
+        device=device,
+        table=table,
+        nexthop=nexthop,
+        lookup_table=lookup_table,
+        interface=interface,
+        segments=segments.split(','),
+        metric=metric,
+        fwd_engine=fwd_engine
+    )
+    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
-                          egress_ip, egress_port,
+def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
+                          ingress_port, egress_ip, egress_port,
                           destination, segments, localseg=None,
                           bsid_addr='', fwd_engine='Linux'):
     '''
     Handle a SRv6 unidirectional tunnel.
     '''
     # pylint: disable=too-many-arguments
-    with utils.get_grpc_session(ingress_ip, ingress_port) as ingress_channel, \
-            utils.get_grpc_session(egress_ip, egress_port) as egress_channel:
-        if operation == 'add':
-            res = srv6_utils.create_uni_srv6_tunnel(
-                ingress_channel=ingress_channel,
-                egress_channel=egress_channel,
-                destination=destination,
-                segments=segments.split(','),
-                localseg=localseg,
-                bsid_addr=bsid_addr,
-                fwd_engine=fwd_engine
-            )
-            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-        elif operation == 'del':
-            res = srv6_utils.destroy_uni_srv6_tunnel(
-                ingress_channel=ingress_channel,
-                egress_channel=egress_channel,
-                destination=destination,
-                localseg=localseg,
-                bsid_addr=bsid_addr,
-                fwd_engine=fwd_engine
-            )
-            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-        else:
-            print('Invalid operation %s' % operation)
+    if operation == 'add':
+        res = srv6_utils.create_uni_srv6_tunnel(
+            controller_channel=controller_channel,
+            operation='add',
+            ingress_ip=ingress_ip,
+            ingress_port=ingress_port,
+            egress_ip=egress_ip,
+            egress_port=egress_port,
+            destination=destination,
+            segments=segments.split(','),
+            localseg=localseg,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    elif operation == 'del':
+        res = srv6_utils.destroy_uni_srv6_tunnel(
+            controller_channel=controller_channel,
+            operation='del',
+            ingress_ip=ingress_ip,
+            ingress_port=ingress_port,
+            egress_ip=egress_ip,
+            egress_port=egress_port,
+            destination=destination,
+            localseg=localseg,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    else:
+        print('Invalid operation %s' % operation)
 
 
-def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
-                           node_r_ip, node_r_port,
+def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
+                           node_l_port, node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None,
                            bsid_addr='', fwd_engine='Linux'):
@@ -165,36 +177,42 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
     Handle SRv6 bidirectional tunnel.
     '''
     # pylint: disable=too-many-arguments,too-many-locals
-    with utils.get_grpc_session(node_l_ip, node_l_port) as node_l_channel, \
-            utils.get_grpc_session(node_r_ip, node_r_port) as node_r_channel:
-        if operation == 'add':
-            res = srv6_utils.create_srv6_tunnel(
-                node_l_channel=node_l_channel,
-                node_r_channel=node_r_channel,
-                sidlist_lr=sidlist_lr.split(','),
-                sidlist_rl=sidlist_rl.split(','),
-                dest_lr=dest_lr,
-                dest_rl=dest_rl,
-                localseg_lr=localseg_lr,
-                localseg_rl=localseg_rl,
-                bsid_addr=bsid_addr,
-                fwd_engine=fwd_engine
-            )
-            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-        elif operation == 'del':
-            res = srv6_utils.destroy_srv6_tunnel(
-                node_l_channel=node_l_channel,
-                node_r_channel=node_r_channel,
-                dest_lr=dest_lr,
-                dest_rl=dest_rl,
-                localseg_lr=localseg_lr,
-                localseg_rl=localseg_rl,
-                bsid_addr=bsid_addr,
-                fwd_engine=fwd_engine
-            )
-            print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-        else:
-            print('Invalid operation %s' % operation)
+    if operation == 'add':
+        res = srv6_utils.create_srv6_tunnel(
+            controller_channel=controller_channel,
+            operation='add',
+            node_l_ip=node_l_ip,
+            node_l_port=node_l_port,
+            node_r_ip=node_r_ip,
+            node_r_port=node_r_port,
+            sidlist_lr=sidlist_lr.split(','),
+            sidlist_rl=sidlist_rl.split(','),
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    elif operation == 'del':
+        res = srv6_utils.destroy_srv6_tunnel(
+            controller_channel=controller_channel,
+            operation='del',
+            node_l_ip=node_l_ip,
+            node_l_port=node_l_port,
+            node_r_ip=node_r_ip,
+            node_r_port=node_r_port,
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
+    else:
+        print('Invalid operation %s' % operation)
 
 
 def args_srv6_usid_policy():
