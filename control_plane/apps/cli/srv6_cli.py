@@ -24,7 +24,9 @@
 #
 
 
-"""SRv6 utilities for Controller CLI"""
+'''
+SRv6 utilities for Controller CLI.
+'''
 
 import sys
 from argparse import ArgumentParser
@@ -37,28 +39,16 @@ from apps.cli import utils as cli_utils
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def handle_srv6_usid_policy(
-        operation,
-        nodes_dict,
-        lr_destination,
-        rl_destination,
-        nodes_lr=None,
-        nodes_rl=None,
-        table=-1,
-        metric=-1,
-        _id=None,
-        l_grpc_ip=None,
-        l_grpc_port=None,
-        l_fwd_engine=None,
-        r_grpc_ip=None,
-        r_grpc_port=None,
-        r_fwd_engine=None,
-        decap_sid=None,
-        locator=None):
-    """Handle a SRv6 uSID policy"""
-
+def handle_srv6_usid_policy(operation, nodes_dict, lr_destination,
+                            rl_destination, nodes_lr=None, nodes_rl=None,
+                            table=-1, metric=-1, _id=None, l_grpc_ip=None,
+                            l_grpc_port=None, l_fwd_engine=None,
+                            r_grpc_ip=None, r_grpc_port=None,
+                            r_fwd_engine=None, decap_sid=None, locator=None):
+    '''
+    Handle a SRv6 uSID policy.
+    '''
     # pylint: disable=too-many-arguments
-
     res = srv6_usid.handle_srv6_usid_policy(
         operation=operation,
         nodes_dict=nodes_dict,
@@ -82,22 +72,13 @@ def handle_srv6_usid_policy(
         print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def handle_srv6_path(
-        operation,
-        grpc_address,
-        grpc_port,
-        destination,
-        segments="",
-        device='',
-        encapmode="encap",
-        table=-1,
-        metric=-1,
-        bsid_addr='',
-        fwd_engine='Linux'):
-    """Handle a SRv6 path"""
-
+def handle_srv6_path(operation, grpc_address, grpc_port, destination,
+                     segments="", device='', encapmode="encap", table=-1,
+                     metric=-1, bsid_addr='', fwd_engine='Linux'):
+    '''
+    Handle a SRv6 path.
+    '''
     # pylint: disable=too-many-arguments
-
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_path(
             operation=operation,
@@ -114,24 +95,14 @@ def handle_srv6_path(
         print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
-def handle_srv6_behavior(
-        operation,
-        grpc_address,
-        grpc_port,
-        segment,
-        action='',
-        device='',
-        table=-1,
-        nexthop="",
-        lookup_table=-1,
-        interface="",
-        segments="",
-        metric=-1,
-        fwd_engine='Linux'):
-    """Handle a SRv6 behavior"""
-
+def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
+                         action='', device='', table=-1, nexthop="",
+                         lookup_table=-1, interface="", segments="",
+                         metric=-1, fwd_engine='Linux'):
+    '''
+    Handle a SRv6 behavior.
+    '''
     # pylint: disable=too-many-arguments
-
     with utils.get_grpc_session(grpc_address, grpc_port) as channel:
         res = srv6_utils.handle_srv6_behavior(
             operation=operation,
@@ -154,10 +125,10 @@ def handle_srv6_unitunnel(operation, ingress_ip, ingress_port,
                           egress_ip, egress_port,
                           destination, segments, localseg=None,
                           bsid_addr='', fwd_engine='Linux'):
-    """Handle a SRv6 unidirectional tunnel"""
-
+    '''
+    Handle a SRv6 unidirectional tunnel.
+    '''
     # pylint: disable=too-many-arguments
-
     with utils.get_grpc_session(ingress_ip, ingress_port) as ingress_channel, \
             utils.get_grpc_session(egress_ip, egress_port) as egress_channel:
         if operation == 'add':
@@ -190,10 +161,10 @@ def handle_srv6_biditunnel(operation, node_l_ip, node_l_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None,
                            bsid_addr='', fwd_engine='Linux'):
-    """Handle SRv6 bidirectional tunnel"""
-
+    '''
+    Handle SRv6 bidirectional tunnel.
+    '''
     # pylint: disable=too-many-arguments,too-many-locals
-
     with utils.get_grpc_session(node_l_ip, node_l_port) as node_l_channel, \
             utils.get_grpc_session(node_r_ip, node_r_port) as node_r_channel:
         if operation == 'add':
@@ -235,7 +206,6 @@ def args_srv6_usid_policy():
       the argparse library
     - is_path, a boolean flag indicating whether the argument is a path or not
     '''
-
     return [
         {
             'args': ['--secure'],
@@ -329,8 +299,9 @@ def args_srv6_usid_policy():
 
 # Parse options
 def parse_arguments_srv6_usid_policy(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_usid_policy function"""
-
+    '''
+    Command-line arguments parser for srv6_usid_policy function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -346,9 +317,10 @@ def parse_arguments_srv6_usid_policy(prog=sys.argv[0], args=None):
 
 # TAB-completion for SRv6 uSID policy
 def complete_srv6_usid_policy(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for srv6_usid_policy
     args = args_srv6_usid_policy()
     # Paths auto-completion
@@ -385,7 +357,6 @@ def args_srv6_path():
       the argparse library
     - is_path, a boolean flag indicating whether the argument is a path or not
     '''
-
     return [
         {
             'args': ['--grpc-ip'],
@@ -452,8 +423,9 @@ def args_srv6_path():
 
 # Parse options
 def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_path function"""
-
+    '''
+    Command-line arguments parser for srv6_path function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -469,9 +441,10 @@ def parse_arguments_srv6_path(prog=sys.argv[0], args=None):
 
 # TAB-completion for SRv6 Path
 def complete_srv6_path(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for srv6_path
     args = args_srv6_path()
     # Paths auto-completion
@@ -507,7 +480,6 @@ def args_srv6_behavior():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--grpc-ip'],
@@ -580,8 +552,9 @@ def args_srv6_behavior():
 
 # Parse options
 def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_behavior function"""
-
+    '''
+    Command-line arguments parser for srv6_behavior function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -597,9 +570,10 @@ def parse_arguments_srv6_behavior(prog=sys.argv[0], args=None):
 
 # TAB-completion for SRv6 behavior
 def complete_srv6_behavior(text, prev_text):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for srv6_behavior
     args = args_srv6_behavior()
     # Paths auto-completion
@@ -635,7 +609,6 @@ def args_srv6_unitunnel():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--op'],
@@ -696,8 +669,9 @@ def args_srv6_unitunnel():
 
 # Parse options
 def parse_arguments_srv6_unitunnel(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_unitunnel function"""
-
+    '''
+    Command-line arguments parser for srv6_unitunnel function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -751,7 +725,6 @@ def args_srv6_biditunnel():
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
     '''
-
     return [
         {
             'args': ['--op'],
@@ -824,8 +797,9 @@ def args_srv6_biditunnel():
 
 # Parse options
 def parse_arguments_srv6_biditunnel(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for srv6_biditunnel function"""
-
+    '''
+    Command-line arguments parser for srv6_biditunnel function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='gRPC Southbound APIs for SRv6 Controller'
@@ -880,7 +854,6 @@ def args_load_nodes_config():
       the argparse library
     - is_path, a boolean flag indicating whether the argument is a path or not
     '''
-
     return [
         {
             'args': ['--nodes-file'],
@@ -895,8 +868,9 @@ def args_load_nodes_config():
 
 # Parse options
 def parse_arguments_load_nodes_config(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for load_nodes_config function"""
-
+    '''
+    Command-line arguments parser for load_nodes_config function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='Load nodes configuration to the database'
@@ -912,9 +886,10 @@ def parse_arguments_load_nodes_config(prog=sys.argv[0], args=None):
 
 # TAB-completion for SRv6 uSID
 def complete_load_nodes_config(text, prev_text=None):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for srv6_biditunnel
     args = args_load_nodes_config()
     # Paths auto-completion
@@ -951,15 +926,15 @@ def args_print_nodes():
       the argparse library
     - is_path, a boolean flag indicating whether the argument is a path or not
     '''
-
     return [
     ]
 
 
 # Parse options
 def parse_arguments_print_nodes(prog=sys.argv[0], args=None):
-    """Command-line arguments parser for print_nodes function"""
-
+    '''
+    Command-line arguments parser for print_nodes function.
+    '''
     # Get parser
     parser = ArgumentParser(
         prog=prog, description='Show the list of the available devices'
@@ -975,9 +950,10 @@ def parse_arguments_print_nodes(prog=sys.argv[0], args=None):
 
 # TAB-completion for SRv6 uSID
 def complete_print_nodes(text, prev_text=None):
-    """This function receives a string as argument and returns
-    a list of parameters candidate for the auto-completion of the string"""
-
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
     # Get arguments for srv6_biditunnel
     args = args_print_nodes()
     # Paths auto-completion
@@ -1006,10 +982,14 @@ def complete_print_nodes(text, prev_text=None):
 
 
 def print_node_to_addr_mapping(nodes_filename):
-    '''Print mapping node to IP address'''
+    '''
+    Print mapping node to IP address.
+    '''
     srv6_usid.print_node_to_addr_mapping(nodes_filename)
 
 
 def print_nodes(nodes_dict):
-    '''Print nodes'''
+    '''
+    Print nodes.
+    '''
     srv6_usid.print_nodes(nodes_dict=nodes_dict)
