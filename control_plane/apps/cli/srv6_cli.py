@@ -33,7 +33,7 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import srv6_utils, srv6_usid, utils
+from controller import srv6_usid
 from apps.cli import utils as cli_utils
 from apps.nb_grpc_client import srv6_manager
 
@@ -52,7 +52,10 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
     Handle a SRv6 uSID policy.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_manager.handle_srv6_usid_policy(
+    #
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    return srv6_manager.handle_srv6_usid_policy(
         controller_channel=controller_channel,
         operation=operation,
         nodes_dict=nodes_dict,
@@ -72,8 +75,6 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
         decap_sid=decap_sid,
         locator=locator
     )
-    if res is not None:
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])        # FIXME fix return value
 
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
@@ -83,7 +84,10 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     Handle a SRv6 path.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_manager.handle_srv6_path(
+    #
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    return srv6_manager.handle_srv6_path(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -97,7 +101,6 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
@@ -108,7 +111,10 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     Handle a SRv6 behavior.
     '''
     # pylint: disable=too-many-arguments
-    res = srv6_manager.handle_srv6_behavior(
+    #
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    return srv6_manager.handle_srv6_behavior(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -124,7 +130,6 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         metric=metric,
         fwd_engine=fwd_engine
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
@@ -136,7 +141,9 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     '''
     # pylint: disable=too-many-arguments
     if operation == 'add':
-        res = srv6_manager.handle_srv6_unitunnel(
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        return srv6_manager.handle_srv6_unitunnel(
             controller_channel=controller_channel,
             operation='add',
             ingress_ip=ingress_ip,
@@ -149,9 +156,10 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-    elif operation == 'del':
-        res = srv6_manager.handle_srv6_unitunnel(
+    if operation == 'del':
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        return srv6_manager.handle_srv6_unitunnel(
             controller_channel=controller_channel,
             operation='del',
             ingress_ip=ingress_ip,
@@ -163,9 +171,8 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-    else:
-        print('Invalid operation %s' % operation)
+    # Invalid operation
+    raise cli_utils.InvalidArgumentError
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
@@ -178,7 +185,9 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     '''
     # pylint: disable=too-many-arguments,too-many-locals
     if operation == 'add':
-        res = srv6_manager.handle_srv6_biditunnel(
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        return srv6_manager.handle_srv6_biditunnel(
             controller_channel=controller_channel,
             operation='add',
             node_l_ip=node_l_ip,
@@ -194,9 +203,10 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-    elif operation == 'del':
-        res = srv6_manager.handle_srv6_biditunnel(
+    if operation == 'del':
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        return srv6_manager.handle_srv6_biditunnel(
             controller_channel=controller_channel,
             operation='del',
             node_l_ip=node_l_ip,
@@ -210,9 +220,8 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine
         )
-        print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
-    else:
-        print('Invalid operation %s' % operation)
+    # Invalid operation
+    raise cli_utils.InvalidArgumentError
 
 
 def args_srv6_usid_policy():
