@@ -42,10 +42,8 @@ except ImportError:
     readline = None
 import logging
 import os
-import sys
 from argparse import ArgumentParser
 from cmd import Cmd
-from pathlib import Path
 
 # Controller dependencies
 from controller import arangodb_driver
