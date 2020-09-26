@@ -50,6 +50,8 @@ logger = logging.getLogger(__name__)
 # Configure logging level for urllib3
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 
+# Default path to the .env file
+DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
 
