@@ -139,4 +139,5 @@ message SRv6ManagerReply {
     repeated SRv6UniTunnel srv6_unitunnels = 4;
     repeated SRv6BidiTunnel srv6_biditunnels = 5;
     repeated SRv6MicroSID srv6_micro_sids = 6;
+    repeated NodeConfig nodes = 7;
 }
