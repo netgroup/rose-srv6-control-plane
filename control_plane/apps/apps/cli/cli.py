@@ -58,6 +58,13 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Logger reference
 logger = logging.getLogger(__name__)
 
+# Default parameters
+#
+# Controller gRPC address
+DEFAULT_CONTROLLER_ADDRESS = 'localhost'
+# Controller gRPC port
+DEFAULT_CONTROLLER_PORT = 12345
+
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
@@ -1141,10 +1148,11 @@ def parse_arguments():
     )
     parser.add_argument(
         '-a', '--controller-address', action='store',
-        help='Controller IP address'
+        help='Controller IP address', default=DEFAULT_CONTROLLER_ADDRESS
     )
     parser.add_argument(
-        '-p', '--controller-port', action='store', help='Controller port'
+        '-p', '--controller-port', action='store', help='Controller port',
+        default=DEFAULT_CONTROLLER_PORT
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
@@ -1159,6 +1167,7 @@ def __main():
     '''
     Entry point for this module.
     '''
+    global CONTROLLER_CHANNEL
     # Parse command-line arguments
     args = parse_arguments()
     # Controller IP address

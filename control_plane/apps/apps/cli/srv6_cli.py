@@ -79,7 +79,7 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
                      destination, segments="", device='', encapmode="encap",
-                     table=-1, metric=-1, bsid_addr='', fwd_engine='Linux'):
+                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 path.
     '''
@@ -106,7 +106,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
                          grpc_port, segment, action='', device='', table=-1,
                          nexthop="", lookup_table=-1, interface="",
-                         segments="", metric=-1, fwd_engine='Linux'):
+                         segments="", metric=-1, fwd_engine='linux'):
     '''
     Handle a SRv6 behavior.
     '''
@@ -135,7 +135,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
                           destination, segments, localseg=None,
-                          bsid_addr='', fwd_engine='Linux'):
+                          bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 unidirectional tunnel.
     '''
@@ -179,7 +179,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            node_l_port, node_r_ip, node_r_port,
                            sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                            localseg_lr=None, localseg_rl=None,
-                           bsid_addr='', fwd_engine='Linux'):
+                           bsid_addr='', fwd_engine='linux'):
     '''
     Handle SRv6 bidirectional tunnel.
     '''
@@ -391,7 +391,7 @@ def args_srv6_path():
                        'required': True, 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--grpc-port'],
-            'kwargs': {'dest': 'grpc_port', 'action': 'store',
+            'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
@@ -440,7 +440,7 @@ def args_srv6_path():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': 'Linux'}
+                       'type': str, 'default': 'linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -514,7 +514,7 @@ def args_srv6_behavior():
                        'required': True, 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--grpc-port'],
-            'kwargs': {'dest': 'grpc_port', 'action': 'store',
+            'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
@@ -569,7 +569,7 @@ def args_srv6_behavior():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': 'Linux'}
+                       'type': str, 'default': 'linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -652,10 +652,12 @@ def args_srv6_unitunnel():
         }, {
             'args': ['--ingress-grpc-port'],
             'kwargs': {'dest': 'ingress_grpc_port', 'action': 'store',
+                       'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--egress-grpc-port'],
             'kwargs': {'dest': 'egress_grpc_port', 'action': 'store',
+                       'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
@@ -686,7 +688,7 @@ def args_srv6_unitunnel():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': 'Linux'}
+                       'type': str, 'default': 'linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -767,11 +769,11 @@ def args_srv6_biditunnel():
                        'required': True, 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--left-grpc-port'],
-            'kwargs': {'dest': 'l_grpc_port', 'action': 'store',
+            'kwargs': {'dest': 'l_grpc_port', 'action': 'store', 'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--right-grpc-port'],
-            'kwargs': {'dest': 'r_grpc_port', 'action': 'store',
+            'kwargs': {'dest': 'r_grpc_port', 'action': 'store', 'type': int,
                        'required': True, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
@@ -814,7 +816,7 @@ def args_srv6_biditunnel():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': 'Linux'}
+                       'type': str, 'default': ''}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}

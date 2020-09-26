@@ -77,13 +77,13 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
     # Set the gRPC port number of the left node
     micro_sid.l_grpc_port = l_grpc_port
     # Set the forwarding engine of the left node
-    micro_sid.l_fwd_engine = nb_srv6_manager_pb2.Value(l_fwd_engine)
+    micro_sid.l_fwd_engine = nb_commons_pb2.FwdEngine.Value(l_fwd_engine.upper())
     # Set the gRPC address of the right node
     micro_sid.r_grpc_ip = r_grpc_ip
     # Set the gRPC port number of the right node
     micro_sid.r_grpc_port = r_grpc_port
     # Set the forwarding engine of the right node
-    micro_sid.r_fwd_engine = nb_srv6_manager_pb2.Value(r_fwd_engine)
+    micro_sid.r_fwd_engine = nb_commons_pb2.FwdEngine.Value(r_fwd_engine.upper())
     # Set the decapsulation SID
     micro_sid.decap_sid = decap_sid
     # Set the locator
@@ -126,7 +126,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # Set the device
     srv6_path.device = device
     # Set the encap mode
-    srv6_path.encapmode = nb_srv6_manager_pb2.Value(encapmode)
+    srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(encapmode.upper())
     # Set the table ID
     srv6_path.table = table
     # Set the metric
@@ -134,7 +134,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # Set the BSID address
     srv6_path.bsid_addr = bsid_addr
     # Set the forwarding engine
-    srv6_path.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -168,7 +168,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     # Set the segment
     srv6_behavior.segment = segment
     # Set the action
-    srv6_behavior.action = nb_srv6_manager_pb2.Value(action)
+    srv6_behavior.action = nb_commons_pb2.SRv6Action.Value(action.upper())
     # Set the device
     srv6_behavior.device = device
     # Set the table ID
@@ -184,7 +184,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     # Set the metric
     srv6_behavior.metric = metric
     # Set the forwarding engine
-    srv6_behavior.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -228,7 +228,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     # Set the BSID address
     srv6_unitunnel.bsid_addr = bsid_addr
     # Set the forwarding engine
-    srv6_unitunnel.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -279,7 +279,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     # BSID address
     srv6_biditunnel.bsid_addr = bsid_addr
     # Forwarding engine
-    srv6_biditunnel.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)

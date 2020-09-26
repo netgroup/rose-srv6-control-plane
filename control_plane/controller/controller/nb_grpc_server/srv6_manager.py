@@ -101,7 +101,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Done, return the reply
         return response
 
-    def HandleSRv6PathPolicy(self, request, context):
+    def HandleSRv6Path(self, request, context):
         '''
         Handle a SRv6 path.
         '''
@@ -130,7 +130,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Done, return the reply
         return response
 
-    def HandleSRv6BehaviorPolicy(self, request, context):
+    def HandleSRv6Behavior(self, request, context):
         '''
         Handle a SRv6 behavior.
         '''
@@ -207,7 +207,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Done, return the reply
         return response
 
-    def handle_srv6_biditunnel(self, request, context):
+    def HandleSRv6BidiTunnel(self, request, context):
         '''
         Handle SRv6 bidirectional tunnel.
         '''

@@ -62,7 +62,7 @@ message SRv6Path {
     string grpc_address = 2;
     int32 grpc_port = 3;
     string destination = 4;
-    string segments = 5;
+    repeated string segments = 5;
     string device = 6;
     nb_grpc_services.EncapMode encapmode = 7;
     int32 table = 8;

@@ -176,9 +176,9 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
         # IPv6 address
         server_ip = 'ipv6:[%s]:%s' % (server_ip, server_port)
     else:
-        # Invalid address
-        logger.fatal('Invalid gRPC address: %s', server_ip)
-        return None
+        # Hostname or invalid address
+        # We try to treat the address as a hostname
+        server_ip = '%s:%s' % (server_ip, server_port)
     # If secure we need to establish a channel with the secure endpoint
     if secure:
         if certificate is None:

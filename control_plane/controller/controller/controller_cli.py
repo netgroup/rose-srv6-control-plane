@@ -41,7 +41,7 @@ from pkg_resources import resource_filename
 
 # Controller dependencies
 from controller.init_db import init_srv6_usid_db
-from controller import nb_grpc_server
+from controller.nb_grpc_server import grpc_server
 
 
 # Logger reference
@@ -203,7 +203,7 @@ def __main():
     # Print configuration
     config.print_config()
     # Start the northbound gRPC server to expose the controller services
-    nb_grpc_server.start_server()
+    grpc_server.start_server()
 
 
 if __name__ == '__main__':

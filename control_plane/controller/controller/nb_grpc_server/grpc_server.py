@@ -42,9 +42,9 @@ from socket import AF_INET, AF_INET6
 import grpc
 
 # Controller dependencies
-import nb_srv6_manager_pb2
-import topology_manager_pb2
-import srv6pm_manager_pb2
+import nb_srv6_manager_pb2_grpc
+import topology_manager_pb2_grpc
+import srv6pm_manager_pb2_grpc
 from controller.utils import get_address_family
 from controller.nb_grpc_server.srv6_manager import SRv6Manager
 from controller.nb_grpc_server.topo_manager import TopologyManager
@@ -113,13 +113,13 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     # Add SRv6 Manager
-    nb_srv6_manager_pb2.add_SRv6ManagerServicer_to_server(
+    nb_srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
         SRv6Manager(), grpc_server)
     # Add Topology Manager
-    topology_manager_pb2.add_TopologyManagerServicer_to_server(
+    topology_manager_pb2_grpc.add_TopologyManagerServicer_to_server(
         TopologyManager(), grpc_server)
     # Add SRv6-PM Manager
-    srv6pm_manager_pb2.add_SRv6PMManagerServicer_to_server(
+    srv6pm_manager_pb2_grpc.add_SRv6PMManagerServicer_to_server(
         SRv6PMManager(), grpc_server)
     # If secure we need to create a secure endpoint
     if secure:
