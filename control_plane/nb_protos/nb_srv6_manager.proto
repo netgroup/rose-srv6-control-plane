@@ -33,7 +33,7 @@ message NodesConfig {
     repeated NodeConfig nodes = 3;
 }
 
-message SRv6MicroSIDRequest {
+message SRv6MicroSID {
     string operation = 1;
     string lr_destination = 2;
     string rl_destination = 3;
@@ -53,7 +53,11 @@ message SRv6MicroSIDRequest {
     NodesConfig nodes_config = 17;
 }
 
-message SRv6PathRequest {
+message SRv6MicroSIDRequest {
+    repeated SRv6MicroSID srv6_micro_sids = 1;
+}
+
+message SRv6Path {
     string operation = 1;
     string grpc_address = 2;
     int32 grpc_port = 3;
@@ -67,7 +71,11 @@ message SRv6PathRequest {
     FwdEngine fwd_engine = 11;
 }
 
-message SRv6BehaviorRequest {
+message SRv6PathRequest {
+    repeated SRv6Path srv6_paths = 1;
+}
+
+message SRv6Behavior {
     string operation = 1;
     string grpc_address = 2;
     int32 grpc_port = 3;
@@ -83,7 +91,11 @@ message SRv6BehaviorRequest {
     FwdEngine fwd_engine = 13;
 }
 
-message SRv6UniTunnelRequest {
+message SRv6BehaviorRequest {
+    repeated SRv6Behavior srv6_behaviors = 1;
+}
+
+message SRv6UniTunnel {
     string operation = 1;
     string ingress_ip = 2;
     int32 ingress_port = 3;
@@ -96,7 +108,11 @@ message SRv6UniTunnelRequest {
     FwdEngine fwd_engine = 10;
 }
 
-message SRv6BidiTunnelRequest {
+message SRv6UniTunnelRequest {
+    repeated SRv6UniTunnel srv6_unitunnels = 1;
+}
+
+message SRv6BidiTunnel {
     string operation = 1;
     string node_l_ip = 2;
     int32 node_l_port = 3;
@@ -112,6 +128,15 @@ message SRv6BidiTunnelRequest {
     FwdEngine fwd_engine = 13;
 }
 
+message SRv6BidiTunnelRequest {
+    repeated SRv6BidiTunnel srv6_biditunnels = 1;
+}
+
 message SRv6ManagerReply {
     srv6_service.StatusCode status_code = 1;
+    repeated SRv6Path srv6_paths = 2;
+    repeated SRv6Behavior srv6_behaviors = 3;
+    repeated SRv6UniTunnel srv6_unitunnels = 4;
+    repeated SRv6BidiTunnel srv6_biditunnels = 5;
+    repeated SRv6MicroSID srv6_micro_sids = 6;
 }
