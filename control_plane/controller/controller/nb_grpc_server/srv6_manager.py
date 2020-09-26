@@ -31,11 +31,17 @@ gRPC server.
 
 # General imports
 import logging
+import os
 
-# Controller dependencies
+# Proto dependencies
+import nb_commons_pb2
 import nb_srv6_manager_pb2
 import nb_srv6_manager_pb2_grpc
+
+# Controller dependencies
+from controller import arangodb_driver
 from controller import srv6_utils, srv6_usid, utils
+from controller.nb_grpc_server import utils as nb_utils
 
 
 # Logger reference
@@ -51,6 +57,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         '''
         Handle a SRv6 uSID policy.
         '''
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Convert nodes config to a dict representation
         nodes_dict = dict()
         for node_config in request.nodes_config:
@@ -88,12 +96,18 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         )
         if res is not None:
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-        # TODO return value
+        # Set status code
+        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        # Done, return the reply
+        return response
 
     def HandleSRv6PathPolicy(self, request, context):
         '''
         Handle a SRv6 path.
         '''
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Perform the operation
         with utils.get_grpc_session(request.grpc_address,
                                     request.grpc_port) as channel:
             res = srv6_utils.handle_srv6_path(
@@ -111,11 +125,18 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     request.fwd_engine).lower()
             )
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Set status code
+        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        # Done, return the reply
+        return response
 
     def HandleSRv6BehaviorPolicy(self, request, context):
         '''
         Handle a SRv6 behavior.
         '''
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Perform the operation
         with utils.get_grpc_session(request.grpc_address,
                                     request.grpc_port) as channel:
             res = srv6_utils.handle_srv6_behavior(
@@ -135,11 +156,18 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     request.fwd_engine).lower()
             )
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Set status code
+        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        # Done, return the reply
+        return response
 
     def HandleSRv6UniTunnel(self, request, context):
         '''
         Handle a SRv6 unidirectional tunnel.
         '''
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Perform the operation
         with utils.get_grpc_session(request.ingress_ip,
                                     request.ingress_port) as ingress_channel, \
                 utils.get_grpc_session(request.egress_ip,
@@ -156,6 +184,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                # Set status code
+                response.status_code = nb_utils.sb_status_to_nb_status[res]
             elif request.operation == 'del':
                 res = srv6_utils.destroy_uni_srv6_tunnel(
                     ingress_channel=ingress_channel,
@@ -167,13 +197,23 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                # Set status code
+                response.status_code = nb_utils.sb_status_to_nb_status[res]
             else:
                 logger.error('Invalid operation %s', request.operation)
+                # Set status code
+                response.status_code = \
+                    nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        # Done, return the reply
+        return response
 
     def handle_srv6_biditunnel(self, request, context):
         '''
         Handle SRv6 bidirectional tunnel.
         '''
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Perform the operation
         with utils.get_grpc_session(request.node_l_ip,
                                     request.node_l_port) as node_l_channel, \
                 utils.get_grpc_session(request.node_r_ip,
@@ -193,6 +233,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                # Set status code
+                response.status_code = nb_utils.sb_status_to_nb_status[res]
             elif request.operation == 'del':
                 res = srv6_utils.destroy_srv6_tunnel(
                     node_l_channel=node_l_channel,
@@ -206,11 +248,48 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                # Set status code
+                response.status_code = nb_utils.sb_status_to_nb_status[res]
             else:
                 logger.error('Invalid operation %s', request.operation)
+                # Set status code
+                response.status_code = \
+                    nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        # Done, return the reply
+        return response
 
     def GetNodes(self, request, context):
         '''
         Get the nodes.
         '''
-        raise NotImplementedError
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)     # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        # Get nodes config
+        nodes = arangodb_driver.get_nodes_config(database)
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Set status code
+        response.status_code = nb_commons_pb2.STATUS_SUCCESS
+        # Add the nodes config
+        for node in nodes:
+            # Create a new node
+            _node = response.nodes.add()
+            _node.name = node['name']
+            _node.grpc_ip = node['grpc_ip']
+            _node.grpc_port = node['grpc_port']
+            _node.uN = node['uN']
+            _node.uDT = node['uDT']
+            _node.fwd_engine = node['fwd_engine']
+        # Return the reply
+        return response
