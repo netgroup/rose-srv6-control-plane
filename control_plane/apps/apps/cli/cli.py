@@ -49,7 +49,6 @@ from cmd import Cmd
 from controller import arangodb_driver
 from controller import srv6_usid
 from apps.cli import srv6_cli, srv6pm_cli, topo_cli
-from controller.init_db import init_srv6_usid_db
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
