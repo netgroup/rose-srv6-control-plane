@@ -31,10 +31,13 @@ gRPC client.
 
 # General imports
 
-# Controller dependencies
+# Proto dependencies
 import nb_commons_pb2
 import nb_srv6_manager_pb2
 import nb_srv6_manager_pb2_grpc
+
+# gRPC client dependencies
+from apps.nb_grpc_client import utils
 
 
 def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
@@ -51,50 +54,51 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
     #
     # Create request message
     request = nb_srv6_manager_pb2.SRv6MicroSIDRequest()
+    # Create a policy
+    micro_sid = request.srv6_micro_sids.add()
     # Set the operation
-    request.operation = operation
+    micro_sid.operation = operation
     # Set the destination for the left to right path
-    request.lr_destination = lr_destination
+    micro_sid.lr_destination = lr_destination
     # Set the destination for the right to left path
-    request.rl_destination = rl_destination
+    micro_sid.rl_destination = rl_destination
     # Set the waypoints list for the left to right path
-    request.nodes_lr.extend(nodes_lr)
+    micro_sid.nodes_lr.extend(nodes_lr)
     # Set the waypoints list for the right to left path
-    request.nodes_rl.extend(nodes_rl)
+    micro_sid.nodes_rl.extend(nodes_rl)
     # Set the table ID
-    request.table = table
+    micro_sid.table = table
     # Set the metric
-    request.metric = metric
+    micro_sid.metric = metric
     # Set the entity ID
-    request._id = _id
+    micro_sid._id = _id
     # Set the gRPC address of the left node
-    request.l_grpc_ip = l_grpc_ip
+    micro_sid.l_grpc_ip = l_grpc_ip
     # Set the gRPC port number of the left node
-    request.l_grpc_port = l_grpc_port
+    micro_sid.l_grpc_port = l_grpc_port
     # Set the forwarding engine of the left node
-    request.l_fwd_engine = nb_srv6_manager_pb2.Value(l_fwd_engine)
+    micro_sid.l_fwd_engine = nb_srv6_manager_pb2.Value(l_fwd_engine)
     # Set the gRPC address of the right node
-    request.r_grpc_ip = r_grpc_ip
+    micro_sid.r_grpc_ip = r_grpc_ip
     # Set the gRPC port number of the right node
-    request.r_grpc_port = r_grpc_port
+    micro_sid.r_grpc_port = r_grpc_port
     # Set the forwarding engine of the right node
-    request.r_fwd_engine = nb_srv6_manager_pb2.Value(r_fwd_engine)
+    micro_sid.r_fwd_engine = nb_srv6_manager_pb2.Value(r_fwd_engine)
     # Set the decapsulation SID
-    request.decap_sid = decap_sid
+    micro_sid.decap_sid = decap_sid
     # Set the locator
-    request.locator = locator
+    micro_sid.locator = locator
     # Set the nodes configuration
-    request.nodes_config = None     # TODO
+    micro_sid.nodes_config = None     # TODO
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6MicroSIDPolicy(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of uSIDs, if any
+    return list(response.srv6_micro_sids)
 
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
@@ -107,38 +111,39 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     #
     # Create request message
     request = nb_srv6_manager_pb2.SRv6PathRequest()
+    # Create a SRv6 path
+    srv6_path = request.srv6_paths.add()
     # Set the operation
-    request.operation = operation
+    srv6_path.operation = operation
     # Set the gRPC address
-    request.grpc_address = grpc_address
+    srv6_path.grpc_address = grpc_address
     # Set the gRPC port
-    request.grpc_port = grpc_port
+    srv6_path.grpc_port = grpc_port
     # Set the destination
-    request.destination = destination
+    srv6_path.destination = destination
     # Set the segments
-    request.segments.extend(segments)
+    srv6_path.segments.extend(segments)
     # Set the device
-    request.device = device
+    srv6_path.device = device
     # Set the encap mode
-    request.encapmode = nb_srv6_manager_pb2.Value(encapmode)
+    srv6_path.encapmode = nb_srv6_manager_pb2.Value(encapmode)
     # Set the table ID
-    request.table = table
+    srv6_path.table = table
     # Set the metric
-    request.metric = metric
+    srv6_path.metric = metric
     # Set the BSID address
-    request.bsid_addr = bsid_addr
+    srv6_path.bsid_addr = bsid_addr
     # Set the forwarding engine
-    request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_path.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6Path(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of SRv6 paths, if any
+    return list(response.srv6_paths)
 
 
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
@@ -152,42 +157,43 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     #
     # Create request message
     request = nb_srv6_manager_pb2.SRv6BehaviorRequest()
+    # Create a SRv6 behavior
+    srv6_behavior = request.srv6_behaviors.add()
     # Set the operation
-    request.operation = operation
+    srv6_behavior.operation = operation
     # Set the gRPC address
-    request.grpc_address = grpc_address
+    srv6_behavior.grpc_address = grpc_address
     # Set the gRPC port
-    request.grpc_port = grpc_port
+    srv6_behavior.grpc_port = grpc_port
     # Set the segment
-    request.segment = segment
+    srv6_behavior.segment = segment
     # Set the action
-    request.action = nb_srv6_manager_pb2.Value(action)
+    srv6_behavior.action = nb_srv6_manager_pb2.Value(action)
     # Set the device
-    request.device = device
+    srv6_behavior.device = device
     # Set the table ID
-    request.table = table
+    srv6_behavior.table = table
     # Set the nexthop
-    request.nexthop = nexthop
+    srv6_behavior.nexthop = nexthop
     # Set the lookup table
-    request.lookup_table = lookup_table
+    srv6_behavior.lookup_table = lookup_table
     # Set the interface
-    request.interface = interface
+    srv6_behavior.interface = interface
     # Set the segments
-    request.segments.extend(segments)
+    srv6_behavior.segments.extend(segments)
     # Set the metric
-    request.metric = metric
+    srv6_behavior.metric = metric
     # Set the forwarding engine
-    request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_behavior.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6Behavior(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of SRv6 behaviors, if any
+    return list(response.srv6_behaviors)
 
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
@@ -201,36 +207,37 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     #
     # Create request message
     request = nb_srv6_manager_pb2.SRv6UniTunnelRequest()
+    # Create a SRv6 behavior
+    srv6_unitunnel = request.srv6_unitunnels.add()
     # Set the operation
-    request.operation = operation
+    srv6_unitunnel.operation = operation
     # Set the gRPC IP address of the ingress node
-    request.ingress_ip = ingress_ip
+    srv6_unitunnel.ingress_ip = ingress_ip
     # Set the gRPC port number of the ingress node
-    request.ingress_port = ingress_port
+    srv6_unitunnel.ingress_port = ingress_port
     # Set the gRPC IP adress of the egress node
-    request.egress_ip = egress_ip
+    srv6_unitunnel.egress_ip = egress_ip
     # Set the gRPC port number of the egress node
-    request.egress_port = egress_port
+    srv6_unitunnel.egress_port = egress_port
     # Set the destination
-    request.destination = destination
+    srv6_unitunnel.destination = destination
     # Set the segments
-    request.segments.extend(segments)
+    srv6_unitunnel.segments.extend(segments)
     # Set the local segment
-    request.localseg = localseg
+    srv6_unitunnel.localseg = localseg
     # Set the BSID address
-    request.bsid_addr = bsid_addr
+    srv6_unitunnel.bsid_addr = bsid_addr
     # Set the forwarding engine
-    request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_unitunnel.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6UniTunnel(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of SRv6 unidirectional tunnels, if any
+    return list(response.srv6_unitunnels)
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
@@ -245,42 +252,43 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     #
     # Create request message
     request = nb_srv6_manager_pb2.SRv6BidiTunnelRequest()
+    # Create a SRv6 behavior
+    srv6_biditunnel = request.srv6_biditunnels.add()
     # Set the operation
-    request.operation = operation
+    srv6_biditunnel.operation = operation
     # Set the gRPC address of the left node
-    request.node_l_ip = node_l_ip
+    srv6_biditunnel.node_l_ip = node_l_ip
     # Set the port number of the left node
-    request.node_l_port = node_l_port
+    srv6_biditunnel.node_l_port = node_l_port
     # Set the gRPC address of the right node
-    request.node_r_ip = node_r_ip
+    srv6_biditunnel.node_r_ip = node_r_ip
     # Set the port number of the right node
-    request.node_r_port = node_r_port
+    srv6_biditunnel.node_r_port = node_r_port
     # SID list of the path left to right
-    request.sidlist_lr.extend(sidlist_lr)
+    srv6_biditunnel.sidlist_lr.extend(sidlist_lr)
     # SID list of the path right to left
-    request.sidlist_rl.extend(sidlist_rl)
+    srv6_biditunnel.sidlist_rl.extend(sidlist_rl)
     # Destination of the path left to right
-    request.dest_lr = dest_lr
+    srv6_biditunnel.dest_lr = dest_lr
     # Destinaton of the path right to left
-    request.dest_rl = dest_rl
+    srv6_biditunnel.dest_rl = dest_rl
     # Local segment of the path left to right
-    request.localseg_lr = localseg_lr
+    srv6_biditunnel.localseg_lr = localseg_lr
     # Local segment of the path right to left
-    request.localseg_rl = localseg_rl
+    srv6_biditunnel.localseg_rl = localseg_rl
     # BSID address
-    request.bsid_addr = bsid_addr
+    srv6_biditunnel.bsid_addr = bsid_addr
     # Forwarding engine
-    request.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
+    srv6_biditunnel.fwd_engine = nb_srv6_manager_pb2.Value(fwd_engine)
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.HandleSRv6BidiTunnel(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of SRv6 bidirectional tunnels, if any
+    return list(response.srv6_biditunnels)
 
 
 def get_nodes(controller_channel):
@@ -295,8 +303,7 @@ def get_nodes(controller_channel):
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.GetNodes(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # Done, success
-    return True
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
+    # Done, return the list of nodes, if any
+    return list(response.nodes)
