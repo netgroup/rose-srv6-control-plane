@@ -108,6 +108,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         '''
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Iterate on the SRv6 paths
         for srv6_path in request.srv6_paths:
             # Perform the operation
             with utils.get_grpc_session(srv6_path.grpc_address,
@@ -143,26 +144,33 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         '''
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
-        # Perform the operation
-        with utils.get_grpc_session(request.grpc_address,
-                                    request.grpc_port) as channel:
-            res = srv6_utils.handle_srv6_behavior(
-                operation=request.operation,
-                channel=channel,
-                segment=request.segment,
-                action=nb_commons_pb2.SRv6Action.Name(
-                    request.action).lower(),
-                device=request.device,
-                table=request.table,
-                nexthop=request.nexthop,
-                lookup_table=request.lookup_table,
-                interface=request.interface,
-                segments=list(request.segments),
-                metric=request.metric,
-                fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                    request.fwd_engine).lower()
-            )
-            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Iterate on the SRv6 behaviors
+        for srv6_behavior in request.srv6_behaviors:
+            # Perform the operation
+            with utils.get_grpc_session(srv6_behavior.grpc_address,
+                                        srv6_behavior.grpc_port) as channel:
+                res = srv6_utils.handle_srv6_behavior(
+                    operation=srv6_behavior.operation,
+                    channel=channel,
+                    segment=srv6_behavior.segment,
+                    action=nb_commons_pb2.SRv6Action.Name(
+                        srv6_behavior.action).lower(),
+                    device=srv6_behavior.device,
+                    table=srv6_behavior.table,
+                    nexthop=srv6_behavior.nexthop,
+                    lookup_table=srv6_behavior.lookup_table,
+                    interface=srv6_behavior.interface,
+                    segments=list(srv6_behavior.segments),
+                    metric=srv6_behavior.metric,
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                        srv6_behavior.fwd_engine).lower()
+                )
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+            # Set status code
+            if res != commons_pb2.STATUS_SUCCESS:
+                # Error
+                response.status = nb_utils.sb_status_to_nb_status[res]
+                return response
         # Set status code
         response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
@@ -178,7 +186,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         with utils.get_grpc_session(request.ingress_ip,
                                     request.ingress_port) as ingress_channel, \
                 utils.get_grpc_session(request.egress_ip,
-                                       request.egress_port) as egress_channel:
+                                    request.egress_port) as egress_channel:
             if request.operation == 'add':
                 res = srv6_utils.create_uni_srv6_tunnel(
                     ingress_channel=ingress_channel,
