@@ -1008,15 +1008,8 @@ def complete_print_nodes(text, prev_text=None):
     return args
 
 
-def print_node_to_addr_mapping(nodes_filename):
-    '''
-    Print mapping node to IP address.
-    '''
-    srv6_usid.print_node_to_addr_mapping(nodes_filename)
-
-
-def print_nodes(nodes_dict):
+def print_nodes(controller_channel):
     '''
     Print nodes.
     '''
-    srv6_usid.print_nodes(nodes_dict=nodes_dict)
+    print(srv6_manager.get_nodes(controller_channel=controller_channel))
