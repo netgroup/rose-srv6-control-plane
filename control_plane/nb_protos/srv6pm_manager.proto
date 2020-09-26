@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package srv6pm_manager;
 
-import "commons.proto";
+import "nb_commons.proto";
 
 
 service SRv6PMManager {
@@ -71,7 +71,7 @@ enum PMDriver {
 }
 
 message SRv6PMManagerReply {
-    srv6_services.StatusCode status = 1;
+    nb_grpc_services.StatusCode status = 1;
     repeated MeasurementData measurement_data = 2;
 }
 

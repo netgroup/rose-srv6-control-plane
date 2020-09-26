@@ -1,6 +1,6 @@
 syntax = "proto3";
-package srv6_services;
 
+package nb_grpc_services;
 
 enum StatusCode {
   STATUS_SUCCESS = 0;
@@ -16,4 +16,28 @@ enum StatusCode {
   STATUS_NOT_CONFIGURED = 10;
   STATUS_ALREADY_CONFIGURED = 11;
   STATUS_NO_SUCH_DEVICE = 12;
+}
+
+enum FwdEngine {
+  LINUX = 0;
+  VPP = 1;
+}
+
+enum SRv6Action {
+  END = 0;
+  END_X = 1;
+  END_T = 2;
+  END_DX4 = 3;
+  END_DX6 = 4;
+  END_DX2 = 5;
+  END_DT4 = 6;
+  END_DT6 = 7;
+  END_B6 = 8;
+  END_B6_ENCAPS = 9;
+}
+
+enum EncapMode {
+  INLINE = 0;
+  ENCAP = 1;
+  L2ENCAP = 2;
 }

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package topo_manager;
 
-import "commons.proto";
+import "nb_commons.proto";
 
 
 service TopologyManager {
@@ -44,10 +44,10 @@ message TopologyManagerRequest {
 }
 
 message Topology {
-    ...
+    // TODO
 }
 
 message TopologyManagerReply {
-    srv6_service.StatusCode status = 1;
+    nb_grpc_services.StatusCode status = 1;
     Topology topology = 2;
 }

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package srv6_manager;
+package nb_srv6_manager;
 
-import "commons.proto";
+import "nb_commons.proto";
 
 
 service SRv6Manager {
@@ -44,10 +44,10 @@ message SRv6MicroSID {
     uint32 _id = 8;
     string l_grpc_ip = 9;
     uint32 l_grpc_port = 10;
-    FwdEngine l_fwd_engine = 11;
+    nb_grpc_services.FwdEngine l_fwd_engine = 11;
     string r_grpc_ip = 12;
     uint32 r_grpc_port = 13;
-    FwdEngine r_fwd_engine = 14;
+    nb_grpc_services.FwdEngine r_fwd_engine = 14;
     string decap_sid = 15;
     string locator = 16;
     NodesConfig nodes_config = 17;
@@ -64,11 +64,11 @@ message SRv6Path {
     string destination = 4;
     string segments = 5;
     string device = 6;
-    EncapMode encapmode = 7;
+    nb_grpc_services.EncapMode encapmode = 7;
     int32 table = 8;
     int32 metric = 9;
     string bsid_addr = 10;
-    FwdEngine fwd_engine = 11;
+    nb_grpc_services.FwdEngine fwd_engine = 11;
 }
 
 message SRv6PathRequest {
@@ -80,7 +80,7 @@ message SRv6Behavior {
     string grpc_address = 2;
     int32 grpc_port = 3;
     string segment = 4;
-    SRv6Action action = 5;
+    nb_grpc_services.SRv6Action action = 5;
     string device = 6;
     int32 table = 7;
     string nexthop = 8;
@@ -88,7 +88,7 @@ message SRv6Behavior {
     string interface = 10;
     repeated string segments = 11;
     int32 metric = 12;
-    FwdEngine fwd_engine = 13;
+    nb_grpc_services.FwdEngine fwd_engine = 13;
 }
 
 message SRv6BehaviorRequest {
@@ -105,7 +105,7 @@ message SRv6UniTunnel {
     repeated string segments = 7;
     string localseg = 8;
     string bsid_addr = 9;
-    FwdEngine fwd_engine = 10;
+    nb_grpc_services.FwdEngine fwd_engine = 10;
 }
 
 message SRv6UniTunnelRequest {
@@ -125,7 +125,7 @@ message SRv6BidiTunnel {
     string localseg_lr = 10;
     string localseg_rl = 11;
     string bsid_addr = 12;
-    FwdEngine fwd_engine = 13;
+    nb_grpc_services.FwdEngine fwd_engine = 13;
 }
 
 message SRv6BidiTunnelRequest {
@@ -133,7 +133,7 @@ message SRv6BidiTunnelRequest {
 }
 
 message SRv6ManagerReply {
-    srv6_service.StatusCode status_code = 1;
+    nb_grpc_services.StatusCode status_code = 1;
     repeated SRv6Path srv6_paths = 2;
     repeated SRv6Behavior srv6_behaviors = 3;
     repeated SRv6UniTunnel srv6_unitunnels = 4;
