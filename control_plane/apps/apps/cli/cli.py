@@ -47,10 +47,6 @@ from argparse import ArgumentParser
 from cmd import Cmd
 from pathlib import Path
 
-# python-dotenv dependencies
-from dotenv import load_dotenv
-from pkg_resources import resource_filename
-
 # Controller dependencies
 from controller import arangodb_driver
 from controller import srv6_usid
@@ -63,19 +59,6 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Logger reference
 logger = logging.getLogger(__name__)
-
-# Configure logging level for urllib3
-logging.getLogger('urllib3').setLevel(logging.WARNING)
-
-# import utils
-# import srv6_controller
-# import ti_extraction
-# import srv6_pm
-
-# Default path to the .env file
-DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
-# Default value for debug mode
-DEFAULT_DEBUG = False
 
 
 # Set line delimiters, required for the auto-completion feature
@@ -1147,97 +1130,13 @@ class ControllerCLI(CustomCmd):
     do_EOF = do_exit
 
 
-# Class representing the configuration
-class Config:
-    """Class implementing configuration for the Controller"""
-
-    # ArangoDB username
-    arango_user = None
-    # ArangoDB password
-    arango_password = None
-    # ArangoDB URL
-    arango_url = None
-    # Configure Kafka servers
-    kafka_servers = None
-    # Define whether to enable the debug mode or not
-    debug = DEFAULT_DEBUG
-
-    # Load configuration from .env file
-    def load_config(self, env_file):
-        """Load configuration from a .env file"""
-
-        logger.info('*** Loading configuration from %s', env_file)
-        # Path to the .env file
-        env_path = Path(env_file)
-        # Load environment variables from .env file
-        load_dotenv(dotenv_path=env_path)
-        # ArangoDB username
-        if os.getenv('ARANGO_USER') is not None:
-            self.arango_user = os.getenv('ARANGO_USER')
-        # ArangoDB password
-        if os.getenv('ARANGO_PASSWORD') is not None:
-            self.arango_password = os.getenv('ARANGO_PASSWORD')
-        # ArangoDB URL
-        if os.getenv('ARANGO_URL') is not None:
-            self.arango_url = os.getenv('ARANGO_URL')
-        # Kafka servers
-        if os.getenv('KAFKA_SERVERS') is not None:
-            self.kafka_servers = os.getenv('KAFKA_SERVERS')
-        # Define whether to enable the debug mode or not
-        if os.getenv('DEBUG') is not None:
-            self.debug = os.getenv('DEBUG')
-            # Values provided in .env files are returned as strings
-            # We need to convert them to bool
-            if self.debug.lower() == 'true':
-                self.debug = True
-            elif self.debug.lower() == 'false':
-                self.debug = False
-            else:
-                # Invalid value for this parameter
-                self.debug = None
-
-    def validate_config(self):
-        """Validate current configuration"""
-
-        # pylint: disable=no-self-use
-
-        logger.info('*** Validating configuration')
-        success = True
-        # Return result
-        return success
-
-    def print_config(self):
-        """Pretty print current configuration"""
-
-        print()
-        print('****************** CONFIGURATION ******************')
-        print()
-        print('ArangoDB URL: %s' % self.arango_url)
-        print('ArangoDB username: %s' % self.arango_user)
-        print('ArangoDB password: %s' % '************')
-        print('Kafka servers: %s' % self.kafka_servers)
-        print('Enable debug: %s' % self.debug)
-        print()
-        print('***************************************************')
-        print()
-        print()
-
-    def import_dependencies(self):
-        """Import dependencies"""
-
-
 # Parse options
 def parse_arguments():
     """Command-line arguments parser"""
 
     # Get parser
     parser = ArgumentParser(
-        description='gRPC Southbound APIs for SRv6 Controller'
-    )
-    parser.add_argument(
-        '-e', '--env-file', dest='env_file', action='store',
-        default=DEFAULT_ENV_FILE_PATH, help='Path to the .env file '
-        'containing the parameters for the node manager'
+        description='Command Line Interface (CLI)'
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
@@ -1249,26 +1148,11 @@ def parse_arguments():
 
 
 def __main():
-    """Entry point for this module"""
-
+    '''
+    Entry point for this module.
+    '''
     # Parse command-line arguments
     args = parse_arguments()
-    # Path to the .env file containing the parameters for the node manager'
-    env_file = args.env_file
-    # Initialize database
-    init_srv6_usid_db()
-    # Create a new configuration object
-    config = Config()
-    # Load configuration from .env file
-    if env_file is not None and os.path.exists(env_file):
-        config.load_config(env_file)
-    else:
-        logger.warning('Configuration file not found. '
-                       'Using default configuration.')
-    # Process other command-line arguments
-    # and replace the parameters defined in .env file
-    # (command-line args have priority over environment variables)
-    #
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
@@ -1278,14 +1162,6 @@ def __main():
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
     logging.info('SERVER_DEBUG: %s', str(server_debug))
-    # Validate configuration
-    if not config.validate_config():
-        logger.critical('Invalid configuration\n')
-        sys.exit(-2)
-    # Import dependencies
-    config.import_dependencies()
-    # Print configuration
-    config.print_config()
     # Start the CLI
     ControllerCLI().cmdloop()
 
