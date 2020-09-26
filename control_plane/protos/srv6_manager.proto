@@ -116,7 +116,7 @@ message SRv6Behavior {
 }
 
 enum FwdEngine {
-  Linux = 0;
+  LINUX = 0;
   VPP = 1;
   P4 = 2;
 }

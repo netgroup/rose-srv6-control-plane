@@ -75,7 +75,7 @@ def parse_grpc_error(err):
 
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='Linux'):
+                     bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 Path
     '''
@@ -107,7 +107,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # Set the BSID address (required for VPP)
     path.bsid_addr = str(bsid_addr)
     # Handle SRv6 policy for VPP
-    if fwd_engine == 'VPP':
+    if fwd_engine == 'vpp':
         if bsid_addr == '':
             logger.error('"bsid_addr" argument is mandatory for VPP')
             return None
@@ -126,7 +126,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             return None
     # Forwarding engine (Linux or VPP)
     try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine)
+        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         return None
@@ -175,7 +175,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
 
 
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
-                       table=-1, metric=-1, fwd_engine='Linux'):
+                       table=-1, metric=-1, fwd_engine='linux'):
     '''
     Handle a SRv6 Path
     '''
@@ -203,7 +203,7 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
     # Forwarding engine (Linux or VPP)
     try:
         policy_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-            fwd_engine)
+            fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         return None
@@ -250,7 +250,7 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
                          interface="", segments=None, metric=-1,
-                         fwd_engine='Linux'):
+                         fwd_engine='linux'):
     '''
     Handle a SRv6 behavior
     '''
@@ -286,7 +286,7 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     # Forwarding engine (Linux or VPP)
     try:
         behavior_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-            fwd_engine)
+            fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         return None
@@ -365,7 +365,7 @@ class SRv6Exception(Exception):
 
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
-                           bsid_addr='', fwd_engine='Linux'):
+                           bsid_addr='', fwd_engine='linux'):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -446,7 +446,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
 def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
-                       bsid_addr='', fwd_engine='Linux'):
+                       bsid_addr='', fwd_engine='linux'):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -514,7 +514,7 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
 
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                            localseg=None, bsid_addr='', fwd_engine='Linux',
+                            localseg=None, bsid_addr='', fwd_engine='linux',
                             ignore_errors=False):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
@@ -599,7 +599,7 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
 
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
-                        bsid_addr='', fwd_engine='Linux',
+                        bsid_addr='', fwd_engine='linux',
                         ignore_errors=False):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.

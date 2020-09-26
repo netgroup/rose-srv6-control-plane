@@ -34,6 +34,7 @@ import logging
 import os
 
 # Proto dependencies
+import commons_pb2
 import nb_commons_pb2
 import nb_srv6_manager_pb2
 import nb_srv6_manager_pb2_grpc
@@ -85,11 +86,11 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             _id=request._id,
             l_grpc_ip=request.l_grpc_ip,
             l_grpc_port=request.l_grpc_port,
-            l_fwd_engine=nb_srv6_manager_pb2.Name(
+            l_fwd_engine=nb_commons_pb2.FwdEngine.Name(
                 request.l_fwd_engine).lower(),
             r_grpc_ip=request.r_grpc_ip,
             r_grpc_port=request.r_grpc_port,
-            r_fwd_engine=nb_srv6_manager_pb2.Name(
+            r_fwd_engine=nb_commons_pb2.FwdEngine.Name(
                 request.r_fwd_engine).lower(),
             decap_sid=request.decap_sid,
             locator=request.locator
@@ -97,7 +98,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         if res is not None:
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Set status code
-        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
         return response
 
@@ -107,26 +108,32 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         '''
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
-        # Perform the operation
-        with utils.get_grpc_session(request.grpc_address,
-                                    request.grpc_port) as channel:
-            res = srv6_utils.handle_srv6_path(
-                operation=request.operation,
-                channel=channel,
-                destination=request.destination,
-                segments=list(request.segments),
-                device=request.device,
-                encapmode=nb_srv6_manager_pb2.Name(
-                    request.encapmode).lower(),
-                table=request.table,
-                metric=request.metric,
-                bsid_addr=request.bsid_addr,
-                fwd_engine=nb_srv6_manager_pb2.Name(
-                    request.fwd_engine).lower()
-            )
-            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        for srv6_path in request.srv6_paths:
+            # Perform the operation
+            with utils.get_grpc_session(srv6_path.grpc_address,
+                                        srv6_path.grpc_port) as channel:
+                res = srv6_utils.handle_srv6_path(
+                    operation=srv6_path.operation,
+                    channel=channel,
+                    destination=srv6_path.destination,
+                    segments=list(srv6_path.segments),
+                    device=srv6_path.device,
+                    encapmode=nb_commons_pb2.EncapMode.Name(
+                        srv6_path.encapmode).lower(),
+                    table=srv6_path.table,
+                    metric=srv6_path.metric,
+                    bsid_addr=srv6_path.bsid_addr,
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                        srv6_path.fwd_engine).lower()
+                )
+                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+            # Set status code
+            if res != commons_pb2.STATUS_SUCCESS:
+                # Error
+                response.status = nb_utils.sb_status_to_nb_status[res]
+                return response
         # Set status code
-        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
         return response
 
@@ -143,7 +150,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 operation=request.operation,
                 channel=channel,
                 segment=request.segment,
-                action=nb_srv6_manager_pb2.Name(
+                action=nb_commons_pb2.SRv6Action.Name(
                     request.action).lower(),
                 device=request.device,
                 table=request.table,
@@ -152,12 +159,12 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 interface=request.interface,
                 segments=list(request.segments),
                 metric=request.metric,
-                fwd_engine=nb_srv6_manager_pb2.Name(
+                fwd_engine=nb_commons_pb2.FwdEngine.Name(
                     request.fwd_engine).lower()
             )
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Set status code
-        response.status_code = nb_utils.sb_status_to_nb_status[res]
+        response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
         return response
 
@@ -180,12 +187,12 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     segments=list(request.segments),
                     localseg=request.localseg,
                     bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_srv6_manager_pb2.Name(
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
                 # Set status code
-                response.status_code = nb_utils.sb_status_to_nb_status[res]
+                response.status = nb_utils.sb_status_to_nb_status[res]
             elif request.operation == 'del':
                 res = srv6_utils.destroy_uni_srv6_tunnel(
                     ingress_channel=ingress_channel,
@@ -193,16 +200,16 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     destination=request.destination,
                     localseg=request.localseg,
                     bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_srv6_manager_pb2.Name(
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
                 # Set status code
-                response.status_code = nb_utils.sb_status_to_nb_status[res]
+                response.status = nb_utils.sb_status_to_nb_status[res]
             else:
                 logger.error('Invalid operation %s', request.operation)
                 # Set status code
-                response.status_code = \
+                response.status = \
                     nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         # Done, return the reply
         return response
@@ -229,12 +236,12 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     localseg_lr=request.localseg_lr,
                     localseg_rl=request.localseg_rl,
                     bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_srv6_manager_pb2.Name(
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
                 # Set status code
-                response.status_code = nb_utils.sb_status_to_nb_status[res]
+                response.status = nb_utils.sb_status_to_nb_status[res]
             elif request.operation == 'del':
                 res = srv6_utils.destroy_srv6_tunnel(
                     node_l_channel=node_l_channel,
@@ -244,16 +251,16 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     localseg_lr=request.localseg_lr,
                     localseg_rl=request.localseg_rl,
                     bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_srv6_manager_pb2.Name(
+                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         request.fwd_engine).lower()
                 )
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
                 # Set status code
-                response.status_code = nb_utils.sb_status_to_nb_status[res]
+                response.status = nb_utils.sb_status_to_nb_status[res]
             else:
                 logger.error('Invalid operation %s', request.operation)
                 # Set status code
-                response.status_code = \
+                response.status = \
                     nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         # Done, return the reply
         return response
@@ -280,7 +287,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Set status code
-        response.status_code = nb_commons_pb2.STATUS_SUCCESS
+        response.status = nb_commons_pb2.STATUS_SUCCESS
         # Add the nodes config
         for node in nodes:
             # Create a new node

@@ -133,7 +133,7 @@ message SRv6BidiTunnelRequest {
 }
 
 message SRv6ManagerReply {
-    nb_grpc_services.StatusCode status_code = 1;
+    nb_grpc_services.StatusCode status = 1;
     repeated SRv6Path srv6_paths = 2;
     repeated SRv6Behavior srv6_behaviors = 3;
     repeated SRv6UniTunnel srv6_unitunnels = 4;
