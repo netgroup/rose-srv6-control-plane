@@ -18,7 +18,7 @@ if os.path.isfile(requirements_path):
 
 packages = [
     'controller',
-    'controller/cli'
+    'controller/nb_grpc_server'
 ]
 
 setuptools.setup(
