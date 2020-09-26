@@ -49,6 +49,7 @@ from cmd import Cmd
 from controller import arangodb_driver
 from controller import srv6_usid
 from apps.cli import srv6_cli, srv6pm_cli, topo_cli
+from apps.nb_grpc_client import utils as nb_utils
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -60,6 +61,9 @@ logger = logging.getLogger(__name__)
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
+
+# gRPC channel to the controller
+CONTROLLER_CHANNEL = None
 
 
 class CustomCmd(Cmd):
@@ -151,21 +155,8 @@ class ControllerCLITopology(CustomCmd):
             return False  # This workaround avoid exit in case of errors
         # pylint: disable=no-self-use
         #
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
-        nodes_dict = arangodb_driver.get_nodes_config(database)
-        srv6_cli.print_nodes(nodes_dict=nodes_dict)
+        # Print the nodes
+        print_nods(CONTROLLER_CHANNEL)
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
@@ -196,7 +187,7 @@ class ControllerCLITopology(CustomCmd):
             password=arango_password
         )
         arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(
-            args.nodes_file)[0])
+            args.nodes_file)[0])        # TODO
 
     def do_extract(self, args):
         """Extract the network topology"""
@@ -210,6 +201,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.topology_information_extraction_isis(
+            controller_channel=CONTROLLER_CHANNEL,
             routers=args.routers.split(','),
             period=args.period,
             isisd_pwd=args.isisd_pwd,
@@ -239,6 +231,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.load_topo_on_arango(
+            controller_channel=CONTROLLER_CHANNEL,
             arango_url=args.arango_url,
             arango_user=args.arango_user,
             arango_password=args.arango_password,
@@ -264,6 +257,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.extract_topo_from_isis_and_load_on_arango(
+            controller_channel=CONTROLLER_CHANNEL,
             isis_nodes=arg.isis_nodes.split(','),
             isisd_pwd=arg.isisd_pwd,
             arango_url=arg.arango_url,
@@ -448,6 +442,7 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.set_configuration(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -476,6 +471,7 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.reset_configuration(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -562,6 +558,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.start_experiment(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -605,6 +602,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.get_experiment_results(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -629,6 +627,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.stop_experiment(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -772,6 +771,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_path(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
@@ -801,6 +801,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_behavior(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
@@ -832,6 +833,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_unitunnel(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             ingress_ip=args.ingress_grpc_ip,
             ingress_port=args.ingress_grpc_port,
@@ -860,6 +862,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_biditunnel(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             node_l_ip=args.l_grpc_ip,
             node_r_ip=args.r_grpc_ip,
@@ -907,6 +910,7 @@ class ControllerCLISRv6(CustomCmd):
         nodes_dict = arangodb_driver.get_nodes_config(database)
         # Handle the uSID policy
         srv6_cli.handle_srv6_usid_policy(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             nodes_dict=nodes_dict,
             lr_destination=args.lr_destination,
@@ -1136,6 +1140,13 @@ def parse_arguments():
         description='Command Line Interface (CLI)'
     )
     parser.add_argument(
+        '-a', '--controller-address', action='store',
+        help='Controller IP address'
+    )
+    parser.add_argument(
+        '-p', '--controller-port', action='store', help='Controller port'
+    )
+    parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
     )
     # Parse input parameters
@@ -1150,15 +1161,23 @@ def __main():
     '''
     # Parse command-line arguments
     args = parse_arguments()
+    # Controller IP address
+    controller_address = args.controller_address
+    # Controller port
+    controller_port = args.controller_port
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
-        config.debug = args.debug
     else:
         logger.setLevel(level=logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
     logging.info('SERVER_DEBUG: %s', str(server_debug))
+    # Try to establish a connection to the controller
+    CONTROLLER_CHANNEL = nb_utils.get_grpc_session(
+        server_ip=controller_address,
+        server_port=controller_port
+    )
     # Start the CLI
     ControllerCLI().cmdloop()
 
