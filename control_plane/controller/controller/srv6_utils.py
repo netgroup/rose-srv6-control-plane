@@ -30,6 +30,7 @@ Control-Plane functionalities for SRv6 Manager
 
 # General imports
 import logging
+import os
 
 import grpc
 from six import text_type
@@ -39,6 +40,7 @@ import commons_pb2
 import srv6_manager_pb2
 # Controller dependencies
 import srv6_manager_pb2_grpc
+from controller import arangodb_driver
 from controller import utils
 
 # Global variables definition
@@ -75,7 +77,8 @@ def parse_grpc_error(err):
 
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='linux'):
+                     bsid_addr='', fwd_engine='linux', key=None,
+                     update_db=True):
     '''
     Handle a SRv6 Path
     '''
@@ -150,7 +153,38 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             response = stub.Create(request)
             # Get the status code of the gRPC operation
             response = response.status
-        elif operation == 'get':
+            # Store the path to the database
+            if response == commons_pb2.STATUS_SUCCESS and \
+                    os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+                    update_db:
+                # ArangoDB params
+                arango_url = os.getenv('ARANGO_URL')
+                arango_user = os.getenv('ARANGO_USER')
+                arango_password = os.getenv('ARANGO_PASSWORD')
+                # Connect to ArangoDB
+                client = arangodb_driver.connect_arango(
+                    url=arango_url)  # TODO keep arango connection open
+                # Connect to the db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=arango_user,
+                    password=arango_password
+                )
+                # Save the policy to the db
+                arangodb_driver.insert_srv6_path(
+                    database=database,
+                    key=key,
+                    grpc_address=channel._channel.target,
+                    destination=destination,
+                    segments=segments,
+                    device=device,
+                    encapmode=encapmode,
+                    table=table,
+                    metric=metric,
+                    bsid_addr=bsid_addr,
+                    fwd_engine=fwd_engine
+                )
+        elif operation == 'get':    # TODO db
             # Get the SRv6 path
             response = stub.Get(request)
             # Get the status code of the gRPC operation
@@ -167,6 +201,37 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             response = stub.Update(request)
             # Get the status code of the gRPC operation
             response = response.status
+            # Remove the path from the database
+            if response == commons_pb2.STATUS_SUCCESS and \
+                    os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+                    update_db:
+                # ArangoDB params
+                arango_url = os.getenv('ARANGO_URL')
+                arango_user = os.getenv('ARANGO_USER')
+                arango_password = os.getenv('ARANGO_PASSWORD')
+                # Connect to ArangoDB
+                client = arangodb_driver.connect_arango(
+                    url=arango_url)  # TODO keep arango connection open
+                # Connect to the db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=arango_user,
+                    password=arango_password
+                )
+                # Save the policy to the db
+                arangodb_driver.update_srv6_path(
+                    database=database,
+                    key=key,
+                    grpc_address=channel._channel.target,
+                    destination=destination,
+                    segments=segments,
+                    device=device,
+                    encapmode=encapmode,
+                    table=table,
+                    metric=metric,
+                    bsid_addr=bsid_addr,
+                    fwd_engine=fwd_engine
+                )
         elif operation == 'del':
             # Remove the SRv6 path
             response = stub.Remove(request)
