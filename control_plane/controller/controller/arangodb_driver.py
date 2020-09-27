@@ -686,15 +686,20 @@ def get_nodes_config(database):
     return {node['name']: node for node in nodes}
 
 
-def insert_srv6_path(database, grpc_address, destination, segments=None,
-                     device=None, encapmode=None, table=None, metric=None,
-                     bsid_addr=None, fwd_engine=None, key=None):
+def insert_srv6_path(database, grpc_address, grpc_port, destination,
+                     segments=None, device=None, encapmode=None,
+                     table=None, metric=None, bsid_addr=None,
+                     fwd_engine=None, key=None):
     '''
     Insert a SRv6 path into the 'srv6_paths' collection of a Arango database.
     :param database: Database where the nodes configuration must be saved.
     :type database: arango.database.StandardDatabase
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
     :type destination: str
@@ -724,6 +729,8 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
     '''
     # Build a dict-representation of the SRv6 path
     path = {
+        'grpc_address': grpc_address,
+        'grpc_port': grpc_port,
         'destination': destination,
         'segments': segments,
         'device': device,
@@ -745,9 +752,10 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
     return srv6_paths.insert(document=path, silent=True)
 
 
-def find_srv6_path(database, key=None, grpc_address=None, destination=None,
-                   segments=None, device=None, encapmode=None, table=None,
-                   metric=None, bsid_addr=None, fwd_engine=None):
+def find_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
+                   destination=None, segments=None, device=None,
+                   encapmode=None, table=None, metric=None,
+                   bsid_addr=None, fwd_engine=None):
     '''
     Find a SRv6 path in the 'srv6_paths' collection of a Arango database.
     :param database: Database where to lookup the SRv6 path.
@@ -756,6 +764,8 @@ def find_srv6_path(database, key=None, grpc_address=None, destination=None,
     :type key: int, optional
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
     :type destination: str
@@ -787,6 +797,10 @@ def find_srv6_path(database, key=None, grpc_address=None, destination=None,
     path = dict()
     if key is not None:
         path['_key'] = str(key)
+    if grpc_address is not None:
+        path['grpc_address'] = grpc_address
+    if grpc_port is not None:
+        path['grpc_port'] = grpc_port
     if destination is not None:
         path['destination'] = destination
     if segments is not None:
@@ -808,9 +822,10 @@ def find_srv6_path(database, key=None, grpc_address=None, destination=None,
     return srv6_paths.find(filters=path)
 
 
-def update_srv6_path(database, key=None, grpc_address=None, destination=None,
-                     segments=None, device=None, encapmode=None, table=None,
-                     metric=None, bsid_addr=None, fwd_engine=None):
+def update_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
+                     destination=None, segments=None, device=None,
+                     encapmode=None, table=None, metric=None,
+                     bsid_addr=None, fwd_engine=None):
     '''
     Update a SRv6 path into a ArangoDB database.
     :param database: Database where the SRv6 path to be updated is saved.
@@ -819,6 +834,8 @@ def update_srv6_path(database, key=None, grpc_address=None, destination=None,
     :type key: int, optional
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
     :type destination: str
@@ -848,10 +865,10 @@ def update_srv6_path(database, key=None, grpc_address=None, destination=None,
     raise NotImplementedError
 
 
-def delete_srv6_path(database, key, grpc_address=None, destination=None,
-                     segments=None, device=None, encapmode=None, table=None,
-                     metric=None, bsid_addr=None, fwd_engine=None,
-                     ignore_missing=False):
+def delete_srv6_path(database, key, grpc_address=None, grpc_port=None,
+                     destination=None, segments=None, device=None,
+                     encapmode=None, table=None, metric=None,
+                     bsid_addr=None, fwd_engine=None, ignore_missing=False):
     '''
     Remove a SRv6 path from the 'srv6_paths' collection of a ArangoDB
     database.
@@ -861,6 +878,8 @@ def delete_srv6_path(database, key, grpc_address=None, destination=None,
     :type key: int
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
     :type destination: str
@@ -898,6 +917,10 @@ def delete_srv6_path(database, key, grpc_address=None, destination=None,
     path = dict()
     if key is not None:
         path['_key'] = key
+    if grpc_address is not None:
+        path['grpc_address'] = grpc_address
+    if grpc_port is not None:
+        path['grpc_port'] = grpc_port
     if destination is not None:
         path['destination'] = destination
     if segments is not None:
@@ -922,7 +945,8 @@ def delete_srv6_path(database, key, grpc_address=None, destination=None,
 
 
 def find_and_delete_srv6_path(database, key=None, grpc_address=None,
-                              destination=None, segments=None, device=None,
+                              grpc_port=None, destination=None,
+                              segments=None, device=None,
                               encapmode=None, table=None, metric=None,
                               bsid_addr=None, fwd_engine=None,
                               ignore_missing=False):
@@ -935,6 +959,8 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
     :type key: int
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param destination: The destination prefix of the SRv6 path.
                         It can be a IP address or a subnet.
     :type destination: str
@@ -972,6 +998,10 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
     path = dict()
     if key is not None:
         path['_key'] = key
+    if grpc_address is not None:
+        path['grpc_address'] = grpc_address
+    if grpc_port is not None:
+        path['grpc_port'] = grpc_port
     if destination is not None:
         path['destination'] = destination
     if segments is not None:
