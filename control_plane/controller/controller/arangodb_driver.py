@@ -724,7 +724,6 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
     '''
     # Build a dict-representation of the SRv6 path
     path = {
-        '_key': key,
         'destination': destination,
         'segments': segments,
         'device': device,
@@ -734,6 +733,9 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
         'bsid_addr': bsid_addr,
         'fwd_engine': fwd_engine
     }
+    # Key argument is optional
+    if key is not None:
+        path['_key'] = key
     # Get the SRv6 paths collection
     # This returns an API wrapper for "srv6_paths" collection
     srv6_paths = database.collection(name='srv6_paths')
@@ -993,7 +995,8 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
     # Return True if the document matching the search criteria
     # has been removed, or False if the document was not found and
     # ignore_missing was set to True
-    return srv6_paths.delete(document=paths, ignore_missing=ignore_missing)
+    for path in paths:
+        srv6_paths.delete(document=path, ignore_missing=ignore_missing)
 
 
 def insert_srv6_behavior(database, grpc_address, segment, action=None,
