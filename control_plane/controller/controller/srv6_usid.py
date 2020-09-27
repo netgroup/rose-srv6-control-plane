@@ -125,7 +125,7 @@ def print_node_to_addr_mapping(nodes_filename):
             raise InvalidConfigurationError
     # Validate the forwarding engine
     for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
+        if fwd_engine not in ['linux', 'vpp', 'p4']:
             logger.error('Invalid forwarding engine %s in %s',
                          fwd_engine, nodes_filename)
             raise InvalidConfigurationError
@@ -179,7 +179,7 @@ def read_nodes(nodes_filename):
             raise InvalidConfigurationError
     # Validate the forwarding engine
     for fwd_engine in [node['fwd_engine'] for node in nodes['nodes'].values()]:
-        if fwd_engine not in ['Linux', 'VPP', 'P4']:
+        if fwd_engine not in ['linux', 'vpp', 'p4']:
             logger.error('Invalid forwarding engine %s in %s',
                          fwd_engine, nodes_filename)
             raise InvalidConfigurationError
@@ -960,7 +960,7 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                                             ingress_node['grpc_port']
                                             ) as channel:
                     # Currently ony Linux and VPP are suppoted for the encap
-                    if ingress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                    if ingress_node['fwd_engine'] not in ['linux', 'vpp']:
                         logger.error(
                             'Encap operation is not supported for '
                             '%s with fwd engine %s',
@@ -1084,7 +1084,7 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                                             egress_node['grpc_port']
                                             ) as channel:
                     # Currently ony Linux and VPP are suppoted for the encap
-                    if egress_node['fwd_engine'] not in ['Linux', 'VPP']:
+                    if egress_node['fwd_engine'] not in ['linux', 'vpp']:
                         logger.error(
                             'Encap operation is not supported for '
                             '%s with fwd engine %s',

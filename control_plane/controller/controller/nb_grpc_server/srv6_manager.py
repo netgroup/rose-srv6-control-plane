@@ -182,42 +182,52 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
-        with utils.get_grpc_session(request.ingress_ip,
-                                    request.ingress_port) as ingress_channel, \
-                utils.get_grpc_session(request.egress_ip,
-                                    request.egress_port) as egress_channel:
-            if request.operation == 'add':
-                res = srv6_utils.create_uni_srv6_tunnel(
-                    ingress_channel=ingress_channel,
-                    egress_channel=egress_channel,
-                    destination=request.destination,
-                    segments=list(request.segments),
-                    localseg=request.localseg,
-                    bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        request.fwd_engine).lower()
-                )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-                # Set status code
-                response.status = nb_utils.sb_status_to_nb_status[res]
-            elif request.operation == 'del':
-                res = srv6_utils.destroy_uni_srv6_tunnel(
-                    ingress_channel=ingress_channel,
-                    egress_channel=egress_channel,
-                    destination=request.destination,
-                    localseg=request.localseg,
-                    bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        request.fwd_engine).lower()
-                )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-                # Set status code
-                response.status = nb_utils.sb_status_to_nb_status[res]
-            else:
-                logger.error('Invalid operation %s', request.operation)
-                # Set status code
-                response.status = \
-                    nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        for srv6_tunnel in request.srv6_unitunnels:
+            with utils.get_grpc_session(srv6_tunnel.ingress_ip,
+                                        srv6_tunnel.ingress_port) as ingress_channel, \
+                    utils.get_grpc_session(srv6_tunnel.egress_ip,
+                                        srv6_tunnel.egress_port) as egress_channel:
+                if srv6_tunnel.operation == 'add':
+                    res = srv6_utils.create_uni_srv6_tunnel(
+                        ingress_channel=ingress_channel,
+                        egress_channel=egress_channel,
+                        destination=srv6_tunnel.destination,
+                        segments=list(srv6_tunnel.segments),
+                        localseg=srv6_tunnel.localseg,
+                        bsid_addr=srv6_tunnel.bsid_addr,
+                        fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                            srv6_tunnel.fwd_engine).lower()
+                    )
+                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                    # Set status code
+                    if res != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        response.status = nb_utils.sb_status_to_nb_status[res]
+                        return response
+                elif srv6_tunnel.operation == 'del':
+                    res = srv6_utils.destroy_uni_srv6_tunnel(
+                        ingress_channel=ingress_channel,
+                        egress_channel=egress_channel,
+                        destination=srv6_tunnel.destination,
+                        localseg=srv6_tunnel.localseg,
+                        bsid_addr=srv6_tunnel.bsid_addr,
+                        fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                            srv6_tunnel.fwd_engine).lower()
+                    )
+                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                    # Set status code
+                    if res != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        response.status = nb_utils.sb_status_to_nb_status[res]
+                        return response
+                else:
+                    logger.error('Invalid operation %s', srv6_tunnel.operation)
+                    # Set status code
+                    response.status = \
+                        nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+                    return response
+        # Set status code
+        response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
         return response
 
@@ -228,47 +238,57 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
-        with utils.get_grpc_session(request.node_l_ip,
-                                    request.node_l_port) as node_l_channel, \
-                utils.get_grpc_session(request.node_r_ip,
-                                       request.node_r_port) as node_r_channel:
-            if request.operation == 'add':
-                res = srv6_utils.create_srv6_tunnel(
-                    node_l_channel=node_l_channel,
-                    node_r_channel=node_r_channel,
-                    sidlist_lr=list(request.sidlist_lr),
-                    sidlist_rl=list(request.sidlist_rl),
-                    dest_lr=request.dest_lr,
-                    dest_rl=request.dest_rl,
-                    localseg_lr=request.localseg_lr,
-                    localseg_rl=request.localseg_rl,
-                    bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        request.fwd_engine).lower()
-                )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-                # Set status code
-                response.status = nb_utils.sb_status_to_nb_status[res]
-            elif request.operation == 'del':
-                res = srv6_utils.destroy_srv6_tunnel(
-                    node_l_channel=node_l_channel,
-                    node_r_channel=node_r_channel,
-                    dest_lr=request.dest_lr,
-                    dest_rl=request.dest_rl,
-                    localseg_lr=request.localseg_lr,
-                    localseg_rl=request.localseg_rl,
-                    bsid_addr=request.bsid_addr,
-                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        request.fwd_engine).lower()
-                )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-                # Set status code
-                response.status = nb_utils.sb_status_to_nb_status[res]
-            else:
-                logger.error('Invalid operation %s', request.operation)
-                # Set status code
-                response.status = \
-                    nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        for srv6_tunnel in request.srv6_biditunnels:
+            with utils.get_grpc_session(srv6_tunnel.node_l_ip,
+                                        srv6_tunnel.node_l_port) as node_l_channel, \
+                    utils.get_grpc_session(srv6_tunnel.node_r_ip,
+                                        srv6_tunnel.node_r_port) as node_r_channel:
+                if srv6_tunnel.operation == 'add':
+                    res = srv6_utils.create_srv6_tunnel(
+                        node_l_channel=node_l_channel,
+                        node_r_channel=node_r_channel,
+                        sidlist_lr=list(srv6_tunnel.sidlist_lr),
+                        sidlist_rl=list(srv6_tunnel.sidlist_rl),
+                        dest_lr=srv6_tunnel.dest_lr,
+                        dest_rl=srv6_tunnel.dest_rl,
+                        localseg_lr=srv6_tunnel.localseg_lr,
+                        localseg_rl=srv6_tunnel.localseg_rl,
+                        bsid_addr=srv6_tunnel.bsid_addr,
+                        fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                            srv6_tunnel.fwd_engine).lower()
+                    )
+                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                    # Set status code
+                    if res != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        response.status = nb_utils.sb_status_to_nb_status[res]
+                        return response
+                elif srv6_tunnel.operation == 'del':
+                    res = srv6_utils.destroy_srv6_tunnel(
+                        node_l_channel=node_l_channel,
+                        node_r_channel=node_r_channel,
+                        dest_lr=srv6_tunnel.dest_lr,
+                        dest_rl=srv6_tunnel.dest_rl,
+                        localseg_lr=srv6_tunnel.localseg_lr,
+                        localseg_rl=srv6_tunnel.localseg_rl,
+                        bsid_addr=srv6_tunnel.bsid_addr,
+                        fwd_engine=nb_commons_pb2.FwdEngine.Name(
+                            srv6_tunnel.fwd_engine).lower()
+                    )
+                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+                    # Set status code
+                    if res != commons_pb2.STATUS_SUCCESS:
+                        # Error
+                        response.status = nb_utils.sb_status_to_nb_status[res]
+                        return response
+                else:
+                    logger.error('Invalid operation %s', srv6_tunnel.operation)
+                    # Set status code
+                    response.status = \
+                        nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+                    return response
+        # Set status code
+        response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
         return response
 

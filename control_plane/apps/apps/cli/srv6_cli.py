@@ -134,7 +134,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
-                          destination, segments, localseg=None,
+                          destination, segments=None, localseg=None,
                           bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 unidirectional tunnel.
@@ -177,7 +177,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            node_l_port, node_r_ip, node_r_port,
-                           sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                           dest_lr, dest_rl, sidlist_lr=None, sidlist_rl=None,
                            localseg_lr=None, localseg_rl=None,
                            bsid_addr='', fwd_engine='linux'):
     '''
@@ -185,7 +185,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     '''
     # pylint: disable=too-many-arguments,too-many-locals
     if operation == 'add':
-        # Perform the operation
+        # Perform the operationf
         # If an error occurs during the operation, an exception will be raised
         return srv6_manager.handle_srv6_biditunnel(
             controller_channel=controller_channel,
@@ -816,7 +816,7 @@ def args_srv6_biditunnel():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': ''}
+                       'type': str, 'default': 'linux'}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}

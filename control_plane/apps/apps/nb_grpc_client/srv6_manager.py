@@ -103,7 +103,7 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
                      destination, segments="", device='', encapmode="encap",
-                     table=-1, metric=-1, bsid_addr='', fwd_engine='Linux'):
+                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 path.
     '''
@@ -149,7 +149,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
                          grpc_port, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1, interface="",
-                         segments="", metric=-1, fwd_engine='Linux'):
+                         segments="", metric=-1, fwd_engine='linux'):
     '''
     Handle a SRv6 behavior.
     '''
@@ -198,8 +198,8 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
-                          destination, segments, localseg=None,
-                          bsid_addr='', fwd_engine='Linux'):
+                          destination, segments=None, localseg=None,
+                          bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 unidirectional tunnel.
     '''
@@ -222,9 +222,11 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     # Set the destination
     srv6_unitunnel.destination = destination
     # Set the segments
-    srv6_unitunnel.segments.extend(segments)
+    if segments is not None:
+        srv6_unitunnel.segments.extend(segments)
     # Set the local segment
-    srv6_unitunnel.localseg = localseg
+    if localseg is not None:
+        srv6_unitunnel.localseg = localseg
     # Set the BSID address
     srv6_unitunnel.bsid_addr = bsid_addr
     # Set the forwarding engine
@@ -242,9 +244,9 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            node_l_port, node_r_ip, node_r_port,
-                           sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                           dest_lr, dest_rl, sidlist_lr=None, sidlist_rl=None,
                            localseg_lr=None, localseg_rl=None,
-                           bsid_addr='', fwd_engine='Linux'):
+                           bsid_addr='', fwd_engine='linux'):
     '''
     Handle SRv6 bidirectional tunnel.
     '''
@@ -265,17 +267,21 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     # Set the port number of the right node
     srv6_biditunnel.node_r_port = node_r_port
     # SID list of the path left to right
-    srv6_biditunnel.sidlist_lr.extend(sidlist_lr)
+    if sidlist_lr is not None:
+        srv6_biditunnel.sidlist_lr.extend(sidlist_lr)
     # SID list of the path right to left
-    srv6_biditunnel.sidlist_rl.extend(sidlist_rl)
+    if sidlist_rl is not None:
+        srv6_biditunnel.sidlist_rl.extend(sidlist_rl)
     # Destination of the path left to right
     srv6_biditunnel.dest_lr = dest_lr
     # Destinaton of the path right to left
     srv6_biditunnel.dest_rl = dest_rl
     # Local segment of the path left to right
-    srv6_biditunnel.localseg_lr = localseg_lr
+    if localseg_lr is not None:
+        srv6_biditunnel.localseg_lr = localseg_lr
     # Local segment of the path right to left
-    srv6_biditunnel.localseg_rl = localseg_rl
+    if localseg_rl is not None:
+        srv6_biditunnel.localseg_rl = localseg_rl
     # BSID address
     srv6_biditunnel.bsid_addr = bsid_addr
     # Forwarding engine
