@@ -194,3 +194,19 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
         channel = grpc.insecure_channel(server_ip)
     # Return the channel
     return channel
+
+
+action_to_grpc_repr = {
+    'End': 'END',
+    'End.X': 'END_x',
+    'End.T': 'END_T',
+    'End.DX4': 'END_DX4',
+    'End.DX6': 'END_DX6',
+    'End.DX2': 'END_DX2',
+    'End.DT4': 'END_DT4',
+    'End.DT6': 'END_DT6',
+    'End.B6': 'END_B6',
+    'End.B6.Encaps': 'END_B6_ENCAPS'
+}
+
+grpc_repr_to_action = {v: k for k, v in action_to_grpc_repr.items()}

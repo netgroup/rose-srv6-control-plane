@@ -153,8 +153,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     operation=srv6_behavior.operation,
                     channel=channel,
                     segment=srv6_behavior.segment,
-                    action=nb_commons_pb2.SRv6Action.Name(
-                        srv6_behavior.action).lower(),
+                    action=nb_utils.grpc_repr_to_action[nb_commons_pb2.SRv6Action.Name(srv6_behavior.action)],
                     device=srv6_behavior.device,
                     table=srv6_behavior.table,
                     nexthop=srv6_behavior.nexthop,
