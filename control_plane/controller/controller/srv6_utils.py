@@ -148,9 +148,13 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 srv6_segment.segment = text_type(segment)
             # Create the SRv6 path
             response = stub.Create(request)
+            # Get the status code of the gRPC operation
+            response = response.status
         elif operation == 'get':
             # Get the SRv6 path
             response = stub.Get(request)
+            # Get the status code of the gRPC operation
+            response = response.status
         elif operation == 'change':
             # Set encapmode
             path.encapmode = text_type(encapmode)
@@ -161,11 +165,17 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 srv6_segment.segment = text_type(segment)
             # Update the SRv6 path
             response = stub.Update(request)
+            # Get the status code of the gRPC operation
+            response = response.status
         elif operation == 'del':
             # Remove the SRv6 path
             response = stub.Remove(request)
-        # Get the status code of the gRPC operation
-        response = response.status
+            # Get the status code of the gRPC operation
+            response = response.status
+        else:
+            # Operation not supported
+            logger.error('Operation not supported')
+            response = commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
     except grpc.RpcError as err:
         # An error occurred during the gRPC operation
         # Parse the error and return it

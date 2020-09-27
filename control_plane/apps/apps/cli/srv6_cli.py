@@ -35,6 +35,7 @@ from argparse import ArgumentParser
 # Controller dependencies
 from controller import srv6_usid
 from apps.cli import utils as cli_utils
+from apps.nb_grpc_client import utils as grpc_utils
 from apps.nb_grpc_client import srv6_manager
 
 # Default CA certificate path
@@ -172,7 +173,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             fwd_engine=fwd_engine
         )
     # Invalid operation
-    raise cli_utils.InvalidArgumentError
+    raise grpc_utils.InvalidArgumentError
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
