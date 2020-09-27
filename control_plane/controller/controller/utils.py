@@ -31,7 +31,9 @@ This module contains a collection of utilities used by Controller
 # General imports
 import logging
 from ipaddress import AddressValueError, IPv4Interface, IPv6Interface
+from ipaddress import ip_address
 from socket import AF_INET, AF_INET6
+from urllib.parse import urlparse
 
 # gRPC dependencies
 import grpc
@@ -205,3 +207,19 @@ STATUS_CODE_TO_DESC = {
     commons_pb2.STATUS_ALREADY_CONFIGURED: 'Error: Already configured',
     commons_pb2.STATUS_NO_SUCH_DEVICE: 'Error: Device not found',
 }
+
+
+def parse_ip_port(netloc):
+    try:
+        ip = ip_address(netloc)
+        port = None
+    except ValueError:
+        parsed = urlparse('//{}'.format(netloc))
+        ip = ip_address(parsed.hostname)
+        port = parsed.port
+    return ip, port
+
+
+def grpc_chan_to_addr_port(channel):
+    address, port = parse_ip_port(channel._channel.target().decode())
+    return str(address), port
