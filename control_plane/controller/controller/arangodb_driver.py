@@ -179,6 +179,236 @@ def init_usid_policies_collection(client, arango_username, arango_password,
     return usid_policies
 
 
+def init_srv6_paths_collection(client, arango_username, arango_password,
+                               force=False):
+    '''
+    Initialize "srv6_paths" collection.
+
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
+    :param arango_username: Username for basic authentication.
+    :type arango_username: str
+    :param arango_password: Password for basic authentication.
+    :type arango_password: str
+    :param force: By default the collection is not re-initialized if it
+                  already exists. If this param is True, clear the collection
+                  before the initialization if it already exists.
+    :type force: bool
+    :return: Standard collection API wrapper.
+    :rtype: arango.collection.StandardCollection
+    :raises arango.exceptions.CollectionCreateError: If create fails.
+    '''
+    # Connect to "srv6_usid" database as root user.
+    # This returns an API wrapper for "srv6_usid" database.
+    database = connect_srv6_usid_db(
+        client=client,
+        username=arango_username,
+        password=arango_password
+    )
+    # Get the API wrapper for database "srv6_usid".
+    database = client.db('srv6_usid', username=arango_username,
+                         password=arango_password)
+    # Create "srv6_paths" collection, if it does not exist
+    if database.has_collection('srv6_paths'):
+        # The collection already exists
+        if force:
+            # If force is True, reinizialize it
+            database.delete_collection(name='srv6_paths')
+            srv6_paths = database.create_collection(name='srv6_paths')
+        else:
+            # If force is False, return the collection without re-init it
+            srv6_paths = database.collection(name='srv6_paths')
+    else:
+        # The collection does not exist, create a new one
+        srv6_paths = database.create_collection(name='srv6_paths')
+    # Return the "srv6_paths" collection
+    return srv6_paths
+
+
+def init_srv6_behaviors_collection(client, arango_username, arango_password,
+                                   force=False):
+    '''
+    Initialize "srv6_behaviors" collection.
+
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
+    :param arango_username: Username for basic authentication.
+    :type arango_username: str
+    :param arango_password: Password for basic authentication.
+    :type arango_password: str
+    :param force: By default the collection is not re-initialized if it
+                  already exists. If this param is True, clear the collection
+                  before the initialization if it already exists.
+    :type force: bool
+    :return: Standard collection API wrapper.
+    :rtype: arango.collection.StandardCollection
+    :raises arango.exceptions.CollectionCreateError: If create fails.
+    '''
+    # Connect to "srv6_usid" database as root user.
+    # This returns an API wrapper for "srv6_usid" database.
+    database = connect_srv6_usid_db(
+        client=client,
+        username=arango_username,
+        password=arango_password
+    )
+    # Get the API wrapper for database "srv6_usid".
+    database = client.db('srv6_usid', username=arango_username,
+                         password=arango_password)
+    # Create "srv6_behaviors" collection, if it does not exist
+    if database.has_collection('srv6_behaviors'):
+        # The collection already exists
+        if force:
+            # If force is True, reinizialize it
+            database.delete_collection(name='srv6_behaviors')
+            srv6_behaviors = database.create_collection(name='srv6_behaviors')
+        else:
+            # If force is False, return the collection without re-init it
+            srv6_behaviors = database.collection(name='srv6_behaviors')
+    else:
+        # The collection does not exist, create a new one
+        srv6_behaviors = database.create_collection(name='srv6_behaviors')
+    # Return the "srv6_behaviors" collection
+    return srv6_behaviors
+
+
+def init_srv6_tunnels_collection(client, arango_username, arango_password,
+                                 force=False):
+    '''
+    Initialize "srv6_tunnels" collection.
+
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
+    :param arango_username: Username for basic authentication.
+    :type arango_username: str
+    :param arango_password: Password for basic authentication.
+    :type arango_password: str
+    :param force: By default the collection is not re-initialized if it
+                  already exists. If this param is True, clear the collection
+                  before the initialization if it already exists.
+    :type force: bool
+    :return: Standard collection API wrapper.
+    :rtype: arango.collection.StandardCollection
+    :raises arango.exceptions.CollectionCreateError: If create fails.
+    '''
+    # Connect to "srv6_usid" database as root user.
+    # This returns an API wrapper for "srv6_usid" database.
+    database = connect_srv6_usid_db(
+        client=client,
+        username=arango_username,
+        password=arango_password
+    )
+    # Get the API wrapper for database "srv6_usid".
+    database = client.db('srv6_usid', username=arango_username,
+                         password=arango_password)
+    # Create "srv6_tunnels" collection, if it does not exist
+    if database.has_collection('srv6_tunnels'):
+        # The collection already exists
+        if force:
+            # If force is True, reinizialize it
+            database.delete_collection(name='srv6_tunnels')
+            srv6_tunnels = database.create_collection(name='srv6_tunnels')
+        else:
+            # If force is False, return the collection without re-init it
+            srv6_tunnels = database.collection(name='srv6_tunnels')
+    else:
+        # The collection does not exist, create a new one
+        srv6_tunnels = database.create_collection(name='srv6_tunnels')
+    # Return the "srv6_tunnels" collection
+    return srv6_tunnels
+
+
+def init_srv6_policies_collection(client, arango_username, arango_password,
+                                  force=False):
+    '''
+    Initialize "srv6_policies" collection.
+
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
+    :param arango_username: Username for basic authentication.
+    :type arango_username: str
+    :param arango_password: Password for basic authentication.
+    :type arango_password: str
+    :param force: By default the collection is not re-initialized if it
+                  already exists. If this param is True, clear the collection
+                  before the initialization if it already exists.
+    :type force: bool
+    :return: Standard collection API wrapper.
+    :rtype: arango.collection.StandardCollection
+    :raises arango.exceptions.CollectionCreateError: If create fails.
+    '''
+    # Connect to "srv6_usid" database as root user.
+    # This returns an API wrapper for "srv6_usid" database.
+    database = connect_srv6_usid_db(
+        client=client,
+        username=arango_username,
+        password=arango_password
+    )
+    # Get the API wrapper for database "srv6_usid".
+    database = client.db('srv6_usid', username=arango_username,
+                         password=arango_password)
+    # Create "srv6_policies" collection, if it does not exist
+    if database.has_collection('srv6_policies'):
+        # The collection already exists
+        if force:
+            # If force is True, reinizialize it
+            database.delete_collection(name='srv6_policies')
+            srv6_policies = database.create_collection(name='srv6_policies')
+        else:
+            # If force is False, return the collection without re-init it
+            srv6_policies = database.collection(name='srv6_policies')
+    else:
+        # The collection does not exist, create a new one
+        srv6_policies = database.create_collection(name='srv6_policies')
+    # Return the "srv6_policies" collection
+    return srv6_policies
+
+
+def init_nodes_config_collection(client, arango_username, arango_password,
+                                 force=False):
+    '''
+    Initialize "nodes_config" collection.
+
+    :param client: ArangoDB client.
+    :type client: arango.client.ArangoClient
+    :param arango_username: Username for basic authentication.
+    :type arango_username: str
+    :param arango_password: Password for basic authentication.
+    :type arango_password: str
+    :param force: By default the collection is not re-initialized if it
+                  already exists. If this param is True, clear the collection
+                  before the initialization if it already exists.
+    :type force: bool
+    :return: Standard collection API wrapper.
+    :rtype: arango.collection.StandardCollection
+    :raises arango.exceptions.CollectionCreateError: If create fails.
+    '''
+    # Connect to "srv6_usid" database as root user.
+    # This returns an API wrapper for "srv6_usid" database.
+    database = connect_srv6_usid_db(
+        client=client,
+        username=arango_username,
+        password=arango_password
+    )
+    # Get the API wrapper for database "srv6_usid".
+    database = client.db('srv6_usid', username=arango_username,
+                         password=arango_password)
+    # Create "nodes_config" collection, if it does not exist
+    if database.has_collection('nodes_config'):
+        # The collection already exists
+        if force:
+            # If force is True, reinizialize it
+            database.delete_collection(name='nodes_config')
+            nodes_config = database.create_collection(name='nodes_config')
+        else:
+            # If force is False, return the collection without re-init it
+            nodes_config = database.collection(name='nodes_config')
+    else:
+        # The collection does not exist, create a new one
+        nodes_config = database.create_collection(name='nodes_config')
+    # Return the "nodes_config" collection
+    return nodes_config
+
+
 def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
                        table=None, metric=None, l_grpc_ip=None,
                        l_grpc_port=None, l_fwd_engine=None,
@@ -458,7 +688,7 @@ def get_nodes_config(database):
 
 def insert_srv6_path(database, grpc_address, destination, segments=None,
                      device=None, encapmode=None, table=None, metric=None,
-                     bsid_addr=None, fwd_engine=None):
+                     bsid_addr=None, fwd_engine=None, key=None):
     '''
     Insert a SRv6 path into the 'srv6_paths' collection of a Arango database.
     :param database: Database where the nodes configuration must be saved.
@@ -485,6 +715,8 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
     :type bsid_addr: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route.
     :type fwd_engine: str, optional
+    :param key: The key of the document in the ArangoDB database.
+    :type key: str, optional
     :return: True.
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
@@ -492,6 +724,7 @@ def insert_srv6_path(database, grpc_address, destination, segments=None,
     '''
     # Build a dict-representation of the SRv6 path
     path = {
+        '_key': key,
         'destination': destination,
         'segments': segments,
         'device': device,
@@ -684,6 +917,83 @@ def delete_srv6_path(database, key, grpc_address=None, destination=None,
     # has been removed, or False if the document was not found and
     # ignore_missing was set to True
     return srv6_paths.delete(document=path, ignore_missing=ignore_missing)
+
+
+def find_and_delete_srv6_path(database, key=None, grpc_address=None,
+                              destination=None, segments=None, device=None,
+                              encapmode=None, table=None, metric=None,
+                              bsid_addr=None, fwd_engine=None,
+                              ignore_missing=False):
+    '''
+    Find and remove a SRv6 path from the 'srv6_paths' collection of a ArangoDB
+    database.
+    :param database: Database where the SRv6 path to be removed is saved.
+    :type database: arango.database.StandardDatabase
+    :param key: Key of the document to be deleted.
+    :type key: int
+    :param grpc_address: The IP address of the gRPC server.
+    :type grpc_address: str, optional
+    :param destination: The destination prefix of the SRv6 path.
+                        It can be a IP address or a subnet.
+    :type destination: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination.
+    :type segments: list, optional
+    :param device: Device of the SRv6 route.
+    :type device: str, optional
+    :param encapmode: The encap mode to use for the path, i.e. "inline" or
+                      "encap".
+    :type encapmode: str, optional
+    :param table: Routing table containing the SRv6 route.
+    :type table: int, optional
+    :param metric: Metric for the SRv6 route.
+    :type metric: int, optional
+    :param bsid_addr: The Binding SID to be used for the route (only required
+                      for VPP).
+    :type bsid_addr: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route.
+    :type fwd_engine: str, optional
+    :param ignore_missing: Define whether to ignore errors or not
+                           (default: False).
+    :type ignore_missing: bool, optional
+    :return: True if the document matching the search criteria
+             has been removed, or False if the document was not found and
+             ignore_missing was set to True.
+    :rtype: bool
+    :raises arango.exceptions.DocumentDeleteError: If delete fails.
+    :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
+    '''
+    # Get the SRv6 path collection
+    # This returns an API wrapper for "srv6_paths" collection
+    srv6_paths = database.collection('srv6_paths')
+    # Build a dict representation of the path
+    path = dict()
+    if key is not None:
+        path['_key'] = key
+    if destination is not None:
+        path['destination'] = destination
+    if segments is not None:
+        path['segments'] = segments
+    if device is not None:
+        path['device'] = device
+    if encapmode is not None:
+        path['encapmode'] = encapmode
+    if table is not None:
+        path['table'] = table
+    if metric is not None:
+        path['metric'] = metric
+    if bsid_addr is not None:
+        path['bsid_addr'] = bsid_addr
+    if fwd_engine is not None:
+        path['fwd_engine'] = fwd_engine
+    # Find the path
+    # Return all documents that match the given filters
+    paths = srv6_paths.find(filters=path)
+    # Remove the path
+    # Return True if the document matching the search criteria
+    # has been removed, or False if the document was not found and
+    # ignore_missing was set to True
+    return srv6_paths.delete(document=paths, ignore_missing=ignore_missing)
 
 
 def insert_srv6_behavior(database, grpc_address, segment, action=None,
