@@ -141,39 +141,26 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     Handle a SRv6 unidirectional tunnel.
     '''
     # pylint: disable=too-many-arguments
-    if operation == 'add':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_unitunnel(
-            controller_channel=controller_channel,
-            operation='add',
-            ingress_ip=ingress_ip,
-            ingress_port=ingress_port,
-            egress_ip=egress_ip,
-            egress_port=egress_port,
-            destination=destination,
-            segments=segments.split(','),
-            localseg=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
-        )
-    if operation == 'del':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_unitunnel(
-            controller_channel=controller_channel,
-            operation='del',
-            ingress_ip=ingress_ip,
-            ingress_port=ingress_port,
-            egress_ip=egress_ip,
-            egress_port=egress_port,
-            destination=destination,
-            localseg=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
-        )
-    # Invalid operation
-    raise grpc_utils.InvalidArgumentError
+    #
+    # Check if the operation is valid
+    if operation not in ['add', 'get', 'change', 'del']:
+        # Invalid operation
+        raise grpc_utils.InvalidArgumentError   # TODO too generic error
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    return srv6_manager.handle_srv6_unitunnel(
+        controller_channel=controller_channel,
+        operation=operation,
+        ingress_ip=ingress_ip,
+        ingress_port=ingress_port,
+        egress_ip=egress_ip,
+        egress_port=egress_port,
+        destination=destination,
+        segments=segments.split(',') if segments is not None else None,
+        localseg=localseg,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
+    )
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
@@ -185,44 +172,29 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     Handle SRv6 bidirectional tunnel.
     '''
     # pylint: disable=too-many-arguments,too-many-locals
-    if operation == 'add':
-        # Perform the operationf
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_biditunnel(
-            controller_channel=controller_channel,
-            operation='add',
-            node_l_ip=node_l_ip,
-            node_l_port=node_l_port,
-            node_r_ip=node_r_ip,
-            node_r_port=node_r_port,
-            sidlist_lr=sidlist_lr.split(','),
-            sidlist_rl=sidlist_rl.split(','),
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
-        )
-    if operation == 'del':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_biditunnel(
-            controller_channel=controller_channel,
-            operation='del',
-            node_l_ip=node_l_ip,
-            node_l_port=node_l_port,
-            node_r_ip=node_r_ip,
-            node_r_port=node_r_port,
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
-        )
-    # Invalid operation
-    raise cli_utils.InvalidArgumentError
+    #
+    # Check if the operation is valid
+    if operation not in ['add', 'get', 'change', 'del']:
+        # Invalid operation
+        raise grpc_utils.InvalidArgumentError   # TODO too generic error
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    return srv6_manager.handle_srv6_biditunnel(
+        controller_channel=controller_channel,
+        operation=operation,
+        node_l_ip=node_l_ip,
+        node_l_port=node_l_port,
+        node_r_ip=node_r_ip,
+        node_r_port=node_r_port,
+        sidlist_lr=sidlist_lr.split(','),
+        sidlist_rl=sidlist_rl.split(','),
+        dest_lr=dest_lr,
+        dest_rl=dest_rl,
+        localseg_lr=localseg_lr,
+        localseg_rl=localseg_rl,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
+    )
 
 
 def args_srv6_usid_policy():
