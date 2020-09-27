@@ -75,6 +75,101 @@ def parse_grpc_error(err):
     return code
 
 
+def del_srv6_path_db(channel, destination, segments=None,
+                     device='', encapmode="encap", table=-1, metric=-1,
+                     bsid_addr='', fwd_engine='linux', key=None,
+                     update_db=True):
+    if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        return commons_pb2.STATUS_INTERNAL_ERROR
+    # ArangoDB params
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Find the paths matching the params
+    srv6_paths = arangodb_driver.find_srv6_path(
+        database=database,
+        key=key,
+        grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+        grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+        destination=destination,
+        segments=segments,
+        device=device,
+        encapmode=encapmode,
+        table=table,
+        metric=metric,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine
+    )
+    if len(srv6_paths) == 0:
+        # Entity not found
+        logger.error('Entity not found')
+        return commons_pb2.STATUS_NO_SUCH_PROCESS
+    # Remove the paths
+    for srv6_path in srv6_paths:
+        # Initialize segments list
+        if srv6_path['segments'] is None:
+            segments = []
+        # Create request message
+        request = srv6_manager_pb2.SRv6ManagerRequest()
+        # Create a new SRv6 path request
+        path_request = request.srv6_path_request       # pylint: disable=no-member
+        # Create a new path
+        path = path_request.paths.add()
+        # Set destination
+        path.destination = text_type(srv6_path['destination'])
+        # Set device
+        # If the device is not specified (i.e. empty string),
+        # it will be chosen by the gRPC server
+        path.device = text_type(srv6_path['device'])
+        # Set table ID
+        # If the table ID is not specified (i.e. table=-1),
+        # the main table will be used
+        path.table = int(srv6_path['table'])
+        # Set metric (i.e. preference value of the route)
+        # If the metric is not specified (i.e. metric=-1),
+        # the decision is left to the Linux kernel
+        path.metric = int(srv6_path['metric'])
+        # Set the BSID address (required for VPP)
+        path.bsid_addr = str(srv6_path['bsid_addr'])
+        # Get gRPC channel
+        channel = utils.get_grpc_session(
+            server_ip=srv6_path['grpc_address'],
+            server_port=srv6_path['grpc_port']
+        )
+        # Get the reference of the stub
+        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+        # Remove the SRv6 path
+        response = stub.Remove(request)
+        # Get the status code of the gRPC operation
+        response = response.status
+        # Remove the path from the db
+        arangodb_driver.delete_srv6_path(
+            database=database,
+            key=srv6_path['_key'],
+            grpc_address=srv6_path['grpc_address'],
+            grpc_port=srv6_path['grpc_port'],
+            destination=srv6_path['destination'],
+            segments=srv6_path['segments'],
+            device=srv6_path['device'],
+            encapmode=srv6_path['encapmode'],
+            table=srv6_path['table'],
+            metric=srv6_path['metric'],
+            bsid_addr=srv6_path['bsid_addr'],
+            fwd_engine=srv6_path['fwd_engine']
+        )
+    # Done, return the reply
+    return response
+
+
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
                      bsid_addr='', fwd_engine='linux', key=None,
@@ -174,7 +269,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 arangodb_driver.insert_srv6_path(
                     database=database,
                     key=key,
-                    grpc_address=channel._channel.target,
+                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
                     destination=destination,
                     segments=segments,
                     device=device,
@@ -222,7 +318,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 arangodb_driver.update_srv6_path(
                     database=database,
                     key=key,
-                    grpc_address=channel._channel.target,
+                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
                     destination=destination,
                     segments=segments,
                     device=device,
@@ -234,9 +331,25 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 )
         elif operation == 'del':
             # Remove the SRv6 path
-            response = stub.Remove(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+                response = del_srv6_path_db(
+                    channel=channel,
+                    destination=destination,
+                    segments=segments,
+                    device=device,
+                    encapmode=encapmode,
+                    table=table,
+                    metric=metric,
+                    bsid_addr=bsid_addr,
+                    fwd_engine=fwd_engine,
+                    key=key,
+                    update_db=update_db
+                )
+            else:
+                # Remove the SRv6 path
+                response = stub.Remove(request)
+                # Get the status code of the gRPC operation
+                response = response.status
         else:
             # Operation not supported
             logger.error('Operation not supported')
