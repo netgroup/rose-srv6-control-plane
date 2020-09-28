@@ -1029,10 +1029,10 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
         srv6_paths.delete(document=path, ignore_missing=ignore_missing)
 
 
-def insert_srv6_behavior(database, grpc_address, segment, action=None,
-                         device=None, table=None, nexthop=None,
+def insert_srv6_behavior(database, grpc_address, grpc_port, segment,
+                         action=None, device=None, table=None, nexthop=None,
                          lookup_table=None, interface=None, segments=None,
-                         metric=None, fwd_engine=None):
+                         metric=None, fwd_engine=None, key=None):
     '''
     Insert a SRv6 behavior into the 'srv6_behaviors' collection of a Arango
     database.
@@ -1040,6 +1040,8 @@ def insert_srv6_behavior(database, grpc_address, segment, action=None,
     :type database: arango.database.StandardDatabase
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int
     :param segment: The local segment of the SRv6 behavior. It can be a IP
                     address or a subnet.
     :type segment: str
@@ -1071,6 +1073,8 @@ def insert_srv6_behavior(database, grpc_address, segment, action=None,
     '''
     # Build a dict-representation of the SRv6 behavior
     behavior = {
+        'grpc_address': grpc_address,
+        'grpc_port': grpc_port,
         'segment': segment,
         'action': action,
         'device': device,
@@ -1082,6 +1086,9 @@ def insert_srv6_behavior(database, grpc_address, segment, action=None,
         'metric': metric,
         'fwd_engine': fwd_engine
     }
+    # Key argument is optional
+    if key is not None:
+        behavior['_key'] = key
     # Get the SRv6 behaviors collection
     # This returns an API wrapper for "srv6_behaviors" collection
     srv6_behaviors = database.collection(name='srv6_behaviors')
@@ -1091,10 +1098,10 @@ def insert_srv6_behavior(database, grpc_address, segment, action=None,
     return srv6_behaviors.insert(document=behavior, silent=True)
 
 
-def find_srv6_behavior(database, key=None, grpc_address=None, segment=None,
-                       action=None, device=None, table=None, nexthop=None,
-                       lookup_table=None, interface=None, segments=None,
-                       metric=None, fwd_engine=None):
+def find_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
+                       segment=None, action=None, device=None, table=None,
+                       nexthop=None, lookup_table=None, interface=None,
+                       segments=None, metric=None, fwd_engine=None):
     '''
     Find a SRv6 behavior in the 'srv6_behaviors' collection of a Arango
     database.
@@ -1104,6 +1111,8 @@ def find_srv6_behavior(database, key=None, grpc_address=None, segment=None,
     :type key: int, optional
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param segment: The local segment of the SRv6 behavior. It can be a IP
                     address or a subnet.
     :type segment: str
@@ -1139,6 +1148,10 @@ def find_srv6_behavior(database, key=None, grpc_address=None, segment=None,
     behavior = dict()
     if key is not None:
         behavior['_key'] = str(key)
+    if grpc_address is not None:
+        behavior['grpc_address'] = grpc_address
+    if grpc_port is not None:
+        behavior['grpc_port'] = grpc_port
     if segment is not None:
         behavior['segment'] = segment
     if action is not None:
@@ -1164,10 +1177,10 @@ def find_srv6_behavior(database, key=None, grpc_address=None, segment=None,
     return srv6_behaviors.find(filters=behavior)
 
 
-def update_srv6_behavior(database, key=None, grpc_address=None, segment=None,
-                         action=None, device=None, table=None, nexthop=None,
-                         lookup_table=None, interface=None, segments=None,
-                         metric=None, fwd_engine=None):
+def update_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
+                         segment=None, action=None, device=None, table=None,
+                         nexthop=None, lookup_table=None, interface=None,
+                         segments=None, metric=None, fwd_engine=None):
     '''
     Update a SRv6 behavior into a ArangoDB database.
     :param database: Database where the SRv6 behavior to be updated is saved.
@@ -1176,6 +1189,8 @@ def update_srv6_behavior(database, key=None, grpc_address=None, segment=None,
     :type key: int, optional
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param segment: The local segment of the SRv6 behavior. It can be a IP
                     address or a subnet.
     :type segment: str
@@ -1209,10 +1224,11 @@ def update_srv6_behavior(database, key=None, grpc_address=None, segment=None,
     raise NotImplementedError
 
 
-def delete_srv6_behavior(database, key, grpc_address=None, segment=None,
-                         action=None, device=None, table=None, nexthop=None,
-                         lookup_table=None, interface=None, segments=None,
-                         metric=None, fwd_engine=None, ignore_missing=False):
+def delete_srv6_behavior(database, key, grpc_address=None, grpc_port=None,
+                         segment=None, action=None, device=None, table=None,
+                         nexthop=None, lookup_table=None, interface=None,
+                         segments=None, metric=None, fwd_engine=None,
+                         ignore_missing=False):
     '''
     Remove a SRv6 behavior from the 'srv6_behaviors' collection of a ArangoDB
     database.
@@ -1222,6 +1238,8 @@ def delete_srv6_behavior(database, key, grpc_address=None, segment=None,
     :type key: int
     :param grpc_address: The IP address of the gRPC server.
     :type grpc_address: str, optional
+    :param grpc_port: The port number of the gRPC server.
+    :type grpc_port: int, optional
     :param segment: The local segment of the SRv6 behavior. It can be a IP
                     address or a subnet.
     :type segment: str
@@ -1263,6 +1281,10 @@ def delete_srv6_behavior(database, key, grpc_address=None, segment=None,
     behavior = dict()
     if key is not None:
         behavior['_key'] = key
+    if grpc_address is not None:
+        behavior['grpc_address'] = grpc_address
+    if grpc_port is not None:
+        behavior['grpc_port'] = grpc_port
     if segment is not None:
         behavior['segment'] = segment
     if action is not None:

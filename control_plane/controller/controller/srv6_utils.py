@@ -140,6 +140,23 @@ def del_srv6_path_db(channel, destination, segments=None,
         path.metric = int(srv6_path['metric'])
         # Set the BSID address (required for VPP)
         path.bsid_addr = str(srv6_path['bsid_addr'])
+        # Forwarding engine (Linux or VPP)
+        try:
+            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+                fwd_engine.upper())
+        except ValueError:
+            logger.error('Invalid forwarding engine: %s', fwd_engine)
+            return None
+        # Set encapmode
+        path.encapmode = text_type(encapmode)
+        if len(segments) == 0:
+            logger.error('*** Missing segments for seg6 route')
+            return commons_pb2.STATUS_INTERNAL_ERROR
+        # Iterate on the segments and build the SID list
+        for segment in segments:
+            # Append the segment to the SID list
+            srv6_segment = path.sr_path.add()
+            srv6_segment.segment = text_type(segment)
         # Get gRPC channel
         channel = utils.get_grpc_session(
             server_ip=srv6_path['grpc_address'],
@@ -455,9 +472,8 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         password=arango_password
     )
     # Find the behaviors matching the params
-    srv6_paths = arangodb_driver.find_srv6_behavior(
+    srv6_behaviors = arangodb_driver.find_srv6_behavior(
         database=database,
-        key=key,
         grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
         grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
         segment=segment,
@@ -472,41 +488,64 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         fwd_engine=fwd_engine,
         key=key
     )
-    if len(srv6_paths) == 0:
+    if len(srv6_behaviors) == 0:
         # Entity not found
         logger.error('Entity not found')
         return commons_pb2.STATUS_NO_SUCH_PROCESS
-    # Remove the paths
-    for srv6_path in srv6_paths:
+    # Remove the behaviors
+    for srv6_behavior in srv6_behaviors:
         # Initialize segments list
-        if srv6_path['segments'] is None:
+        if segments is None:
             segments = []
         # Create request message
         request = srv6_manager_pb2.SRv6ManagerRequest()
-        # Create a new SRv6 path request
-        path_request = request.srv6_path_request       # pylint: disable=no-member
-        # Create a new path
-        path = path_request.paths.add()
-        # Set destination
-        path.destination = text_type(srv6_path['destination'])
+        # Create a new SRv6 behavior request
+        behavior_request = (request               # pylint: disable=no-member
+                            .srv6_behavior_request)
+        # Create a new SRv6 behavior
+        behavior = behavior_request.behaviors.add()
+        # Set local segment for the seg6local route
+        behavior.segment = srv6_behavior['segment']
+        # Set the table where the seg6local must be inserted
+        # If the table ID is not specified (i.e. table=-1),
+        # the main table will be used
+        behavior.table = srv6_behavior['table']
         # Set device
         # If the device is not specified (i.e. empty string),
         # it will be chosen by the gRPC server
-        path.device = text_type(srv6_path['device'])
-        # Set table ID
-        # If the table ID is not specified (i.e. table=-1),
-        # the main table will be used
-        path.table = int(srv6_path['table'])
+        behavior.device = srv6_behavior['device']
         # Set metric (i.e. preference value of the route)
         # If the metric is not specified (i.e. metric=-1),
         # the decision is left to the Linux kernel
-        path.metric = int(srv6_path['metric'])
-        # Set the BSID address (required for VPP)
-        path.bsid_addr = str(srv6_path['bsid_addr'])
+        behavior.metric = srv6_behavior['metric']
+        # Set the action for the seg6local route
+        behavior.action = text_type(action)
+        # Set the nexthop for the L3 cross-connect actions
+        # (e.g. End.DX4, End.DX6)
+        behavior.nexthop = text_type(nexthop)
+        # Set the table for the "decap and table lookup" actions
+        # (e.g. End.DT4, End.DT6)
+        behavior.lookup_table = int(lookup_table)
+        # Set the inteface for the L2 cross-connect actions
+        # (e.g. End.DX2)
+        behavior.interface = text_type(interface)
+        # Set the segments for the binding SID actions
+        # (e.g. End.B6, End.B6.Encaps)
+        for seg in segments:
+            # Create a new segment
+            srv6_segment = behavior.segs.add()
+            srv6_segment.segment = text_type(seg)
+        # Forwarding engine (Linux or VPP)
+        try:
+            behavior_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+                fwd_engine.upper())
+        except ValueError:
+            logger.error('Invalid forwarding engine: %s', fwd_engine)
+            return None
         # Get gRPC channel
         channel = utils.get_grpc_session(
-            server_ip=srv6_path['grpc_address'],
-            server_port=srv6_path['grpc_port']
+            server_ip=srv6_behavior['grpc_address'],
+            server_port=srv6_behavior['grpc_port']
         )
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -515,19 +554,21 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         # Get the status code of the gRPC operation
         response = response.status
         # Remove the path from the db
-        arangodb_driver.delete_srv6_path(
+        arangodb_driver.delete_srv6_behavior(
             database=database,
-            key=srv6_path['_key'],
-            grpc_address=srv6_path['grpc_address'],
-            grpc_port=srv6_path['grpc_port'],
-            destination=srv6_path['destination'],
-            segments=srv6_path['segments'],
-            device=srv6_path['device'],
-            encapmode=srv6_path['encapmode'],
-            table=srv6_path['table'],
-            metric=srv6_path['metric'],
-            bsid_addr=srv6_path['bsid_addr'],
-            fwd_engine=srv6_path['fwd_engine']
+            key=srv6_behavior['_key'],
+            grpc_address=srv6_behavior['grpc_address'],
+            grpc_port=srv6_behavior['grpc_port'],
+            segment=srv6_behavior['segment'],
+            action=srv6_behavior['action'],
+            device=srv6_behavior['device'],
+            table=srv6_behavior['table'],
+            nexthop=srv6_behavior['nexthop'],
+            lookup_table=srv6_behavior['lookup_table'],
+            interface=srv6_behavior['interface'],
+            segments=srv6_behavior['segments'],
+            metric=srv6_behavior['metric'],
+            fwd_engine=srv6_behavior['fwd_engine']
         )
     # Done, return the reply
     return response
