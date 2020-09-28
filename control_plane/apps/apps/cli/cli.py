@@ -281,6 +281,45 @@ class ControllerCLITopology(CustomCmd):
         # after the command execution
         return False
 
+    def do_push_nodes_config(self, args):
+        '''
+        Push nodes configuration to the controller.
+        '''
+        # pylint: disable=no-self-use
+        try:
+            arg = (topo_cli
+                   .parse_arguments_push_nodes_config(
+                       prog='push_nodes_config', args=args.split(' '))
+                   )
+        except SystemExit:
+            return False  # This workaround avoid exit in case of errors
+        topo_cli.push_nodes_config(
+            controller_channel=CONTROLLER_CHANNEL,
+            nodes_config_filename=arg.nodes_config_filename
+        )
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
+    def do_get_nodes_config(self, args):
+        '''
+        Get nodes configuration from the controller.
+        '''
+        # pylint: disable=no-self-use
+        # try:
+        #     arg = (topo_cli
+        #            .parse_arguments_push_nodes_config(
+        #                prog='push_nodes_config', args=args.split(' '))
+        #            )
+        # except SystemExit:
+        #     return False  # This workaround avoid exit in case of errors
+        topo_cli.get_nodes_config(
+            controller_channel=CONTROLLER_CHANNEL
+        )
+        # Return False in order to keep the CLI subsection open
+        # after the command execution
+        return False
+
     def complete_show_nodes(self, text, line, start_idx, end_idx):
         """Auto-completion for show_nodes command"""
 
@@ -380,6 +419,46 @@ class ControllerCLITopology(CustomCmd):
                 .complete_extract_topo_from_isis_and_load_on_arango(
                     text, prev_text))
 
+    def complete_push_nodes_config(self, text, line, start_idx, end_idx):
+        '''
+        Auto-completion for push_nodes_config command.
+        '''
+        # pylint: disable=no-self-use, unused-argument
+        #
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return topo_cli.complete_push_nodes_config(text, prev_text)
+
+    def complete_get_nodes_config(self, text, line, start_idx, end_idx):
+        '''
+        Auto-completion for get_nodes_config command.
+        '''
+        # pylint: disable=no-self-use, unused-argument
+        #
+        # Get the previous argument in the command
+        # Depending on the previous argument, it is possible to
+        # complete specific params, such as the paths
+        #
+        # Split args
+        args = line[:start_idx].split(' ')
+        # If this is not the first arg, get the previous one
+        prev_text = None
+        if len(args) > 1:
+            prev_text = args[-2]    # [-2] because last element is always ''
+        # Call auto-completion function and return a list of
+        # possible arguments
+        return topo_cli.complete_get_nodes_config(text, prev_text)
+
     def help_show_nodes(self):
         """Show help usage for show_nodes config command"""
         #
@@ -427,6 +506,26 @@ class ControllerCLITopology(CustomCmd):
 
         topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
             prog='extract_and_load_on_arango',
+            args=['--help']
+        )
+
+    def help_push_nodes_config(self):
+        '''
+        Show help usage for push_nodes_config.
+        '''
+        # pylint: disable=no-self-use
+        topo_cli.parse_arguments_push_nodes_config(
+            prog='push_nodes_config',
+            args=['--help']
+        )
+
+    def help_get_nodes_config(self):
+        '''
+        Show help usage for get_nodes_config.
+        '''
+        # pylint: disable=no-self-use
+        topo_cli.parse_arguments_get_nodes_config(
+            prog='get_nodes_config',
             args=['--help']
         )
 

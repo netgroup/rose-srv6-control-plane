@@ -36,9 +36,11 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
+import nb_commons_pb2
 import topology_manager_pb2
 import topology_manager_pb2_grpc
 from controller import arangodb_utils
+from controller import topo_utils
 from controller.ti_extraction import connect_and_extract_topology_isis
 from apps.cli import utils as cli_utils
 
@@ -221,4 +223,60 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             period=period,
             verbose=verbose
         )
+
+    def PushNodesConfig(self, request, context):
+        '''
+        Load nodes configuration.
+        '''
+        # Nodes configuration
+        nodes_config = {
+            'locator_bits': request.nodes_config.locator_bits,
+            'usid_id_bits': request.nodes_config.usid_id_bits,
+            'nodes': []
+        }
+        # Iterate on the nodes
+        for node in request.nodes_config.nodes:
+            # Append the node to the nodes list
+            nodes_config['nodes'].append({
+                'name': node.name,
+                'grpc_ip': node.grpc_ip,
+                'grpc_port': node.grpc_port,
+                'uN': node.uN,
+                'uDT': node.uDT,
+                'fwd_engine': node.fwd_engine
+            })
+        # Load the nodes on the database
+        topo_utils.load_nodes_config(nodes_config)
+        # Create reply message
+        return topology_manager_pb2.NodesConfigReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
+
+    def GetNodesConfig(self, request, context):
+        '''
+        Retrieve nodes configuration.
+        '''
+        # Retrieve nodes configuration from the database
+        nodes_config = topo_utils.get_nodes_config()
+        # Create reply message
+        response = topology_manager_pb2.NodesConfigReply()
+        # Set locator bits
+        response.nodes_config.locator_bits = nodes_config['locator_bits']
+        # Set uSID ID bits
+        response.nodes_config.usid_id_bits = nodes_config['usid_id_bits']
+        # Iterate on the nodes
+        for node in nodes_config['nodes']:
+            _node = response.nodes_config.nodes.add()
+            _node.name = node['name']
+            _node.grpc_ip = node['grpc_ip']
+            _node.grpc_port = node['grpc_port']
+            _node.uN = node['uN']
+            _node.uDT = node['uDT']
+            _node.fwd_engine = node['fwd_engine']
+        # Set status code
+        response.status = nb_commons_pb2.STATUS_SUCCESS
+        # Done, return the reply
+        return response
+
+
 # TODO fix errors

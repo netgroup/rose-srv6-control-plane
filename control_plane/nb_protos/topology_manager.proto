@@ -9,6 +9,8 @@ service TopologyManager {
   rpc ExtractTopology (TopologyManagerRequest) returns (TopologyManagerReply) {}
   rpc LoadTopologyOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
   rpc ExtractTopologyAndLoadOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
+  rpc PushNodesConfig (NodesConfigRequest) returns (NodesConfigReply) {}
+  rpc GetNodesConfig (NodesConfigRequest) returns (NodesConfigReply) {}
 }
 
 
@@ -50,4 +52,28 @@ message Topology {
 message TopologyManagerReply {
     nb_grpc_services.StatusCode status = 1;
     Topology topology = 2;
+}
+
+message NodeConfig {
+    string name = 1;
+    string grpc_ip = 2;
+    uint32 grpc_port = 3;
+    string uN = 4;
+    string uDT = 5;
+    string fwd_engine = 6;
+}
+
+message NodesConfig {
+    uint32 locator_bits = 1;
+    uint32 usid_id_bits = 2;
+    repeated NodeConfig nodes = 3;
+}
+
+message NodesConfigRequest {
+    NodesConfig nodes_config = 1;
+}
+
+message NodesConfigReply {
+    nb_grpc_services.StatusCode status = 1;
+    NodesConfig nodes_config = 2;
 }

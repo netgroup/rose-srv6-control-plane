@@ -31,10 +31,12 @@ ArangoDB utilities for Controller CLI.
 # General imports
 import os
 import sys
+import yaml
 from argparse import ArgumentParser
 
 # Controller dependencies
 from controller import arangodb_utils
+from apps.nb_grpc_client import topo_manager
 from apps.cli import utils as cli_utils
 
 # Interval between two consecutive extractions (in seconds)
@@ -145,6 +147,33 @@ def topology_information_extraction_isis(controller_channel,
         period=period,
         verbose=verbose
     )
+
+
+def push_nodes_config(controller_channel, nodes_config_filename):
+    '''
+    Push nodes configuration.
+    '''
+    # Read nodes config from file
+    with open(nodes_config_filename, 'r') as nodes_config_file:
+        try:
+            nodes_config = yaml.safe_load(nodes_config_file)
+        except yaml.YAMLError as err:
+            print(err)
+    # Push nodes confiiguration to the controller
+    topo_manager.push_nodes_config(
+        controller_channel=controller_channel,
+        nodes_config=nodes_config
+    )
+
+
+def get_nodes_config(controller_channel):
+    '''
+    Get nodes configuration.
+    '''
+    nodes_config = topo_manager.get_nodes_config(
+        controller_channel=controller_channel
+    )
+    print(nodes_config)
 
 
 def args_extract_topo_from_isis():
@@ -568,6 +597,154 @@ def complete_topology_information_extraction_isis(text, prev_text):
     #
     # Get the list of the arguments supported by the command
     args = [arg for param in args
+            for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_push_nodes_config():
+    '''
+    Command-line arguments for the args_push_nodes_config command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+    return [
+        {
+            'args': ['--nodes-config-filename'],
+            'kwargs': {'dest': 'nodes_config_filename', 'action': 'store',
+                       'required': True, 'help': 'nodes_config_filename'}
+        }, {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
+
+
+# Parse options
+def parse_arguments_push_nodes_config(prog=sys.argv[0], args=None):
+    '''
+    Command-line arguments parser for topolgy extraction function.
+    '''
+    # Get parser
+    parser = ArgumentParser(
+        prog=prog, description=''
+    )
+    # Add the arguments to the parser
+    for param in args_push_nodes_config():
+        parser.add_argument(*param['args'], **param['kwargs'])
+    # Parse input parameters
+    args = parser.parse_args(args)
+    # Return the arguments
+    return args
+
+
+# TAB-completion for push_nodes_config
+def complete_push_nodes_config(text, prev_text):
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
+    # Get arguments from push_nodes_config
+    args = args_push_nodes_config()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg
+            for param in args
+            for arg in param['args']]
+    # Return the matching arguments
+    if text:
+        return [
+            arg for arg in args
+            if arg.startswith(text)
+        ]
+    # No argument provided: return all the available arguments
+    return args
+
+
+def args_get_nodes_config():
+    '''
+    Command-line arguments for the args_get_nodes_config command
+    Arguments are represented as a dicts. Each dict has two items:
+    - args, a list of names for the argument
+    - kwargs, a dict containing the attributes for the argument required by
+      the argparse library
+    '''
+    return [
+        {
+            'args': ['--verbose'],
+            'kwargs': {'action': 'store_true', 'help': 'Enable verbose mode'}
+        }, {
+            'args': ['--debug'],
+            'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
+        }
+    ]
+
+
+# Parse options
+def parse_arguments_get_nodes_config(prog=sys.argv[0], args=None):
+    '''
+    Command-line arguments parser for topolgy extraction function.
+    '''
+    # Get parser
+    parser = ArgumentParser(
+        prog=prog, description=''
+    )
+    # Add the arguments to the parser
+    for param in args_get_nodes_config():
+        parser.add_argument(*param['args'], **param['kwargs'])
+    # Parse input parameters
+    args = parser.parse_args(args)
+    # Return the arguments
+    return args
+
+
+# TAB-completion for get_nodes_config
+def complete_get_nodes_config(text, prev_text):
+    '''
+    This function receives a string as argument and returns
+    a list of parameters candidate for the auto-completion of the string.
+    '''
+    # Get arguments from get_nodes_config
+    args = args_get_nodes_config()
+    # Paths auto-completion
+    if prev_text is not None:
+        # Get the list of the arguments requiring a path
+        path_args = [arg
+                     for param in args
+                     for arg in param['args']
+                     if param.get('is_path', False)]
+        # Check whether the previous argument requires a path or not
+        if prev_text in path_args:
+            # Auto-complete the path and return the results
+            return cli_utils.complete_path(text)
+    # Argument is not a path
+    #
+    # Get the list of the arguments supported by the command
+    args = [arg
+            for param in args
             for arg in param['args']]
     # Return the matching arguments
     if text:

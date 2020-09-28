@@ -655,8 +655,8 @@ def insert_nodes_config(database, nodes):
     database.delete_collection(name='nodes_config', ignore_missing=True)
     # Create a new 'nodes_config' collection
     nodes_config = database.create_collection(name='nodes_config')
-    # Insert the nodes config
-    return nodes_config.insert(document=list(nodes.values()), silent=True)
+    # Insert the nodes config       # TODO validate before adding to db
+    return nodes_config.insert(document=nodes, silent=True)
 
 
 def get_nodes_config(database):
@@ -681,9 +681,9 @@ def get_nodes_config(database):
     if nodes_config.count() == 0:
         raise NodesConfigNotLoadedError
     # Get the nodes
-    nodes = nodes_config.find(filters={})
+    nodes = next(nodes_config.find(filters={}))
     # Convert the nodes list to a dict representation
-    return {node['name']: node for node in nodes}
+    return nodes
 
 
 def insert_srv6_path(database, grpc_address, grpc_port, destination,

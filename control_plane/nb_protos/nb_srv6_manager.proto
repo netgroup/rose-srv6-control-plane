@@ -11,26 +11,10 @@ service SRv6Manager {
   rpc HandleSRv6UniTunnel (SRv6UniTunnelRequest) returns (SRv6ManagerReply) {}
   rpc HandleSRv6BidiTunnel (SRv6BidiTunnelRequest) returns (SRv6ManagerReply) {}
   rpc HandleSRv6MicroSIDPolicy (SRv6MicroSIDRequest) returns (SRv6ManagerReply) {}
-  rpc GetNodes (EmptyRequest) returns (SRv6ManagerReply) {}
 }
 
 message EmptyRequest {
 
-}
-
-message NodeConfig {
-    string name = 1;
-    string grpc_ip = 2;
-    uint32 grpc_port = 3;
-    string uN = 4;
-    string uDT = 5;
-    string fwd_engine = 6;
-}
-
-message NodesConfig {
-    uint32 locator_bits = 1;
-    uint32 usid_id_bits = 2;
-    repeated NodeConfig nodes = 3;
 }
 
 message SRv6MicroSID {
@@ -50,7 +34,6 @@ message SRv6MicroSID {
     nb_grpc_services.FwdEngine r_fwd_engine = 14;
     string decap_sid = 15;
     string locator = 16;
-    NodesConfig nodes_config = 17;
 }
 
 message SRv6MicroSIDRequest {
@@ -139,5 +122,4 @@ message SRv6ManagerReply {
     repeated SRv6UniTunnel srv6_unitunnels = 4;
     repeated SRv6BidiTunnel srv6_biditunnels = 5;
     repeated SRv6MicroSID srv6_micro_sids = 6;
-    repeated NodeConfig nodes = 7;
 }
