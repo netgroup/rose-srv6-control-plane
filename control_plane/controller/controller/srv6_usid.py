@@ -1024,7 +1024,8 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                         table=table,
                         metric=metric,
                         bsid_addr=bsid_addr,
-                        fwd_engine=ingress_node['fwd_engine']
+                        fwd_engine=ingress_node['fwd_engine'],
+                        update_db=False
                     )
                     if response != commons_pb2.STATUS_SUCCESS:
                         # Error
@@ -1186,7 +1187,8 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
                         table=table,
                         metric=metric,
                         bsid_addr=bsid_addr,
-                        fwd_engine=egress_node['fwd_engine']
+                        fwd_engine=egress_node['fwd_engine'],
+                        update_db=False
                     )
                     if response != commons_pb2.STATUS_SUCCESS:
                         # Error

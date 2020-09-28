@@ -1313,11 +1313,11 @@ def delete_srv6_behavior(database, key, grpc_address=None, grpc_port=None,
                                  ignore_missing=ignore_missing)
 
 
-def insert_srv6_tunnel(database, l_grpc_address, r_grpc_address,
-                       sidlist_lr=None, sidlist_rl=None, dest_lr=None,
-                       dest_rl=None, localseg_lr=None, localseg_rl=None,
-                       bsid_addr=None, fwd_engine=None,
-                       is_unidirectional=False):
+def insert_srv6_tunnel(database, l_grpc_address, l_grpc_port, r_grpc_address,
+                       r_grpc_port, sidlist_lr=None, sidlist_rl=None,
+                       dest_lr=None, dest_rl=None, localseg_lr=None,
+                       localseg_rl=None, bsid_addr=None, fwd_engine=None,
+                       is_unidirectional=False, key=None):
     '''
     Insert a SRv6 tunnel into the 'srv6_tunnels' collection of a Arango
     database.
@@ -1325,8 +1325,12 @@ def insert_srv6_tunnel(database, l_grpc_address, r_grpc_address,
     :type database: arango.database.StandardDatabase
     :param l_grpc_address: The IP address of the gRPC server on the left node.
     :type l_grpc_address: str
+    :param l_grpc_port: The port number of the gRPC server on the left node.
+    :type l_grpc_port: int
     :param r_grpc_address: The IP address of the gRPC server on the right node.
     :type r_grpc_address: str
+    :param r_grpc_port: The port number of the gRPC server on the right node.
+    :type r_grpc_port: int
     :param sidlist_lr: The SID list to be installed on the packets going
                        from <node_l> to <node_r>.
     :type sidlist_lr: list, optional
@@ -1362,6 +1366,10 @@ def insert_srv6_tunnel(database, l_grpc_address, r_grpc_address,
     '''
     # Build a dict-representation of the SRv6 tunnel
     tunnel = {
+        'l_grpc_address': l_grpc_address,
+        'l_grpc_port': l_grpc_port,
+        'r_grpc_address': r_grpc_address,
+        'r_grpc_port': r_grpc_port,
         'sidlist_lr': sidlist_lr,
         'sidlist_rl': sidlist_rl,
         'dest_lr': dest_lr,
@@ -1372,6 +1380,9 @@ def insert_srv6_tunnel(database, l_grpc_address, r_grpc_address,
         'fwd_engine': fwd_engine,
         'is_unidirectional': is_unidirectional
     }
+    # Key is optional
+    if key is not None:
+        tunnel['_key'] = key
     # Get the SRv6 tunnels collection
     # This returns an API wrapper for "srv6_tunnels" collection
     srv6_tunnels = database.collection(name='srv6_tunnels')
@@ -1382,7 +1393,8 @@ def insert_srv6_tunnel(database, l_grpc_address, r_grpc_address,
 
 
 def find_srv6_tunnel(database, key=None, l_grpc_address=None,
-                     r_grpc_address=None, sidlist_lr=None, sidlist_rl=None,
+                     l_grpc_port=None, r_grpc_address=None, r_grpc_port=None,
+                     sidlist_lr=None, sidlist_rl=None,
                      dest_lr=None, dest_rl=None, localseg_lr=None,
                      localseg_rl=None, bsid_addr=None, fwd_engine=None,
                      is_unidirectional=False):
@@ -1395,8 +1407,12 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
     :type key: int, optional
     :param l_grpc_address: The IP address of the gRPC server on the left node.
     :type l_grpc_address: str, optional
+    :param l_grpc_port: The port number of the gRPC server on the left node.
+    :type l_grpc_port: int, optional
     :param r_grpc_address: The IP address of the gRPC server on the right node.
     :type r_grpc_address: str, optional
+    :param r_grpc_port: The port number of the gRPC server on the right node.
+    :type r_grpc_port: int, optional
     :param sidlist_lr: The SID list to be installed on the packets going
                        from <node_l> to <node_r>.
     :type sidlist_lr: list, optional
@@ -1436,6 +1452,14 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
     tunnel = dict()
     if key is not None:
         tunnel['_key'] = str(key)
+    if l_grpc_address is not None:
+        tunnel['l_grpc_address'] = l_grpc_address
+    if l_grpc_port is not None:
+        tunnel['l_grpc_port'] = l_grpc_port
+    if r_grpc_address is not None:
+        tunnel['r_grpc_address'] = r_grpc_address
+    if r_grpc_port is not None:
+        tunnel['r_grpc_port'] = r_grpc_port
     if sidlist_lr is not None:
         tunnel['sidlist_lr'] = sidlist_lr
     if sidlist_rl is not None:
@@ -1459,8 +1483,9 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
 
 
 def update_srv6_tunnel(database, key=None, l_grpc_address=None,
-                       r_grpc_address=None, sidlist_lr=None, sidlist_rl=None,
-                       dest_lr=None, dest_rl=None, localseg_lr=None,
+                       l_grpc_port=None, r_grpc_address=None, r_grpc_port=None,
+                       sidlist_lr=None, sidlist_rl=None, dest_lr=None,
+                       dest_rl=None, localseg_lr=None,
                        localseg_rl=None, bsid_addr=None, fwd_engine=None,
                        is_unidirectional=False):
     '''
@@ -1471,8 +1496,12 @@ def update_srv6_tunnel(database, key=None, l_grpc_address=None,
     :type key: int, optional
     :param l_grpc_address: The IP address of the gRPC server on the left node.
     :type l_grpc_address: str, optional
+    :param l_grpc_port: The port number of the gRPC server on the left node.
+    :type l_grpc_port: int, optional
     :param r_grpc_address: The IP address of the gRPC server on the right node.
     :type r_grpc_address: str, optional
+    :param r_grpc_port: The port number of the gRPC server on the right node.
+    :type r_grpc_port: int, optional
     :param sidlist_lr: The SID list to be installed on the packets going
                        from <node_l> to <node_r>.
     :type sidlist_lr: list, optional
@@ -1510,11 +1539,12 @@ def update_srv6_tunnel(database, key=None, l_grpc_address=None,
     raise NotImplementedError
 
 
-def delete_srv6_tunnel(database, key, l_grpc_address=None,
-                       r_grpc_address=None, sidlist_lr=None, sidlist_rl=None,
-                       dest_lr=None, dest_rl=None, localseg_lr=None,
-                       localseg_rl=None, bsid_addr=None, fwd_engine=None,
-                       is_unidirectional=False, ignore_missing=False):
+def delete_srv6_tunnel(database, key, l_grpc_address=None, l_grpc_port=None,
+                       r_grpc_address=None, r_grpc_port=None, sidlist_lr=None,
+                       sidlist_rl=None, dest_lr=None, dest_rl=None,
+                       localseg_lr=None, localseg_rl=None, bsid_addr=None,
+                       fwd_engine=None, is_unidirectional=False,
+                       ignore_missing=False):
     '''
     Remove a SRv6 tunnel from the 'srv6_tunnels' collection of a ArangoDB
     database.
@@ -1524,8 +1554,12 @@ def delete_srv6_tunnel(database, key, l_grpc_address=None,
     :type key: int
     :param l_grpc_address: The IP address of the gRPC server on the left node.
     :type l_grpc_address: str, optional
+    :param l_grpc_port: The port number of the gRPC server on the left node.
+    :type l_grpc_port: int, optional
     :param r_grpc_address: The IP address of the gRPC server on the right node.
     :type r_grpc_address: str, optional
+    :param r_grpc_port: The port number of the gRPC server on the right node.
+    :type r_grpc_port: int, optional
     :param sidlist_lr: The SID list to be installed on the packets going
                        from <node_l> to <node_r>.
     :type sidlist_lr: list, optional
@@ -1571,6 +1605,14 @@ def delete_srv6_tunnel(database, key, l_grpc_address=None,
     tunnel = dict()
     if key is not None:
         tunnel['_key'] = key
+    if l_grpc_address is not None:
+        tunnel['l_grpc_address'] = l_grpc_address
+    if l_grpc_port is not None:
+        tunnel['l_grpc_port'] = l_grpc_port
+    if r_grpc_address is not None:
+        tunnel['r_grpc_address'] = r_grpc_address
+    if r_grpc_port is not None:
+        tunnel['r_grpc_port'] = r_grpc_port
     if sidlist_lr is not None:
         tunnel['sidlist_lr'] = sidlist_lr
     if sidlist_rl is not None:

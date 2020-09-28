@@ -348,7 +348,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 )
         elif operation == 'del':
             # Remove the SRv6 path
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+                    update_db:
                 response = del_srv6_path_db(
                     channel=channel,
                     destination=destination,
@@ -710,7 +711,8 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             # TODO update
         elif operation == 'del':
             # Remove the SRv6 behavior
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+                    update_db:
                 response = del_srv6_behavior_db(
                     channel=channel,
                     segment=segment,
@@ -750,7 +752,8 @@ class SRv6Exception(Exception):
 
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
-                           bsid_addr='', fwd_engine='linux'):
+                           bsid_addr='', fwd_engine='linux', key=None,
+                           update_db=True):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -786,7 +789,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         destination=destination,
         segments=segments,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # Pretty print status code
     utils.print_status_message(
@@ -813,7 +817,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             segment=localseg,
             action='End.DT6',
             lookup_table=254,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            update_db=False
         )
         # Pretty print status code
         utils.print_status_message(
@@ -824,6 +829,37 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         # If an error occurred, abort the operation
         if res != commons_pb2.STATUS_SUCCESS:
             return res
+    # Add the tunnel to the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        # Save the tunnel to the db
+        arangodb_driver.insert_srv6_tunnel(
+            database=database,
+            l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
+            l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
+            r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
+            r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
+            sidlist_lr=segments,
+            dest_lr=destination,
+            localseg_lr=localseg,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            is_unidirectional=True,
+            key=key
+        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
@@ -831,7 +867,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
 def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
-                       bsid_addr='', fwd_engine='linux'):
+                       bsid_addr='', fwd_engine='linux', update_db=True,
+                       key=None):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -876,7 +913,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         segments=sidlist_lr,
         localseg=localseg_lr,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -889,18 +927,176 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         segments=sidlist_rl,
         localseg=localseg_rl,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
         return res
+    # Add the tunnel to the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        # Save the tunnel to the db
+        arangodb_driver.insert_srv6_tunnel(
+            database=database,
+            l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0],
+            l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1],
+            r_grpc_address=utils.grpc_chan_to_addr_port(node_r_channel)[0],
+            r_grpc_port=utils.grpc_chan_to_addr_port(node_r_channel)[1],
+            sidlist_lr=sidlist_lr,
+            sidlist_rl=sidlist_rl,
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            is_unidirectional=False,
+            key=key
+        )
     # Success
     return commons_pb2.STATUS_SUCCESS
 
 
+def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
+                           localseg=None, bsid_addr='', fwd_engine='linux',
+                           ignore_errors=False, key=None):
+    if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        return commons_pb2.STATUS_INTERNAL_ERROR
+    # ArangoDB params
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Find the tunnels matching the params
+    srv6_tunnels = arangodb_driver.find_srv6_tunnel(
+        database=database,
+        key=key,
+        l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
+        l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
+        r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
+        r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
+        dest_lr=destination,
+        localseg_lr=localseg,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
+        is_unidirectional=True
+    )
+    if len(srv6_tunnels) == 0:
+        # Entity not found
+        logger.error('Entity not found')
+        return commons_pb2.STATUS_NO_SUCH_PROCESS
+    # Remove the tunnels
+    for srv6_tunnel in srv6_tunnels:
+        # Get a gRPC channel to the ingress node
+        ingress_channel = utils.get_grpc_session(
+            server_ip=srv6_tunnel['l_grpc_address'],
+            server_port=srv6_tunnel['l_grpc_port']
+        )
+        # Get a gRPC channel to the egress node
+        egress_channel = utils.get_grpc_session(
+            server_ip=srv6_tunnel['r_grpc_address'],
+            server_port=srv6_tunnel['r_grpc_port']
+        )
+        # Remove seg6 route from <ingress> to steer the packets sent to
+        # <destination> through the SID list <segments>
+        #
+        # Equivalent to the command:
+        #    ingress: ip -6 route del <destination> encap seg6 mode encap \
+        #             segs <segments> dev <device>
+        res = handle_srv6_path(
+            operation='del',
+            channel=ingress_channel,
+            destination=srv6_tunnel['dest_lr'],
+            bsid_addr=srv6_tunnel['bsid_addr'],
+            fwd_engine=srv6_tunnel['fwd_engine'],
+            update_db=False
+        )
+        # Pretty print status code
+        utils.print_status_message(
+            status_code=res,
+            success_msg='Removed SRv6 Path',
+            failure_msg='Error in remove_srv6_path()'
+        )
+        # If an error occurred, abort the operation
+        if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
+            # If the 'ignore_errors' flag is set, continue
+            if not ignore_errors:
+                return res
+        elif res != commons_pb2.STATUS_SUCCESS:
+            return res
+        # Remove "Decapsulaton and Specific IPv6 Table Lookup" function
+        # from the egress node <egress>
+        # The decap function associated to the <localseg> passed in
+        # as argument. If argument 'localseg' isn't passed in, the behavior
+        # is not removed
+        #
+        # Equivalent to the command:
+        #    egress: ip -6 route del <localseg> encap seg6local action \
+        #            End.DT6 table 254 dev <device>
+        if localseg is not None:
+            res = handle_srv6_behavior(
+                operation='del',
+                channel=egress_channel,
+                segment=srv6_tunnel['localseg_lr'],
+                fwd_engine=srv6_tunnel['fwd_engine'],
+                update_db=False
+            )
+            # Pretty print status code
+            utils.print_status_message(
+                status_code=res,
+                success_msg='Removed SRv6 behavior',
+                failure_msg='Error in remove_srv6_behavior()'
+            )
+            # If an error occurred, abort the operation
+            if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
+                # If the 'ignore_errors' flag is set, continue
+                if not ignore_errors:
+                    return res
+            elif res != commons_pb2.STATUS_SUCCESS:
+                return res
+        # Remove the path from the db
+        arangodb_driver.delete_srv6_tunnel(
+            database=database,
+            key=srv6_tunnel['_key'],
+            l_grpc_address=srv6_tunnel['l_grpc_address'],
+            l_grpc_port=srv6_tunnel['l_grpc_port'],
+            r_grpc_address=srv6_tunnel['r_grpc_address'],
+            r_grpc_port=srv6_tunnel['r_grpc_port'],
+            dest_lr=srv6_tunnel['dest_lr'],
+            localseg_lr=srv6_tunnel['localseg_lr'],
+            bsid_addr=srv6_tunnel['bsid_addr'],
+            fwd_engine=srv6_tunnel['fwd_engine'],
+            is_unidirectional=True
+        )
+        # Success
+        return commons_pb2.STATUS_SUCCESS
+
+
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                             localseg=None, bsid_addr='', fwd_engine='linux',
-                            ignore_errors=False):
+                            ignore_errors=False, update_db=True):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -923,6 +1119,17 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Remove the SRv6 behavior
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and update_db:
+        return del_uni_srv6_tunnel_db(
+            ingress_channel=ingress_channel,
+            egress_channel=egress_channel,
+            destination=destination,
+            localseg=localseg,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            ignore_errors=ignore_errors
+        )
     # Remove seg6 route from <ingress> to steer the packets sent to
     # <destination> through the SID list <segments>
     #
@@ -934,7 +1141,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         channel=ingress_channel,
         destination=destination,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # Pretty print status code
     utils.print_status_message(
@@ -963,7 +1171,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             operation='del',
             channel=egress_channel,
             segment=localseg,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            update_db=False
         )
         # Pretty print status code
         utils.print_status_message(
@@ -982,10 +1191,110 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     return commons_pb2.STATUS_SUCCESS
 
 
+def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
+                            dest_lr, dest_rl, localseg_lr=None,
+                            localseg_rl=None, bsid_addr='',
+                            fwd_engine='linux', ignore_errors=False,
+                            key=None):
+    if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        return commons_pb2.STATUS_INTERNAL_ERROR
+    # ArangoDB params
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Find the tunnels matching the params
+    srv6_tunnels = arangodb_driver.find_srv6_tunnel(
+        database=database,
+        key=key,
+        l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0],
+        l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1],
+        r_grpc_address=utils.grpc_chan_to_addr_port(node_r_channel)[0],
+        r_grpc_port=utils.grpc_chan_to_addr_port(node_r_channel)[1],
+        dest_lr=dest_lr,
+        dest_rl=dest_rl,
+        localseg_lr=localseg_lr,
+        localseg_rl=localseg_rl,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
+        is_unidirectional=False
+    )
+    if len(srv6_tunnels) == 0:
+        # Entity not found
+        logger.error('Entity not found')
+        return commons_pb2.STATUS_NO_SUCH_PROCESS
+    # Remove the tunnels
+    for srv6_tunnel in srv6_tunnels:
+        # Get a gRPC channel to the ingress node
+        node_l_channel = utils.get_grpc_session(
+            server_ip=srv6_tunnel['l_grpc_address'],
+            server_port=srv6_tunnel['l_grpc_port']
+        )
+        # Get a gRPC channel to the egress node
+        node_r_channel = utils.get_grpc_session(
+            server_ip=srv6_tunnel['r_grpc_address'],
+            server_port=srv6_tunnel['r_grpc_port']
+        )
+        # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
+        res = destroy_uni_srv6_tunnel(
+            ingress_channel=node_l_channel,
+            egress_channel=node_r_channel,
+            destination=srv6_tunnel['dest_lr'],
+            localseg=srv6_tunnel['localseg_lr'],
+            ignore_errors=ignore_errors,
+            bsid_addr=srv6_tunnel['bsid_addr'],
+            fwd_engine=srv6_tunnel['fwd_engine'],
+            update_db=False
+        )
+        # If an error occurred, abort the operation
+        if res != commons_pb2.STATUS_SUCCESS:
+            return res
+        # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
+        res = destroy_uni_srv6_tunnel(
+            ingress_channel=node_r_channel,
+            egress_channel=node_l_channel,
+            destination=srv6_tunnel['dest_rl'],
+            localseg=srv6_tunnel['localseg_rl'],
+            ignore_errors=ignore_errors,
+            bsid_addr=srv6_tunnel['bsid_addr'],
+            fwd_engine=srv6_tunnel['fwd_engine'],
+            update_db=False
+        )
+        # If an error occurred, abort the operation
+        if res != commons_pb2.STATUS_SUCCESS:
+            return res
+        # Remove the path from the db
+        arangodb_driver.delete_srv6_tunnel(
+            database=database,
+            key=srv6_tunnel['_key'],
+            l_grpc_address=srv6_tunnel['l_grpc_address'],
+            l_grpc_port=srv6_tunnel['l_grpc_port'],
+            r_grpc_address=srv6_tunnel['r_grpc_address'],
+            r_grpc_port=srv6_tunnel['r_grpc_port'],
+            dest_lr=srv6_tunnel['dest_lr'],
+            dest_rl=srv6_tunnel['dest_rl'],
+            localseg_lr=srv6_tunnel['localseg_lr'],
+            localseg_rl=srv6_tunnel['localseg_rl'],
+            bsid_addr=srv6_tunnel['bsid_addr'],
+            fwd_engine=srv6_tunnel['fwd_engine'],
+            is_unidirectional=False
+        )
+        # Success
+        return commons_pb2.STATUS_SUCCESS
+
+
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
                         bsid_addr='', fwd_engine='linux',
-                        ignore_errors=False):
+                        ignore_errors=False, update_db=True):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1023,6 +1332,20 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Remove the SRv6 behavior
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        return del_bidi_srv6_tunnel_db(
+            node_l_channel=node_l_channel,
+            node_r_channel=node_r_channel,
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            ignore_errors=ignore_errors
+        )
     # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
     res = destroy_uni_srv6_tunnel(
         ingress_channel=node_l_channel,
@@ -1031,7 +1354,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         localseg=localseg_lr,
         ignore_errors=ignore_errors,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
@@ -1044,7 +1368,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         localseg=localseg_rl,
         ignore_errors=ignore_errors,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        update_db=False
     )
     # If an error occurred, abort the operation
     if res != commons_pb2.STATUS_SUCCESS:
