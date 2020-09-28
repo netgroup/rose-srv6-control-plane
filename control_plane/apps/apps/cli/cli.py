@@ -163,7 +163,7 @@ class ControllerCLITopology(CustomCmd):
         # pylint: disable=no-self-use
         #
         # Print the nodes
-        print_nods(CONTROLLER_CHANNEL)
+        srv6_cli.print_nodes(CONTROLLER_CHANNEL)
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
@@ -864,6 +864,12 @@ class ControllerCLISRv6(CustomCmd):
 
     prompt = "controller(srv6)> "
 
+    def __init__(self):
+        # Print the nodes
+        srv6_cli.print_nodes(CONTROLLER_CHANNEL)
+        # Init superclass
+        super().__init__()
+
     def do_path(self, args):
         """Handle a SRv6 path"""
 
@@ -999,26 +1005,10 @@ class ControllerCLISRv6(CustomCmd):
             )
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
-        # Retrieve the nodes configuration from the database
-        nodes_dict = arangodb_driver.get_nodes_config(database)
         # Handle the uSID policy
         srv6_cli.handle_srv6_usid_policy(
             controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
-            nodes_dict=nodes_dict,
             lr_destination=args.lr_destination,
             rl_destination=args.rl_destination,
             nodes_lr=args.nodes,
@@ -1036,7 +1026,7 @@ class ControllerCLISRv6(CustomCmd):
             locator=args.locator
         )
         # Print nodes available
-        srv6_cli.print_nodes(nodes_dict=nodes_dict)
+        srv6_cli.print_nodes()
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
@@ -1134,7 +1124,7 @@ class ControllerCLISRv6(CustomCmd):
             prev_text = args[-2]    # [-2] because last element is always ''
         # Call auto-completion function and return a list of
         # possible arguments
-        return srv6_cli.complete_usid_policy(text, prev_text)
+        return srv6_cli.complete_srv6_usid_policy(text, prev_text)
 
     def help_path(self):
         """Show help usage for path command"""
@@ -1181,7 +1171,7 @@ class ControllerCLISRv6(CustomCmd):
 
         # pylint: disable=no-self-use
 
-        srv6_cli.parse_arguments_usid_policy(
+        srv6_cli.parse_arguments_srv6_usid_policy(
             prog='usid_policy',
             args=['--help']
         )

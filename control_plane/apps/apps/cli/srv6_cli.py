@@ -37,12 +37,13 @@ from controller import srv6_usid
 from apps.cli import utils as cli_utils
 from apps.nb_grpc_client import utils as grpc_utils
 from apps.nb_grpc_client import srv6_manager
+from apps.nb_grpc_client import topo_manager
 
 # Default CA certificate path
 DEFAULT_CERTIFICATE = 'cert_server.pem'
 
 
-def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
+def handle_srv6_usid_policy(controller_channel, operation,
                             lr_destination, rl_destination, nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1, _id=None,
                             l_grpc_ip=None, l_grpc_port=None,
@@ -59,7 +60,6 @@ def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
     return srv6_manager.handle_srv6_usid_policy(
         controller_channel=controller_channel,
         operation=operation,
-        nodes_dict=nodes_dict,
         lr_destination=lr_destination,
         rl_destination=rl_destination,
         nodes_lr=nodes_lr.split(',') if nodes_lr is not None else None,
@@ -1015,4 +1015,14 @@ def print_nodes(controller_channel):
     '''
     Print nodes.
     '''
-    print(srv6_manager.get_nodes(controller_channel=controller_channel))
+    try:
+        # Get nodes config
+        nodes_config = topo_manager.get_nodes_config(
+            controller_channel=controller_channel)
+        # Extract node names
+        nodes = [node['name'] for node in nodes_config['nodes']]
+        # Print the nodes
+        print('Available nodes: %s\n' % nodes)
+    except grpc_utils.NodesConfigNotLoadedError:
+        print('Nodes config not loaded. '
+              'Cannot use hostnames as node identifiers.\n')

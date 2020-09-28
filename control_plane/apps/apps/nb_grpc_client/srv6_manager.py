@@ -40,7 +40,7 @@ import nb_srv6_manager_pb2_grpc
 from apps.nb_grpc_client import utils
 
 
-def handle_srv6_usid_policy(controller_channel, operation, nodes_dict,
+def handle_srv6_usid_policy(controller_channel, operation,
                             lr_destination, rl_destination, nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1, _id=None,
                             l_grpc_ip=None, l_grpc_port=None,
@@ -295,21 +295,3 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     utils.raise_exception_on_error(response.status)
     # Done, return the list of SRv6 bidirectional tunnels, if any
     return list(response.srv6_biditunnels)
-
-
-def get_nodes(controller_channel):
-    '''
-    Print nodes.
-    '''
-    #
-    # Create request message
-    request = nb_srv6_manager_pb2.EmptyRequest()
-    #
-    # Get the reference of the stub
-    stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
-    # Send the request to the gRPC server
-    response = stub.GetNodes(request)
-    # Check the status code and raise an exception if an error occurred
-    utils.raise_exception_on_error(response.status)
-    # Done, return the list of nodes, if any
-    return list(response.nodes)

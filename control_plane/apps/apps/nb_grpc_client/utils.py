@@ -79,6 +79,12 @@ class InvalidArgumentError(Exception):
     '''
 
 
+class NodesConfigNotLoadedError(Exception):
+    '''
+    NodesConfigNotLoadedError
+    '''
+
+
 def raise_exception_on_error(error_code):   # TODO exeptions more specific
     if error_code == STATUS_SUCCESS:
         return
@@ -101,7 +107,7 @@ def raise_exception_on_error(error_code):   # TODO exeptions more specific
     if error_code == STATUS_GRPC_UNAUTHORIZED:
         raise InvalidArgumentError
     if error_code == STATUS_NOT_CONFIGURED:
-        raise InvalidArgumentError
+        raise NodesConfigNotLoadedError
     if error_code == STATUS_ALREADY_CONFIGURED:
         raise InvalidArgumentError
     if error_code == STATUS_NO_SUCH_DEVICE:

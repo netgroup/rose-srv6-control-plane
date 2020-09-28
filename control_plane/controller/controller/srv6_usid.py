@@ -41,6 +41,7 @@ from pyaml import yaml
 import commons_pb2
 # Controller dependencies
 from controller import srv6_utils
+from controller import topo_utils
 from controller import utils
 try:
     from controller import arangodb_driver
@@ -688,7 +689,7 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
             nodes_info[node_name] = node
 
 
-def handle_srv6_usid_policy(operation, nodes_dict=None,
+def handle_srv6_usid_policy(operation,
                             lr_destination=None, rl_destination=None,
                             nodes_lr=None,
                             nodes_rl=None, table=-1, metric=-1,
@@ -702,8 +703,6 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
     :param operation: The operation to be performed on the uSID policy
                       (i.e. add, get, change, del)
     :type operation: str
-    :param nodes_dict: Dict containing the nodes configuration.
-    :type nodes_dict: dict
     :param destination: Destination of the SRv6 route
     :type destination: str
     :param nodes: Waypoints of the SRv6 route
@@ -776,11 +775,6 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
             return None
     if nodes_rl is None:
         pass
-    if nodes_dict is None:
-        if operation in ['add', 'del']:
-            logger.error('"nodes_filename" argument is mandatory for %s '
-                         'operation', operation)
-            return None
     if operation == 'change':
         logger.error('Operation not yet implemented: %s', operation)
         return None
@@ -814,12 +808,14 @@ def handle_srv6_usid_policy(operation, nodes_dict=None,
         print('\n\n')
         return 0
     if operation in ['add', 'del']:
+        # Extract the nodes configuration from the db
+        nodes_config = topo_utils.get_nodes_config()
         #
         # In order to perform this translation, a file containing the
         # mapping of node names to IPv6 addresses is required
         #
         # Read nodes from YAML file
-        nodes_info = nodes_dict
+        nodes_info = {node['name']: node for node in nodes_config['nodes']}
         locator_bits = DEFAULT_LOCATOR_BITS  # TODO configurable locator bits
         usid_id_bits = DEFAULT_USID_ID_BITS  # TODO configurable uSID id bits
         # Add nodes list for the left-to-right path to the 'nodes_info' dict

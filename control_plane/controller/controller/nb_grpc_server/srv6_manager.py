@@ -60,21 +60,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         '''
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
-        # Convert nodes config to a dict representation
-        nodes_dict = dict()
-        for node_config in request.nodes_config:
-            nodes_dict[node_config.name] = {
-                'name': node_config.name,
-                'grpc_ip': node_config.grpc_ip,
-                'grpc_port': node_config.grpc_port,
-                'uN': node_config.uN,
-                'uDT': node_config.uDT,
-                'fwd_engine': node_config.fwd_engine
-            }
         # Handle SRv6 uSID policy
         res = srv6_usid.handle_srv6_usid_policy(
             operation=request.operation,
-            nodes_dict=nodes_dict,
             lr_destination=request.lr_destination,
             rl_destination=request.rl_destination,
             nodes_lr=list(request.nodes_lr)
@@ -290,40 +278,4 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Set status code
         response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
-        return response
-
-    def GetNodes(self, request, context):
-        '''
-        Get the nodes.
-        '''
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
-        # Get nodes config
-        nodes = arangodb_driver.get_nodes_config(database)
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
-        # Add the nodes config
-        for node in nodes:
-            # Create a new node
-            _node = response.nodes.add()
-            _node.name = node['name']
-            _node.grpc_ip = node['grpc_ip']
-            _node.grpc_port = node['grpc_port']
-            _node.uN = node['uN']
-            _node.uDT = node['uDT']
-            _node.fwd_engine = node['fwd_engine']
-        # Return the reply
         return response

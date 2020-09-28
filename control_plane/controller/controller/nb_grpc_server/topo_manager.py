@@ -40,6 +40,7 @@ import nb_commons_pb2
 import topology_manager_pb2
 import topology_manager_pb2_grpc
 from controller import arangodb_utils
+from controller import arangodb_driver
 from controller import topo_utils
 from controller.ti_extraction import connect_and_extract_topology_isis
 from apps.cli import utils as cli_utils
@@ -256,27 +257,32 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         '''
         Retrieve nodes configuration.
         '''
-        # Retrieve nodes configuration from the database
-        nodes_config = topo_utils.get_nodes_config()
         # Create reply message
         response = topology_manager_pb2.NodesConfigReply()
-        # Set locator bits
-        response.nodes_config.locator_bits = nodes_config['locator_bits']
-        # Set uSID ID bits
-        response.nodes_config.usid_id_bits = nodes_config['usid_id_bits']
-        # Iterate on the nodes
-        for node in nodes_config['nodes']:
-            _node = response.nodes_config.nodes.add()
-            _node.name = node['name']
-            _node.grpc_ip = node['grpc_ip']
-            _node.grpc_port = node['grpc_port']
-            _node.uN = node['uN']
-            _node.uDT = node['uDT']
-            _node.fwd_engine = node['fwd_engine']
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
-        # Done, return the reply
-        return response
+        try:
+            # Retrieve nodes configuration from the database
+            nodes_config = topo_utils.get_nodes_config()
+            # Set locator bits
+            response.nodes_config.locator_bits = nodes_config['locator_bits']
+            # Set uSID ID bits
+            response.nodes_config.usid_id_bits = nodes_config['usid_id_bits']
+            # Iterate on the nodes
+            for node in nodes_config['nodes']:
+                _node = response.nodes_config.nodes.add()
+                _node.name = node['name']
+                _node.grpc_ip = node['grpc_ip']
+                _node.grpc_port = node['grpc_port']
+                _node.uN = node['uN']
+                _node.uDT = node['uDT']
+                _node.fwd_engine = node['fwd_engine']
+            # Set status code
+            response.status = nb_commons_pb2.STATUS_SUCCESS
+        except arangodb_driver.NodesConfigNotLoadedError:
+            # Nodes configuration not loaded
+            response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
+        finally:
+            # Done, return the reply
+            return response
 
 
 # TODO fix errors
