@@ -37,8 +37,7 @@ from apps.nb_grpc_client import utils
 
 
 def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
-                           nodes_yaml, edges_yaml,
-                           addrs_yaml=None, hosts_yaml=None,
+                           addrs_config=None, hosts_config=None,
                            verbose=False):
     '''
     Extract the network topology from a set of nodes running
@@ -48,6 +47,8 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     #
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
+    # Set the protocol
+    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
     # Set the IS-IS nodes
     for isis_node in isis_nodes.split(','):
         node = request.nodes.add()
@@ -57,58 +58,110 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     request.password = isisd_pwd
     # Set verbose mode
     request.verbose = verbose
+    # Set the addresses configuration
+    for addr in addrs_config:
+        _addr = request.addrs_config.addrs.add()
+        _addr.node = addr['node']
+        _addr.ip_address = addr['ip_address']
+    # Set the hosts configuration
+    for host in hosts_config:
+        _host = request.hosts_config.hosts.add()
+        _host.name = host['name']
+        _host.ip_address = host['ip_address']
+        _host.gateway = host['gw']
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
     response = stub.ExtractTopology(request)
     # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    # TODO write file
-    return True
+    utils.raise_exception_on_error(response.status)
+    # Extract the nodes from the gRPC response
+    nodes = list()
+    for node in response.topology.nodes:
+        nodes.append({
+            '_key': node.id,
+            'ext_reachability': node.ext_reachability,
+            'ip_address': node.ip_address,
+            'type': utils.grpc_repr_to_node_type[
+                topology_manager_pb2.NodeType.Name(node.type)]
+        })
+    # Extract the edges from the gRPC response
+    edges = list()
+    for edge in response.topology.links:
+        edges.append({
+            '_key': edge.id,
+            '_from': edge.source,
+            '_to': edge.target,
+            'type': utils.grpc_repr_to_edge_type[
+                topology_manager_pb2.LinkType.Name(edge.type)]
+        })
+    # Done, return the topology
+    return nodes, edges
 
 
-def load_topo_on_arango(controller_channel, arango_url, arango_user,
-                        arango_password, nodes_yaml, edges_yaml,
+def load_topo_on_arango(controller_channel, nodes_config, edges_config,
                         verbose=False):
     '''
     Load a network topology on a Arango database.
     '''
     # pylint: disable=too-many-arguments
     #
-    # Read nodes YAML
-    nodes = arangodb_utils.load_yaml_dump(nodes_yaml)
-    # Read edges YAML
-    edges = arangodb_utils.load_yaml_dump(edges_yaml)
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
-    # Set the database
-    request.db_config.database = topology_manager_pb2.DBConfig.ARANGODB
-    # Set the ArangoDB URL
-    request.db_config.url = arango_url
-    # Set the ArangoDB username
-    request.db_config.username = arango_user
-    # Set the ArangoDB password
-    request.db_config.password = arango_password
     # Set verbose mode
     request.verbose = verbose
+    # Set the nodes
+    for node in nodes_config:
+        _node = request.topology.nodes.add()
+        _node.id = node['_key']
+        if 'ext_reachability' in node:
+            _node.ext_reachability = node['ext_reachability']
+        if 'ip_address' in node:
+            _node.ip_address = node['ip_address']
+        _node.type = topology_manager_pb2.NodeType.Value(
+            utils.node_type_to_grpc_repr[node['type']])
+    # Set the edges
+    for edge in edges_config:
+        _edge = request.topology.links.add()
+        _edge.id = edge['_key']
+        _edge.source = edge['_from']
+        _edge.target = edge['_to']
+        _edge.type = topology_manager_pb2.LinkType.Value(
+            utils.edge_type_to_grpc_repr[edge['type']])
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
-    response = stub.LoadTopologyOnDatabase(request)
+    response = stub.LoadTopology(request)
     # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    return True
+    utils.raise_exception_on_error(response.status)
+    # Extract the nodes from the gRPC response
+    nodes = list()
+    for node in response.topology.nodes:
+        nodes.append({
+            '_key': node.id,
+            'ext_reachability': node.ext_reachability,
+            'ip_address': node.ip_address,
+            'type': utils.grpc_repr_to_node_type[
+                topology_manager_pb2.NodeType.Name(node.type)]
+        })
+    # Extract the edges from the gRPC response
+    edges = list()
+    for edge in response.topology.links:
+        edges.append({
+            '_key': edge.id,
+            '_from': edge.source,
+            '_to': edge.target,
+            'type': utils.grpc_repr_to_edge_type[
+                topology_manager_pb2.LinkType.Name(edge.type)]
+        })
+    # Done, return the topology
+    return nodes, edges
 
 
 def extract_topo_from_isis_and_load_on_arango(controller_channel,
                                               isis_nodes, isisd_pwd,
-                                              arango_url=None,
-                                              arango_user=None,
-                                              arango_password=None,
-                                              nodes_yaml=None, edges_yaml=None,
-                                              addrs_yaml=None, hosts_yaml=None,
+                                              addrs_config=None,
+                                              hosts_config=None,
                                               period=0, verbose=False):
     '''
     Extract the topology from a set of nodes running ISIS protocol
@@ -116,68 +169,129 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
     '''
     # pylint: disable=too-many-arguments
     #
-    # Read nodes YAML
-    nodes = arangodb_utils.load_yaml_dump(nodes_yaml)
-    # Read edges YAML
-    edges = arangodb_utils.load_yaml_dump(edges_yaml)
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
-    # Set the database
-    request.db_config.database = topology_manager_pb2.DBConfig.ARANGODB
-    # Set the ArangoDB URL
-    request.db_config.url = arango_url
-    # Set the ArangoDB username
-    request.db_config.username = arango_user
-    # Set the ArangoDB password
-    request.db_config.password = arango_password
+    # Set the protocol
+    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
+    # Set the IS-IS nodes
+    for isis_node in isis_nodes:
+        node = request.nodes.add()
+        node.address = isis_node.split('-')[0]  # FIXME
+        node.port = int(isis_node.split('-')[1])  # FIXME
+    # Set the period (i.e the interval between two consecutive extractions)
+    request.period = period
+    # Set the IS-IS password
+    request.password = isisd_pwd
     # Set verbose mode
     request.verbose = verbose
+    # Set the addresses configuration
+    if addrs_config is not None:
+        for addr in addrs_config:
+            _addr = request.addrs_config.addrs.add()
+            _addr.node = addr['node']
+            _addr.ip_address = addr['ip_address']
+    # Set the hosts configuration
+    if hosts_config is not None:
+        for host in hosts_config:
+            _host = request.hosts_config.hosts.add()
+            _host.name = host['name']
+            _host.ip_address = host['ip_address']
+            _host.gateway = host['gw']
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
-    response = stub.ExtractTopologyAndLoadOnDatabase(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    return True
+    for response in stub.ExtractAndLoadTopology(request):
+        # Check the status code
+        utils.raise_exception_on_error(response.status)
+        # Extract the nodes from the gRPC response
+        nodes = list()
+        for node in response.topology.nodes:
+            nodes.append({
+                '_key': node.id,
+                'ext_reachability': node.ext_reachability,
+                'ip_address': node.ip_address,
+                'type': utils.grpc_repr_to_node_type[
+                    topology_manager_pb2.NodeType.Name(node.type)]
+            })
+        # Extract the edges from the gRPC response
+        edges = list()
+        for edge in response.topology.links:
+            edges.append({
+                '_key': edge.id,
+                '_from': edge.source,
+                '_to': edge.target,
+                'type': utils.grpc_repr_to_edge_type[
+                    topology_manager_pb2.LinkType.Name(edge.type)]
+            })
+        # Done, return the topology
+        yield nodes, edges
 
 
 def topology_information_extraction_isis(controller_channel,
                                          routers, period, isisd_pwd,
-                                         topo_file_json=None,
-                                         nodes_file_yaml=None,
-                                         edges_file_yaml=None,
-                                         addrs_yaml=None, hosts_yaml=None,
-                                         topo_graph=None, verbose=False):
+                                         addrs_config=None, hosts_config=None,
+                                         verbose=False):
     '''
     Run periodical topology extraction
     '''
     # pylint: disable=too-many-arguments, unused-argument
     #
-    # Read nodes YAML
-    nodes = arangodb_utils.load_yaml_dump(nodes_yaml)
-    # Read edges YAML
-    edges = arangodb_utils.load_yaml_dump(edges_yaml)
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
-    # Set the database
-    request.db_config.database = topology_manager_pb2.DBConfig.ARANGODB
-    # Set the ArangoDB URL
-    request.db_config.url = arango_url
-    # Set the ArangoDB username
-    request.db_config.username = arango_user
-    # Set the ArangoDB password
-    request.db_config.password = arango_password
+    # Set the protocol
+    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
+    # Set the IS-IS nodes
+    for isis_node in routers.split(','):
+        node = request.nodes.add()
+        node.address = isis_node.split('-')[0]  # FIXME
+        node.port = isis_node.split('-')[1]  # FIXME
+    # Set the IS-IS password
+    request.password = isisd_pwd
+    # Set the period
+    request.period = period
     # Set verbose mode
     request.verbose = verbose
+    # Set the addresses configuration
+    if addrs_config is not None:
+        for addr in addrs_config:
+            _addr = request.addrs_config.addrs.add()
+            _addr.node = addr['node']
+            _addr.ip_address = addr['ip_address']
+    # Set the hosts configuration
+    if hosts_config is not None:
+        for host in hosts_config:
+            _host = request.hosts_config.hosts.add()
+            _host.name = host['name']
+            _host.ip_address = host['ip_address']
+            _host.gateway = host['gw']
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
-    response = stub.ExtractTopologyAndLoadOnDatabase(request)
-    # Check the status code
-    if response.status != nb_commons_pb2.STATUS_SUCCESS:
-        return False       # TODO raise an exception?
-    return True
+    for response in stub.ExtractAndLoadTopology(request):
+        # Check the status code
+        utils.raise_exception_on_error(response.status)
+        # Extract the nodes from the gRPC response
+        nodes = list()
+        for node in response.topology.nodes:
+            nodes.append({
+                '_key': node.id,
+                'ext_reachability': node.ext_reachability,
+                'ip_address': node.ip_address,
+                'type': utils.grpc_repr_to_node_type[
+                    topology_manager_pb2.NodeType.Name(node.type)]
+            })
+        # Extract the edges from the gRPC response
+        edges = list()
+        for edge in response.topology.links:
+            edges.append({
+                '_key': edge.id,
+                '_from': edge.source,
+                '_to': edge.target,
+                'type': utils.grpc_repr_to_edge_type[
+                    topology_manager_pb2.LinkType.Name(edge.type)]
+            })
+        # Done, return the topology
+        yield nodes, edges
 
 
 def push_nodes_config(controller_channel, nodes_config):

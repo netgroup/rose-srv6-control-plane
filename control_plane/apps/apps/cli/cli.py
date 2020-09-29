@@ -168,34 +168,6 @@ class ControllerCLITopology(CustomCmd):
         # after the command execution
         return False
 
-    def do_load_nodes_config(self, args):
-        '''Load node configuration to database'''
-        # pylint: disable=no-self-use
-        #
-        # Parse arguments
-        try:
-            args = srv6_cli.parse_arguments_load_nodes_config(
-                prog='load_nodes_config',
-                args=args.split(' ')
-            )
-        except SystemExit:
-            return False  # This workaround avoid exit in case of errors
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
-        arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(
-            args.nodes_file)[0])        # TODO
-
     def do_extract(self, args):
         """Extract the network topology"""
 
@@ -239,9 +211,6 @@ class ControllerCLITopology(CustomCmd):
             return False  # This workaround avoid exit in case of errors
         topo_cli.load_topo_on_arango(
             controller_channel=CONTROLLER_CHANNEL,
-            arango_url=args.arango_url,
-            arango_user=args.arango_user,
-            arango_password=args.arango_password,
             nodes_yaml=args.nodes_yaml,
             edges_yaml=args.edges_yaml,
             verbose=args.verbose
@@ -267,9 +236,6 @@ class ControllerCLITopology(CustomCmd):
             controller_channel=CONTROLLER_CHANNEL,
             isis_nodes=arg.isis_nodes.split(','),
             isisd_pwd=arg.isisd_pwd,
-            arango_url=arg.arango_url,
-            arango_user=arg.arango_user,
-            arango_password=arg.arango_password,
             nodes_yaml=arg.nodes_yaml,
             edges_yaml=arg.edges_yaml,
             addrs_yaml=arg.addrs_yaml,
@@ -338,25 +304,6 @@ class ControllerCLITopology(CustomCmd):
         # Call auto-completion function and return a list of
         # possible arguments
         return srv6_cli.complete_print_nodes(text, prev_text)
-
-    def complete_load_nodes_config(self, text, line, start_idx, end_idx):
-        """Auto-completion for load_nodes_config command"""
-
-        # pylint: disable=no-self-use, unused-argument
-
-        # Get the previous argument in the command
-        # Depending on the previous argument, it is possible to
-        # complete specific params, such as the paths
-        #
-        # Split args
-        args = line[:start_idx].split(' ')
-        # If this is not the first arg, get the previous one
-        prev_text = None
-        if len(args) > 1:
-            prev_text = args[-2]    # [-2] because last element is always ''
-        # Call auto-completion function and return a list of
-        # possible arguments
-        return srv6_cli.complete_load_nodes_config(text, prev_text)
 
     def complete_extract(self, text, line, start_idx, end_idx):
         """Auto-completion for extract command"""
@@ -466,16 +413,6 @@ class ControllerCLITopology(CustomCmd):
         #
         srv6_cli.parse_arguments_print_nodes(
             prog='show_nodes',
-            args=['--help']
-        )
-
-    def help_load_nodes_config(self):
-        """Show help usage for load_nodes_config nodes command"""
-        #
-        # pylint: disable=no-self-use
-        #
-        srv6_cli.parse_arguments_load_nodes_config(
-            prog='load_nodes_config',
             args=['--help']
         )
 

@@ -52,81 +52,91 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     ISIS protocol.
     '''
     # pylint: disable=too-many-arguments
-    topo_manager.extract_topo_from_isis(
+    #
+    # Read addresses configuration from YAML file
+    addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
+    # Read hosts configuration from YAML file
+    hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
+    # Extract the network topology
+    nodes, edges = topo_manager.extract_topo_from_isis(
         controller_channel=controller_channel,
-        isis_nodes=isis_nodes.split(','),
+        isis_nodes=isis_nodes,
         isisd_pwd=isisd_pwd,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        addrs_yaml=addrs_yaml,
-        hosts_yaml=hosts_yaml,
+        addrs_config=addrs_config,
+        hosts_config=hosts_config,
         verbose=verbose
     )
+    # Save nodes to a YAML file
+    if nodes_yaml is not None:
+        cli_utils.save_yaml_dump(nodes, nodes_yaml)
+    # Save edges to a YAML file
+    if edges_yaml is not None:
+        cli_utils.save_yaml_dump(edges, edges_yaml)
+    # Print the nodes
+    print('\nNodes: %s\n' % nodes)
+    # Print the edges
+    print('\nEdges: %s\n' % edges)
 
 
-def load_topo_on_arango(controller_channel, arango_url, arango_user,
-                        arango_password, nodes_yaml, edges_yaml,
+def load_topo_on_arango(controller_channel, nodes_yaml, edges_yaml,
                         verbose=False):
     '''
     Load a network topology on a Arango database.
     '''
     # pylint: disable=too-many-arguments
     #
-    # Init database
-    nodes_collection, edges_collection = arangodb_utils.initialize_db(
-        arango_url=arango_url,
-        arango_user=arango_user,
-        arango_password=arango_password
-    )
     # Read nodes YAML
-    nodes = arangodb_utils.load_yaml_dump(nodes_yaml)
+    nodes = cli_utils.load_yaml_dump(nodes_yaml)
     # Read edges YAML
-    edges = arangodb_utils.load_yaml_dump(edges_yaml)
+    edges = cli_utils.load_yaml_dump(edges_yaml)
     # Load nodes and edges on ArangoDB
     topo_manager.load_topo_on_arango(
         controller_channel=controller_channel,
-        arango_url=arango_url,
-        user=arango_user,
-        password=arango_password,
-        nodes=nodes,
-        edges=edges,
-        nodes_collection=nodes_collection,
-        edges_collection=edges_collection,
+        nodes_config=nodes,
+        edges_config=edges,
         verbose=verbose
     )
 
 
 def extract_topo_from_isis_and_load_on_arango(controller_channel,
-                                              isis_nodes, isisd_pwd,
-                                              arango_url=None,
-                                              arango_user=None,
-                                              arango_password=None,
+                                              isis_nodes, isisd_pwd, period=0,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
-                                              period=0, verbose=False):
+                                              verbose=False):
     '''
     Extract the topology from a set of nodes running ISIS protocol
     and load it on a Arango database.
     '''
+    # Read addresses configuration from YAML file
+    addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
+    # Read hosts configuration from YAML file
+    hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
     # pylint: disable=too-many-arguments
-    topo_manager.extract_topo_from_isis_and_load_on_arango(
-        controller_channel=controller_channel,
-        isis_nodes=isis_nodes,
-        isisd_pwd=isisd_pwd,
-        arango_url=arango_url,
-        arango_user=arango_user,
-        arango_password=arango_password,
-        nodes_yaml=nodes_yaml,
-        edges_yaml=edges_yaml,
-        addrs_yaml=addrs_yaml,
-        hosts_yaml=hosts_yaml,
-        period=period,
-        verbose=verbose
-    )
+    for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
+                controller_channel=controller_channel,
+                isis_nodes=isis_nodes,
+                isisd_pwd=isisd_pwd,
+                addrs_config=addrs_config,
+                hosts_config=hosts_config,
+                period=period,
+                verbose=verbose
+            ):
+        # Save nodes to a YAML file
+        if nodes_yaml is not None:
+            cli_utils.save_yaml_dump(nodes, nodes_yaml)
+        # Save edges to a YAML file
+        if edges_yaml is not None:
+            cli_utils.save_yaml_dump(edges, edges_yaml)
+        # Print the nodes
+        print('\nNodes: %s\n' % nodes)
+        # Print the edges
+        print('\nEdges: %s\n' % edges)
+        # Separation line
+        print('\n******************************\n')
 
 
 def topology_information_extraction_isis(controller_channel,
-                                         routers, period, isisd_pwd,
+                                         routers, period=0, isisd_pwd='',
                                          topo_file_json=None,
                                          nodes_file_yaml=None,
                                          edges_file_yaml=None,
@@ -135,18 +145,30 @@ def topology_information_extraction_isis(controller_channel,
     '''
     Run periodical topology extraction.
     '''
+    # Read addresses configuration from YAML file
+    addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
+    # Read hosts configuration from YAML file
+    hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
     # pylint: disable=too-many-arguments, unused-argument
-    topo_manager.extract_topo_from_isis_and_load_on_arango(
-        controller_channel=controller_channel,
-        isis_nodes=routers,
-        isisd_pwd=isisd_pwd,
-        nodes_yaml=nodes_file_yaml,
-        edges_yaml=edges_file_yaml,
-        addrs_yaml=addrs_yaml,
-        hosts_yaml=hosts_yaml,
-        period=period,
-        verbose=verbose
-    )
+    for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
+                controller_channel=controller_channel,
+                isis_nodes=routers,
+                isisd_pwd=isisd_pwd,
+                addrs_config=addrs_config,
+                hosts_config=hosts_config,
+                period=period,
+                verbose=verbose
+            ):
+        # Save nodes to a YAML file
+        if nodes_file_yaml is not None:
+            cli_utils.save_yaml_dump(nodes, nodes_file_yaml)
+        # Save edges to a YAML file
+        if edges_file_yaml is not None:
+            cli_utils.save_yaml_dump(edges, edges_file_yaml)
+        # Print the nodes
+        print('\nNodes: %s\n' % nodes)
+        # Print the edges
+        print('\nEdges: %s\n' % edges)
 
 
 def push_nodes_config(controller_channel, nodes_config_filename):
@@ -286,21 +308,6 @@ def args_load_topo_on_arango():
     '''
     return [
         {
-            'args': ['--arango-url'],
-            'kwargs': {'dest': 'arango_url', 'action': 'store',
-                       'help': 'arango_url',
-                       'default': os.getenv('ARANGO_URL')}
-        }, {
-            'args': ['--arango-user'],
-            'kwargs': {'dest': 'arango_user', 'action': 'store',
-                       'help': 'arango_user',
-                       'default': os.getenv('ARANGO_USER')}
-        }, {
-            'args': ['--arango-password'],
-            'kwargs': {'dest': 'arango_password', 'action': 'store',
-                       'help': 'arango_password',
-                       'default': os.getenv('ARANGO_PASSWORD')}
-        }, {
             'args': ['--nodes-yaml'],
             'kwargs': {'dest': 'nodes_yaml', 'action': 'store',
                        'help': 'nodes_yaml'},
@@ -388,21 +395,6 @@ def args_extract_topo_from_isis_and_load_on_arango():
             'args': ['--isisd-pwd'],
             'kwargs': {'dest': 'isisd_pwd', 'action': 'store',
                        'help': 'period'}
-        }, {
-            'args': ['--arango-url'],
-            'kwargs': {'dest': 'arango_url', 'action': 'store',
-                       'help': 'arango_url',
-                       'default': os.getenv('ARANGO_URL')}
-        }, {
-            'args': ['--arango-user'],
-            'kwargs': {'dest': 'arango_user', 'action': 'store',
-                       'help': 'arango_user',
-                       'default': os.getenv('ARANGO_USER')}
-        }, {
-            'args': ['--arango-password'],
-            'kwargs': {'dest': 'arango_password', 'action': 'store',
-                       'help': 'arango_password',
-                       'default': os.getenv('ARANGO_PASSWORD')}
         }, {
             'args': ['--period'],
             'kwargs': {'dest': 'period', 'action': 'store',

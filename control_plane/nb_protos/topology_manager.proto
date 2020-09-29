@@ -7,8 +7,8 @@ import "nb_commons.proto";
 
 service TopologyManager {
   rpc ExtractTopology (TopologyManagerRequest) returns (TopologyManagerReply) {}
-  rpc LoadTopologyOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
-  rpc ExtractTopologyAndLoadOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
+  rpc LoadTopology (TopologyManagerRequest) returns (TopologyManagerReply) {}
+  rpc ExtractAndLoadTopology (TopologyManagerRequest) returns (stream TopologyManagerReply) {}
   rpc PushNodesConfig (NodesConfigRequest) returns (NodesConfigReply) {}
   rpc GetNodesConfig (NodesConfigRequest) returns (NodesConfigReply) {}
 }
@@ -19,11 +19,12 @@ enum Protocol {
     // OSPF = 1;    // Not yet supported
 }
 
-message Node {
+message Router {
     string address = 1;
     uint32 port = 2;
 }
 
+/*  DEPRECATED!!!
 enum Database {
     ARANGODB = 0;
 }
@@ -34,19 +35,67 @@ message DBConfig {
     string username = 3;
     string password = 4;
 }
+*/
+
+message AddressConfig {
+    string node = 1;
+    string ip_address = 2;
+}
+
+message AddrsConfig {
+    repeated AddressConfig addrs = 1;
+}
+
+message HostConfig {
+    string name = 1;
+    string ip_address = 2;
+    string gateway = 3;
+}
+
+message HostsConfig {
+    repeated HostConfig hosts = 1;
+}
 
 // The TopologyManagerRequest message.
 message TopologyManagerRequest {
-    repeated Node nodes = 1;
+    repeated Router nodes = 1;
     Protocol protocol = 2;
     string password = 3;
     uint32 period = 4;
-    DBConfig db_config = 5;
+    // DBConfig db_config = 5;  DEPRECATED!!!
     bool verbose = 6;
+    AddrsConfig addrs_config = 7;
+    HostsConfig hosts_config = 8;
+    Topology topology = 9;
+}
+
+enum NodeType {
+    ROUTER = 0;
+    HOST = 1;
+}
+
+message Node {
+    string id = 1;
+    string ext_reachability = 2;
+    string ip_address = 3;
+    NodeType type = 4;
+}
+
+enum LinkType {
+    CORE = 0;
+    EDGE = 1;
+}
+
+message Link {
+    string id = 1;
+    string source = 2;
+    string target = 3;
+    LinkType type = 4;
 }
 
 message Topology {
-    // TODO
+    repeated Node nodes = 1;
+    repeated Link links = 2;
 }
 
 message TopologyManagerReply {

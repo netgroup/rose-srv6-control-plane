@@ -216,3 +216,17 @@ action_to_grpc_repr = {
 }
 
 grpc_repr_to_action = {v: k for k, v in action_to_grpc_repr.items()}
+
+node_type_to_grpc_repr = {
+    'router': 'ROUTER',
+    'host': 'HOST'
+}
+
+grpc_repr_to_node_type = {v: k for k, v in node_type_to_grpc_repr.items()}
+
+edge_type_to_grpc_repr = {
+    'core': 'CORE',
+    'edge': 'EDGE'
+}
+
+grpc_repr_to_edge_type = {v: k for k, v in edge_type_to_grpc_repr.items()}

@@ -66,7 +66,7 @@ def load_yaml_dump(filename):
         return yaml.safe_load(infile)
 
 
-def fill_ip_addresses(nodes, addresses_yaml):
+def fill_ip_addresses(nodes, addresses_yaml):    # TODO reuse fill_ip_addresses_from_list
     '''
     Add addresses to a nodes dict
     '''
@@ -89,7 +89,7 @@ def fill_ip_addresses(nodes, addresses_yaml):
     return nodes
 
 
-def add_hosts(nodes, edges, hosts_yaml):
+def add_hosts(nodes, edges, hosts_yaml):    # TODO reuse add_hosts_from_list
     '''
     Add hosts to a topology
     '''
@@ -101,6 +101,67 @@ def add_hosts(nodes, edges, hosts_yaml):
         hosts = yaml.safe_load(infile.read())
     # Add hosts and links
     for host in hosts:
+        # Add host
+        nodes.append({
+            '_key': host['name'],
+            'type': 'host',
+            'ip_address': host['ip_address']
+        })
+        # Get the subnet
+        net = str(ipaddress.ip_network(host['ip_address'], strict=False))
+        # Add edge (host to router)
+        # Character '/' is not accepted in key strign in arango, using
+        # '-' instead
+        edges.append({
+            '_key': '%s-dir1' % net.replace('/', '-'),
+            '_from': 'nodes/%s' % host['name'],
+            '_to': 'nodes/%s' % host['gw'],
+            'type': 'edge'
+        })
+        # Add edge (router to host)
+        # This is required because we work with
+        # unidirectional edges
+        edges.append({
+            '_key': '%s-dir2' % net.replace('/', '-'),
+            '_to': 'nodes/%s' % host['gw'],
+            '_from': 'nodes/%s' % host['name'],
+            'type': 'edge'
+        })
+    logger.info('*** Nodes YAML updated\n')
+    logger.info('*** Edges YAML updated\n')
+    # Return the updated nodes and edges lists
+    return nodes, edges
+
+
+def fill_ip_addresses_from_list(nodes, addrs_config):
+    '''
+    Add addresses to a nodes dict
+    '''
+    # Read IP addresses information from a YAML file and
+    # add addresses to the nodes
+    logger.info('*** Filling nodes YAML file with IP addresses')
+    # Parse addresses
+    node_to_addr = dict()
+    for addr in addrs_config:
+        node_to_addr[addr['node']] = addr['ip_address']
+    # Fill addresses
+    for node in nodes:
+        # Update the dict
+        node['ip_address'] = node_to_addr[node['_key']]
+    logger.info('*** Nodes YAML updated\n')
+    # Return the updated nodes list
+    return nodes
+
+
+def add_hosts_from_list(nodes, edges, hosts_config):
+    '''
+    Add hosts to a topology
+    '''
+    # Read hosts information from a YAML file and
+    # add hosts to the nodes and edges lists
+    logger.info('*** Adding hosts to the topology')
+    # Add hosts and links
+    for host in hosts_config:
         # Add host
         nodes.append({
             '_key': host['name'],
@@ -287,6 +348,83 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                     edges_collection=edges_collection,
                     verbose=verbose
                 )
+        # Period = 0 means a single extraction
+        if period == 0:
+            break
+        # Wait 'period' seconds between two extractions
+        time.sleep(period)
+
+
+def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
+                                                     arango_url=None,
+                                                     arango_user=None,
+                                                     arango_password=None,
+                                                     addrs_config=None,
+                                                     hosts_config=None,
+                                                     period=0, verbose=False):
+    '''
+    Extract the network topology from a set of nodes running ISIS protocol
+    and upload it on a database
+    '''
+    #
+    # pylint: disable=too-many-arguments, too-many-locals
+    #
+    # Param isis_nodes: list of ip-port
+    # (e.g. [2000::1-2608,2000::2-2608])
+    #
+    # Topology Information Extraction
+    #
+    # Initialize database
+    if arango_url is not None and arango_user is not None and \
+            arango_password is not None:
+        nodes_collection, edges_collection = arango_db.initialize_db(
+            arango_url=arango_url,
+            arango_user=arango_user,
+            arango_password=arango_password
+        )
+    while True:
+        # Connect to a node and extract the topology
+        nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
+            ips_ports=isis_nodes,
+            isisd_pwd=isisd_pwd,
+            verbose=verbose
+        )
+        if nodes is None or edges is None or node_to_systemid is None:
+            logger.error('Cannot extract topology')
+        else:
+            logger.info('Topology extracted')
+            # Export the topology in YAML format
+            # This function returns a representation of nodes and
+            # edges ready to get uploaded on ArangoDB.
+            # Optionally, the nodes and the edges are exported in
+            # YAML format, if 'nodes_yaml' and 'edges_yaml' variables
+            # are not None
+            nodes, edges = dump_topo_yaml(
+                nodes=nodes,
+                edges=edges,
+                node_to_systemid=node_to_systemid
+            )
+            # Add IP addresses information
+            if addrs_config is not None:
+                fill_ip_addresses_from_list(nodes, addrs_config)
+            # Add hosts information
+            if hosts_config is not None:
+                add_hosts_from_list(nodes, edges, hosts_config)
+            # Load the topology on Arango DB
+            if arango_url is not None and \
+                    arango_user is not None and arango_password is not None:
+                load_topo_on_arango(
+                    arango_url=arango_url,
+                    user=arango_user,
+                    password=arango_password,
+                    nodes=nodes,
+                    edges=edges,
+                    nodes_collection=nodes_collection,
+                    edges_collection=edges_collection,
+                    verbose=verbose
+                )
+        # Return nodes and edges
+        yield nodes, edges
         # Period = 0 means a single extraction
         if period == 0:
             break
