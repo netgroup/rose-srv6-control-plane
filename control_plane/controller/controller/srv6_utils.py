@@ -94,12 +94,20 @@ def del_srv6_path_db(channel, destination, segments=None,
         username=arango_user,
         password=arango_password
     )
+    # gRPC address
+    grpc_address = None
+    if channel is not None:
+        grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # gRPC port number
+    grpc_port = None
+    if channel is not None:
+        grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Find the paths matching the params
     srv6_paths = arangodb_driver.find_srv6_path(
         database=database,
         key=key,
-        grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-        grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+        grpc_address=grpc_address,
+        grpc_port=grpc_port,
         destination=destination,
         segments=segments,
         device=device,
@@ -143,17 +151,17 @@ def del_srv6_path_db(channel, destination, segments=None,
         # Forwarding engine (Linux or VPP)
         try:
             path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-                fwd_engine.upper())
+                srv6_path['fwd_engine'].upper())
         except ValueError:
-            logger.error('Invalid forwarding engine: %s', fwd_engine)
+            logger.error('Invalid forwarding engine: %s', srv6_path['fwd_engine'])
             return commons_pb2.STATUS_INTERNAL_ERROR
         # Set encapmode
-        path.encapmode = text_type(encapmode)
-        if len(segments) == 0:
+        path.encapmode = text_type(srv6_path['encapmode'])
+        if len(srv6_path['segments']) == 0:
             logger.error('*** Missing segments for seg6 route')
             return commons_pb2.STATUS_INTERNAL_ERROR
         # Iterate on the segments and build the SID list
-        for segment in segments:
+        for segment in srv6_path['segments']:
             # Append the segment to the SID list
             srv6_segment = path.sr_path.add()
             srv6_segment.segment = text_type(segment)
@@ -417,27 +425,27 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 )
             return
         elif operation == 'del':
-            # Get the reference of the stub
-            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Remove the SRv6 path
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
                 response = del_srv6_path_db(
                     channel=channel,
-                    destination=destination,
-                    segments=segments,
-                    device=device,
-                    encapmode=encapmode,
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=fwd_engine,
-                    key=key,
+                    key=key if key != '' else None,
+                    destination=destination if destination != '' else None,
+                    segments=segments if segments != [''] else None,
+                    device=device if device != '' else None,
+                    encapmode=encapmode if encapmode != '' else None,
+                    table=table if table != -1 else None,
+                    metric=metric if metric != -1 else None,
+                    bsid_addr=bsid_addr if bsid_addr != '' else None,
+                    fwd_engine=fwd_engine if fwd_engine != '' else None,
                     update_db=update_db
                 )
                 # Raise an exception if an error occurred
                 utils.raise_exception_on_error(response)
             else:
+                # Get the reference of the stub
+                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
                 # Remove the SRv6 path
                 response = stub.Remove(request)
                 # Raise an exception if an error occurred
