@@ -182,7 +182,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
                           destination, segments=None, localseg=None,
-                          bsid_addr='', fwd_engine='linux'):
+                          bsid_addr='', fwd_engine='linux', key=''):
     '''
     Handle a SRv6 unidirectional tunnel.
     '''
@@ -201,7 +201,8 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             segments=segments.split(','),
             localseg=localseg,
             bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            key=key
         )
     if operation == 'del':
         # Perform the operation
@@ -216,7 +217,8 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             destination=destination,
             localseg=localseg,
             bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            key=key
         )
     # Invalid operation
     raise grpc_utils.InvalidArgumentError
@@ -226,7 +228,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            node_l_port, node_r_ip, node_r_port,
                            dest_lr, dest_rl, sidlist_lr=None, sidlist_rl=None,
                            localseg_lr=None, localseg_rl=None,
-                           bsid_addr='', fwd_engine='linux'):
+                           bsid_addr='', fwd_engine='linux', key=''):
     '''
     Handle SRv6 bidirectional tunnel.
     '''
@@ -248,7 +250,8 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
             localseg_lr=localseg_lr,
             localseg_rl=localseg_rl,
             bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            key=key
         )
     if operation == 'del':
         # Perform the operation
@@ -265,7 +268,8 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
             localseg_lr=localseg_lr,
             localseg_rl=localseg_rl,
             bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine
+            fwd_engine=fwd_engine,
+            key=key
         )
     # Invalid operation
     raise cli_utils.InvalidArgumentError
@@ -698,6 +702,10 @@ def args_srv6_unitunnel():
             'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
                        'help': 'Operation'}
         }, {
+            'args': ['--key'],
+            'kwargs': {'dest': 'key', 'action': 'store',
+                       'help': 'An id of the SRv6 tunnel', 'default': ''}
+        }, {
             'args': ['--ingress-grpc-ip'],
             'kwargs': {'dest': 'ingress_grpc_ip', 'action': 'store',
                        'required': True, 'help': 'IP of the gRPC server'}
@@ -815,6 +823,10 @@ def args_srv6_biditunnel():
             'args': ['--op'],
             'kwargs': {'dest': 'op', 'action': 'store', 'required': True,
                        'help': 'Operation'}
+        }, {
+            'args': ['--key'],
+            'kwargs': {'dest': 'key', 'action': 'store',
+                       'help': 'An id of the SRv6 tunnel', 'default': ''}
         }, {
             'args': ['--left-grpc-ip'],
             'kwargs': {'dest': 'l_grpc_ip', 'action': 'store',

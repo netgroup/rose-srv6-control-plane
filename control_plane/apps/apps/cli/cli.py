@@ -894,7 +894,8 @@ class ControllerCLISRv6(CustomCmd):
             segments=args.sidlist,
             localseg=args.localseg,
             bsid_addr=args.bsid_addr,
-            fwd_engine=args.fwd_engine
+            fwd_engine=args.fwd_engine,
+            key=args.key
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution
@@ -926,7 +927,8 @@ class ControllerCLISRv6(CustomCmd):
             localseg_lr=args.localseg_lr,
             localseg_rl=args.localseg_rl,
             bsid_addr=args.bsid_addr,
-            fwd_engine=args.fwd_engine
+            fwd_engine=args.fwd_engine,
+            key=args.key
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution

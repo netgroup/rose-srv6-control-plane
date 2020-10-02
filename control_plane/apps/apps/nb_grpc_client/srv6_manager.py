@@ -218,7 +218,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
                           destination, segments=None, localseg=None,
-                          bsid_addr='', fwd_engine='linux'):
+                          bsid_addr='', fwd_engine='linux', key=''):
     '''
     Handle a SRv6 unidirectional tunnel.
     '''
@@ -250,6 +250,8 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     srv6_unitunnel.bsid_addr = bsid_addr
     # Set the forwarding engine
     srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    # Set the key
+    srv6_unitunnel.key = key
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -265,7 +267,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            node_l_port, node_r_ip, node_r_port,
                            dest_lr, dest_rl, sidlist_lr=None, sidlist_rl=None,
                            localseg_lr=None, localseg_rl=None,
-                           bsid_addr='', fwd_engine='linux'):
+                           bsid_addr='', fwd_engine='linux', key=''):
     '''
     Handle SRv6 bidirectional tunnel.
     '''
@@ -305,6 +307,8 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     srv6_biditunnel.bsid_addr = bsid_addr
     # Forwarding engine
     srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    # Set the key
+    srv6_biditunnel.key = key
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)

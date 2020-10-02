@@ -91,6 +91,7 @@ message SRv6UniTunnel {
     string localseg = 8;
     string bsid_addr = 9;
     nb_grpc_services.FwdEngine fwd_engine = 10;
+    string key = 11;
 }
 
 message SRv6UniTunnelRequest {
@@ -111,6 +112,7 @@ message SRv6BidiTunnel {
     string localseg_rl = 11;
     string bsid_addr = 12;
     nb_grpc_services.FwdEngine fwd_engine = 13;
+    string key = 14;
 }
 
 message SRv6BidiTunnelRequest {

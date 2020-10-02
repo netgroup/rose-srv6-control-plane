@@ -974,13 +974,36 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Check if a SRv6 tunnel with the same key already exists
+    if key is not None and \
+            os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        paths = arangodb_driver.find_srv6_tunnel(
+            database=database,
+            key=key
+        )
+        if len(paths) > 0:
+            logger.error('An entity with key %s already exists', key)
+            raise utils.InvalidArgumentError
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
     #
     # Equivalent to the command:
     #    ingress: ip -6 route add <destination> encap seg6 mode encap \
     #            segs <segments> dev <device>
-    res = handle_srv6_path(
+    handle_srv6_path(
         operation='add',
         channel=ingress_channel,
         destination=destination,
@@ -989,14 +1012,6 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # Pretty print status code
-    utils.print_status_message(
-        status_code=res,
-        success_msg='Added SRv6 Path',
-        failure_msg='Error in add_srv6_path()'
-    )
-    # Raise an exception if an error occurred
-    utils.raise_exception_on_error(res)
     # Perform "Decapsulaton and Specific IPv6 Table Lookup" function
     # on the egress node <egress>
     # The decap function is associated to the <localseg> passed in
@@ -1007,7 +1022,7 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     #    egress: ip -6 route add <localseg> encap seg6local action \
     #            End.DT6 table 254 dev <device>
     if localseg is not None:
-        res = handle_srv6_behavior(
+        handle_srv6_behavior(
             operation='add',
             channel=egress_channel,
             segment=localseg,
@@ -1016,14 +1031,6 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             fwd_engine=fwd_engine,
             update_db=False
         )
-        # Pretty print status code
-        utils.print_status_message(
-            status_code=res,
-            success_msg='Added SRv6 Behavior',
-            failure_msg='Error in add_srv6_behavior()'
-        )
-        # Raise an exception if an error occurred
-        utils.raise_exception_on_error(res)
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -1098,8 +1105,31 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Check if a SRv6 tunnel with the same key already exists
+    if key is not None and \
+            os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        paths = arangodb_driver.find_srv6_tunnel(
+            database=database,
+            key=key
+        )
+        if len(paths) > 0:
+            logger.error('An entity with key %s already exists', key)
+            raise utils.InvalidArgumentError
     # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
-    res = create_uni_srv6_tunnel(
+    create_uni_srv6_tunnel(
         ingress_channel=node_l_channel,
         egress_channel=node_r_channel,
         destination=dest_lr,
@@ -1109,10 +1139,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # Raise an exception if an error occurred
-    utils.raise_exception_on_error(res)
     # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
-    res = create_uni_srv6_tunnel(
+    create_uni_srv6_tunnel(
         ingress_channel=node_r_channel,
         egress_channel=node_l_channel,
         destination=dest_rl,
@@ -1122,8 +1150,6 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # Raise an exception if an error occurred
-    utils.raise_exception_on_error(res)
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -1214,7 +1240,7 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
         # Equivalent to the command:
         #    ingress: ip -6 route del <destination> encap seg6 mode encap \
         #             segs <segments> dev <device>
-        res = handle_srv6_path(
+        res = handle_srv6_path(     # FIXME res = None
             operation='del',
             channel=ingress_channel,
             destination=srv6_tunnel['dest_lr'],
@@ -1245,7 +1271,7 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
         #    egress: ip -6 route del <localseg> encap seg6local action \
         #            End.DT6 table 254 dev <device>
         if localseg is not None:
-            res = handle_srv6_behavior(
+            res = handle_srv6_behavior(     # FIXME res = None
                 operation='del',
                 channel=egress_channel,
                 segment=srv6_tunnel['localseg_lr'],
@@ -1285,7 +1311,7 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                             localseg=None, bsid_addr='', fwd_engine='linux',
-                            ignore_errors=False, update_db=True):
+                            ignore_errors=False, key=None, update_db=True):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -1317,7 +1343,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             localseg=localseg,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine,
-            ignore_errors=ignore_errors
+            ignore_errors=ignore_errors,
+            key=key
         )
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(res)
@@ -1487,7 +1514,7 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
                         bsid_addr='', fwd_engine='linux',
-                        ignore_errors=False, update_db=True):
+                        ignore_errors=False, key=None, update_db=True):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1537,6 +1564,7 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
             localseg_rl=localseg_rl,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine,
+            key=key,
             ignore_errors=ignore_errors
         )
         # Raise an exception if an error occurred
