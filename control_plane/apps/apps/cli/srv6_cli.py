@@ -560,12 +560,12 @@ def args_srv6_behavior():
         {
             'args': ['--grpc-ip'],
             'kwargs': {'dest': 'grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'help': 'IP of the gRPC server', 'default': ''}
         }, {
             'args': ['--grpc-port'],
             'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
-                       'required': True, 'help': 'Port of the gRPC server',
-                       'default': None}
+                       'help': 'Port of the gRPC server',
+                       'default': -1}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
@@ -589,11 +589,11 @@ def args_srv6_behavior():
                        'help': 'Table', 'type': int, 'default': -1}
         }, {
             'args': ['--segment'],
-            'kwargs': {'dest': 'segment', 'action': 'store', 'required': True,
-                       'help': 'Segment'}
+            'kwargs': {'dest': 'segment', 'action': 'store',
+                       'help': 'Segment', 'default': ''}
         }, {
             'args': ['--action'],
-            'kwargs': {'dest': 'action', 'action': 'store', 'required': True,
+            'kwargs': {'dest': 'action', 'action': 'store',
                        'help': 'Action', 'default': ''}
         }, {
             'args': ['--nexthop'],
