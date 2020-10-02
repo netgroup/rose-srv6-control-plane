@@ -864,7 +864,8 @@ class ControllerCLISRv6(CustomCmd):
             interface=args.interface,
             segments=args.segments,
             metric=args.metric,
-            fwd_engine=args.fwd_engine
+            fwd_engine=args.fwd_engine,
+            key=args.key
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution

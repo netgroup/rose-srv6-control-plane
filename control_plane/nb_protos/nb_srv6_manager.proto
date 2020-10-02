@@ -73,6 +73,7 @@ message SRv6Behavior {
     repeated string segments = 11;
     int32 metric = 12;
     nb_grpc_services.FwdEngine fwd_engine = 13;
+    string key = 14;
 }
 
 message SRv6BehaviorRequest {

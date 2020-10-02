@@ -161,7 +161,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
                          grpc_port, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1, interface="",
-                         segments="", metric=-1, fwd_engine='linux'):
+                         segments="", metric=-1, fwd_engine='linux', key=''):
     '''
     Handle a SRv6 behavior.
     '''
@@ -202,6 +202,8 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     srv6_behavior.metric = metric
     # Set the forwarding engine
     srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    # Set the key
+    srv6_behavior.key = key
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)

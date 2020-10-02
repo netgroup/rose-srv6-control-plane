@@ -239,7 +239,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     segments=list(srv6_behavior.segments),
                     metric=srv6_behavior.metric,
                     fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        srv6_behavior.fwd_engine).lower()
+                        srv6_behavior.fwd_engine).lower(),
+                    key=srv6_behavior.key
                 )
                 if channel is not None:
                     channel.close()
@@ -313,6 +314,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_behavior.table = behavior['table']
                     _srv6_behavior.metric = behavior['metric']
                     _srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(behavior['fwd_engine'].upper())
+                    _srv6_behavior.key = behavior['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply

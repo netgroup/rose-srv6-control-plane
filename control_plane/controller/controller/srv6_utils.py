@@ -669,6 +669,30 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
+    # Check if a SRv6 behavior with the same key already exists
+    if operation == 'add' and key is not None and \
+            os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        behaviors = arangodb_driver.find_srv6_behavior(
+            database=database,
+            key=key
+        )
+        if len(behaviors) > 0:
+            logger.error('An entity with key %s already exists', key)
+            raise utils.InvalidArgumentError
+    #
     if segments is None:
         segments = []
     # Create request message
@@ -753,6 +777,7 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 # Save the behavior to the db
                 arangodb_driver.insert_srv6_behavior(
                     database=database,
+                    key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
                     segment=segment,
@@ -851,6 +876,7 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 # Save the behavior to the db
                 arangodb_driver.update_srv6_behavior(
                     database=database,
+                    key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
                     segment=segment,
@@ -873,6 +899,7 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     update_db:
                 response = del_srv6_behavior_db(
                     channel=channel,
+                    key=key if key != '' else None,
                     segment=segment,
                     action=action,
                     device=device,
@@ -883,7 +910,6 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     segments=segments,
                     metric=metric,
                     fwd_engine=fwd_engine,
-                    key=key,
                     update_db=update_db
                 )
                 # Raise an exception if an error occurred
