@@ -304,11 +304,11 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_behavior.grpc_address = behavior['grpc_address']
                     _srv6_behavior.grpc_port = behavior['grpc_port']
                     _srv6_behavior.segment = behavior['segment']
-                    _srv6_behavior.action = behavior['action']
+                    _srv6_behavior.action = nb_commons_pb2.SRv6Action.Value(nb_utils.action_to_grpc_repr[behavior['action']])
                     _srv6_behavior.nexthop = behavior['nexthop']
                     _srv6_behavior.lookup_table = behavior['lookup_table']
                     _srv6_behavior.interface = behavior['interface']
-                    _srv6_behavior.segs.extend(behavior['segs'])
+                    _srv6_behavior.segments.extend(behavior['segments'])
                     _srv6_behavior.device = behavior['device']
                     _srv6_behavior.table = behavior['table']
                     _srv6_behavior.metric = behavior['metric']
