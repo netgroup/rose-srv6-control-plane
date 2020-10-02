@@ -188,7 +188,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_path.table = path['table']
                     _srv6_path.metric = path['metric']
                     _srv6_path.bsid_addr = path['bsid_addr']
-                    _srv6_path.fwd_engine = path['fwd_engine']
+                    _srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(path['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -295,7 +295,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_behavior.device = behavior['device']
                     _srv6_behavior.table = behavior['table']
                     _srv6_behavior.metric = behavior['metric']
-                    _srv6_behavior.fwd_engine = behavior['fwd_engine']
+                    _srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(behavior['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -439,7 +439,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_unitunnel.segments.extend(tunnel['segments'])
                     _srv6_unitunnel.localseg = tunnel['localseg']
                     _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
-                    _srv6_unitunnel.fwd_engine = tunnel['fwd_engine']
+                    _srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -594,7 +594,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_biditunnel.localseg_lr = tunnel['localseg_lr']
                     _srv6_biditunnel.localseg_rl = tunnel['localseg_rl']
                     _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
-                    _srv6_biditunnel.fwd_engine = tunnel['fwd_engine']
+                    _srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
