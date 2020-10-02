@@ -197,6 +197,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_path.metric = path['metric']
                     _srv6_path.bsid_addr = path['bsid_addr']
                     _srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(path['fwd_engine'].upper())
+                    if '_key' in path:
+                        _srv6_path.key = path['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply

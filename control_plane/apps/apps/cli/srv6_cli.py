@@ -115,7 +115,8 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
             'table': srv6_path.table,
             'metric': srv6_path.metric,
             'bsid_addr': srv6_path.bsid_addr,
-            'fwd_engine': srv6_path.fwd_engine
+            'fwd_engine': srv6_path.fwd_engine,
+            'key': srv6_path.key
         })
     if operation == 'get':
         if srv6_paths is None:

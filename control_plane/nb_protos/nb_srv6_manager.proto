@@ -52,6 +52,7 @@ message SRv6Path {
     int32 metric = 9;
     string bsid_addr = 10;
     nb_grpc_services.FwdEngine fwd_engine = 11;
+    string key = 12;
 }
 
 message SRv6PathRequest {
