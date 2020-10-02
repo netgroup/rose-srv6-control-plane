@@ -222,10 +222,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # Set the BSID address (required for VPP)
     path.bsid_addr = str(bsid_addr)
     # Handle SRv6 policy for VPP
-    if fwd_engine == 'vpp':
+    if fwd_engine == 'vpp' and operation == 'add':
         if bsid_addr == '':
             logger.error('"bsid_addr" argument is mandatory for VPP')
-            return None
+            raise utils.InvalidArgumentError
         # Handle SRv6 policy
         res = handle_srv6_policy(
             operation=operation,
@@ -238,24 +238,25 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         )
         if res != commons_pb2.STATUS_SUCCESS:
             logger.error('Cannot create SRv6 policy: error %s', res)
-            return None
+            utils.raise_exception_on_error(res)
     # Forwarding engine (Linux or VPP)
     try:
         path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
-        # Get the reference of the stub
-        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Set encapmode
             path.encapmode = text_type(encapmode)
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                utils.raise_exception_on_error(
+                    commons_pb2.STATUS_INTERNAL_ERROR)
             # Iterate on the segments and build the SID list
             for segment in segments:
                 # Append the segment to the SID list
@@ -263,11 +264,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 srv6_segment.segment = text_type(segment)
             # Create the SRv6 path
             response = stub.Create(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(response.status)
             # Store the path to the database
-            if response == commons_pb2.STATUS_SUCCESS and \
-                    os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
                 # ArangoDB params
                 arango_url = os.getenv('ARANGO_URL')
@@ -297,12 +297,49 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                     bsid_addr=bsid_addr,
                     fwd_engine=fwd_engine
                 )
-        elif operation == 'get':    # TODO db
-            # Get the SRv6 path
-            response = stub.Get(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            return
+        elif operation == 'get':
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+                # ArangoDB params
+                arango_url = os.getenv('ARANGO_URL')
+                arango_user = os.getenv('ARANGO_USER')
+                arango_password = os.getenv('ARANGO_PASSWORD')
+                # Connect to ArangoDB
+                client = arangodb_driver.connect_arango(
+                    url=arango_url)  # TODO keep arango connection open
+                # Connect to the db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=arango_user,
+                    password=arango_password
+                )
+                # Find the paths
+                return arangodb_driver.find_srv6_path(
+                   database=database,
+                   key=key if key != '' else None,
+                   grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
+                   grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
+                   destination=destination if destination != '' else None,
+                   segments=segments if segments != [''] else None,
+                   device=device if device != '' else None,
+                   encapmode=encapmode if encapmode != '' else None,
+                   table=table if table != -1 else None,
+                   metric=metric if metric != -1 else None,
+                   bsid_addr=bsid_addr if bsid_addr != '' else None,
+                   fwd_engine=fwd_engine if fwd_engine != '' else None
+                )
+            else:
+                # Get the reference of the stub
+                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+                # Get the SRv6 path
+                response = stub.Get(request)
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
+                # Return the paths
+                return response.paths
         elif operation == 'change':
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Set encapmode
             path.encapmode = text_type(encapmode)
             # Iterate on the segments and build the SID list
@@ -312,11 +349,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                 srv6_segment.segment = text_type(segment)
             # Update the SRv6 path
             response = stub.Update(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(response.status)
             # Remove the path from the database
-            if response == commons_pb2.STATUS_SUCCESS and \
-                    os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
                 # ArangoDB params
                 arango_url = os.getenv('ARANGO_URL')
@@ -346,7 +382,10 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                     bsid_addr=bsid_addr,
                     fwd_engine=fwd_engine
                 )
+            return
         elif operation == 'del':
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Remove the SRv6 path
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
@@ -363,21 +402,26 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                     key=key,
                     update_db=update_db
                 )
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
             else:
                 # Remove the SRv6 path
                 response = stub.Remove(request)
-                # Get the status code of the gRPC operation
-                response = response.status
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
+            return
         else:
             # Operation not supported
             logger.error('Operation not supported')
-            response = commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+            # Raise an exception
+            utils.raise_exception_on_error(
+                commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
     except grpc.RpcError as err:
         # An error occurred during the gRPC operation
         # Parse the error and return it
         response = parse_grpc_error(err)
-    # Return the response
-    return response
+        # Raise an exception
+        utils.raise_exception_on_error(response)
 
 
 def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
@@ -617,16 +661,17 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
-        return None
+        raise utils.InvalidArgumentError
     try:
-        # Get the reference of the stub
-        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
         # Fill the request depending on the operation
         # and send the request
         if operation == 'add':
             if action == '':
                 logger.error('*** Missing action for seg6local route')
-                return commons_pb2.STATUS_INTERNAL_ERROR
+                utils.raise_exception_on_error(
+                    commons_pb2.STATUS_INTERNAL_ERROR)
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -646,11 +691,10 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 srv6_segment.segment = text_type(seg)
             # Create the SRv6 behavior
             response = stub.Create(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(response.status)
             # Store the path to the database
-            if response == commons_pb2.STATUS_SUCCESS and \
-                    os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
                 # ArangoDB params
                 arango_url = os.getenv('ARANGO_URL')
@@ -681,12 +725,51 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     metric=metric,
                     fwd_engine=fwd_engine
                 )
+            return
         elif operation == 'get':
-            # Get the SRv6 behavior
-            response = stub.Get(request)
-            # Get the status code of the gRPC operation
-            response = response.status
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+                # ArangoDB params
+                arango_url = os.getenv('ARANGO_URL')
+                arango_user = os.getenv('ARANGO_USER')
+                arango_password = os.getenv('ARANGO_PASSWORD')
+                # Connect to ArangoDB
+                client = arangodb_driver.connect_arango(
+                    url=arango_url)  # TODO keep arango connection open
+                # Connect to the db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=arango_user,
+                    password=arango_password
+                )
+                # Find the behaviors
+                return arangodb_driver.find_srv6_behavior(
+                   database=database,
+                   key=key if key != '' else None,
+                   grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
+                   grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
+                   segment=segment if segment != '' else None,
+                   action=action if action != '' else None,
+                   device=device if device != '' else None,
+                   table=table if table != -1 else None,
+                   nexthop=nexthop if nexthop != '' else None,
+                   lookup_table=lookup_table if lookup_table != -1 else None,
+                   interface=interface if interface != '' else None,
+                   segments=segments if segments != [''] else None,
+                   metric=metric if metric != -1 else None,
+                   fwd_engine=fwd_engine if fwd_engine != '' else None
+                )
+            else:
+                # Get the reference of the stub
+                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+                # Get the SRv6 behavior
+                response = stub.Get(request)
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
+                # Return the paths
+                return response.paths
         elif operation == 'change':
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Set the action for the seg6local route
             behavior.action = text_type(action)
             # Set the nexthop for the L3 cross-connect actions
@@ -706,10 +789,44 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 srv6_segment.segment = text_type(seg)
             # Update the SRv6 behavior
             response = stub.Update(request)
-            # Get the status code of the gRPC operation
-            response = response.status
-            # TODO update
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(response.status)
+            # Remove the path from the database
+            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+                    update_db:
+                # ArangoDB params
+                arango_url = os.getenv('ARANGO_URL')
+                arango_user = os.getenv('ARANGO_USER')
+                arango_password = os.getenv('ARANGO_PASSWORD')
+                # Connect to ArangoDB
+                client = arangodb_driver.connect_arango(
+                    url=arango_url)  # TODO keep arango connection open
+                # Connect to the db
+                database = arangodb_driver.connect_srv6_usid_db(
+                    client=client,
+                    username=arango_user,
+                    password=arango_password
+                )
+                # Save the behavior to the db
+                arangodb_driver.update_srv6_behavior(
+                    database=database,
+                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+                    segment=segment,
+                    action=action,
+                    device=device,
+                    table=table,
+                    nexthop=nexthop,
+                    lookup_table=lookup_table,
+                    interface=interface,
+                    segments=segments,
+                    metric=metric,
+                    fwd_engine=fwd_engine
+                )
+            return
         elif operation == 'del':
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Remove the SRv6 behavior
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
@@ -728,20 +845,25 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     key=key,
                     update_db=update_db
                 )
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
             else:
                 # Remove the SRv6 behavior
                 response = stub.Remove(request)
-                # Get the status code of the gRPC operation
-                response = response.status
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(response.status)
         else:
-            logger.error('Invalid operation: %s', operation)
-            return None
+            # Operation not supported
+            logger.error('Operation not supported')
+            # Raise an exception
+            utils.raise_exception_on_error(
+                commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
     except grpc.RpcError as err:
         # An error occurred during the gRPC operation
         # Parse the error and return it
         response = parse_grpc_error(err)
-    # Return the response
-    return response
+        # Raise an exception
+        utils.raise_exception_on_error(response)
 
 
 class SRv6Exception(Exception):
@@ -798,9 +920,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         success_msg='Added SRv6 Path',
         failure_msg='Error in add_srv6_path()'
     )
-    # If an error occurred, abort the operation
-    if res != commons_pb2.STATUS_SUCCESS:
-        return res
+    # Raise an exception if an error occurred
+    utils.raise_exception_on_error(res)
     # Perform "Decapsulaton and Specific IPv6 Table Lookup" function
     # on the egress node <egress>
     # The decap function is associated to the <localseg> passed in
@@ -826,9 +947,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             success_msg='Added SRv6 Behavior',
             failure_msg='Error in add_srv6_behavior()'
         )
-        # If an error occurred, abort the operation
-        if res != commons_pb2.STATUS_SUCCESS:
-            return res
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(res)
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -860,8 +980,6 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             is_unidirectional=True,
             key=key
         )
-    # Success
-    return commons_pb2.STATUS_SUCCESS
 
 
 def create_srv6_tunnel(node_l_channel, node_r_channel,
@@ -916,9 +1034,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # If an error occurred, abort the operation
-    if res != commons_pb2.STATUS_SUCCESS:
-        return res
+    # Raise an exception if an error occurred
+    utils.raise_exception_on_error(res)
     # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
     res = create_uni_srv6_tunnel(
         ingress_channel=node_r_channel,
@@ -930,9 +1047,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # If an error occurred, abort the operation
-    if res != commons_pb2.STATUS_SUCCESS:
-        return res
+    # Raise an exception if an error occurred
+    utils.raise_exception_on_error(res)
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -967,8 +1083,6 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
             is_unidirectional=False,
             key=key
         )
-    # Success
-    return commons_pb2.STATUS_SUCCESS
 
 
 def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
@@ -1121,7 +1235,7 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     #
     # Remove the SRv6 behavior
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and update_db:
-        return del_uni_srv6_tunnel_db(
+        res = del_uni_srv6_tunnel_db(
             ingress_channel=ingress_channel,
             egress_channel=egress_channel,
             destination=destination,
@@ -1130,6 +1244,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             fwd_engine=fwd_engine,
             ignore_errors=ignore_errors
         )
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(res)
     # Remove seg6 route from <ingress> to steer the packets sent to
     # <destination> through the SID list <segments>
     #
@@ -1154,9 +1270,11 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
         # If the 'ignore_errors' flag is set, continue
         if not ignore_errors:
-            return res
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(res)
     elif res != commons_pb2.STATUS_SUCCESS:
-        return res
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(res)
     # Remove "Decapsulaton and Specific IPv6 Table Lookup" function
     # from the egress node <egress>
     # The decap function associated to the <localseg> passed in
@@ -1184,11 +1302,11 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         if res == commons_pb2.STATUS_NO_SUCH_PROCESS:
             # If the 'ignore_errors' flag is set, continue
             if not ignore_errors:
-                return res
+                # Raise an exception if an error occurred
+                utils.raise_exception_on_error(res)
         elif res != commons_pb2.STATUS_SUCCESS:
-            return res
-    # Success
-    return commons_pb2.STATUS_SUCCESS
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(res)
 
 
 def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
@@ -1335,7 +1453,7 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     # Remove the SRv6 behavior
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
-        return del_bidi_srv6_tunnel_db(
+        res = del_bidi_srv6_tunnel_db(
             node_l_channel=node_l_channel,
             node_r_channel=node_r_channel,
             dest_lr=dest_lr,
@@ -1346,6 +1464,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
             fwd_engine=fwd_engine,
             ignore_errors=ignore_errors
         )
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(res)
     # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
     res = destroy_uni_srv6_tunnel(
         ingress_channel=node_l_channel,
@@ -1357,9 +1477,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # If an error occurred, abort the operation
-    if res != commons_pb2.STATUS_SUCCESS:
-        return res
+    # Raise an exception if an error occurred
+    utils.raise_exception_on_error(res)
     # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
     res = destroy_uni_srv6_tunnel(
         ingress_channel=node_r_channel,
@@ -1371,8 +1490,148 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine,
         update_db=False
     )
-    # If an error occurred, abort the operation
-    if res != commons_pb2.STATUS_SUCCESS:
-        return res
-    # Success
-    return commons_pb2.STATUS_SUCCESS
+    # Raise an exception if an error occurred
+    utils.raise_exception_on_error(res)
+
+
+def get_uni_srv6_tunnel(ingress_channel, egress_channel,
+                        destination, segments, localseg=None,
+                        bsid_addr='', fwd_engine='linux', key=None):
+    '''
+    Get a unidirectional SRv6 tunnel from <ingress> to <egress>
+
+    :param ingress_channel: The gRPC Channel to the ingress node
+    :type ingress_channel: class: `grpc._channel.Channel`
+    :param egress_channel: The gRPC Channel to the egress node
+    :type egress_channel: class: `grpc._channel.Channel`
+    :param destination: The destination prefix of the SRv6 path.
+                  It can be a IP address or a subnet.
+    :type destination: str
+    :param segments: The SID list to be applied to the packets going to
+                     the destination
+    :type segments: list
+    :param localseg: The local segment to be associated to the End.DT6
+                     seg6local function on the egress node. If the argument
+                     'localseg' isn't passed in, the End.DT6 function
+                     is not created.
+    :type localseg: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
+    '''
+    # pylint: disable=too-many-arguments
+    #
+    if os.getenv('ENABLE_PERSISTENCY') not in ['true', 'True']:
+        logger.error('Get tunnel requires ENABLE_PERSISTENCY')
+        raise utils.InvalidArgumentError
+    # Retrieve the tunnel from the database
+    #
+    # ArangoDB params
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Retrieve the tunnel from the db
+    return arangodb_driver.find_srv6_tunnel(
+        database=database,
+        key=key if key != '' else None,
+        l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0] if ingress_channel is not None else None,
+        l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1] if ingress_channel is not None else None,
+        r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0] if egress_channel is not None else None,
+        r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1] if egress_channel is not None else None,
+        sidlist_lr=segments if segments != [''] else None,
+        sidlist_rl=None,
+        dest_lr=destination if destination != '' else None,
+        dest_rl=None,
+        localseg_lr=localseg if localseg != '' else None,
+        localseg_rl=None,
+        bsid_addr=bsid_addr if bsid_addr != '' else None,
+        fwd_engine=fwd_engine if fwd_engine != '' else None,
+        is_unidirectional=True
+    )
+
+
+def get_srv6_tunnel(node_l_channel, node_r_channel,
+                       sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                       localseg_lr=None, localseg_rl=None,
+                       bsid_addr='', fwd_engine='linux', update_db=True,
+                       key=None):
+    '''
+    Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
+
+    :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
+                           of the SRv6 tunnel
+    :type node_l_channel: class: `grpc._channel.Channel`
+    :param node_r_channel: The gRPC Channel to the right endpoint (node_r)
+                           of the SRv6 tunnel
+    :type node_r_channel: class: `grpc._channel.Channel`
+    :param sidlist_lr: The SID list to be installed on the packets going
+                       from <node_l> to <node_r>
+    :type sidlist_lr: list
+    :param sidlist_rl: The SID list to be installed on the packets going
+                       from <node_r> to <node_l>
+    :type sidlist_rl: list
+    :param dest_lr: The destination prefix of the SRv6 path from <node_l>
+                    to <node_r>. It can be a IP address or a subnet.
+    :type dest_lr: str
+    :param dest_rl: The destination prefix of the SRv6 path from <node_r>
+                    to <node_l>. It can be a IP address or a subnet.
+    :type dest_rl: str
+    :param localseg_lr: The local segment to be associated to the End.DT6
+                        seg6local function for the SRv6 path from <node_l>
+                        to <node_r>. If the argument 'localseg_lr' isn't
+                        passed in, the End.DT6 function is not created.
+    :type localseg_lr: str, optional
+    :param localseg_rl: The local segment to be associated to the End.DT6
+                        seg6local function for the SRv6 path from <node_r>
+                        to <node_l>. If the argument 'localseg_rl' isn't
+                        passed in, the End.DT6 function is not created.
+    :type localseg_rl: str, optional
+    :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
+    :type fwd_engine: str, optional
+    '''
+    # pylint: disable=too-many-arguments
+    #
+    if os.getenv('ENABLE_PERSISTENCY') not in ['true', 'True']:
+        logger.error('Get tunnel requires ENABLE_PERSISTENCY')
+        raise utils.InvalidArgumentError
+    # Retrieve the tunnel from the database
+    #
+    # ArangoDB params
+    arango_url = os.getenv('ARANGO_URL')
+    arango_user = os.getenv('ARANGO_USER')
+    arango_password = os.getenv('ARANGO_PASSWORD')
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(
+        url=arango_url)  # TODO keep arango connection open
+    # Connect to the db
+    database = arangodb_driver.connect_srv6_usid_db(
+        client=client,
+        username=arango_user,
+        password=arango_password
+    )
+    # Retrieve the tunnel from the db
+    return arangodb_driver.find_srv6_tunnel(
+        database=database,
+        key=key if key != '' else None,
+        l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0] if node_l_channel is not None else None,
+        l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1] if node_l_channel is not None else None,
+        r_grpc_address=utils.grpc_chan_to_addr_port(node_r_channel)[0] if node_r_channel is not None else None,
+        r_grpc_port=utils.grpc_chan_to_addr_port(node_r_channel)[1] if node_r_channel is not None else None,
+        sidlist_lr=sidlist_lr if sidlist_lr != [''] else None,
+        sidlist_rl=sidlist_rl if sidlist_rl != [''] else None,
+        dest_lr=dest_lr if dest_lr != '' else None,
+        dest_rl=dest_rl if dest_rl != '' else None,
+        localseg_lr=localseg_lr if localseg_lr != '' else None,
+        localseg_rl=localseg_rl if localseg_rl != '' else None,
+        bsid_addr=bsid_addr if bsid_addr != '' else None,
+        fwd_engine=fwd_engine if fwd_engine != '' else None,
+        is_unidirectional=False
+    )

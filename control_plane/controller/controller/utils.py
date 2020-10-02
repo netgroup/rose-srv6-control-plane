@@ -223,3 +223,111 @@ def parse_ip_port(netloc):
 def grpc_chan_to_addr_port(channel):
     address, port = parse_ip_port(channel._channel.target().decode())
     return str(address), port
+
+
+class OperationNotSupportedException(Exception):
+    '''
+    Operation not supported.
+    '''
+
+
+class BadRequestException(Exception):
+    '''
+    Bad request.
+    '''
+
+
+class InternalError(Exception):
+    '''
+    Internal error.
+    '''
+
+
+class InvalidGRPCRequestException(Exception):
+    '''
+    Invalid gRPC request.
+    '''
+
+
+class FileExistsException(Exception):
+    '''
+    File already exists.
+    '''
+
+
+class NoSuchProcessException(Exception):
+    '''
+    No such process.
+    '''
+
+
+class InvalidActionException(Exception):
+    '''
+    Invalid SRv6 action.
+    '''
+
+
+class GRPCServiceUnavailableException(Exception):
+    '''
+    gRPC service unavailable.
+    '''
+
+
+class GRPCUnauthorizedException(Exception):
+    '''
+    gRPC unauthorized.
+    '''
+
+
+class NotConfiguredException(Exception):
+    '''
+    Not configured.
+    '''
+
+
+class AlreadyConfiguredException(Exception):
+    '''
+    Already configured.
+    '''
+
+
+class NoSuchDevicecException(Exception):
+    '''
+    No such device.
+    '''
+
+
+class InvalidArgumentError(Exception):
+    '''
+    Invalid argument.
+    '''
+
+
+def raise_exception_on_error(error_code):
+    if error_code == commons_pb2.STATUS_SUCCESS:
+        return
+    if error_code == commons_pb2.STATUS_OPERATION_NOT_SUPPORTED:
+        raise OperationNotSupportedException
+    if error_code == commons_pb2.STATUS_BAD_REQUEST:
+        raise BadRequestException
+    if error_code == commons_pb2.STATUS_INTERNAL_ERROR:
+        raise InternalError
+    if error_code == commons_pb2.STATUS_INVALID_GRPC_REQUEST:
+        raise InvalidGRPCRequestException
+    if error_code == commons_pb2.STATUS_FILE_EXISTS:
+        raise FileExistsException
+    if error_code == commons_pb2.STATUS_NO_SUCH_PROCESS:
+        raise NoSuchProcessException
+    if error_code == commons_pb2.STATUS_INVALID_ACTION:
+        raise InvalidActionException
+    if error_code == commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE:
+        raise GRPCServiceUnavailableException
+    if error_code == commons_pb2.STATUS_GRPC_UNAUTHORIZED:
+        raise GRPCUnauthorizedException
+    if error_code == commons_pb2.STATUS_NOT_CONFIGURED:
+        raise NotConfiguredException
+    if error_code == commons_pb2.STATUS_ALREADY_CONFIGURED:
+        raise AlreadyConfiguredException
+    if error_code == commons_pb2.STATUS_NO_SUCH_DEVICE:
+        raise NoSuchDevicecException
+    raise InvalidArgumentError

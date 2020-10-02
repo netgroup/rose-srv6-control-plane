@@ -112,6 +112,7 @@ def raise_exception_on_error(error_code):   # TODO exeptions more specific
         raise InvalidArgumentError
     if error_code == STATUS_NO_SUCH_DEVICE:
         raise InvalidArgumentError
+    raise InvalidArgumentError
 
 
 # Utiliy function to check if the IP

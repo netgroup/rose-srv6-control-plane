@@ -88,7 +88,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     #
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
-    return srv6_manager.handle_srv6_path(
+    _srv6_paths = srv6_manager.handle_srv6_path(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -102,6 +102,25 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine
     )
+    srv6_paths = []
+    for srv6_path in _srv6_paths:
+        srv6_paths.append({
+            'grpc_address': srv6_path.grpc_address,
+            'grpc_port': srv6_path.grpc_port,
+            'destination': srv6_path.destination,
+            'segments': srv6_path.segments,
+            'device': srv6_path.device,
+            'encapmode': encapmode,
+            'table': srv6_path.table,
+            'metric': srv6_path.metric,
+            'bsid_addr': srv6_path.bsid_addr,
+            'fwd_engine': srv6_path.fwd_engine
+        })
+    if operation == 'get':
+        if srv6_paths is None:
+            print('Path not found\n')
+        else:
+            print(srv6_paths)
 
 
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
@@ -115,7 +134,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     #
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
-    return srv6_manager.handle_srv6_behavior(
+    _srv6_behaviors = srv6_manager.handle_srv6_behavior(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -131,6 +150,27 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         metric=metric,
         fwd_engine=fwd_engine
     )
+    srv6_behaviors = []
+    for srv6_behavior in _srv6_behaviors:
+        srv6_behaviors.append({
+            'grpc_address': srv6_behavior.grpc_address,
+            'grpc_port': srv6_behavior.grpc_port,
+            'segment': srv6_behavior.segment,
+            'action': srv6_behavior.action,
+            'device': srv6_behavior.device,
+            'table': srv6_behavior.table,
+            'nexthop': srv6_behavior.nexthop,
+            'lookup_table': srv6_behavior.lookup_table,
+            'interface': srv6_behavior.interface,
+            'segments': srv6_behavior.segments,
+            'metric': srv6_behavior.metric,
+            'fwd_engine': srv6_behavior.fwd_engine
+        })
+    if operation == 'get':
+        if srv6_behaviors is None:
+            print('Path not found\n')
+        else:
+            print(srv6_behaviors)
 
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
@@ -389,11 +429,11 @@ def args_srv6_path():
         {
             'args': ['--grpc-ip'],
             'kwargs': {'dest': 'grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'help': 'IP of the gRPC server'}
         }, {
             'args': ['--grpc-port'],
             'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
@@ -410,10 +450,10 @@ def args_srv6_path():
         }, {
             'args': ['--destination'],
             'kwargs': {'dest': 'destination', 'action': 'store',
-                       'required': True, 'help': 'Destination'}
+                       'help': 'Destination'}
         }, {
             'args': ['--segments'],
-            'kwargs': {'dest': 'segments', 'action': 'store', 'required': True,
+            'kwargs': {'dest': 'segments', 'action': 'store',
                        'help': 'Segments', 'default': ''}
         }, {
             'args': ['--device'],

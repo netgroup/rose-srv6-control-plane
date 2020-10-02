@@ -116,11 +116,14 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # Set the operation
     srv6_path.operation = operation
     # Set the gRPC address
-    srv6_path.grpc_address = grpc_address
+    if grpc_address is not None:
+        srv6_path.grpc_address = grpc_address
     # Set the gRPC port
-    srv6_path.grpc_port = grpc_port
+    if grpc_port is not None:
+        srv6_path.grpc_port = grpc_port
     # Set the destination
-    srv6_path.destination = destination
+    if destination is not None:
+        srv6_path.destination = destination
     # Set the segments
     srv6_path.segments.extend(segments)
     # Set the device
