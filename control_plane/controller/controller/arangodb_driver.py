@@ -1477,6 +1477,7 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
     if fwd_engine is not None:
         tunnel['fwd_engine'] = fwd_engine
     tunnel['is_unidirectional'] = is_unidirectional
+    print(tunnel)
     # Find the tunnel
     # Return all documents that match the given filters
     return srv6_tunnels.find(filters=tunnel)

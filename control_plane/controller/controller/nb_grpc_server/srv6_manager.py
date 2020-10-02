@@ -340,6 +340,10 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                 srv6_tunnel.ingress_port)
                     egress_channel = utils.get_grpc_session(srv6_tunnel.egress_ip,
                                                 srv6_tunnel.egress_port)
+                fwd_engine = \
+                    nb_commons_pb2.FwdEngine.Name(srv6_tunnel.fwd_engine)
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_uni_srv6_tunnel(
                         ingress_channel=ingress_channel,
@@ -453,13 +457,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             if srv6_tunnels is not None:
                 for tunnel in srv6_tunnels:
                     _srv6_unitunnel = response.srv6_unitunnels.add()
-                    _srv6_unitunnel.ingress_ip = tunnel['ingress_ip']
-                    _srv6_unitunnel.ingress_port = tunnel['ingress_port']
-                    _srv6_unitunnel.egress_ip = tunnel['egress_ip']
-                    _srv6_unitunnel.egress_port = tunnel['egress_port']
-                    _srv6_unitunnel.destination = tunnel['destination']
-                    _srv6_unitunnel.segments.extend(tunnel['segments'])
-                    _srv6_unitunnel.localseg = tunnel['localseg']
+                    _srv6_unitunnel.ingress_ip = tunnel['l_grpc_address']
+                    _srv6_unitunnel.ingress_port = tunnel['l_grpc_port']
+                    _srv6_unitunnel.egress_ip = tunnel['r_grpc_address']
+                    _srv6_unitunnel.egress_port = tunnel['r_grpc_port']
+                    _srv6_unitunnel.destination = tunnel['dest_lr']
+                    _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
+                    _srv6_unitunnel.localseg = tunnel['localseg_lr']
                     _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
                     _srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
                     _srv6_unitunnel.key = tunnel['_key']
@@ -488,6 +492,10 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                                                 srv6_tunnel.node_l_port)
                     node_r_channel = utils.get_grpc_session(srv6_tunnel.node_r_ip,
                                                 srv6_tunnel.node_r_port)
+                fwd_engine = \
+                    nb_commons_pb2.FwdEngine.Name(srv6_tunnel.fwd_engine)
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
                 if srv6_tunnel.operation == 'add':
                     res = srv6_utils.create_srv6_tunnel(
                         node_l_channel=node_l_channel,
@@ -530,8 +538,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     srv6_tunnels = srv6_utils.get_srv6_tunnel(
                         node_l_channel=node_l_channel,
                         node_r_channel=node_r_channel,
-                        sidlist_lr=srv6_tunnel.sidlist_lr if srv6_tunnel.sidlist_lr != [''] else None,
-                        sidlist_rl=srv6_tunnel.sidlist_rl if srv6_tunnel.sidlist_rl != [''] else None,
+                        sidlist_lr=list(srv6_tunnel.sidlist_lr) if srv6_tunnel.sidlist_lr != [''] else None,
+                        sidlist_rl=list(srv6_tunnel.sidlist_rl) if srv6_tunnel.sidlist_rl != [''] else None,
                         dest_lr=srv6_tunnel.dest_lr if srv6_tunnel.dest_lr != '' else None,
                         dest_rl=srv6_tunnel.dest_rl if srv6_tunnel.dest_rl != '' else None,
                         localseg_lr=srv6_tunnel.localseg_lr if srv6_tunnel.localseg_lr != '' else None,
@@ -608,8 +616,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             if srv6_tunnels is not None:
                 for tunnel in srv6_tunnels:
                     _srv6_biditunnel = response.srv6_biditunnels.add()
-                    _srv6_biditunnel.node_l_ip = tunnel['node_l_ip']
-                    _srv6_biditunnel.node_l_port = tunnel['node_l_port']
+                    _srv6_biditunnel.node_l_ip = tunnel['l_grpc_address']
+                    _srv6_biditunnel.node_l_port = tunnel['l_grpc_port']
                     _srv6_biditunnel.node_r_ip = tunnel['node_r_ip']
                     _srv6_biditunnel.node_r_port = tunnel['node_r_port']
                     _srv6_biditunnel.dest_lr = tunnel['dest_lr']

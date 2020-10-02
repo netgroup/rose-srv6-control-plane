@@ -174,7 +174,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         })
     if operation == 'get':
         if srv6_behaviors is None:
-            print('Path not found\n')
+            print('Behavior not found\n')
         else:
             pprint.pprint(srv6_behaviors)
 
@@ -220,6 +220,42 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
             fwd_engine=fwd_engine,
             key=key
         )
+    if operation == 'get':
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        _srv6_tunnels = srv6_manager.handle_srv6_unitunnel(
+            controller_channel=controller_channel,
+            operation='get',
+            ingress_ip=ingress_ip,
+            ingress_port=ingress_port,
+            egress_ip=egress_ip,
+            egress_port=egress_port,
+            destination=destination,
+            localseg=localseg,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key
+        )
+    srv6_tunnels = []
+    for srv6_tunnel in _srv6_tunnels:
+        srv6_tunnels.append({
+            'ingress_ip': srv6_tunnel.ingress_ip,
+            'ingress_port': srv6_tunnel.ingress_port,
+            'egress_ip': srv6_tunnel.egress_ip,
+            'egress_port': srv6_tunnel.egress_port,
+            'destination': srv6_tunnel.destination,
+            'segments': srv6_tunnel.segments,
+            'bsid_addr': srv6_tunnel.bsid_addr,
+            'fwd_engine': srv6_tunnel.fwd_engine,
+            'key': srv6_tunnel.key
+        })
+    if operation == 'get':
+        if srv6_tunnels is None or len(srv6_tunnels) == 0:
+            print('Tunnel not found\n')
+            return
+        else:
+            pprint.pprint(srv6_tunnels)
+            return
     # Invalid operation
     raise grpc_utils.InvalidArgumentError
 
@@ -271,8 +307,50 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
             fwd_engine=fwd_engine,
             key=key
         )
+    if operation == 'get':
+        # Perform the operation
+        # If an error occurs during the operation, an exception will be raised
+        _srv6_tunnels = srv6_manager.handle_srv6_biditunnel(
+            controller_channel=controller_channel,
+            operation='get',
+            node_l_ip=node_l_ip,
+            node_l_port=node_l_port,
+            node_r_ip=node_r_ip,
+            node_r_port=node_r_port,
+            dest_lr=dest_lr,
+            dest_rl=dest_rl,
+            localseg_lr=localseg_lr,
+            localseg_rl=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key
+        )
+    srv6_tunnels = []
+    for srv6_tunnel in _srv6_tunnels:
+        srv6_tunnels.append({
+            'node_l_ip': srv6_tunnel.node_l_ip,
+            'node_r_ip': srv6_tunnel.node_r_ip,
+            'node_l_port': srv6_tunnel.node_l_port,
+            'node_r_port': srv6_tunnel.node_r_port,
+            'sidlist_lr': srv6_tunnel.sidlist_lr,
+            'sidlist_rl': srv6_tunnel.sidlist_rl,
+            'dest_lr': srv6_tunnel.dest_lr,
+            'dest_rl': srv6_tunnel.dest_rl,
+            'localseg_lr': srv6_tunnel.localseg_lr,
+            'localseg_rl': srv6_tunnel.localseg_rl,
+            'bsid_addr': srv6_tunnel.bsid_addr,
+            'fwd_engine': srv6_tunnel.fwd_engine,
+            'key': srv6_tunnel.key
+        })
+    if operation == 'get':
+        if srv6_tunnels is None or len(srv6_tunnels) == 0:
+            print('Tunnel not found\n')
+            return
+        else:
+            pprint.pprint(srv6_tunnels)
+            return
     # Invalid operation
-    raise cli_utils.InvalidArgumentError
+    raise grpc_utils.InvalidArgumentError
 
 
 def args_srv6_usid_policy():
@@ -708,21 +786,21 @@ def args_srv6_unitunnel():
         }, {
             'args': ['--ingress-grpc-ip'],
             'kwargs': {'dest': 'ingress_grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'default': '', 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--egress-grpc-ip'],
             'kwargs': {'dest': 'egress_grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'default': '', 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--ingress-grpc-port'],
             'kwargs': {'dest': 'ingress_grpc_port', 'action': 'store',
                        'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'default': -1, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--egress-grpc-port'],
             'kwargs': {'dest': 'egress_grpc_port', 'action': 'store',
                        'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'default': -1, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
@@ -734,7 +812,7 @@ def args_srv6_unitunnel():
             'is_path': True
         }, {
             'args': ['--dest'],
-            'kwargs': {'dest': 'dest', 'action': 'store', 'required': True,
+            'kwargs': {'dest': 'dest', 'action': 'store', 'default': '',
                        'help': 'Destination'}
         }, {
             'args': ['--localseg'],
@@ -743,7 +821,7 @@ def args_srv6_unitunnel():
         }, {
             'args': ['--sidlist'],
             'kwargs': {'dest': 'sidlist', 'action': 'store',
-                       'help': 'SID list', 'required': True}
+                       'help': 'SID list', 'default': None}
         }, {
             'args': ['--bsid-addr'],
             'kwargs': {'dest': 'bsid_addr', 'action': 'store',
@@ -830,19 +908,19 @@ def args_srv6_biditunnel():
         }, {
             'args': ['--left-grpc-ip'],
             'kwargs': {'dest': 'l_grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'default': '', 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--right-grpc-ip'],
             'kwargs': {'dest': 'r_grpc_ip', 'action': 'store',
-                       'required': True, 'help': 'IP of the gRPC server'}
+                       'default': '', 'help': 'IP of the gRPC server'}
         }, {
             'args': ['--left-grpc-port'],
             'kwargs': {'dest': 'l_grpc_port', 'action': 'store', 'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'default': -1, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--right-grpc-port'],
             'kwargs': {'dest': 'r_grpc_port', 'action': 'store', 'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'default': -1, 'help': 'Port of the gRPC server'}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
@@ -854,28 +932,28 @@ def args_srv6_biditunnel():
             'is_path': True
         }, {
             'args': ['--left-right-dest'],
-            'kwargs': {'dest': 'dest_lr', 'action': 'store', 'required': True,
+            'kwargs': {'dest': 'dest_lr', 'action': 'store', 'default': '',
                        'help': 'Left to Right destination'}
         }, {
             'args': ['--right-left-dest'],
-            'kwargs': {'dest': 'dest_rl', 'action': 'store', 'required': True,
+            'kwargs': {'dest': 'dest_rl', 'action': 'store', 'default': '',
                        'help': 'Right to Left destination'}
         }, {
             'args': ['--left-right-localseg'],
             'kwargs': {'dest': 'localseg_lr', 'action': 'store',
-                       'help': 'Left to Right Local segment', 'default': None}
+                       'help': 'Left to Right Local segment', 'default': ''}
         }, {
             'args': ['--right-left-localseg'],
             'kwargs': {'dest': 'localseg_rl', 'action': 'store',
-                       'help': 'Right to Left Local segment', 'default': None}
+                       'help': 'Right to Left Local segment', 'default': ''}
         }, {
             'args': ['--left-right-sidlist'],
             'kwargs': {'dest': 'sidlist_lr', 'action': 'store',
-                       'help': 'Left to Right SID list', 'required': True}
+                       'help': 'Left to Right SID list', 'default': None}
         }, {
             'args': ['--right-left-sidlist'],
             'kwargs': {'dest': 'sidlist_rl', 'action': 'store',
-                       'help': 'Right to Left SID list', 'required': True}
+                       'help': 'Right to Left SID list', 'default': None}
         }, {
             'args': ['--bsid-addr'],
             'kwargs': {'dest': 'bsid_addr', 'action': 'store',
