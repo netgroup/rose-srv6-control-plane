@@ -81,7 +81,8 @@ def handle_srv6_usid_policy(controller_channel, operation,
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
                      destination, segments="", device='', encapmode="encap",
-                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux'):
+                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux',
+                     key=''):
     '''
     Handle a SRv6 path.
     '''
@@ -101,7 +102,8 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         table=table,
         metric=metric,
         bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
+        fwd_engine=fwd_engine,
+        key=key
     )
     srv6_paths = []
     for srv6_path in _srv6_paths:
@@ -429,6 +431,10 @@ def args_srv6_path():
     '''
     return [
         {
+            'args': ['--key'],
+            'kwargs': {'dest': 'key', 'action': 'store',
+                       'help': 'An id of the SRv6 path', 'default': ''}
+        }, {
             'args': ['--grpc-ip'],
             'kwargs': {'dest': 'grpc_ip', 'action': 'store',
                        'help': 'IP of the gRPC server', 'default': ''}

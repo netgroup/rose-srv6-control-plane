@@ -103,7 +103,8 @@ def handle_srv6_usid_policy(controller_channel, operation,
 
 def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
                      destination='', segments="", device='', encapmode="encap",
-                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux'):
+                     table=-1, metric=-1, bsid_addr='', fwd_engine='linux',
+                     key=''):
     '''
     Handle a SRv6 path.
     '''
@@ -144,6 +145,8 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
         srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value('FWD_ENGINE_UNSPEC')
     else:
         srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    # Set the key
+    srv6_path.key = key
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)

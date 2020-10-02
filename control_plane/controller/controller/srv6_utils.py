@@ -194,9 +194,32 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     '''
     Handle a SRv6 Path
     '''
-
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-
+    #
+    # Check if a SRv6 path with the same key already exists
+    if operation == 'add' and key is not None and \
+            os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # ArangoDB params
+        arango_url = os.getenv('ARANGO_URL')
+        arango_user = os.getenv('ARANGO_USER')
+        arango_password = os.getenv('ARANGO_PASSWORD')
+        # Connect to ArangoDB
+        client = arangodb_driver.connect_arango(
+            url=arango_url)  # TODO keep arango connection open
+        # Connect to the db
+        database = arangodb_driver.connect_srv6_usid_db(
+            client=client,
+            username=arango_user,
+            password=arango_password
+        )
+        paths = arangodb_driver.find_srv6_path(
+            database=database,
+            key=key
+        )
+        if len(paths) > 0:
+            logger.error('An entity with key %s already exists', key)
+            raise utils.InvalidArgumentError
+    #
     if segments is None:
         segments = []
     # Create request message

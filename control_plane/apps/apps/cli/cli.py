@@ -831,7 +831,8 @@ class ControllerCLISRv6(CustomCmd):
             table=args.table,
             metric=args.metric,
             bsid_addr=args.bsid_addr,
-            fwd_engine=args.fwd_engine
+            fwd_engine=args.fwd_engine,
+            key=args.key
         )
         # Return False in order to keep the CLI subsection open
         # after the command execution

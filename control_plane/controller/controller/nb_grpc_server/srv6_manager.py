@@ -125,7 +125,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     table=srv6_path.table,
                     metric=srv6_path.metric,
                     bsid_addr=srv6_path.bsid_addr,
-                    fwd_engine=fwd_engine
+                    fwd_engine=fwd_engine,
+                    key=srv6_path.key if srv6_path.key != '' else None
                 )
                 if channel is not None:
                     channel.close()
