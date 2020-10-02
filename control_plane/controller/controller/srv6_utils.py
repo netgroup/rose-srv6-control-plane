@@ -146,7 +146,7 @@ def del_srv6_path_db(channel, destination, segments=None,
                 fwd_engine.upper())
         except ValueError:
             logger.error('Invalid forwarding engine: %s', fwd_engine)
-            return None
+            return commons_pb2.STATUS_INTERNAL_ERROR
         # Set encapmode
         path.encapmode = text_type(encapmode)
         if len(segments) == 0:
@@ -403,7 +403,7 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                     update_db=update_db
                 )
                 # Raise an exception if an error occurred
-                utils.raise_exception_on_error(response.status)
+                utils.raise_exception_on_error(response)
             else:
                 # Remove the SRv6 path
                 response = stub.Remove(request)
@@ -586,7 +586,7 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
                 fwd_engine.upper())
         except ValueError:
             logger.error('Invalid forwarding engine: %s', fwd_engine)
-            return None
+            return commons_pb2.STATUS_INTERNAL_ERROR
         # Get gRPC channel
         channel = utils.get_grpc_session(
             server_ip=srv6_behavior['grpc_address'],
@@ -846,7 +846,7 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     update_db=update_db
                 )
                 # Raise an exception if an error occurred
-                utils.raise_exception_on_error(response.status)
+                utils.raise_exception_on_error(response)
             else:
                 # Remove the SRv6 behavior
                 response = stub.Remove(request)
