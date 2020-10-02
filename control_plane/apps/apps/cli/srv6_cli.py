@@ -29,6 +29,7 @@ SRv6 utilities for Controller CLI.
 '''
 
 # General imports
+import pprint
 import sys
 from argparse import ArgumentParser
 
@@ -120,7 +121,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         if srv6_paths is None:
             print('Path not found\n')
         else:
-            print(srv6_paths)
+            pprint.pprint(srv6_paths)
 
 
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
