@@ -174,7 +174,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         if srv6_behaviors is None:
             print('Path not found\n')
         else:
-            print(srv6_behaviors)
+            pprint.pprint(srv6_behaviors)
 
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
