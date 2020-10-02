@@ -179,7 +179,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             if srv6_paths is not None:
                 for path in srv6_paths:
                     _srv6_path = response.srv6_paths.add()
-                    _srv6_path.grpc_ip = path['grpc_ip']
+                    _srv6_path.grpc_ip = path['grpc_address']
                     _srv6_path.grpc_port = path['grpc_port']
                     _srv6_path.destination = path['destination']
                     _srv6_path.segments.extend(path['segments'])
@@ -284,7 +284,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             if srv6_behaviors is not None:
                 for behavior in srv6_behaviors:
                     _srv6_behavior = response.srv6_behaviors.add()
-                    _srv6_behavior.grpc_ip = behavior['grpc_ip']
+                    _srv6_behavior.grpc_ip = behavior['grpc_address']
                     _srv6_behavior.grpc_port = behavior['grpc_port']
                     _srv6_behavior.segment = behavior['segment']
                     _srv6_behavior.action = behavior['action']
