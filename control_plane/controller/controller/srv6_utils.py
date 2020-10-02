@@ -557,11 +557,19 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         username=arango_user,
         password=arango_password
     )
+    # gRPC address
+    grpc_address = None
+    if channel is not None:
+        grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # gRPC port number
+    grpc_port = None
+    if channel is not None:
+        grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Find the behaviors matching the params
     srv6_behaviors = arangodb_driver.find_srv6_behavior(
         database=database,
-        grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-        grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+        grpc_address=grpc_address,
+        grpc_port=grpc_port,
         segment=segment,
         action=action,
         device=device,
@@ -605,26 +613,26 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         # the decision is left to the Linux kernel
         behavior.metric = srv6_behavior['metric']
         # Set the action for the seg6local route
-        behavior.action = text_type(action)
+        behavior.action = text_type(srv6_behavior['action'])
         # Set the nexthop for the L3 cross-connect actions
         # (e.g. End.DX4, End.DX6)
-        behavior.nexthop = text_type(nexthop)
+        behavior.nexthop = text_type(srv6_behavior['nexthop'])
         # Set the table for the "decap and table lookup" actions
         # (e.g. End.DT4, End.DT6)
-        behavior.lookup_table = int(lookup_table)
+        behavior.lookup_table = int(srv6_behavior['lookup_table'])
         # Set the inteface for the L2 cross-connect actions
         # (e.g. End.DX2)
-        behavior.interface = text_type(interface)
+        behavior.interface = text_type(srv6_behavior['interface'])
         # Set the segments for the binding SID actions
         # (e.g. End.B6, End.B6.Encaps)
-        for seg in segments:
+        for seg in srv6_behavior['segments']:
             # Create a new segment
             srv6_segment = behavior.segs.add()
             srv6_segment.segment = text_type(seg)
         # Forwarding engine (Linux or VPP)
         try:
             behavior_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-                fwd_engine.upper())
+                srv6_behavior['fwd_engine'].upper())
         except ValueError:
             logger.error('Invalid forwarding engine: %s', fwd_engine)
             return commons_pb2.STATUS_INTERNAL_ERROR
@@ -892,29 +900,29 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                 )
             return
         elif operation == 'del':
-            # Get the reference of the stub
-            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Remove the SRv6 behavior
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
                 response = del_srv6_behavior_db(
                     channel=channel,
                     key=key if key != '' else None,
-                    segment=segment,
-                    action=action,
-                    device=device,
-                    table=table,
-                    nexthop=nexthop,
-                    lookup_table=lookup_table,
-                    interface=interface,
-                    segments=segments,
-                    metric=metric,
-                    fwd_engine=fwd_engine,
+                    segment=segment if segment != '' else None,
+                    action=action if action != '' else None,
+                    device=device if device != '' else None,
+                    table=table if table != -1 else None,
+                    nexthop=nexthop if nexthop != '' else None,
+                    lookup_table=lookup_table if lookup_table != -1 else None,
+                    interface=interface if interface != '' else None,
+                    segments=segments if segments != [''] else None,
+                    metric=metric if metric != -1 else None,
+                    fwd_engine=fwd_engine if fwd_engine != '' else None,
                     update_db=update_db
                 )
                 # Raise an exception if an error occurred
                 utils.raise_exception_on_error(response)
             else:
+                # Get the reference of the stub
+                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
                 # Remove the SRv6 behavior
                 response = stub.Remove(request)
                 # Raise an exception if an error occurred
