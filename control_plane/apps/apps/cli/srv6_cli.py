@@ -429,11 +429,11 @@ def args_srv6_path():
         {
             'args': ['--grpc-ip'],
             'kwargs': {'dest': 'grpc_ip', 'action': 'store',
-                       'help': 'IP of the gRPC server'}
+                       'help': 'IP of the gRPC server', 'default': ''}
         }, {
             'args': ['--grpc-port'],
             'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
-                       'help': 'Port of the gRPC server'}
+                       'help': 'Port of the gRPC server', 'default': -1}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}
@@ -450,7 +450,7 @@ def args_srv6_path():
         }, {
             'args': ['--destination'],
             'kwargs': {'dest': 'destination', 'action': 'store',
-                       'help': 'Destination'}
+                       'help': 'Destination', 'default': ''}
         }, {
             'args': ['--segments'],
             'kwargs': {'dest': 'segments', 'action': 'store',
@@ -464,7 +464,7 @@ def args_srv6_path():
             'kwargs': {'dest': 'encapmode', 'action': 'store',
                        'help': 'Encap mode',
                        'choices': ['encap', 'inline', 'l2encap'],
-                       'default': 'encap'}
+                       'default': ''}
         }, {
             'args': ['--table'],
             'kwargs': {'dest': 'table', 'action': 'store',
@@ -481,7 +481,7 @@ def args_srv6_path():
             'args': ['--fwd-engine'],
             'kwargs': {'dest': 'fwd_engine', 'action': 'store',
                        'help': 'Forwarding engine (Linux or VPP)',
-                       'type': str, 'default': 'linux'}
+                       'type': str, 'default': ''}
         }, {
             'args': ['--debug'],
             'kwargs': {'action': 'store_true', 'help': 'Activate debug logs'}
@@ -556,7 +556,8 @@ def args_srv6_behavior():
         }, {
             'args': ['--grpc-port'],
             'kwargs': {'dest': 'grpc_port', 'action': 'store', 'type': int,
-                       'required': True, 'help': 'Port of the gRPC server'}
+                       'required': True, 'help': 'Port of the gRPC server',
+                       'default': None}
         }, {
             'args': ['--secure'],
             'kwargs': {'action': 'store_true', 'help': 'Activate secure mode'}

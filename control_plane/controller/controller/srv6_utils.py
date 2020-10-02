@@ -241,7 +241,12 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             utils.raise_exception_on_error(res)
     # Forwarding engine (Linux or VPP)
     try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
+        if fwd_engine != '':
+            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
+        else:
+            # By default, if forwarding engine is not specified, we use
+            # Linux forwarding engine
+            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value('LINUX')
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         raise utils.InvalidArgumentError
@@ -252,7 +257,12 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             # Get the reference of the stub
             stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
             # Set encapmode
-            path.encapmode = text_type(encapmode)
+            if encapmode != '':
+                path.encapmode = text_type(encapmode)
+            else:
+                # By default, if encap mode is not specified, we use
+                # 'encap' mode
+                path.encapmode = 'encap'
             if len(segments) == 0:
                 logger.error('*** Missing segments for seg6 route')
                 utils.raise_exception_on_error(

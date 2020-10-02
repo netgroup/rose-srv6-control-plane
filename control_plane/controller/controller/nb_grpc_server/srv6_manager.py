@@ -105,19 +105,27 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         srv6_path.grpc_port not in [None, -1]:
                     channel = utils.get_grpc_session(srv6_path.grpc_address,
                                                      srv6_path.grpc_port)
+                # Extract the encap mode
+                encapmode = nb_commons_pb2.EncapMode.Name(srv6_path.encapmode)
+                if encapmode == 'ENCAP_MODE_UNSPEC':
+                    encapmode = ''
+                # Extract the forwarding engine
+                fwd_engine = \
+                    nb_commons_pb2.FwdEngine.Name(srv6_path.fwd_engine)
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
+                # Handle SRv6 path
                 srv6_paths = srv6_utils.handle_srv6_path(
                     operation=srv6_path.operation,
                     channel=channel,
                     destination=srv6_path.destination,
                     segments=list(srv6_path.segments),
                     device=srv6_path.device,
-                    encapmode=nb_commons_pb2.EncapMode.Name(
-                        srv6_path.encapmode).lower(),
+                    encapmode=encapmode,
                     table=srv6_path.table,
                     metric=srv6_path.metric,
                     bsid_addr=srv6_path.bsid_addr,
-                    fwd_engine=nb_commons_pb2.FwdEngine.Name(
-                        srv6_path.fwd_engine).lower()
+                    fwd_engine=fwd_engine
                 )
                 if channel is not None:
                     channel.close()

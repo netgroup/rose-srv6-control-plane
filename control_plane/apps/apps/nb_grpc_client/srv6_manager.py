@@ -101,8 +101,8 @@ def handle_srv6_usid_policy(controller_channel, operation,
     return list(response.srv6_micro_sids)
 
 
-def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
-                     destination, segments="", device='', encapmode="encap",
+def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
+                     destination='', segments="", device='', encapmode="encap",
                      table=-1, metric=-1, bsid_addr='', fwd_engine='linux'):
     '''
     Handle a SRv6 path.
@@ -129,7 +129,10 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # Set the device
     srv6_path.device = device
     # Set the encap mode
-    srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(encapmode.upper())
+    if encapmode == '':
+        srv6_path.encapmode = nb_commons_pb2.EncapMode.Value('ENCAP_MODE_UNSPEC')
+    else:
+        srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(encapmode.upper())
     # Set the table ID
     srv6_path.table = table
     # Set the metric
@@ -137,7 +140,10 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     # Set the BSID address
     srv6_path.bsid_addr = bsid_addr
     # Set the forwarding engine
-    srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    if encapmode == '':
+        srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value('FWD_ENGINE_UNSPEC')
+    else:
+        srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)

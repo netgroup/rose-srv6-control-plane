@@ -19,8 +19,9 @@ enum StatusCode {
 }
 
 enum FwdEngine {
-  LINUX = 0;
-  VPP = 1;
+  FWD_ENGINE_UNSPEC = 0;
+  LINUX = 1;
+  VPP = 2;
 }
 
 enum SRv6Action {
@@ -37,7 +38,8 @@ enum SRv6Action {
 }
 
 enum EncapMode {
-  INLINE = 0;
-  ENCAP = 1;
-  L2ENCAP = 2;
+  ENCAP_MODE_UNSPEC = 0;
+  INLINE = 1;
+  ENCAP = 2;
+  L2ENCAP = 3;
 }
