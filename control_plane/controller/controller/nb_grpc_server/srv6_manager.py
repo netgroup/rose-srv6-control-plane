@@ -220,11 +220,17 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         srv6_behavior.grpc_port not in [None, -1]:
                     channel = utils.get_grpc_session(srv6_behavior.grpc_address,
                                                      srv6_behavior.grpc_port)
+                # Extract the SRv6 action
+                if nb_commons_pb2.SRv6Action.Name(srv6_behavior.action) == 'SRV6_ACTION_UNSPEC':
+                    action = ''
+                else:
+                    action = nb_utils.grpc_repr_to_action[nb_commons_pb2.SRv6Action.Name(srv6_behavior.action)]
+                # Handle the behavior
                 srv6_behaviors = srv6_utils.handle_srv6_behavior(
                     operation=srv6_behavior.operation,
                     channel=channel,
                     segment=srv6_behavior.segment,
-                    action=nb_utils.grpc_repr_to_action[nb_commons_pb2.SRv6Action.Name(srv6_behavior.action)],
+                    action=action,
                     device=srv6_behavior.device,
                     table=srv6_behavior.table,
                     nexthop=srv6_behavior.nexthop,

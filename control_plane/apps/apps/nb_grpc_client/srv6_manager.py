@@ -180,7 +180,12 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     # Set the segment
     srv6_behavior.segment = segment
     # Set the action
-    srv6_behavior.action = nb_commons_pb2.SRv6Action.Value(utils.action_to_grpc_repr[action])
+    if action == '':
+        srv6_behavior.action = \
+            nb_commons_pb2.SRv6Action.Value('SRV6_ACTION_UNSPEC')
+    else:
+        srv6_behavior.action = \
+            nb_commons_pb2.SRv6Action.Value(utils.action_to_grpc_repr[action])
     # Set the device
     srv6_behavior.device = device
     # Set the table ID
