@@ -146,9 +146,13 @@ def topology_information_extraction_isis(controller_channel,
     Run periodical topology extraction.
     '''
     # Read addresses configuration from YAML file
-    addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
+    addrs_config = None
+    if addrs_yaml is not None:
+        addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
     # Read hosts configuration from YAML file
-    hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
+    hosts_config = None
+    if hosts_yaml is not None:
+        hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
     # pylint: disable=too-many-arguments, unused-argument
     for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
                 controller_channel=controller_channel,

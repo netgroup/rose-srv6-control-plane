@@ -290,8 +290,8 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                         arango_url=arango_url,
                         arango_user=arango_user,
                         arango_password=arango_password,
-                        addrs_config=addrs_config,
-                        hosts_config=hosts_config,
+                        addrs_config=addrs_config if len(addrs_config) != 0 else None,
+                        hosts_config=hosts_config if len(hosts_config) != 0 else None,
                         period=period,
                         verbose=verbose
                     ):
@@ -305,9 +305,9 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 for node in nodes:
                     _node = response.topology.nodes.add()
                     _node.id = node['_key']
-                    if 'ext_reachability' in node:
+                    if node.get('ext_reachability') is not None:
                         _node.ext_reachability = node['ext_reachability']
-                    if 'ip_address' in node:
+                    if node.get('ip_address') is not None:
                         _node.ip_address = node['ip_address']
                     _node.type = topology_manager_pb2.NodeType.Value(
                         node_type_to_grpc_repr[node['type']])
