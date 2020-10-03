@@ -240,7 +240,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     metric=srv6_behavior.metric,
                     fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         srv6_behavior.fwd_engine).lower(),
-                    key=srv6_behavior.key
+                    key=srv6_behavior.key if srv6_behavior.key != '' else None
                 )
                 if channel is not None:
                     channel.close()
@@ -314,7 +314,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_behavior.table = behavior['table']
                     _srv6_behavior.metric = behavior['metric']
                     _srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(behavior['fwd_engine'].upper())
-                    _srv6_behavior.key = behavior['_key']
+                    if '_key' in behavior:
+                        _srv6_behavior.key = behavior['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -466,7 +467,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_unitunnel.localseg = tunnel['localseg_lr']
                     _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
                     _srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
-                    _srv6_unitunnel.key = tunnel['_key']
+                    if '_key' in tunnel:
+                        _srv6_unitunnel.key = tunnel['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -509,7 +511,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
                     )
                     if node_l_channel is not None:
                         node_l_channel.close()
@@ -527,7 +529,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
                     )
                     if node_l_channel is not None:
                         node_l_channel.close()
@@ -627,7 +629,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     _srv6_biditunnel.localseg_lr = tunnel['localseg_lr']
                     _srv6_biditunnel.localseg_rl = tunnel['localseg_rl']
                     _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
-                    _srv6_biditunnel.key = tunnel['_key']
+                    if '_key' in tunnel:
+                        _srv6_biditunnel.key = tunnel['_key']
                     _srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
