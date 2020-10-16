@@ -80,7 +80,8 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  grpc_port=DEFAULT_GRPC_PORT,
                  secure=DEFAULT_SECURE,
                  certificate=DEFAULT_CERTIFICATE,
-                 key=DEFAULT_KEY):
+                 key=DEFAULT_KEY,
+                 db_client=None):
     '''
     Start a gRPC server.
 
@@ -93,6 +94,8 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     :param certificate: Filename of the certificate of the gRPC server
                         (default: cert_server.pem)
     :type certificate: str, optional
+    :param db_client: Database client.
+    :rtype: arango.client.ArangoClient
     :param key: Filename of the private key of the gRPC server
                 (default: key_server.pem)
     :type key: str, optional
@@ -114,13 +117,13 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     # Add SRv6 Manager
     nb_srv6_manager_pb2_grpc.add_SRv6ManagerServicer_to_server(
-        SRv6Manager(), grpc_server)
+        SRv6Manager(db_client=db_client), grpc_server)
     # Add Topology Manager
     topology_manager_pb2_grpc.add_TopologyManagerServicer_to_server(
-        TopologyManager(), grpc_server)
+        TopologyManager(db_client=db_client), grpc_server)
     # Add SRv6-PM Manager
     srv6pm_manager_pb2_grpc.add_SRv6PMManagerServicer_to_server(
-        SRv6PMManager(), grpc_server)
+        SRv6PMManager(db_client=db_client), grpc_server)
     # If secure we need to create a secure endpoint
     if secure:
         # Read key and certificate

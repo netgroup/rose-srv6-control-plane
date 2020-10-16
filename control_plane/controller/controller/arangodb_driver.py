@@ -88,7 +88,7 @@ def connect_srv6_usid_db(client, username, password):
                       username=username, password=password)
 
 
-def init_srv6_usid_db(client, arango_username, arango_password, force=False):
+def init_db(client, arango_username, arango_password, db_name, force=False):
     '''
     Initialize "srv6_usid" database.
 
@@ -98,6 +98,8 @@ def init_srv6_usid_db(client, arango_username, arango_password, force=False):
     :type arango_username: str
     :param arango_password: Password for basic authentication.
     :type arango_password: str
+    :param db_name: Name of the database.
+    :type db_name: str
     :param force: By default the database is not re-initialized if it already
                   exists. If this param is True, clear the database before the
                   initialization if it already exists.
@@ -116,18 +118,18 @@ def init_srv6_usid_db(client, arango_username, arango_password, force=False):
         password=arango_password
     )
     # Create "srv6_usid" database, if it does not exist
-    if sys_db.has_database('srv6_usid'):
+    if sys_db.has_database(db_name):
         # The database already exists
         if force:
             # If force is True, reinizialize it
-            sys_db.delete_database(name='srv6_usid')
-            is_success = sys_db.create_database(name='srv6_usid')
+            sys_db.delete_database(name=db_name)
+            is_success = sys_db.create_database(name=db_name)
         else:
             # If force is False, return the database without re-init it
-            is_success = sys_db.collection(name='srv6_usid')
+            is_success = sys_db.collection(name=db_name)
     else:
         # The database does not exist, create a new one
-        is_success = sys_db.create_database(name='srv6_usid')
+        is_success = sys_db.create_database(name=db_name)
     # Return True if the database has been initialized successfully,
     # False otherwise
     return is_success
@@ -206,7 +208,7 @@ def init_srv6_paths_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "srv6_usid".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "srv6_paths" collection, if it does not exist
     if database.has_collection('srv6_paths'):
@@ -252,7 +254,7 @@ def init_srv6_behaviors_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "srv6_usid".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "srv6_behaviors" collection, if it does not exist
     if database.has_collection('srv6_behaviors'):
@@ -298,7 +300,7 @@ def init_srv6_tunnels_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "srv6_usid".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "srv6_tunnels" collection, if it does not exist
     if database.has_collection('srv6_tunnels'):
@@ -344,7 +346,7 @@ def init_srv6_policies_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "srv6_usid".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "srv6_policies" collection, if it does not exist
     if database.has_collection('srv6_policies'):
@@ -390,7 +392,7 @@ def init_nodes_config_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "srv6_usid".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "nodes_config" collection, if it does not exist
     if database.has_collection('nodes_config'):

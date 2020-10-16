@@ -102,6 +102,15 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
     gRPC request handler.
     '''
 
+    def __init__(self, db_client=None):
+        # Establish a connection to the "srv6" database
+        self.db_conn = arangodb_driver.connect_db(
+            client=db_client,
+            db_name='topology',
+            username=os.getenv('ARANGO_USER'),
+            password=os.getenv('ARANGO_PASSWORD')
+        )
+
     def ExtractTopology(self, request, context):
         '''
         Extract the network topology from a set of nodes running

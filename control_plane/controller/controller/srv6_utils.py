@@ -78,22 +78,9 @@ def parse_grpc_error(err):
 def del_srv6_path_db(channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
                      bsid_addr='', fwd_engine='linux', key=None,
-                     update_db=True):
+                     update_db=True, db_conn=None):
     if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # gRPC address
     grpc_address = None
     if channel is not None:
@@ -104,7 +91,7 @@ def del_srv6_path_db(channel, destination, segments=None,
         grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Find the paths matching the params
     srv6_paths = arangodb_driver.find_srv6_path(
-        database=database,
+        database=db_conn,
         key=key,
         grpc_address=grpc_address,
         grpc_port=grpc_port,
@@ -178,7 +165,7 @@ def del_srv6_path_db(channel, destination, segments=None,
         response = response.status
         # Remove the path from the db
         arangodb_driver.delete_srv6_path(
-            database=database,
+            database=db_conn,
             key=srv6_path['_key'],
             grpc_address=srv6_path['grpc_address'],
             grpc_port=srv6_path['grpc_port'],
@@ -198,7 +185,7 @@ def del_srv6_path_db(channel, destination, segments=None,
 def handle_srv6_path(operation, channel, destination, segments=None,
                      device='', encapmode="encap", table=-1, metric=-1,
                      bsid_addr='', fwd_engine='linux', key=None,
-                     update_db=True):
+                     update_db=True, db_conn=None):
     '''
     Handle a SRv6 Path
     '''
@@ -207,21 +194,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
     # Check if a SRv6 path with the same key already exists
     if operation == 'add' and key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         paths = arangodb_driver.find_srv6_path(
-            database=database,
+            database=db_conn,
             key=key
         )
         if len(paths) > 0:
@@ -310,22 +284,9 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             # Store the path to the database
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Save the policy to the db
                 arangodb_driver.insert_srv6_path(
-                    database=database,
+                    database=db_conn,
                     key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
@@ -341,22 +302,9 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             return
         elif operation == 'get':
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Find the paths
                 return arangodb_driver.find_srv6_path(
-                   database=database,
+                   database=db_conn,
                    key=key if key != '' else None,
                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
@@ -395,22 +343,9 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             # Remove the path from the database
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Save the policy to the db
                 arangodb_driver.update_srv6_path(
-                    database=database,
+                    database=db_conn,
                     key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
@@ -439,7 +374,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
                     metric=metric if metric != -1 else None,
                     bsid_addr=bsid_addr if bsid_addr != '' else None,
                     fwd_engine=fwd_engine if fwd_engine != '' else None,
-                    update_db=update_db
+                    update_db=update_db,
+                    db_conn=db_conn
                 )
                 # Raise an exception if an error occurred
                 utils.raise_exception_on_error(response)
@@ -541,22 +477,10 @@ def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
 def del_srv6_behavior_db(channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
                          interface="", segments=None, metric=-1,
-                         fwd_engine='linux', key=None, update_db=True):
+                         fwd_engine='linux', key=None, update_db=True,
+                         db_conn=None):
     if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # gRPC address
     grpc_address = None
     if channel is not None:
@@ -567,7 +491,7 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Find the behaviors matching the params
     srv6_behaviors = arangodb_driver.find_srv6_behavior(
-        database=database,
+        database=db_conn,
         grpc_address=grpc_address,
         grpc_port=grpc_port,
         segment=segment,
@@ -649,7 +573,7 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
         response = response.status
         # Remove the path from the db
         arangodb_driver.delete_srv6_behavior(
-            database=database,
+            database=db_conn,
             key=srv6_behavior['_key'],
             grpc_address=srv6_behavior['grpc_address'],
             grpc_port=srv6_behavior['grpc_port'],
@@ -671,7 +595,8 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
 def handle_srv6_behavior(operation, channel, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1,
                          interface="", segments=None, metric=-1,
-                         fwd_engine='linux', key=None, update_db=True):
+                         fwd_engine='linux', key=None, update_db=True,
+                         db_conn=None):
     '''
     Handle a SRv6 behavior
     '''
@@ -680,21 +605,8 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
     # Check if a SRv6 behavior with the same key already exists
     if operation == 'add' and key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         behaviors = arangodb_driver.find_srv6_behavior(
-            database=database,
+            database=db_conn,
             key=key
         )
         if len(behaviors) > 0:
@@ -769,22 +681,9 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             # Store the path to the database
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Save the behavior to the db
                 arangodb_driver.insert_srv6_behavior(
-                    database=database,
+                    database=db_conn,
                     key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
@@ -802,22 +701,9 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             return
         elif operation == 'get':
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Find the behaviors
                 return arangodb_driver.find_srv6_behavior(
-                   database=database,
+                   database=db_conn,
                    key=key if key != '' else None,
                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
@@ -868,22 +754,9 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
             # Remove the path from the database
             if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
                     update_db:
-                # ArangoDB params
-                arango_url = os.getenv('ARANGO_URL')
-                arango_user = os.getenv('ARANGO_USER')
-                arango_password = os.getenv('ARANGO_PASSWORD')
-                # Connect to ArangoDB
-                client = arangodb_driver.connect_arango(
-                    url=arango_url)  # TODO keep arango connection open
-                # Connect to the db
-                database = arangodb_driver.connect_srv6_usid_db(
-                    client=client,
-                    username=arango_user,
-                    password=arango_password
-                )
                 # Save the behavior to the db
                 arangodb_driver.update_srv6_behavior(
-                    database=database,
+                    database=db_conn,
                     key=key,
                     grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
                     grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
@@ -916,7 +789,8 @@ def handle_srv6_behavior(operation, channel, segment, action='', device='',
                     segments=segments if segments != [''] else None,
                     metric=metric if metric != -1 else None,
                     fwd_engine=fwd_engine if fwd_engine != '' else None,
-                    update_db=update_db
+                    update_db=update_db,
+                    db_conn=db_conn
                 )
                 # Raise an exception if an error occurred
                 utils.raise_exception_on_error(response)
@@ -950,7 +824,7 @@ class SRv6Exception(Exception):
 def create_uni_srv6_tunnel(ingress_channel, egress_channel,
                            destination, segments, localseg=None,
                            bsid_addr='', fwd_engine='linux', key=None,
-                           update_db=True):
+                           update_db=True, db_conn=None):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -977,21 +851,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     # Check if a SRv6 tunnel with the same key already exists
     if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         paths = arangodb_driver.find_srv6_tunnel(
-            database=database,
+            database=db_conn,
             key=key
         )
         if len(paths) > 0:
@@ -1010,7 +871,8 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         segments=segments,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Perform "Decapsulaton and Specific IPv6 Table Lookup" function
     # on the egress node <egress>
@@ -1029,27 +891,15 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
             action='End.DT6',
             lookup_table=254,
             fwd_engine=fwd_engine,
-            update_db=False
+            update_db=False,
+            db_conn=db_conn
         )
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         # Save the tunnel to the db
         arangodb_driver.insert_srv6_tunnel(
-            database=database,
+            database=db_conn,
             l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
             l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
             r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
@@ -1068,7 +918,7 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
                        bsid_addr='', fwd_engine='linux', update_db=True,
-                       key=None):
+                       key=None, db_conn=None):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1108,21 +958,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     # Check if a SRv6 tunnel with the same key already exists
     if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         paths = arangodb_driver.find_srv6_tunnel(
-            database=database,
+            database=db_conn,
             key=key
         )
         if len(paths) > 0:
@@ -1137,7 +974,8 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         localseg=localseg_lr,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
     create_uni_srv6_tunnel(
@@ -1148,27 +986,15 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
         localseg=localseg_rl,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Add the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)  # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         # Save the tunnel to the db
         arangodb_driver.insert_srv6_tunnel(
-            database=database,
+            database=db_conn,
             l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0],
             l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1],
             r_grpc_address=utils.grpc_chan_to_addr_port(node_r_channel)[0],
@@ -1188,25 +1014,12 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
 
 def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
                            localseg=None, bsid_addr='', fwd_engine='linux',
-                           ignore_errors=False, key=None):
+                           ignore_errors=False, key=None, db_conn=None):
     if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # Find the tunnels matching the params
     srv6_tunnels = arangodb_driver.find_srv6_tunnel(
-        database=database,
+        database=db_conn,
         key=key,
         l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
         l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
@@ -1246,7 +1059,8 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
             destination=srv6_tunnel['dest_lr'],
             bsid_addr=srv6_tunnel['bsid_addr'],
             fwd_engine=srv6_tunnel['fwd_engine'],
-            update_db=False
+            update_db=False,
+            db_conn=db_conn
         )
         # Pretty print status code
         utils.print_status_message(
@@ -1276,7 +1090,8 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
                 channel=egress_channel,
                 segment=srv6_tunnel['localseg_lr'],
                 fwd_engine=srv6_tunnel['fwd_engine'],
-                update_db=False
+                update_db=False,
+                db_conn=db_conn
             )
             # Pretty print status code
             utils.print_status_message(
@@ -1293,7 +1108,7 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
                 return res
         # Remove the path from the db
         arangodb_driver.delete_srv6_tunnel(
-            database=database,
+            database=db_conn,
             key=srv6_tunnel['_key'],
             l_grpc_address=srv6_tunnel['l_grpc_address'],
             l_grpc_port=srv6_tunnel['l_grpc_port'],
@@ -1311,7 +1126,8 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
 
 def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
                             localseg=None, bsid_addr='', fwd_engine='linux',
-                            ignore_errors=False, key=None, update_db=True):
+                            ignore_errors=False, key=None, update_db=True,
+                            db_conn=None):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -1344,7 +1160,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine,
             ignore_errors=ignore_errors,
-            key=key
+            key=key,
+            db_conn=db_conn
         )
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(res)
@@ -1360,7 +1177,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
         destination=destination,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Pretty print status code
     utils.print_status_message(
@@ -1392,7 +1210,8 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
             channel=egress_channel,
             segment=localseg,
             fwd_engine=fwd_engine,
-            update_db=False
+            update_db=False,
+            db_conn=db_conn
         )
         # Pretty print status code
         utils.print_status_message(
@@ -1415,25 +1234,12 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
                             dest_lr, dest_rl, localseg_lr=None,
                             localseg_rl=None, bsid_addr='',
                             fwd_engine='linux', ignore_errors=False,
-                            key=None):
+                            key=None, db_conn=None):
     if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
         return commons_pb2.STATUS_INTERNAL_ERROR
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # Find the tunnels matching the params
     srv6_tunnels = arangodb_driver.find_srv6_tunnel(
-        database=database,
+        database=db_conn,
         key=key,
         l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0],
         l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1],
@@ -1472,7 +1278,8 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
             ignore_errors=ignore_errors,
             bsid_addr=srv6_tunnel['bsid_addr'],
             fwd_engine=srv6_tunnel['fwd_engine'],
-            update_db=False
+            update_db=False,
+            db_conn=db_conn
         )
         # If an error occurred, abort the operation
         if res != commons_pb2.STATUS_SUCCESS:
@@ -1486,14 +1293,15 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
             ignore_errors=ignore_errors,
             bsid_addr=srv6_tunnel['bsid_addr'],
             fwd_engine=srv6_tunnel['fwd_engine'],
-            update_db=False
+            update_db=False,
+            db_conn=db_conn
         )
         # If an error occurred, abort the operation
         if res != commons_pb2.STATUS_SUCCESS:
             return res
         # Remove the path from the db
         arangodb_driver.delete_srv6_tunnel(
-            database=database,
+            database=db_conn,
             key=srv6_tunnel['_key'],
             l_grpc_address=srv6_tunnel['l_grpc_address'],
             l_grpc_port=srv6_tunnel['l_grpc_port'],
@@ -1514,7 +1322,8 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
 def destroy_srv6_tunnel(node_l_channel, node_r_channel,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
                         bsid_addr='', fwd_engine='linux',
-                        ignore_errors=False, key=None, update_db=True):
+                        ignore_errors=False, key=None, update_db=True,
+                        db_conn=None):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1565,7 +1374,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
             bsid_addr=bsid_addr,
             fwd_engine=fwd_engine,
             key=key,
-            ignore_errors=ignore_errors
+            ignore_errors=ignore_errors,
+            db_conn=db_conn
         )
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(res)
@@ -1578,7 +1388,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         ignore_errors=ignore_errors,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Raise an exception if an error occurred
     utils.raise_exception_on_error(res)
@@ -1591,7 +1402,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
         ignore_errors=ignore_errors,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
-        update_db=False
+        update_db=False,
+        db_conn=db_conn
     )
     # Raise an exception if an error occurred
     utils.raise_exception_on_error(res)
@@ -1599,7 +1411,8 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
 
 def get_uni_srv6_tunnel(ingress_channel, egress_channel,
                         destination, segments, localseg=None,
-                        bsid_addr='', fwd_engine='linux', key=None):
+                        bsid_addr='', fwd_engine='linux', key=None,
+                        db_conn=None):
     '''
     Get a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -1628,22 +1441,9 @@ def get_uni_srv6_tunnel(ingress_channel, egress_channel,
         raise utils.InvalidArgumentError
     # Retrieve the tunnel from the database
     #
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # Retrieve the tunnel from the db
     return arangodb_driver.find_srv6_tunnel(
-        database=database,
+        database=db_conn,
         key=key if key != '' else None,
         l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0] if ingress_channel is not None else None,
         l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1] if ingress_channel is not None else None,
@@ -1665,7 +1465,7 @@ def get_srv6_tunnel(node_l_channel, node_r_channel,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
                        bsid_addr='', fwd_engine='linux', update_db=True,
-                       key=None):
+                       key=None, db_conn=None):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1707,22 +1507,9 @@ def get_srv6_tunnel(node_l_channel, node_r_channel,
         raise utils.InvalidArgumentError
     # Retrieve the tunnel from the database
     #
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    # Connect to ArangoDB
-    client = arangodb_driver.connect_arango(
-        url=arango_url)  # TODO keep arango connection open
-    # Connect to the db
-    database = arangodb_driver.connect_srv6_usid_db(
-        client=client,
-        username=arango_user,
-        password=arango_password
-    )
     # Retrieve the tunnel from the db
     return arangodb_driver.find_srv6_tunnel(
-        database=database,
+        database=db_conn,
         key=key if key != '' else None,
         l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0] if node_l_channel is not None else None,
         l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1] if node_l_channel is not None else None,

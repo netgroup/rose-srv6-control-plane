@@ -40,7 +40,8 @@ from dotenv import load_dotenv
 from pkg_resources import resource_filename
 
 # Controller dependencies
-from controller.init_db import init_srv6_usid_db
+from controller import arangodb_driver
+from controller.init_db import init_db
 from controller.init_db import init_db_collections
 from controller.nb_grpc_server import grpc_server
 
@@ -55,6 +56,19 @@ logging.getLogger('urllib3').setLevel(logging.WARNING)
 DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 # Default value for debug mode
 DEFAULT_DEBUG = False
+
+
+def connect_db():
+    '''
+    Initialize and return the ArangoDB client.
+
+    :return: ArangoDB client
+    :rtype: arango.client.ArangoClient
+    '''
+    # Get the ArangoDB URL
+    arango_url = os.getenv('ARANGO_URL')
+    # Initialize and return the ArangoDB client
+    return arangodb_driver.connect_arango(url=arango_url)
 
 
 # Class representing the configuration
@@ -173,7 +187,9 @@ def __main():
     # Path to the .env file containing the parameters for the node manager'
     env_file = args.env_file
     # Initialize database
-    init_srv6_usid_db()
+    init_db('srv6')
+    init_db('srv6pm')
+    init_db('topology')
     # Initialize collections on database
     init_db_collections()
     # Create a new configuration object
@@ -205,8 +221,10 @@ def __main():
     config.import_dependencies()
     # Print configuration
     config.print_config()
+    # Establish a connection to the database
+    db_client = connect_db()
     # Start the northbound gRPC server to expose the controller services
-    grpc_server.start_server()
+    grpc_server.start_server(db_client=db_client)
 
 
 if __name__ == '__main__':

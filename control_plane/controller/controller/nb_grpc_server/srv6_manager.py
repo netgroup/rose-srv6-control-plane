@@ -54,6 +54,15 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
     gRPC request handler.
     '''
 
+    def __init__(self, db_client=None):
+        # Establish a connection to the "srv6" database
+        self.db_conn = arangodb_driver.connect_db(
+            client=db_client,
+            db_name='srv6',
+            username=os.getenv('ARANGO_USER'),
+            password=os.getenv('ARANGO_PASSWORD')
+        )
+
     def HandleSRv6MicroSIDPolicy(self, request, context):
         '''
         Handle a SRv6 uSID policy.
@@ -81,7 +90,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             r_fwd_engine=nb_commons_pb2.FwdEngine.Name(
                 request.r_fwd_engine).lower(),
             decap_sid=request.decap_sid,
-            locator=request.locator
+            locator=request.locator,
+            db_conn=self.db_conn
         )
         if res is not None:
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
@@ -126,7 +136,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     metric=srv6_path.metric,
                     bsid_addr=srv6_path.bsid_addr,
                     fwd_engine=fwd_engine,
-                    key=srv6_path.key if srv6_path.key != '' else None
+                    key=srv6_path.key if srv6_path.key != '' else None,
+                    db_conn=self.db_conn
                 )
                 if channel is not None:
                     channel.close()
@@ -240,7 +251,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     metric=srv6_behavior.metric,
                     fwd_engine=nb_commons_pb2.FwdEngine.Name(
                         srv6_behavior.fwd_engine).lower(),
-                    key=srv6_behavior.key if srv6_behavior.key != '' else None
+                    key=srv6_behavior.key if srv6_behavior.key != '' else None,
+                    db_conn=self.db_conn
                 )
                 if channel is not None:
                     channel.close()
@@ -355,7 +367,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if ingress_channel is not None:
                         ingress_channel.close()
@@ -371,7 +384,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if ingress_channel is not None:
                         ingress_channel.close()
@@ -388,7 +402,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.localseg != '' else None,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower() if srv6_tunnel.fwd_engine != '' else None,
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if ingress_channel is not None:
                         ingress_channel.close()
@@ -511,7 +526,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if node_l_channel is not None:
                         node_l_channel.close()
@@ -529,7 +545,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         bsid_addr=srv6_tunnel.bsid_addr,
                         fwd_engine=nb_commons_pb2.FwdEngine.Name(
                             srv6_tunnel.fwd_engine).lower(),
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if node_l_channel is not None:
                         node_l_channel.close()
@@ -548,7 +565,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         localseg_rl=srv6_tunnel.localseg_rl if srv6_tunnel.localseg_rl != '' else None,
                         bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
                         fwd_engine=srv6_tunnel.fwd_engine if srv6_tunnel.fwd_engine != '' else None,
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
                     )
                     if node_l_channel is not None:
                         node_l_channel.close()

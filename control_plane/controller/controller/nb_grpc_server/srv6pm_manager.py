@@ -31,11 +31,13 @@ gRPC server.
 
 # General imports
 import logging
+import os
 
 # Controller dependencies
 import srv6pm_manager_pb2
 import srv6pm_manager_pb2_grpc
 from controller import srv6_pm, utils
+from controller import arangodb_driver
 
 
 # Logger reference
@@ -46,6 +48,15 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
     '''
     gRPC request handler.
     '''
+
+    def __init__(self, db_client=None):
+        # Establish a connection to the "srv6" database
+        self.db_conn = arangodb_driver.connect_db(
+            client=db_client,
+            db_name='srv6pm',
+            username=os.getenv('ARANGO_USER'),
+            password=os.getenv('ARANGO_PASSWORD')
+        )
 
     def SetConfiguration(self, request, context):
         '''

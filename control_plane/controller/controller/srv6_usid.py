@@ -32,7 +32,6 @@ Control-Plane functionalities for SRv6 Manager
 import logging
 import math
 import pprint
-import os
 from ipaddress import IPv6Address
 
 from pyaml import yaml
@@ -696,7 +695,8 @@ def handle_srv6_usid_policy(operation,
                             persistency=True, _id=None, l_grpc_ip=None,
                             l_grpc_port=None, l_fwd_engine=None,
                             r_grpc_ip=None, r_grpc_port=None,
-                            r_fwd_engine=None, decap_sid=None, locator=None):
+                            r_fwd_engine=None, decap_sid=None, locator=None,
+                            db_conn=None):
     '''
     Handle a SRv6 Policy using uSIDs
 
@@ -752,11 +752,6 @@ def handle_srv6_usid_policy(operation,
     # pylint: disable=too-many-return-statements, too-many-branches
     # pylint: disable=too-many-statements
     #
-    # ArangoDB params
-    arango_url = os.getenv('ARANGO_URL')
-    arango_user = os.getenv('ARANGO_USER')
-    arango_password = os.getenv('ARANGO_PASSWORD')
-    #
     # Validate arguments
     if lr_destination is None:
         if operation in ['add']:
@@ -782,18 +777,9 @@ def handle_srv6_usid_policy(operation,
         if not persistency:
             logger.error('Error in get(): Persistency is disabled')
             return None
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
         # Get the policy from the db
         policies = arangodb_driver.find_usid_policy(
-            database=database,
+            database=db_conn,
             key=_id,
             lr_dst=lr_destination,
             rl_dst=rl_destination,
@@ -855,19 +841,9 @@ def handle_srv6_usid_policy(operation,
                 'rl_nodes': nodes_rl
             }]
         if operation == 'del':
-            #
-            # Connect to ArangoDB
-            client = arangodb_driver.connect_arango(
-                url=arango_url)     # TODO keep arango connection open
-            # Connect to the db
-            database = arangodb_driver.connect_srv6_usid_db(
-                client=client,
-                username=arango_user,
-                password=arango_password
-            )
             # Get the policy from the db
             policies = arangodb_driver.find_usid_policy(
-                database=database,
+                database=db_conn,
                 key=_id,
                 lr_dst=lr_destination,
                 rl_dst=rl_destination,
@@ -1192,18 +1168,9 @@ def handle_srv6_usid_policy(operation,
                 # Persist uSID policy to database
                 if persistency:
                     if operation == 'add':
-                        # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(
-                            url=arango_url)  # TODO keep arango connection open
-                        # Connect to the db
-                        database = arangodb_driver.connect_srv6_usid_db(
-                            client=client,
-                            username=arango_user,
-                            password=arango_password
-                        )
                         # Save the policy to the db
                         arangodb_driver.insert_usid_policy(
-                            database=database,
+                            database=db_conn,
                             lr_dst=lr_destination,
                             rl_dst=rl_destination,
                             lr_nodes=nodes_lr,
@@ -1220,19 +1187,9 @@ def handle_srv6_usid_policy(operation,
                             locator=locator
                         )
                     elif operation == 'del':
-                        # TODO keep arango connection open
-                        # Connect to ArangoDB
-                        client = arangodb_driver.connect_arango(
-                            url=arango_url)
-                        # Connect to the db
-                        database = arangodb_driver.connect_srv6_usid_db(
-                            client=client,
-                            username=arango_user,
-                            password=arango_password
-                        )
                         # Save the policy to the db
                         arangodb_driver.delete_usid_policy(
-                            database=database,
+                            database=db_conn,
                             key=_id,
                             lr_dst=lr_destination,
                             rl_dst=rl_destination,
