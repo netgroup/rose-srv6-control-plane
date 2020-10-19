@@ -48,6 +48,12 @@ logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
+class TopologyExtractionException(Exception):
+    """
+    An error occurred during topology extraction.
+    """
+
+
 def save_yaml_dump(obj, filename):
     '''
     Export an object to a YAML file
@@ -412,6 +418,9 @@ def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
                     edges_collection=edges_collection,
                     verbose=verbose
                 )
+        if nodes is None or edges is None:
+            # TODO use a more specific error
+            raise TopologyExtractionException('Cannot extract topology')
         # Return nodes and edges
         yield nodes, edges
         # Period = 0 means a single extraction
