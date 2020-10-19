@@ -26,7 +26,8 @@
 
 '''
 This module provides an implementation of a Topology Manager for the
-Northbound gRPC server.
+Northbound gRPC server. The Topology Manager implements different
+control plane functionalities to extract and manage the network topology.
 '''
 
 # General imports
@@ -137,7 +138,14 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
     '''
 
     def __init__(self, db_client=None):
-        # Establish a connection to the "srv6" database
+        """
+        Topology Manager init method.
+
+        :param db_client: ArangoDB client.
+        :type db_client: class: `arango.client.ArangoClient`
+        """
+        # Establish a connection to the "topology" database
+        # We will keep the connection open forever
         self.db_conn = arangodb_driver.connect_db(
             client=db_client,
             db_name='topology',
