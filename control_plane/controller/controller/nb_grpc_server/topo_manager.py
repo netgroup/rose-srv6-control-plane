@@ -42,6 +42,7 @@ from controller import arangodb_driver
 from controller import topo_utils
 from controller.ti_extraction import connect_and_extract_topology_isis
 from controller.ti_extraction import dump_topo_yaml
+from controller.nb_grpc_server import utils as nb_utils
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -111,7 +112,7 @@ def extract_topology_isis(nodes, password, addrs_config=None,
     # extraction process
     if nodes is None or edges is None or node_to_systemid is None:
         logger.error('Cannot extract topology')
-        return  # FIXME we should return an error
+        raise nb_utils.TopoManagerException('Cannot extract topology')
     # Convert the extracted topology (i.e. nodes and edges) to a intermediate
     # representation suitable for exporting to a YAML file
     nodes, edges = dump_topo_yaml(
