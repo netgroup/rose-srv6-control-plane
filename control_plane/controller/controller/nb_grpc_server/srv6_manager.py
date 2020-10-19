@@ -33,13 +33,10 @@ control plane functionalities to setup SRv6 entities.
 # General imports
 import logging
 import os
-
 # Proto dependencies
-import commons_pb2
 import nb_commons_pb2
 import nb_srv6_manager_pb2
 import nb_srv6_manager_pb2_grpc
-
 # Controller dependencies
 from controller import arangodb_driver
 from controller import srv6_utils, srv6_usid, utils
@@ -47,13 +44,14 @@ from controller.nb_grpc_server import utils as nb_utils
 
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
 class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
-    '''
+    """
     gRPC request handler.
-    '''
+    """
 
     def __init__(self, db_client=None):
         # Establish a connection to the "srv6" database
@@ -65,9 +63,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         )
 
     def HandleSRv6MicroSIDPolicy(self, request, context):
-        '''
+        """
         Handle a SRv6 uSID policy.
-        '''
+        """
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Handle SRv6 uSID policy
@@ -102,9 +100,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return response
 
     def HandleSRv6Path(self, request, context):
-        '''
+        """
         Handle a SRv6 path.
-        '''
+        """
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Iterate on the SRv6 paths
@@ -218,9 +216,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return response
 
     def HandleSRv6Behavior(self, request, context):
-        '''
+        """
         Handle a SRv6 behavior.
-        '''
+        """
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Iterate on the SRv6 behaviors
@@ -335,9 +333,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return response
 
     def HandleSRv6UniTunnel(self, request, context):
-        '''
+        """
         Handle a SRv6 unidirectional tunnel.
-        '''
+        """
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
@@ -491,9 +489,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         return response
 
     def HandleSRv6BidiTunnel(self, request, context):
-        '''
+        """
         Handle SRv6 bidirectional tunnel.
-        '''
+        """
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
