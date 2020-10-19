@@ -33,6 +33,7 @@ control plane functionalities to setup SRv6 entities.
 # General imports
 import logging
 import os
+from contextlib import contextmanager
 # Proto dependencies
 import nb_commons_pb2
 import nb_srv6_manager_pb2
@@ -46,6 +47,67 @@ from controller.nb_grpc_server import utils as nb_utils
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def srv6_mgr_error_handling():
+    # Create reply message
+    response = nb_srv6_manager_pb2.SRv6ManagerReply()
+    try:
+        yield
+    except utils.OperationNotSupportedException:
+        response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.InternalError:
+        response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.InvalidGRPCRequestException:
+        response.status = nb_commons_pb2.STATUS_INVALID_GRPC_REQUEST
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.FileExistsException:
+        response.status = nb_commons_pb2.STATUS_FILE_EXISTS
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.NoSuchProcessException:
+        response.status = nb_commons_pb2.STATUS_NO_SUCH_PROCESS
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.InvalidActionException:
+        response.status = nb_commons_pb2.STATUS_INVALID_ACTION
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.GRPCServiceUnavailableException:
+        response.status = \
+            nb_commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.GRPCUnauthorizedException:
+        response.status = nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.NotConfiguredException:
+        response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.AlreadyConfiguredException:
+        response.status = nb_commons_pb2.STATUS_ALREADY_CONFIGURED
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.BadRequestException:
+        response.status = nb_commons_pb2.STATUS_BAD_REQUEST
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.NoSuchDevicecException:
+        response.status = nb_commons_pb2.STATUS_NO_SUCH_DEVICE
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
+    except utils.InvalidActionException:
+        response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
+        return response
 
 
 class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
@@ -103,7 +165,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             locator=request.locator,
             db_conn=self.db_conn
         )
-        if res is not None:
+        if res is not None:  # TODO replace status code with exceptions
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
@@ -116,12 +178,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         """
         Handle a SRv6 path.
         """
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Iterate on the SRv6 paths
         for srv6_path in request.srv6_paths:
             # Perform the operation
-            try:
+            #
+            # The "with" block is used to avoid duplicating the error handling
+            # code
+            with srv6_mgr_error_handling():
                 channel = None
                 if srv6_path.grpc_address not in [None, ''] and \
                         srv6_path.grpc_port not in [None, -1]:
@@ -154,75 +217,24 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 if channel is not None:
                     channel.close()
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
-            except utils.OperationNotSupportedException:
-                response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InternalError:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidGRPCRequestException:
-                response.status = nb_commons_pb2.STATUS_INVALID_GRPC_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.FileExistsException:
-                response.status = nb_commons_pb2.STATUS_FILE_EXISTS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchProcessException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_PROCESS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INVALID_ACTION
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCServiceUnavailableException:
-                response.status = \
-                    nb_commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCUnauthorizedException:
-                response.status = nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NotConfiguredException:
-                response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.AlreadyConfiguredException:
-                response.status = nb_commons_pb2.STATUS_ALREADY_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.BadRequestException:
-                response.status = nb_commons_pb2.STATUS_BAD_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchDevicecException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_DEVICE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            # Add the SRv6 paths to the response message
-            if srv6_paths is not None:
-                for path in srv6_paths:
-                    _srv6_path = response.srv6_paths.add()
-                    _srv6_path.grpc_address = path['grpc_address']
-                    _srv6_path.grpc_port = path['grpc_port']
-                    _srv6_path.destination = path['destination']
-                    _srv6_path.segments.extend(path['segments'])
-                    _srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(path['encapmode'].upper())
-                    _srv6_path.device = path['device']
-                    _srv6_path.table = path['table']
-                    _srv6_path.metric = path['metric']
-                    _srv6_path.bsid_addr = path['bsid_addr']
-                    _srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(path['fwd_engine'].upper())
-                    if '_key' in path:
-                        _srv6_path.key = path['_key']
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Add the SRv6 paths to the response message
+        if srv6_paths is not None:
+            for path in srv6_paths:
+                _srv6_path = response.srv6_paths.add()
+                _srv6_path.grpc_address = path['grpc_address']
+                _srv6_path.grpc_port = path['grpc_port']
+                _srv6_path.destination = path['destination']
+                _srv6_path.segments.extend(path['segments'])
+                _srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(path['encapmode'].upper())
+                _srv6_path.device = path['device']
+                _srv6_path.table = path['table']
+                _srv6_path.metric = path['metric']
+                _srv6_path.bsid_addr = path['bsid_addr']
+                _srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(path['fwd_engine'].upper())
+                if '_key' in path:
+                    _srv6_path.key = path['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -232,12 +244,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         """
         Handle a SRv6 behavior.
         """
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Iterate on the SRv6 behaviors
         for srv6_behavior in request.srv6_behaviors:
             # Perform the operation
-            try:
+            #
+            # The "with" block is used to avoid duplicating the error handling
+            # code
+            with srv6_mgr_error_handling():
                 channel = None
                 if srv6_behavior.grpc_address not in [None, ''] and \
                         srv6_behavior.grpc_port not in [None, -1]:
@@ -269,77 +282,26 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 if channel is not None:
                     channel.close()
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
-            except utils.OperationNotSupportedException:
-                response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InternalError:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidGRPCRequestException:
-                response.status = nb_commons_pb2.STATUS_INVALID_GRPC_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.FileExistsException:
-                response.status = nb_commons_pb2.STATUS_FILE_EXISTS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchProcessException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_PROCESS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INVALID_ACTION
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCServiceUnavailableException:
-                response.status = \
-                    nb_commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCUnauthorizedException:
-                response.status = nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NotConfiguredException:
-                response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.AlreadyConfiguredException:
-                response.status = nb_commons_pb2.STATUS_ALREADY_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.BadRequestException:
-                response.status = nb_commons_pb2.STATUS_BAD_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchDevicecException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_DEVICE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            # Add the SRv6 behaviors to the response message
-            if srv6_behaviors is not None:
-                for behavior in srv6_behaviors:
-                    _srv6_behavior = response.srv6_behaviors.add()
-                    _srv6_behavior.grpc_address = behavior['grpc_address']
-                    _srv6_behavior.grpc_port = behavior['grpc_port']
-                    _srv6_behavior.segment = behavior['segment']
-                    _srv6_behavior.action = nb_commons_pb2.SRv6Action.Value(nb_utils.action_to_grpc_repr[behavior['action']])
-                    _srv6_behavior.nexthop = behavior['nexthop']
-                    _srv6_behavior.lookup_table = behavior['lookup_table']
-                    _srv6_behavior.interface = behavior['interface']
-                    _srv6_behavior.segments.extend(behavior['segments'])
-                    _srv6_behavior.device = behavior['device']
-                    _srv6_behavior.table = behavior['table']
-                    _srv6_behavior.metric = behavior['metric']
-                    _srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(behavior['fwd_engine'].upper())
-                    if '_key' in behavior:
-                        _srv6_behavior.key = behavior['_key']
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Add the SRv6 behaviors to the response message
+        if srv6_behaviors is not None:
+            for behavior in srv6_behaviors:
+                _srv6_behavior = response.srv6_behaviors.add()
+                _srv6_behavior.grpc_address = behavior['grpc_address']
+                _srv6_behavior.grpc_port = behavior['grpc_port']
+                _srv6_behavior.segment = behavior['segment']
+                _srv6_behavior.action = nb_commons_pb2.SRv6Action.Value(nb_utils.action_to_grpc_repr[behavior['action']])
+                _srv6_behavior.nexthop = behavior['nexthop']
+                _srv6_behavior.lookup_table = behavior['lookup_table']
+                _srv6_behavior.interface = behavior['interface']
+                _srv6_behavior.segments.extend(behavior['segments'])
+                _srv6_behavior.device = behavior['device']
+                _srv6_behavior.table = behavior['table']
+                _srv6_behavior.metric = behavior['metric']
+                _srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(behavior['fwd_engine'].upper())
+                if '_key' in behavior:
+                    _srv6_behavior.key = behavior['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -353,7 +315,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
         for srv6_tunnel in request.srv6_unitunnels:
-            try:
+            # The "with" block is used to avoid duplicating the error handling
+            # code
+            with srv6_mgr_error_handling():
                 ingress_channel = None
                 egress_channel = None
                 srv6_tunnels = None
@@ -428,74 +392,23 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     response.status = \
                         nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
                     return response
-            except utils.OperationNotSupportedException:
-                response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InternalError:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidGRPCRequestException:
-                response.status = nb_commons_pb2.STATUS_INVALID_GRPC_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.FileExistsException:
-                response.status = nb_commons_pb2.STATUS_FILE_EXISTS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchProcessException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_PROCESS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INVALID_ACTION
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCServiceUnavailableException:
-                response.status = \
-                    nb_commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCUnauthorizedException:
-                response.status = nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NotConfiguredException:
-                response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.AlreadyConfiguredException:
-                response.status = nb_commons_pb2.STATUS_ALREADY_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.BadRequestException:
-                response.status = nb_commons_pb2.STATUS_BAD_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchDevicecException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_DEVICE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            # Add the SRv6 behaviors to the response message
-            if srv6_tunnels is not None:
-                for tunnel in srv6_tunnels:
-                    _srv6_unitunnel = response.srv6_unitunnels.add()
-                    _srv6_unitunnel.ingress_ip = tunnel['l_grpc_address']
-                    _srv6_unitunnel.ingress_port = tunnel['l_grpc_port']
-                    _srv6_unitunnel.egress_ip = tunnel['r_grpc_address']
-                    _srv6_unitunnel.egress_port = tunnel['r_grpc_port']
-                    _srv6_unitunnel.destination = tunnel['dest_lr']
-                    _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
-                    _srv6_unitunnel.localseg = tunnel['localseg_lr']
-                    _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
-                    _srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
-                    if '_key' in tunnel:
-                        _srv6_unitunnel.key = tunnel['_key']
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Add the SRv6 behaviors to the response message
+        if srv6_tunnels is not None:
+            for tunnel in srv6_tunnels:
+                _srv6_unitunnel = response.srv6_unitunnels.add()
+                _srv6_unitunnel.ingress_ip = tunnel['l_grpc_address']
+                _srv6_unitunnel.ingress_port = tunnel['l_grpc_port']
+                _srv6_unitunnel.egress_ip = tunnel['r_grpc_address']
+                _srv6_unitunnel.egress_port = tunnel['r_grpc_port']
+                _srv6_unitunnel.destination = tunnel['dest_lr']
+                _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
+                _srv6_unitunnel.localseg = tunnel['localseg_lr']
+                _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
+                _srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
+                if '_key' in tunnel:
+                    _srv6_unitunnel.key = tunnel['_key']
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
@@ -509,7 +422,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
         for srv6_tunnel in request.srv6_biditunnels:
-            try:
+            # The "with" block is used to avoid duplicating the error handling
+            # code
+            with srv6_mgr_error_handling():
                 node_l_channel = None
                 node_r_channel = None
                 srv6_tunnels = None
@@ -591,77 +506,26 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     response.status = \
                         nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
                     return response
-            except utils.OperationNotSupportedException:
-                response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InternalError:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidGRPCRequestException:
-                response.status = nb_commons_pb2.STATUS_INVALID_GRPC_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.FileExistsException:
-                response.status = nb_commons_pb2.STATUS_FILE_EXISTS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchProcessException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_PROCESS
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INVALID_ACTION
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCServiceUnavailableException:
-                response.status = \
-                    nb_commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.GRPCUnauthorizedException:
-                response.status = nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NotConfiguredException:
-                response.status = nb_commons_pb2.STATUS_NOT_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.AlreadyConfiguredException:
-                response.status = nb_commons_pb2.STATUS_ALREADY_CONFIGURED
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.BadRequestException:
-                response.status = nb_commons_pb2.STATUS_BAD_REQUEST
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.NoSuchDevicecException:
-                response.status = nb_commons_pb2.STATUS_NO_SUCH_DEVICE
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            except utils.InvalidActionException:
-                response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
-                return response
-            # Add the SRv6 behaviors to the response message
-            if srv6_tunnels is not None:
-                for tunnel in srv6_tunnels:
-                    _srv6_biditunnel = response.srv6_biditunnels.add()
-                    _srv6_biditunnel.node_l_ip = tunnel['l_grpc_address']
-                    _srv6_biditunnel.node_l_port = tunnel['l_grpc_port']
-                    _srv6_biditunnel.node_r_ip = tunnel['node_r_ip']
-                    _srv6_biditunnel.node_r_port = tunnel['node_r_port']
-                    _srv6_biditunnel.dest_lr = tunnel['dest_lr']
-                    _srv6_biditunnel.dest_rl = tunnel['dest_rl']
-                    _srv6_biditunnel.sidlist_lr.extend(tunnel['sidlist_lr'])
-                    _srv6_biditunnel.sidlist_rl.extend(tunnel['sidlist_rl'])
-                    _srv6_biditunnel.localseg_lr = tunnel['localseg_lr']
-                    _srv6_biditunnel.localseg_rl = tunnel['localseg_rl']
-                    _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
-                    if '_key' in tunnel:
-                        _srv6_biditunnel.key = tunnel['_key']
-                    _srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Add the SRv6 behaviors to the response message
+        if srv6_tunnels is not None:
+            for tunnel in srv6_tunnels:
+                _srv6_biditunnel = response.srv6_biditunnels.add()
+                _srv6_biditunnel.node_l_ip = tunnel['l_grpc_address']
+                _srv6_biditunnel.node_l_port = tunnel['l_grpc_port']
+                _srv6_biditunnel.node_r_ip = tunnel['node_r_ip']
+                _srv6_biditunnel.node_r_port = tunnel['node_r_port']
+                _srv6_biditunnel.dest_lr = tunnel['dest_lr']
+                _srv6_biditunnel.dest_rl = tunnel['dest_rl']
+                _srv6_biditunnel.sidlist_lr.extend(tunnel['sidlist_lr'])
+                _srv6_biditunnel.sidlist_rl.extend(tunnel['sidlist_rl'])
+                _srv6_biditunnel.localseg_lr = tunnel['localseg_lr']
+                _srv6_biditunnel.localseg_rl = tunnel['localseg_rl']
+                _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
+                if '_key' in tunnel:
+                    _srv6_biditunnel.key = tunnel['_key']
+                _srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(tunnel['fwd_engine'].upper())
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
