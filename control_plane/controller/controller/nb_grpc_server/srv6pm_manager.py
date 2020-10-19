@@ -178,27 +178,42 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         Get the results of a running experiment.
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
+        # Establish a gRPC connection to the sender and to the reflector
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
                                        request.reflector.port) as refl_channel:
-            print(srv6_pm.get_experiment_results(   # TODO
+            # Trying to collect the experiment results
+            logger.debug('Trying to collect the experiment results')
+            print(srv6_pm.get_experiment_results(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel,
                 send_refl_sidlist=list(request.send_refl_sidlist),
                 refl_send_sidlist=list(request.refl_send_sidlist)
             ))
+            logger.debug('Results retrieved successfully')
+            # TODO get_experiment_results should return an exception in case of error
+            # TODO get_experiment_results should return the results instead of printing them
+        # Done, create a reply
+        return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
 
     def StopExperiment(self, request, context):
         """
         Stop a running experiment.
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
+        # Establish a gRPC connection to the sender and to the reflector
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
                                        request.reflector.port) as refl_channel:
-            srv6_pm.stop_experiment(
+            # Trying to stop the experiment
+            logger.debug('Trying to stop the experiment')
+            res = srv6_pm.stop_experiment(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel,
                 send_refl_dest=request.send_refl_dest,
@@ -208,3 +223,10 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 send_refl_localseg=request.send_refl_localseg,
                 refl_send_localseg=request.refl_send_localseg
             )
+            logger.debug('Experiment stopped successfully')
+            # TODO stop_experiment should return an exception in case of error
+            logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Done, create a reply
+        return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
