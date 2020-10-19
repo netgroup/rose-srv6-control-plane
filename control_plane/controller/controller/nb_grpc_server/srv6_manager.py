@@ -186,7 +186,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             with utils.get_grpc_session(srv6_tunnel.ingress_ip,
                                         srv6_tunnel.ingress_port) as ingress_channel, \
                     utils.get_grpc_session(srv6_tunnel.egress_ip,
-                                        srv6_tunnel.egress_port) as egress_channel:
+                                           srv6_tunnel.egress_port) as egress_channel:
                 if srv6_tunnel.operation == 'add':
                     res = srv6_utils.create_uni_srv6_tunnel(
                         ingress_channel=ingress_channel,
@@ -242,7 +242,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             with utils.get_grpc_session(srv6_tunnel.node_l_ip,
                                         srv6_tunnel.node_l_port) as node_l_channel, \
                     utils.get_grpc_session(srv6_tunnel.node_r_ip,
-                                        srv6_tunnel.node_r_port) as node_r_channel:
+                                           srv6_tunnel.node_r_port) as node_r_channel:
                 if srv6_tunnel.operation == 'add':
                     res = srv6_utils.create_srv6_tunnel(
                         node_l_channel=node_l_channel,

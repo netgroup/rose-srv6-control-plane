@@ -126,7 +126,8 @@ def handle_srv6_path(operation, channel, destination, segments=None,
             return None
     # Forwarding engine (Linux or VPP)
     try:
-        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
+        path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
+            fwd_engine.upper())
     except ValueError:
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         return None
