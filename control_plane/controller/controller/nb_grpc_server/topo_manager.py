@@ -303,6 +303,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         '''
         Extract the topology from a set of nodes running a distance vector
         routing protocol (e.g. IS-IS) and load it on a Arango database.
+        This is a stream RPC.
         '''
         # pylint: disable=too-many-arguments
         #
@@ -338,8 +339,10 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 'gw': host_config.gateway
             })
         # Dispatch based on the routing protocol
-        if request.protocol == topology_manager_pb2.Protocol.Value('ISIS'):
-            # Extract the topology
+        if request.protocol == RoutingProtocol.ISIS:
+            # ISIS protocol
+            #
+            # Extract the topology and load it on the Arango database
             for nodes, edges in arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream(
                 isis_nodes=nodes,
                 isisd_pwd=request.password,
@@ -352,34 +355,45 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 verbose=request.verbose
             ):
                 if nodes is None or edges is None:
-                    # Error
+                    # Something went wrong in topology extraction
+                    logger.error('Error in topology extraction')
                     response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
                     return response
-                # Set status code
-                response.status = nb_commons_pb2.STATUS_SUCCESS
                 # Set the nodes
                 for node in nodes:
+                    # Add a new node to the response message
                     _node = response.topology.nodes.add()
+                    # Fill "key" field
                     _node.id = node['_key']
+                    # Fill "ext_reachability" field
                     if node.get('ext_reachability') is not None:
                         _node.ext_reachability = node['ext_reachability']
+                    # Fill "ip_address" field
                     if node.get('ip_address') is not None:
                         _node.ip_address = node['ip_address']
+                    # Set node type (e.g. "ROUTER" or "HOST")
                     _node.type = topology_manager_pb2.NodeType.Value(
                         node_type_to_grpc_repr[node['type']])
                 # Set the edges
                 for edge in edges:
+                    # Add the edges to the response message
                     _edge = response.topology.links.add()
+                    # Fill "key" field
                     _edge.id = edge['_key']
+                    # Fill "from" field
                     _edge.source = edge['_from']
+                    # Fill "to" field
                     _edge.target = edge['_to']
+                    # Set edge type (e.g. "CORE" or "EDGE")
                     _edge.type = topology_manager_pb2.LinkType.Value(
                         edge_type_to_grpc_repr[edge['type']])
+                # Set status code
+                response.status = nb_commons_pb2.STATUS_SUCCESS
                 # Send the reply
                 yield response
         else:
             # Unknown or unsupported routing protocol
-            logger.error('Unknown or unsupported routing protocol: %s',
+            logger.error('Unknown/Unsupported routing protocol: %s',
                          topology_manager_pb2.Protocol.Name(request.protocol))
             response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             return response
