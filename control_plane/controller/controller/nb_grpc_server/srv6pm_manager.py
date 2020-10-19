@@ -111,12 +111,13 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 utils.get_grpc_session(request.reflector.address,
                                        request.reflector.port) as refl_channel:
             # Send the reset configuration request
+            logger.debug('Trying to reset the experiment configuration')
             res = srv6_pm.reset_configuration(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel
             )
-            logger.debug('Configuration installed successfully')
-            # TODO set_configuration should return an exception in case of error
+            logger.debug('Configuration reset successfully')
+            # TODO reset_configuration should return an exception in case of error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Done, create a reply
         return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
@@ -128,10 +129,14 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         Start an experiment.
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
+        # Establish a gRPC connection to the sender and to the reflector
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
                                        request.reflector.port) as refl_channel:
+            # Trying to start the experiment
+            logger.debug('Trying to start the experiment')
             res = srv6_pm.start_experiment(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel,
@@ -160,7 +165,13 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 refl_send_localseg=request.refl_send_localseg,
                 force=request.force
             )
+            logger.debug('Experiment started successfully')
+            # TODO start_experiment should return an exception in case of error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Done, create a reply
+        return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
 
     def GetExperimentResults(self, request, context):
         """
