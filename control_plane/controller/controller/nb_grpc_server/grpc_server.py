@@ -47,7 +47,7 @@ import nb_srv6_manager_pb2_grpc
 import topology_manager_pb2_grpc
 import srv6pm_manager_pb2_grpc
 # Controller dependencies
-from controller.utils import get_address_family
+from controller import utils
 from controller.nb_grpc_server.srv6_manager import SRv6Manager
 from controller.nb_grpc_server.topo_manager import TopologyManager
 from controller.nb_grpc_server.srv6pm_manager import SRv6PMManager
@@ -102,7 +102,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     :type db_client: arango.client.ArangoClient
     """
     # Get family of the gRPC IP
-    addr_family = get_address_family(grpc_ip)
+    addr_family = utils.get_address_family(grpc_ip)
     # Build address depending on the family
     if addr_family == AF_INET:
         # IPv4 address
@@ -113,7 +113,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     else:
         # Invalid address
         logger.fatal('Invalid gRPC address: %s', grpc_ip)
-        sys.exit(-2)
+        raise utils.InvalidArgumentError
     # Create the server and add the handlers
     grpc_server = grpc.server(futures.ThreadPoolExecutor())
     # Add SRv6 Manager
