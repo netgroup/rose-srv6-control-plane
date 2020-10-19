@@ -183,7 +183,7 @@
 
 <dl class="function">
 <dt id="controller.srv6_utils.create_srv6_tunnel">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">sidlist_lr</em>, <em class="sig-param">sidlist_rl</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='Linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">sidlist_lr</em>, <em class="sig-param">sidlist_rl</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -192,23 +192,23 @@
 of the SRv6 tunnel</p></li>
 <li><p><strong>node_r_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the right endpoint (node_r)
 of the SRv6 tunnel</p></li>
-<li><p><strong>sidlist_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be installed on the packets going
+<li><p><strong>sidlist_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The SID list to be installed on the packets going
 from &lt;node_l&gt; to &lt;node_r&gt;</p></li>
-<li><p><strong>sidlist_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be installed on the packets going
+<li><p><strong>sidlist_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The SID list to be installed on the packets going
 from &lt;node_r&gt; to &lt;node_l&gt;</p></li>
-<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
+<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
 to &lt;node_r&gt;. It can be a IP address or a subnet.</p></li>
-<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
+<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
 to &lt;node_l&gt;. It can be a IP address or a subnet.</p></li>
-<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
 seg6local function for the SRv6 path from &lt;node_l&gt;
 to &lt;node_r&gt;. If the argument ‘localseg_lr’ isn’t
 passed in, the End.DT6 function is not created.</p></li>
-<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
 seg6local function for the SRv6 path from &lt;node_r&gt;
 to &lt;node_l&gt;. If the argument ‘localseg_rl’ isn’t
 passed in, the End.DT6 function is not created.</p></li>
-<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
+<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
 </ul>
 </dd>
 </dl>
@@ -216,22 +216,22 @@ passed in, the End.DT6 function is not created.</p></li>
 
 <dl class="function">
 <dt id="controller.srv6_utils.create_uni_srv6_tunnel">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">segments</em>, <em class="sig-param">localseg=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='Linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">create_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">segments</em>, <em class="sig-param">localseg=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#create_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.create_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ingress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the ingress node</p></li>
 <li><p><strong>egress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the egress node</p></li>
-<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path.
+<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path.
 It can be a IP address or a subnet.</p></li>
-<li><p><strong>segments</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.8)"><em>list</em></a>) – The SID list to be applied to the packets going to
+<li><p><strong>segments</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – The SID list to be applied to the packets going to
 the destination</p></li>
-<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
+<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment to be associated to the End.DT6
 seg6local function on the egress node. If the argument
 ‘localseg’ isn’t passed in, the End.DT6 function
 is not created.</p></li>
-<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
+<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
 </ul>
 </dd>
 </dl>
@@ -239,7 +239,7 @@ is not created.</p></li>
 
 <dl class="function">
 <dt id="controller.srv6_utils.destroy_srv6_tunnel">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='Linux'</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">node_l_channel</em>, <em class="sig-param">node_r_channel</em>, <em class="sig-param">dest_lr</em>, <em class="sig-param">dest_rl</em>, <em class="sig-param">localseg_lr=None</em>, <em class="sig-param">localseg_rl=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='linux'</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Destroy a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -248,22 +248,22 @@ is not created.</p></li>
 SRv6 tunnel (node_l)</p></li>
 <li><p><strong>node_r_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC channel to the right endpoint of the
 SRv6 tunnel (node_r)</p></li>
-<li><p><strong>node_l</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The IP address of the left endpoint of the SRv6 tunnel</p></li>
-<li><p><strong>node_r</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The IP address of the right endpoint of the SRv6 tunnel</p></li>
-<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
+<li><p><strong>node_l</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The IP address of the left endpoint of the SRv6 tunnel</p></li>
+<li><p><strong>node_r</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The IP address of the right endpoint of the SRv6 tunnel</p></li>
+<li><p><strong>dest_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_l&gt;
 to &lt;node_r&gt;. It can be a IP address or a subnet.</p></li>
-<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
+<li><p><strong>dest_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path from &lt;node_r&gt;
 to &lt;node_l&gt;. It can be a IP address or a subnet.</p></li>
-<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
+<li><p><strong>localseg_lr</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
 function for the SRv6 path from &lt;node_l&gt; to &lt;node_r&gt;.
 If the argument ‘localseg_l’ isn’t passed in, the
 End.DT6 function is not removed.</p></li>
-<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
+<li><p><strong>localseg_rl</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
 function for the SRv6 path from &lt;node_r&gt; to &lt;node_l&gt;.
 If the argument ‘localseg_r’ isn’t passed in, the
 End.DT6 function is not removed.</p></li>
-<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
-<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
+<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
+<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
 (default is False)</p></li>
 </ul>
 </dd>
@@ -272,20 +272,20 @@ End.DT6 function is not removed.</p></li>
 
 <dl class="function">
 <dt id="controller.srv6_utils.destroy_uni_srv6_tunnel">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">localseg=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='Linux'</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">destroy_uni_srv6_tunnel</code><span class="sig-paren">(</span><em class="sig-param">ingress_channel</em>, <em class="sig-param">egress_channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">localseg=None</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='linux'</em>, <em class="sig-param">ignore_errors=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#destroy_uni_srv6_tunnel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.destroy_uni_srv6_tunnel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ingress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the ingress node</p></li>
 <li><p><strong>egress_channel</strong> (class: <cite>grpc._channel.Channel</cite>) – The gRPC Channel to the egress node</p></li>
-<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a>) – The destination prefix of the SRv6 path.
+<li><p><strong>destination</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The destination prefix of the SRv6 path.
 It can be a IP address or a subnet.</p></li>
-<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
+<li><p><strong>localseg</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The local segment associated to the End.DT6 seg6local
 function on the egress node. If the argument ‘localseg’
 isn’t passed in, the End.DT6 function is not removed.</p></li>
-<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.8)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
-<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.8)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
+<li><p><strong>fwd_engine</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Forwarding engine for the SRv6 route. Default: Linux.</p></li>
+<li><p><strong>ignore_errors</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to ignore “No such process” errors or not
 (default is False)</p></li>
 </ul>
 </dd>
@@ -294,19 +294,19 @@ isn’t passed in, the End.DT6 function is not removed.</p></li>
 
 <dl class="function">
 <dt id="controller.srv6_utils.handle_srv6_behavior">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_behavior</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">segment</em>, <em class="sig-param">action=''</em>, <em class="sig-param">device=''</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">nexthop=''</em>, <em class="sig-param">lookup_table=-1</em>, <em class="sig-param">interface=''</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">fwd_engine='Linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_behavior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_behavior" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_behavior</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">segment</em>, <em class="sig-param">action=''</em>, <em class="sig-param">device=''</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">nexthop=''</em>, <em class="sig-param">lookup_table=-1</em>, <em class="sig-param">interface=''</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">fwd_engine='linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_behavior"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_behavior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle a SRv6 behavior</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="controller.srv6_utils.handle_srv6_path">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_path</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">device=''</em>, <em class="sig-param">encapmode='encap'</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='Linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_path" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_path</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">destination</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">device=''</em>, <em class="sig-param">encapmode='encap'</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">bsid_addr=''</em>, <em class="sig-param">fwd_engine='linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle a SRv6 Path</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="controller.srv6_utils.handle_srv6_policy">
-<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_policy</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">bsid_addr</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">fwd_engine='Linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_policy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">controller.srv6_utils.</code><code class="sig-name descname">handle_srv6_policy</code><span class="sig-paren">(</span><em class="sig-param">operation</em>, <em class="sig-param">channel</em>, <em class="sig-param">bsid_addr</em>, <em class="sig-param">segments=None</em>, <em class="sig-param">table=-1</em>, <em class="sig-param">metric=-1</em>, <em class="sig-param">fwd_engine='linux'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/srv6_utils.html#handle_srv6_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.srv6_utils.handle_srv6_policy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle a SRv6 Path</p>
 </dd></dl>
 

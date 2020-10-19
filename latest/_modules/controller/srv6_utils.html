@@ -227,7 +227,7 @@
 
 <div class="viewcode-block" id="handle_srv6_path"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_path">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_path</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">encapmode</span><span class="o">=</span><span class="s2">&quot;encap&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                     <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">):</span>
+                     <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 Path</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -259,7 +259,7 @@
     <span class="c1"># Set the BSID address (required for VPP)</span>
     <span class="n">path</span><span class="o">.</span><span class="n">bsid_addr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">bsid_addr</span><span class="p">)</span>
     <span class="c1"># Handle SRv6 policy for VPP</span>
-    <span class="k">if</span> <span class="n">fwd_engine</span> <span class="o">==</span> <span class="s1">&#39;VPP&#39;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">fwd_engine</span> <span class="o">==</span> <span class="s1">&#39;vpp&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">bsid_addr</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;&quot;bsid_addr&quot; argument is mandatory for VPP&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
@@ -278,7 +278,8 @@
             <span class="k">return</span> <span class="kc">None</span>
     <span class="c1"># Forwarding engine (Linux or VPP)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">path_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">fwd_engine</span><span class="p">)</span>
+        <span class="n">path_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span>
+            <span class="n">fwd_engine</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid forwarding engine: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -327,7 +328,7 @@
 
 
 <div class="viewcode-block" id="handle_srv6_policy"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_policy</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">):</span>
+                       <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 Path</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -355,7 +356,7 @@
     <span class="c1"># Forwarding engine (Linux or VPP)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">policy_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span>
-            <span class="n">fwd_engine</span><span class="p">)</span>
+            <span class="n">fwd_engine</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid forwarding engine: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -402,7 +403,7 @@
 <div class="viewcode-block" id="handle_srv6_behavior"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_behavior">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_behavior</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                          <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nexthop</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">lookup_table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                          <span class="n">interface</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                         <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">):</span>
+                         <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 behavior</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -438,7 +439,7 @@
     <span class="c1"># Forwarding engine (Linux or VPP)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">behavior_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span>
-            <span class="n">fwd_engine</span><span class="p">)</span>
+            <span class="n">fwd_engine</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid forwarding engine: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -517,7 +518,7 @@
 
 <div class="viewcode-block" id="create_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span>
                            <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span> <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                           <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">):</span>
+                           <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</span>
 
@@ -598,7 +599,7 @@
 <div class="viewcode-block" id="create_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                        <span class="n">sidlist_lr</span><span class="p">,</span> <span class="n">sidlist_rl</span><span class="p">,</span> <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span>
                        <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">):</span>
+                       <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Create a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
 
@@ -666,7 +667,7 @@
 
 
 <div class="viewcode-block" id="destroy_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
-                            <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">,</span>
+                            <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span>
                             <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;.</span>
@@ -751,7 +752,7 @@
 
 <div class="viewcode-block" id="destroy_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                         <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span> <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                        <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;Linux&#39;</span><span class="p">,</span>
+                        <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span>
                         <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Destroy a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
