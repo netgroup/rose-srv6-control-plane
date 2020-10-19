@@ -1,4 +1,4 @@
 **gRPC server**
 ----
 
-This folder contains an implementation of a gRPC server for the controller.
+This folder contains a gRPC-based implementation of a Northbound interface for the controller.
