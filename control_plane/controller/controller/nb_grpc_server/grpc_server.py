@@ -36,7 +36,6 @@ Northbound API for the SRv6 controller implementing different functionalities:
 # General imports
 import logging
 import os
-import sys
 import time
 from concurrent import futures
 from socket import AF_INET, AF_INET6
