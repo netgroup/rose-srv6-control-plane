@@ -32,36 +32,40 @@ Northbound gRPC server.
 # General imports
 import logging
 import os
-import sys
-from argparse import ArgumentParser
-
-# Controller dependencies
+# Proto dependencies
 import nb_commons_pb2
 import topology_manager_pb2
 import topology_manager_pb2_grpc
+# Controller dependencies
 from controller import arangodb_utils
 from controller import arangodb_driver
 from controller import topo_utils
 from controller.ti_extraction import connect_and_extract_topology_isis
 from controller.ti_extraction import dump_topo_yaml
-from apps.cli import utils as cli_utils
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
+# Dict used to convert the python representation of node type to gRPC
+# representation
 node_type_to_grpc_repr = {
     'router': 'ROUTER',
     'host': 'HOST'
 }
-
+# Dict used to convert the gRPC representation of node type to python
+# representation
 grpc_repr_to_node_type = {v: k for k, v in node_type_to_grpc_repr.items()}
 
+# Dict used to convert the python representation of edge type to gRPC
+# representation
 edge_type_to_grpc_repr = {
     'core': 'CORE',
     'edge': 'EDGE'
 }
-
+# Dict used to convert the gRPC representation of edge type to python
+# representation
 grpc_repr_to_edge_type = {v: k for k, v in edge_type_to_grpc_repr.items()}
 
 
@@ -69,19 +73,47 @@ def extract_topology_isis(nodes, password, addrs_config=None,
                           hosts_config=None, verbose=False):
     '''
     Extract the network topology from a set of nodes running
-    ISIS protocol.
+    the IS-IS protocol.
+
+    :param nodes: A list of nodes running the IS-IS protocol. Each node is
+                  represented by a string containing its IP address and the
+                  port on which the IS-IS daemon is listening separated by a
+                  comma character.
+                  (e.g. ['2000::1-2608', '2000::2-2608']).
+    :type nodes: list
+    :param password: The password used to log in to the IS-IS daemon.
+    :type password: str
+    :param addrs_config: Dict containing the addressing plan to assign to the
+                         extracted topology. If not provided, the IP address
+                         information is not added to the extracted topology.
+    :type addrs_config: dict, optional
+    :param hosts_config: Dict containing the hosts configuration to assign to
+                         the extracted topology. If not provided, the hosts
+                         information is not added to the extracted topology.
+    :type hosts_config: dict, optional
+    :param verbose: Define whether to enable or not the verbose mode
+                    (default: False).
+    :type verbose: bool, optional
+    :return: Tuple containing two items. The first element is the list of
+             nodes and the second item is the list of edges. Both nodes and
+             edges representation are suitable for exporting to a YAML file.
+    :rtype: tuple
     '''
-    # TODO check if ISIS...
-    # Connect to a node and extract the topology
+    # Try to establish a connection to a node in the nodes list and extract
+    # the topology
     nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
         ips_ports=nodes,
         isisd_pwd=password,
         verbose=verbose
     )
+    # Nodes, edges and node_to_systemid should be not None
+    # If one of these elements is None, something went wrong in the topology
+    # extraction process
     if nodes is None or edges is None or node_to_systemid is None:
         logger.error('Cannot extract topology')
         return  # FIXME we should return an error
-    # Export the topology in YAML format
+    # Convert the extracted topology (i.e. nodes and edges) to a intermediate
+    # representation suitable for exporting to a YAML file
     nodes, edges = dump_topo_yaml(
         nodes=nodes,
         edges=edges,
@@ -93,7 +125,8 @@ def extract_topology_isis(nodes, password, addrs_config=None,
     # Add hosts information
     if hosts_config is not None:
         arangodb_utils.add_hosts_from_list(nodes, edges, hosts_config)
-    # Return the nodes and edges
+    # Return a representation of nodes and edges suitable for export in YAML
+    # format
     return nodes, edges
 
 
