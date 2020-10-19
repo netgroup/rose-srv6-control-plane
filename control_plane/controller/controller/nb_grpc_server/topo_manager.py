@@ -24,11 +24,11 @@
 #
 
 
-'''
+"""
 This module provides an implementation of a Topology Manager for the
 Northbound gRPC server. The Topology Manager implements different
 control plane functionalities to extract and manage the network topology.
-'''
+"""
 
 # General imports
 import logging
@@ -87,7 +87,7 @@ class TopoManagerException(Exception):
 
 def extract_topology_isis(nodes, password, addrs_config=None,
                           hosts_config=None, verbose=False):
-    '''
+    """
     Extract the network topology from a set of nodes running
     the IS-IS protocol.
 
@@ -114,7 +114,7 @@ def extract_topology_isis(nodes, password, addrs_config=None,
              nodes and the second item is the list of edges. Both nodes and
              edges representation are suitable for exporting to a YAML file.
     :rtype: tuple
-    '''
+    """
     # Try to establish a connection to a node in the nodes list and extract
     # the topology
     nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
@@ -147,9 +147,9 @@ def extract_topology_isis(nodes, password, addrs_config=None,
 
 
 class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
-    '''
+    """
     gRPC request handler.
-    '''
+    """
 
     def __init__(self, db_client=None):
         """
@@ -175,10 +175,10 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             )  # TODO reuse the existing db connection
 
     def ExtractTopology(self, request, context):
-        '''
+        """
         Extract the network topology from a set of nodes running
         a distance vector routing protocol (e.g. IS-IS).
-        '''
+        """
         # pylint: disable=too-many-arguments
         #
         # Create the reply message
@@ -257,9 +257,9 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         )
 
     def LoadTopology(self, request, context):
-        '''
+        """
         Load a network topology on a Arango database.
-        '''
+        """
         # pylint: disable=too-many-arguments
         #
         # Extract the parameters from the gRPC request
@@ -300,11 +300,11 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             status=nb_commons_pb2.STATUS_SUCCESS)
 
     def ExtractAndLoadTopology(self, request, context):
-        '''
+        """
         Extract the topology from a set of nodes running a distance vector
         routing protocol (e.g. IS-IS) and load it on a Arango database.
         This is a stream RPC.
-        '''
+        """
         # pylint: disable=too-many-arguments
         #
         # Create the reply message
@@ -403,7 +403,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             return response
 
     def PushNodesConfig(self, request, context):
-        '''
+        """
         Load nodes configuration. Configuration consists of:
         -    locator_bits: an integer representing the number of bits in the
              locator part of the SID;
@@ -417,7 +417,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
              -    uN: uN SID;
              -    uDT: uDT SID (used for the decap operation),
              -    fwd_engine: forwarding engine.
-        '''
+        """
         # Nodes configuration
         nodes_config = {
             'locator_bits': request.nodes_config.locator_bits,
@@ -443,7 +443,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         )
 
     def GetNodesConfig(self, request, context):
-        '''
+        """
         Retrieve nodes configuration. Configuration consists of:
         -    locator_bits: an integer representing the number of bits in the
              locator part of the SID;
@@ -457,7 +457,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
              -    uN: uN SID;
              -    uDT: uDT SID (used for the decap operation),
              -    fwd_engine: forwarding engine.
-        '''
+        """
         # Create reply message
         response = topology_manager_pb2.NodesConfigReply()
         try:
