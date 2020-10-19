@@ -316,18 +316,12 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         nodes = list()
         for node in request.nodes:
             nodes.append('%s-%s' % (node.address, node.port))
-        # Password of the routing protocol
-        password = request.password
         # ArangoDB URL
         arango_url = os.getenv('ARANGO_URL')
         # ArangoDB username
         arango_user = os.getenv('ARANGO_USER')
         # ArangoDB password
         arango_password = os.getenv('ARANGO_PASSWORD')
-        # Interval between two consecutive extractions
-        period = request.period
-        # Verbose mode
-        verbose = request.verbose
         # Addresses configuration
         addrs_config = list()
         for addr_config in request.addrs_config.addrs:
@@ -348,14 +342,14 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             # Extract the topology
             for nodes, edges in arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream(
                 isis_nodes=nodes,
-                isisd_pwd=password,
+                isisd_pwd=request.password,
                 arango_url=arango_url,
                 arango_user=arango_user,
                 arango_password=arango_password,
                 addrs_config=addrs_config if len(addrs_config) != 0 else None,
                 hosts_config=hosts_config if len(hosts_config) != 0 else None,
-                period=period,
-                verbose=verbose
+                period=request.period,
+                verbose=request.verbose
             ):
                 if nodes is None or edges is None:
                     # Error
