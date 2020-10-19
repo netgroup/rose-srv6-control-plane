@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 This module contains a collection of utilities used by Northbound gRPC server.
-'''
+"""
 
 # Proto dependencies
 import commons_pb2
