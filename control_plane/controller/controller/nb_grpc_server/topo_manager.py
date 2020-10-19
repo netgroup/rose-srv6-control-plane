@@ -317,12 +317,6 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         nodes = list()
         for node in request.nodes:
             nodes.append('%s-%s' % (node.address, node.port))
-        # ArangoDB URL
-        arango_url = os.getenv('ARANGO_URL')
-        # ArangoDB username
-        arango_user = os.getenv('ARANGO_USER')
-        # ArangoDB password
-        arango_password = os.getenv('ARANGO_PASSWORD')
         # Addresses configuration
         addrs_config = list()
         for addr_config in request.addrs_config.addrs:
