@@ -54,8 +54,40 @@ def init_srv6_usid_db():
         arango_username=ARANGO_USER,
         arango_password=ARANGO_PASSWORD
     )
+
+
+def init_db_collections():
+    '''
+    Initialize database collections.
+    '''
+    # Connect to ArangoDB
+    client = arangodb_driver.connect_arango(url=ARANGO_URL)
     # Initialize uSID policies collection
     arangodb_driver.init_usid_policies_collection(
+        client=client,
+        arango_username=ARANGO_USER,
+        arango_password=ARANGO_PASSWORD
+    )
+    # Initialize SRv6 paths collection
+    arangodb_driver.init_srv6_paths_collection(
+        client=client,
+        arango_username=ARANGO_USER,
+        arango_password=ARANGO_PASSWORD
+    )
+    # Initialize SRv6 behaviors collection
+    arangodb_driver.init_srv6_behaviors_collection(
+        client=client,
+        arango_username=ARANGO_USER,
+        arango_password=ARANGO_PASSWORD
+    )
+    # Initialize SRv6 tunnels collection
+    arangodb_driver.init_srv6_tunnels_collection(
+        client=client,
+        arango_username=ARANGO_USER,
+        arango_password=ARANGO_PASSWORD
+    )
+    # Initialize nodes config collection
+    arangodb_driver.init_nodes_config_collection(
         client=client,
         arango_username=ARANGO_USER,
         arango_password=ARANGO_PASSWORD
@@ -65,3 +97,4 @@ def init_srv6_usid_db():
 # Entry point for this module
 if __name__ == '__main__':
     init_srv6_usid_db()
+    init_db_collections()

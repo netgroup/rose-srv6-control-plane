@@ -41,6 +41,7 @@ from pkg_resources import resource_filename
 
 # Controller dependencies
 from controller.init_db import init_srv6_usid_db
+from controller.init_db import init_db_collections
 from controller.nb_grpc_server import grpc_server
 
 
@@ -173,6 +174,8 @@ def __main():
     env_file = args.env_file
     # Initialize database
     init_srv6_usid_db()
+    # Initialize collections on database
+    init_db_collections()
     # Create a new configuration object
     config = Config()
     # Load configuration from .env file
