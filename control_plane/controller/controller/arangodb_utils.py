@@ -356,9 +356,8 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
 
 
 def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
-                                                     arango_url=None,
-                                                     arango_user=None,
-                                                     arango_password=None,
+                                                     nodes_collection=None,
+                                                     edges_collection=None,
                                                      addrs_config=None,
                                                      hosts_config=None,
                                                      period=0, verbose=False):
@@ -373,15 +372,6 @@ def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
     # (e.g. [2000::1-2608,2000::2-2608])
     #
     # Topology Information Extraction
-    #
-    # Initialize database
-    if arango_url is not None and arango_user is not None and \
-            arango_password is not None:
-        nodes_collection, edges_collection = arango_db.initialize_db(
-            arango_url=arango_url,
-            arango_user=arango_user,
-            arango_password=arango_password
-        )
     while True:
         # Connect to a node and extract the topology
         nodes, edges, node_to_systemid = connect_and_extract_topology_isis(
@@ -411,12 +401,11 @@ def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
             if hosts_config is not None:
                 add_hosts_from_list(nodes, edges, hosts_config)
             # Load the topology on Arango DB
-            if arango_url is not None and \
-                    arango_user is not None and arango_password is not None:
+            if nodes_collection is not None and edges_collection is not None:
                 load_topo_on_arango(
-                    arango_url=arango_url,
-                    user=arango_user,
-                    password=arango_password,
+                    arango_url=None,
+                    user=None,
+                    password=None,
                     nodes=nodes,
                     edges=edges,
                     nodes_collection=nodes_collection,
