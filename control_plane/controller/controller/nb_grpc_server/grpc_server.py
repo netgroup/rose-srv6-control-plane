@@ -95,11 +95,11 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     :param certificate: Filename of the certificate of the gRPC server
                         (default: cert_server.pem)
     :type certificate: str, optional
-    :param db_client: Database client.
-    :rtype: arango.client.ArangoClient
     :param key: Filename of the private key of the gRPC server
                 (default: key_server.pem)
     :type key: str, optional
+    :param db_client: Database client.
+    :type db_client: arango.client.ArangoClient
     """
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
