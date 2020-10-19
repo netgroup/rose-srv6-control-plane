@@ -63,10 +63,3 @@ action_to_grpc_repr = {
 }
 
 grpc_repr_to_action = {v: k for k, v in action_to_grpc_repr.items()}
-
-
-class TopoManagerException(Exception):
-    """
-    Generic topology manager exception.
-    """
-    pass

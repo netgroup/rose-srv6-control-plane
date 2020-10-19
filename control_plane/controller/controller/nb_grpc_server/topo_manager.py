@@ -33,6 +33,7 @@ control plane functionalities to extract and manage the network topology.
 # General imports
 import logging
 import os
+from enum import Enum
 # Proto dependencies
 import nb_commons_pb2
 import topology_manager_pb2
@@ -43,7 +44,6 @@ from controller import arangodb_driver
 from controller import topo_utils
 from controller.ti_extraction import connect_and_extract_topology_isis
 from controller.ti_extraction import dump_topo_yaml
-from controller.nb_grpc_server import utils as nb_utils
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -69,6 +69,20 @@ edge_type_to_grpc_repr = {
 # Dict used to convert the gRPC representation of edge type to python
 # representation
 grpc_repr_to_edge_type = {v: k for k, v in edge_type_to_grpc_repr.items()}
+
+
+class RoutingProtocol(Enum):
+    """
+    Enumeration for routing protocol.
+    """
+    ISIS = topology_manager_pb2.Protocol.Value('ISIS')
+
+
+class TopoManagerException(Exception):
+    """
+    Generic topology manager exception.
+    """
+    pass
 
 
 def extract_topology_isis(nodes, password, addrs_config=None,
@@ -113,7 +127,7 @@ def extract_topology_isis(nodes, password, addrs_config=None,
     # extraction process
     if nodes is None or edges is None or node_to_systemid is None:
         logger.error('Cannot extract topology')
-        raise nb_utils.TopoManagerException('Cannot extract topology')
+        raise TopoManagerException('Cannot extract topology')
     # Convert the extracted topology (i.e. nodes and edges) to a intermediate
     # representation suitable for exporting to a YAML file
     nodes, edges = dump_topo_yaml(
@@ -170,10 +184,6 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         nodes = list()
         for node in request.nodes:
             nodes.append('%s-%s' % (node.address, node.port))
-        # Password of the routing protocol
-        password = request.password
-        # Verbose mode
-        verbose = request.verbose
         # Addresses configuration
         addrs_config = list()
         for addr_config in request.addrs_config.addrs:
@@ -190,38 +200,50 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 'gw': host_config.gateway
             })
         # Dispatch based on the routing protocol
-        if request.protocol == topology_manager_pb2.Protocol.Value('ISIS'):
-            # ISIS protocol
+        if request.protocol == RoutingProtocol.ISIS:
+            # Requested extraction from ISIS protocol
+            #
+            # Extract the topolgy
             nodes, edges = extract_topology_isis(
                 nodes=nodes,
-                password=password,
+                password=request.password,
                 addrs_config=addrs_config,
                 hosts_config=hosts_config,
-                verbose=verbose)
-            # Set status code
-            response.status = nb_commons_pb2.STATUS_SUCCESS
-            # Set the nodes
+                verbose=request.verbose)
+            # Add the nodes to the response message
             for node in nodes:
+                # Add a new node to the response message
                 _node = response.topology.nodes.add()
+                # Fill "key" field
                 _node.id = node['_key']
+                # Fill "ext_reachability" field
                 if 'ext_reachability' in node:
                     _node.ext_reachability = node['ext_reachability']
+                # Fill "ip_address" field
                 if 'ip_address' in node:
                     _node.ip_address = node['ip_address']
+                # Set node type (e.g. "ROUTER" or "HOST")
                 _node.type = topology_manager_pb2.NodeType.Value(
                     node_type_to_grpc_repr[node['type']])
-            # Set the edges
+            # Add the edges to the response message
             for edge in edges:
+                # Add a new edge to the response message
                 _edge = response.topology.links.add()
+                # Fill "key" field
                 _edge.id = edge['_key']
+                # Fill "from" field
                 _edge.source = edge['_from']
+                # Fill "to" field
                 _edge.target = edge['_to']
+                # Set edge type (e.g. "CORE" or "EDGE")
                 _edge.type = topology_manager_pb2.LinkType.Value(
                     edge_type_to_grpc_repr[edge['type']])
+            # Set status code
+            response.status = nb_commons_pb2.STATUS_SUCCESS
             # Send the reply
             return response
         # Unknown or unsupported routing protocol
-        logger.error('Unknown or unsupported routing protocol: %s',
+        logger.error('Unknown/Unsupported routing protocol: %s',
                      topology_manager_pb2.Protocol.Name(request.protocol))
         return topology_manager_pb2_grpc.TopologyManagerReply(
             status=nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
