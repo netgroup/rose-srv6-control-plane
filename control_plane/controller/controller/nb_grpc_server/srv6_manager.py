@@ -26,7 +26,7 @@
 
 """
 This module provides an implementation of a SRv6 Manager for the
-Northbound gRPC server. The Topology Manager implements different
+Northbound gRPC server. The SRv6 Manager implements different
 control plane functionalities to setup SRv6 entities.
 """
 
