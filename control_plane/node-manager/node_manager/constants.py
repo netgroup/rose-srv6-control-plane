@@ -46,9 +46,9 @@ from commons_pb2 import (STATUS_SUCCESS,
 
 # Forwarding Engine
 FWD_ENGINE = {
-    'VPP': FwdEngine.Value('VPP'),
-    'Linux': FwdEngine.Value('Linux'),
-    'P4': FwdEngine.Value('P4'),
+    'vpp': FwdEngine.Value('VPP'),
+    'linux': FwdEngine.Value('LINUX'),
+    'p4': FwdEngine.Value('P4'),
 }  # pylint: disable=no-member
 
 # Status codes

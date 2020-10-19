@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package topo_manager;
+
+import "nb_commons.proto";
+
+
+service TopologyManager {
+  rpc ExtractTopology (TopologyManagerRequest) returns (TopologyManagerReply) {}
+  rpc LoadTopologyOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
+  rpc ExtractTopologyAndLoadOnDatabase (TopologyManagerRequest) returns (TopologyManagerReply) {}
+}
+
+
+enum Protocol {
+    ISIS = 0;
+    // OSPF = 1;    // Not yet supported
+}
+
+message Node {
+    string address = 1;
+    uint32 port = 2;
+}
+
+enum Database {
+    ARANGODB = 0;
+}
+
+message DBConfig {
+    Database database = 1;
+    string url = 2;
+    string username = 3;
+    string password = 4;
+}
+
+// The TopologyManagerRequest message.
+message TopologyManagerRequest {
+    repeated Node nodes = 1;
+    Protocol protocol = 2;
+    string password = 3;
+    uint32 period = 4;
+    DBConfig db_config = 5;
+    bool verbose = 6;
+}
+
+message Topology {
+    // TODO
+}
+
+message TopologyManagerReply {
+    nb_grpc_services.StatusCode status = 1;
+    Topology topology = 2;
+}

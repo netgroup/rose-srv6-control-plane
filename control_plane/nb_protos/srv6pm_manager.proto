@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package srv6pm_manager;
+
+import "nb_commons.proto";
+
+
+service SRv6PMManager {
+    rpc SetConfiguration (SRv6PMConfigurationRequest) returns (SRv6PMManagerReply) {}
+    rpc ResetConfiguration (SRv6PMConfigurationRequest) returns (SRv6PMManagerReply) {}
+    rpc StartExperiment (SRv6PMExperimentRequest) returns (SRv6PMManagerReply) {}
+    rpc GetExperimentResults (SRv6PMExperimentRequest) returns (SRv6PMManagerReply) {}
+    rpc StopExperiment (SRv6PMExperimentRequest) returns (SRv6PMManagerReply) {}
+}
+
+message ColorOptions {
+    uint32 interval_duration = 1;
+    uint32 delay_margin = 2;
+    uint32 numbers_of_color = 3;
+}
+
+message MeasurementData {
+    uint32 meas_id = 1;
+    uint32 interval = 2;
+    string timestamp = 3;
+    // forward path
+    uint64 ssSeqNum = 4;
+    uint64 ssTxCounter = 5;
+    uint64 rfRxCounter = 6;
+    uint32 fwColor = 7;
+    // reverse path
+    uint64 rfSeqNum = 8;
+    uint64 rfTxCounter = 9;
+    uint64 ssRxCounter = 10;
+    uint32 rvColor = 11;
+}
+
+enum MeasurementProtocol {
+    TWAMP = 0;
+    STAMP = 1;
+}
+
+enum AuthenticationMode {
+    HMAC_SHA_256 = 0;
+}
+
+enum MeasurementType {
+    DELAY = 0;
+    LOSS = 1;
+}
+
+enum TimestampFormat {
+    PTPv2 = 0;
+    NTP = 1;
+}
+
+enum DelayMeasurementMode {
+    OneWay = 0;
+    TwoWay = 1;
+    LoopbackMode = 2;
+}
+
+enum LossMeasurementMode {
+    Inferred = 0;
+    Direct = 1;
+}
+
+enum PMDriver {
+    EBPF = 0;
+    IPSET = 1;
+}
+
+message SRv6PMManagerReply {
+    nb_grpc_services.StatusCode status = 1;
+    repeated MeasurementData measurement_data = 2;
+}
+
+message Node {
+    string address = 1;
+    int32 port = 2;
+}
+
+message SRv6PMConfigurationRequest {
+    Node sender = 1;
+    Node reflector = 2;
+    int32 send_udp_port = 3;
+    int32 refl_udp_port = 4;
+    ColorOptions color_options = 5;
+    PMDriver pm_driver = 6;
+    repeated string in_interfaces = 7;
+    repeated string out_interfaces = 8;
+}
+
+message SRv6PMExperimentRequest {
+    Node sender = 1;
+    Node reflector = 2;
+    string send_refl_dest = 3;
+    string refl_send_dest = 4;
+    repeated string send_refl_sidlist = 5;
+    repeated string refl_send_sidlist = 6;
+    MeasurementProtocol measurement_protocol = 7;
+    MeasurementType measurement_type = 8;
+    AuthenticationMode authentication_mode = 9;
+    string authentication_key = 10;
+    TimestampFormat timestamp_format = 11;
+    DelayMeasurementMode delay_measurement_mode = 12;
+    uint32 padding_mbz = 13;
+    LossMeasurementMode loss_measurement_mode = 14;
+    int32 measure_id = 15;
+    string send_refl_localseg = 16;
+    string refl_send_localseg = 17;
+    bool force = 18;
+}

@@ -17,24 +17,22 @@ if os.path.isfile(requirements_path):
         install_requires = f.read().splitlines()
 
 packages = [
-    'controller',
-    'controller/nb_grpc_server'
+    'apps',
+    'apps/cli',
+    'apps/nb_grpc_client'
 ]
 
 setuptools.setup(
-    name="rose-srv6-control-plane-controller",
+    name="rose-srv6-control-plane-apps",
     version="0.0.1",
     author="Carmine Scarpitta",
     author_email="carmine.scarpitta@uniroma2.it",
-    description="Collection of control-plane modules for a Controller",
+    description="Collection of SDN apps for a Controller",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     install_requires=install_requires,
-    entry_points={'console_scripts': [
-        'controller = controller.controller_cli:__main']},
-    include_package_data=True,
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License',

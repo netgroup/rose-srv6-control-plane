@@ -7,53 +7,53 @@ nodes:
     grpc_port: 12345
     uN: 'FCBB:BB00:0001::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R2:
     name: 'R2'
     grpc_ip: 'fcff:2::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0002::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R3:
     name: 'R3'
     grpc_ip: 'fcff:3::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0003::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R4:
     name: 'R4'
     grpc_ip: 'fcff:4::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0004::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R5:
     name: 'R5'
     grpc_ip: 'fcff:5::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0005::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R6:
     name: 'R6'
     grpc_ip: 'fcff:6::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0006::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R7:
     name: 'R7'
     grpc_ip: 'fcff:7::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0007::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'
   R8:
     name: 'R8'
     grpc_ip: 'fcff:8::1'
     grpc_port: 12345
     uN: 'FCBB:BB00:0008::'
     uDT: 'FCBB:BB00:F00D:0000::'
-    fwd_engine: 'Linux'
+    fwd_engine: 'linux'

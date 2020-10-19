@@ -15,9 +15,9 @@ $ controller --env-file config/controller.env
 
 The Controller CLI will start and load the configuration:
 ```console
-INFO:controller.cli.cli:*** Loading configuration from /home/rose/.envs/controller-venv/lib/python3.8/site-packages/rose_srv6_control_plane_controller-0.0.1-py3.8.egg/controller/cli/../config/controller.env
+INFO:apps.cli.cli:*** Loading configuration from /home/rose/.envs/controller-venv/lib/python3.8/site-packages/rose_srv6_control_plane_controller-0.0.1-py3.8.egg/controller/cli/../config/controller.env
 INFO:root:SERVER_DEBUG: False
-INFO:controller.cli.cli:*** Validating configuration
+INFO:apps.cli.cli:*** Validating configuration
 
 ****************** CONFIGURATION ******************
 

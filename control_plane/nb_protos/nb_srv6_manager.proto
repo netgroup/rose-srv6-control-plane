@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package nb_srv6_manager;
+
+import "nb_commons.proto";
+
+
+service SRv6Manager {
+  rpc HandleSRv6Path (SRv6PathRequest) returns (SRv6ManagerReply) {}
+  rpc HandleSRv6Behavior (SRv6BehaviorRequest) returns (SRv6ManagerReply) {}
+  rpc HandleSRv6UniTunnel (SRv6UniTunnelRequest) returns (SRv6ManagerReply) {}
+  rpc HandleSRv6BidiTunnel (SRv6BidiTunnelRequest) returns (SRv6ManagerReply) {}
+  rpc HandleSRv6MicroSIDPolicy (SRv6MicroSIDRequest) returns (SRv6ManagerReply) {}
+  rpc GetNodes (EmptyRequest) returns (SRv6ManagerReply) {}
+}
+
+message EmptyRequest {
+
+}
+
+message NodeConfig {
+    string name = 1;
+    string grpc_ip = 2;
+    uint32 grpc_port = 3;
+    string uN = 4;
+    string uDT = 5;
+    string fwd_engine = 6;
+}
+
+message NodesConfig {
+    uint32 locator_bits = 1;
+    uint32 usid_id_bits = 2;
+    repeated NodeConfig nodes = 3;
+}
+
+message SRv6MicroSID {
+    string operation = 1;
+    string lr_destination = 2;
+    string rl_destination = 3;
+    string nodes_lr = 4;
+    string nodes_rl = 5;
+    int32 table = 6;
+    int32 metric = 7;
+    uint32 _id = 8;
+    string l_grpc_ip = 9;
+    uint32 l_grpc_port = 10;
+    nb_grpc_services.FwdEngine l_fwd_engine = 11;
+    string r_grpc_ip = 12;
+    uint32 r_grpc_port = 13;
+    nb_grpc_services.FwdEngine r_fwd_engine = 14;
+    string decap_sid = 15;
+    string locator = 16;
+    NodesConfig nodes_config = 17;
+}
+
+message SRv6MicroSIDRequest {
+    repeated SRv6MicroSID srv6_micro_sids = 1;
+}
+
+message SRv6Path {
+    string operation = 1;
+    string grpc_address = 2;
+    int32 grpc_port = 3;
+    string destination = 4;
+    repeated string segments = 5;
+    string device = 6;
+    nb_grpc_services.EncapMode encapmode = 7;
+    int32 table = 8;
+    int32 metric = 9;
+    string bsid_addr = 10;
+    nb_grpc_services.FwdEngine fwd_engine = 11;
+}
+
+message SRv6PathRequest {
+    repeated SRv6Path srv6_paths = 1;
+}
+
+message SRv6Behavior {
+    string operation = 1;
+    string grpc_address = 2;
+    int32 grpc_port = 3;
+    string segment = 4;
+    nb_grpc_services.SRv6Action action = 5;
+    string device = 6;
+    int32 table = 7;
+    string nexthop = 8;
+    int32 lookup_table = 9;
+    string interface = 10;
+    repeated string segments = 11;
+    int32 metric = 12;
+    nb_grpc_services.FwdEngine fwd_engine = 13;
+}
+
+message SRv6BehaviorRequest {
+    repeated SRv6Behavior srv6_behaviors = 1;
+}
+
+message SRv6UniTunnel {
+    string operation = 1;
+    string ingress_ip = 2;
+    int32 ingress_port = 3;
+    string egress_ip = 4;
+    int32 egress_port = 5;
+    string destination = 6;
+    repeated string segments = 7;
+    string localseg = 8;
+    string bsid_addr = 9;
+    nb_grpc_services.FwdEngine fwd_engine = 10;
+}
+
+message SRv6UniTunnelRequest {
+    repeated SRv6UniTunnel srv6_unitunnels = 1;
+}
+
+message SRv6BidiTunnel {
+    string operation = 1;
+    string node_l_ip = 2;
+    int32 node_l_port = 3;
+    string node_r_ip = 4;
+    int32 node_r_port = 5;
+    repeated string sidlist_lr = 6;
+    repeated string sidlist_rl = 7;
+    string dest_lr = 8;
+    string dest_rl = 9;
+    string localseg_lr = 10;
+    string localseg_rl = 11;
+    string bsid_addr = 12;
+    nb_grpc_services.FwdEngine fwd_engine = 13;
+}
+
+message SRv6BidiTunnelRequest {
+    repeated SRv6BidiTunnel srv6_biditunnels = 1;
+}
+
+message SRv6ManagerReply {
+    nb_grpc_services.StatusCode status = 1;
+    repeated SRv6Path srv6_paths = 2;
+    repeated SRv6Behavior srv6_behaviors = 3;
+    repeated SRv6UniTunnel srv6_unitunnels = 4;
+    repeated SRv6BidiTunnel srv6_biditunnels = 5;
+    repeated SRv6MicroSID srv6_micro_sids = 6;
+    repeated NodeConfig nodes = 7;
+}

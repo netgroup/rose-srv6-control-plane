@@ -42,20 +42,14 @@ except ImportError:
     readline = None
 import logging
 import os
-import sys
 from argparse import ArgumentParser
 from cmd import Cmd
-from pathlib import Path
-
-# python-dotenv dependencies
-from dotenv import load_dotenv
-from pkg_resources import resource_filename
 
 # Controller dependencies
 from controller import arangodb_driver
 from controller import srv6_usid
-from controller.cli import srv6_cli, srv6pm_cli, topo_cli
-from controller.init_db import init_srv6_usid_db
+from apps.cli import srv6_cli, srv6pm_cli, topo_cli
+from apps.nb_grpc_client import utils as nb_utils
 
 # Folder containing this script
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -64,22 +58,19 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 # Logger reference
 logger = logging.getLogger(__name__)
 
-# Configure logging level for urllib3
-logging.getLogger('urllib3').setLevel(logging.WARNING)
-
-# import utils
-# import srv6_controller
-# import ti_extraction
-# import srv6_pm
-
-# Default path to the .env file
-DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
-# Default value for debug mode
-DEFAULT_DEBUG = False
+# Default parameters
+#
+# Controller gRPC address
+DEFAULT_CONTROLLER_ADDRESS = 'localhost'
+# Controller gRPC port
+DEFAULT_CONTROLLER_PORT = 12345
 
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
+
+# gRPC channel to the controller
+CONTROLLER_CHANNEL = None
 
 
 class CustomCmd(Cmd):
@@ -171,21 +162,8 @@ class ControllerCLITopology(CustomCmd):
             return False  # This workaround avoid exit in case of errors
         # pylint: disable=no-self-use
         #
-        # ArangoDB params
-        arango_url = os.getenv('ARANGO_URL')
-        arango_user = os.getenv('ARANGO_USER')
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Connect to ArangoDB
-        client = arangodb_driver.connect_arango(
-            url=arango_url)     # TODO keep arango connection open
-        # Connect to the db
-        database = arangodb_driver.connect_srv6_usid_db(
-            client=client,
-            username=arango_user,
-            password=arango_password
-        )
-        nodes_dict = arangodb_driver.get_nodes_config(database)
-        srv6_cli.print_nodes(nodes_dict=nodes_dict)
+        # Print the nodes
+        print_nods(CONTROLLER_CHANNEL)
         # Return False in order to keep the CLI subsection open
         # after the command execution
         return False
@@ -216,7 +194,7 @@ class ControllerCLITopology(CustomCmd):
             password=arango_password
         )
         arangodb_driver.insert_nodes_config(database, srv6_usid.read_nodes(
-            args.nodes_file)[0])
+            args.nodes_file)[0])        # TODO
 
     def do_extract(self, args):
         """Extract the network topology"""
@@ -230,6 +208,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.topology_information_extraction_isis(
+            controller_channel=CONTROLLER_CHANNEL,
             routers=args.routers.split(','),
             period=args.period,
             isisd_pwd=args.isisd_pwd,
@@ -259,6 +238,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.load_topo_on_arango(
+            controller_channel=CONTROLLER_CHANNEL,
             arango_url=args.arango_url,
             arango_user=args.arango_user,
             arango_password=args.arango_password,
@@ -284,6 +264,7 @@ class ControllerCLITopology(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         topo_cli.extract_topo_from_isis_and_load_on_arango(
+            controller_channel=CONTROLLER_CHANNEL,
             isis_nodes=arg.isis_nodes.split(','),
             isisd_pwd=arg.isisd_pwd,
             arango_url=arg.arango_url,
@@ -468,6 +449,7 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.set_configuration(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -496,6 +478,7 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.reset_configuration(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -582,6 +565,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.start_experiment(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -625,6 +609,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.get_experiment_results(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -649,6 +634,7 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6pm_cli.stop_experiment(
+            controller_channel=CONTROLLER_CHANNEL,
             sender=args.sender_ip,
             reflector=args.reflector_ip,
             sender_port=args.sender_port,
@@ -792,6 +778,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_path(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
@@ -821,6 +808,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_behavior(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             grpc_address=args.grpc_ip,
             grpc_port=args.grpc_port,
@@ -852,6 +840,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_unitunnel(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             ingress_ip=args.ingress_grpc_ip,
             ingress_port=args.ingress_grpc_port,
@@ -880,6 +869,7 @@ class ControllerCLISRv6(CustomCmd):
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
         srv6_cli.handle_srv6_biditunnel(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             node_l_ip=args.l_grpc_ip,
             node_r_ip=args.r_grpc_ip,
@@ -927,6 +917,7 @@ class ControllerCLISRv6(CustomCmd):
         nodes_dict = arangodb_driver.get_nodes_config(database)
         # Handle the uSID policy
         srv6_cli.handle_srv6_usid_policy(
+            controller_channel=CONTROLLER_CHANNEL,
             operation=args.op,
             nodes_dict=nodes_dict,
             lr_destination=args.lr_destination,
@@ -1147,97 +1138,21 @@ class ControllerCLI(CustomCmd):
     do_EOF = do_exit
 
 
-# Class representing the configuration
-class Config:
-    """Class implementing configuration for the Controller"""
-
-    # ArangoDB username
-    arango_user = None
-    # ArangoDB password
-    arango_password = None
-    # ArangoDB URL
-    arango_url = None
-    # Configure Kafka servers
-    kafka_servers = None
-    # Define whether to enable the debug mode or not
-    debug = DEFAULT_DEBUG
-
-    # Load configuration from .env file
-    def load_config(self, env_file):
-        """Load configuration from a .env file"""
-
-        logger.info('*** Loading configuration from %s', env_file)
-        # Path to the .env file
-        env_path = Path(env_file)
-        # Load environment variables from .env file
-        load_dotenv(dotenv_path=env_path)
-        # ArangoDB username
-        if os.getenv('ARANGO_USER') is not None:
-            self.arango_user = os.getenv('ARANGO_USER')
-        # ArangoDB password
-        if os.getenv('ARANGO_PASSWORD') is not None:
-            self.arango_password = os.getenv('ARANGO_PASSWORD')
-        # ArangoDB URL
-        if os.getenv('ARANGO_URL') is not None:
-            self.arango_url = os.getenv('ARANGO_URL')
-        # Kafka servers
-        if os.getenv('KAFKA_SERVERS') is not None:
-            self.kafka_servers = os.getenv('KAFKA_SERVERS')
-        # Define whether to enable the debug mode or not
-        if os.getenv('DEBUG') is not None:
-            self.debug = os.getenv('DEBUG')
-            # Values provided in .env files are returned as strings
-            # We need to convert them to bool
-            if self.debug.lower() == 'true':
-                self.debug = True
-            elif self.debug.lower() == 'false':
-                self.debug = False
-            else:
-                # Invalid value for this parameter
-                self.debug = None
-
-    def validate_config(self):
-        """Validate current configuration"""
-
-        # pylint: disable=no-self-use
-
-        logger.info('*** Validating configuration')
-        success = True
-        # Return result
-        return success
-
-    def print_config(self):
-        """Pretty print current configuration"""
-
-        print()
-        print('****************** CONFIGURATION ******************')
-        print()
-        print('ArangoDB URL: %s' % self.arango_url)
-        print('ArangoDB username: %s' % self.arango_user)
-        print('ArangoDB password: %s' % '************')
-        print('Kafka servers: %s' % self.kafka_servers)
-        print('Enable debug: %s' % self.debug)
-        print()
-        print('***************************************************')
-        print()
-        print()
-
-    def import_dependencies(self):
-        """Import dependencies"""
-
-
 # Parse options
 def parse_arguments():
     """Command-line arguments parser"""
 
     # Get parser
     parser = ArgumentParser(
-        description='gRPC Southbound APIs for SRv6 Controller'
+        description='Command Line Interface (CLI)'
     )
     parser.add_argument(
-        '-e', '--env-file', dest='env_file', action='store',
-        default=DEFAULT_ENV_FILE_PATH, help='Path to the .env file '
-        'containing the parameters for the node manager'
+        '-a', '--controller-address', action='store',
+        help='Controller IP address', default=DEFAULT_CONTROLLER_ADDRESS
+    )
+    parser.add_argument(
+        '-p', '--controller-port', action='store', help='Controller port',
+        default=DEFAULT_CONTROLLER_PORT
     )
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
@@ -1249,43 +1164,29 @@ def parse_arguments():
 
 
 def __main():
-    """Entry point for this module"""
-
+    '''
+    Entry point for this module.
+    '''
+    global CONTROLLER_CHANNEL
     # Parse command-line arguments
     args = parse_arguments()
-    # Path to the .env file containing the parameters for the node manager'
-    env_file = args.env_file
-    # Initialize database
-    init_srv6_usid_db()
-    # Create a new configuration object
-    config = Config()
-    # Load configuration from .env file
-    if env_file is not None and os.path.exists(env_file):
-        config.load_config(env_file)
-    else:
-        logger.warning('Configuration file not found. '
-                       'Using default configuration.')
-    # Process other command-line arguments
-    # and replace the parameters defined in .env file
-    # (command-line args have priority over environment variables)
-    #
+    # Controller IP address
+    controller_address = args.controller_address
+    # Controller port
+    controller_port = args.controller_port
     # Setup properly the logger
     if args.debug:
         logger.setLevel(level=logging.DEBUG)
-        config.debug = args.debug
     else:
         logger.setLevel(level=logging.INFO)
     # Debug settings
     server_debug = logger.getEffectiveLevel() == logging.DEBUG
     logging.info('SERVER_DEBUG: %s', str(server_debug))
-    # Validate configuration
-    if not config.validate_config():
-        logger.critical('Invalid configuration\n')
-        sys.exit(-2)
-    # Import dependencies
-    config.import_dependencies()
-    # Print configuration
-    config.print_config()
+    # Try to establish a connection to the controller
+    CONTROLLER_CHANNEL = nb_utils.get_grpc_session(
+        server_ip=controller_address,
+        server_port=controller_port
+    )
     # Start the CLI
     ControllerCLI().cmdloop()
 
