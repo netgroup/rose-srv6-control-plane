@@ -54,6 +54,12 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
     """
 
     def __init__(self, db_client=None):
+        """
+        SRv6 Manager init method.
+
+        :param db_client: ArangoDB client.
+        :type db_client: class: `arango.client.ArangoClient`
+        """
         # Establish a connection to the "srv6" database
         self.db_conn = arangodb_driver.connect_db(
             client=db_client,
