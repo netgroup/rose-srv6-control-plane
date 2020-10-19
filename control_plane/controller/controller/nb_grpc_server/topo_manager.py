@@ -166,6 +166,13 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             username=os.getenv('ARANGO_USER'),
             password=os.getenv('ARANGO_PASSWORD')
         )
+        # Init database and return nodes and edges collection
+        self.nodes_collection, self.edges_collection = \
+            arangodb_utils.initialize_db(
+                arango_url=os.getenv('ARANGO_URL'),
+                arango_user=os.getenv('ARANGO_USER'),
+                arango_password=os.getenv('ARANGO_PASSWORD')
+            )  # TODO reuse the existing db connection
 
     def ExtractTopology(self, request, context):
         '''
@@ -257,21 +264,6 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         #
         # Extract the parameters from the gRPC request
         #
-        # ArangoDB URL
-        arango_url = os.getenv('ARANGO_URL')
-        # ArangoDB username
-        arango_user = os.getenv('ARANGO_USER')
-        # ArangoDB password
-        arango_password = os.getenv('ARANGO_PASSWORD')
-        # Verbose mode
-        verbose = request.verbose
-        #
-        # Init database
-        nodes_collection, edges_collection = arangodb_utils.initialize_db(
-            arango_url=arango_url,
-            arango_user=arango_user,
-            arango_password=arango_password
-        )
         # Extract the nodes from the gRPC request
         nodes = list()
         for node in request.topology.nodes:
@@ -294,14 +286,14 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             })
         # Load nodes and edges on ArangoDB
         arangodb_utils.load_topo_on_arango(
-            arango_url=arango_url,
-            user=arango_user,
-            password=arango_password,
+            arango_url=None,  # FIXME: unused argument, to be fixed
+            user=None,  # FIXME: unused argument, to be fixed
+            password=None,  # FIXME: unused argument, to be fixed
             nodes=nodes,
             edges=edges,
-            nodes_collection=nodes_collection,
-            edges_collection=edges_collection,
-            verbose=verbose
+            nodes_collection=self.nodes_collection,
+            edges_collection=self.edges_collection,
+            verbose=request.verbose
         )
         # Done, return the reply
         return topology_manager_pb2.TopologyManagerReply(
@@ -355,16 +347,16 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         if request.protocol == topology_manager_pb2.Protocol.Value('ISIS'):
             # Extract the topology
             for nodes, edges in arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream(
-                        isis_nodes=nodes,
-                        isisd_pwd=password,
-                        arango_url=arango_url,
-                        arango_user=arango_user,
-                        arango_password=arango_password,
-                        addrs_config=addrs_config if len(addrs_config) != 0 else None,
-                        hosts_config=hosts_config if len(hosts_config) != 0 else None,
-                        period=period,
-                        verbose=verbose
-                    ):
+                isis_nodes=nodes,
+                isisd_pwd=password,
+                arango_url=arango_url,
+                arango_user=arango_user,
+                arango_password=arango_password,
+                addrs_config=addrs_config if len(addrs_config) != 0 else None,
+                hosts_config=hosts_config if len(hosts_config) != 0 else None,
+                period=period,
+                verbose=verbose
+            ):
                 if nodes is None or edges is None:
                     # Error
                     response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
@@ -394,7 +386,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         else:
             # Unknown or unsupported routing protocol
             logger.error('Unknown or unsupported routing protocol: %s',
-                        topology_manager_pb2.Protocol.Name(request.protocol))
+                         topology_manager_pb2.Protocol.Name(request.protocol))
             response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             return response
 
