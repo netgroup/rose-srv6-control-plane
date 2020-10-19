@@ -25,10 +25,13 @@
 #
 
 
-'''
+"""
 This module contains an implementation of a gRPC server that provides a
-Northbound API for the SRv6 controller.
-'''
+Northbound API for the SRv6 controller implementing different functionalities:
+- topology extraction utilities;
+- SRv6 entities management;
+- SRv6 Performance Measurement utilities.
+"""
 
 # General imports
 import logging
@@ -37,14 +40,13 @@ import sys
 import time
 from concurrent import futures
 from socket import AF_INET, AF_INET6
-
 # gRPC dependencies
 import grpc
-
-# Controller dependencies
+# Proto dependencies
 import nb_srv6_manager_pb2_grpc
 import topology_manager_pb2_grpc
 import srv6pm_manager_pb2_grpc
+# Controller dependencies
 from controller.utils import get_address_family
 from controller.nb_grpc_server.srv6_manager import SRv6Manager
 from controller.nb_grpc_server.topo_manager import TopologyManager
@@ -82,7 +84,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
                  certificate=DEFAULT_CERTIFICATE,
                  key=DEFAULT_KEY,
                  db_client=None):
-    '''
+    """
     Start a gRPC server.
 
     :param grpc_ip: The IP address of the gRPC server (default: ::).
@@ -99,7 +101,7 @@ def start_server(grpc_ip=DEFAULT_GRPC_IP,
     :param key: Filename of the private key of the gRPC server
                 (default: key_server.pem)
     :type key: str, optional
-    '''
+    """
     # Get family of the gRPC IP
     addr_family = get_address_family(grpc_ip)
     # Build address depending on the family
