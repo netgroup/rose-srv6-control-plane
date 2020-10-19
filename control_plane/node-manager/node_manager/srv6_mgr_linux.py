@@ -374,7 +374,7 @@ class SRv6ManagerLinux():
             encap = {
                 'type': 'seg6local',
                 'action': 'End.DX6',
-                'nh4': nexthop
+                'nh6': nexthop
             }
             # Handle route
             self.ip_route.route(operation, family=AF_INET6,
