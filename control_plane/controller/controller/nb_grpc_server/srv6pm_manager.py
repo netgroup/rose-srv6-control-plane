@@ -79,7 +79,7 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                                     request.sender.port) as sender_channel, \
             utils.get_grpc_session(request.reflector.address,
                                    request.reflector.port) as refl_channel:
-            # Set the configuration
+            # Send the set configuration request
             logger.debug('Trying to set the experiment configuration')
             res = srv6_pm.set_configuration(
                 sender_channel=sender_channel,
@@ -104,15 +104,24 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         Clear node configuration.
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
+        # Establish a gRPC connection to the sender and to the reflector
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
                                        request.reflector.port) as refl_channel:
+            # Send the reset configuration request
             res = srv6_pm.reset_configuration(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel
             )
+            logger.debug('Configuration installed successfully')
+            # TODO set_configuration should return an exception in case of error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Done, create a reply
+        return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
 
     def StartExperiment(self, request, context):
         """
