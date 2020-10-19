@@ -24,15 +24,15 @@
 #
 
 
-'''
-This module provides an implementation of a SRv6 Manager for the Northbound
-gRPC server.
-'''
+"""
+This module provides an implementation of a SRv6-PM Manager for the Northbound
+gRPC server. The SRv6-PM Manager implements different
+control plane functionalities to setup SRv6 entities
+"""
 
 # General imports
 import logging
 import os
-
 # Controller dependencies
 import srv6pm_manager_pb2
 import srv6pm_manager_pb2_grpc
@@ -41,16 +41,24 @@ from controller import arangodb_driver
 
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
 class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
-    '''
+    """
     gRPC request handler.
-    '''
+    """
 
     def __init__(self, db_client=None):
-        # Establish a connection to the "srv6" database
+        """
+        SRv6-PM Manager init method.
+
+        :param db_client: ArangoDB client.
+        :type db_client: class: `arango.client.ArangoClient`
+        """
+        # Establish a connection to the "srv6pm" database
+        # We will keep the connection open forever
         self.db_conn = arangodb_driver.connect_db(
             client=db_client,
             db_name='srv6pm',
@@ -59,9 +67,9 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         )
 
     def SetConfiguration(self, request, context):
-        '''
+        """
         Configure sender and reflector nodes for running an experiment.
-        '''
+        """
         # pylint: disable=too-many-arguments
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
@@ -81,9 +89,9 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         # TODO return value
 
     def ResetConfiguration(self, request, context):
-        '''
+        """
         Clear node configuration.
-        '''
+        """
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
@@ -95,9 +103,9 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
 
     def StartExperiment(self, request, context):
-        '''
+        """
         Start an experiment.
-        '''
+        """
         # pylint: disable=too-many-arguments, too-many-locals
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
@@ -134,9 +142,9 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
 
     def GetExperimentResults(self, request, context):
-        '''
+        """
         Get the results of a running experiment.
-        '''
+        """
         # pylint: disable=too-many-arguments
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
@@ -150,9 +158,9 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
             ))
 
     def StopExperiment(self, request, context):
-        '''
+        """
         Stop a running experiment.
-        '''
+        """
         # pylint: disable=too-many-arguments
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
