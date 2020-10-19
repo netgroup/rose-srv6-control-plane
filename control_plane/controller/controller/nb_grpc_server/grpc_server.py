@@ -58,15 +58,14 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
-#
+
 # Default parameters for gRPC server
 #
 # Server ip and port
 DEFAULT_GRPC_IP = '::'
 DEFAULT_GRPC_PORT = 12345
-# Debug option
-SERVER_DEBUG = False
 # Secure option
 DEFAULT_SECURE = False
 # Server certificate
