@@ -404,7 +404,19 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
 
     def PushNodesConfig(self, request, context):
         '''
-        Load nodes configuration.
+        Load nodes configuration. Configuration consists of:
+        -    locator_bits: an integer representing the number of bits in the
+             locator part of the SID;
+        -    usid_id_bits: an integer representing the number of bits in the
+             MicroSID identifier part of the SID;
+        -    nodes: a list of nodes represented as dicts containing the
+             following fields:
+             -    name: name of the node;
+             -    grpc_ip: gRPC address of the node;
+             -    grpc_port: gRPC port number of the node;
+             -    uN: uN SID;
+             -    uDT: uDT SID (used for the decap operation),
+             -    fwd_engine: forwarding engine.
         '''
         # Nodes configuration
         nodes_config = {
@@ -423,7 +435,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 'uDT': node.uDT,
                 'fwd_engine': node.fwd_engine
             })
-        # Load the nodes on the database
+        # Load the nodes configuration on the database
         topo_utils.load_nodes_config(nodes_config)
         # Create reply message
         return topology_manager_pb2.NodesConfigReply(
@@ -432,7 +444,19 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
 
     def GetNodesConfig(self, request, context):
         '''
-        Retrieve nodes configuration.
+        Retrieve nodes configuration. Configuration consists of:
+        -    locator_bits: an integer representing the number of bits in the
+             locator part of the SID;
+        -    usid_id_bits: an integer representing the number of bits in the
+             MicroSID identifier part of the SID;
+        -    nodes: a list of nodes represented as dicts containing the
+             following fields:
+             -    name: name of the node;
+             -    grpc_ip: gRPC address of the node;
+             -    grpc_port: gRPC port number of the node;
+             -    uN: uN SID;
+             -    uDT: uDT SID (used for the decap operation),
+             -    fwd_engine: forwarding engine.
         '''
         # Create reply message
         response = topology_manager_pb2.NodesConfigReply()
@@ -445,12 +469,19 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             response.nodes_config.usid_id_bits = nodes_config['usid_id_bits']
             # Iterate on the nodes
             for node in nodes_config['nodes']:
+                # Create a new node
                 _node = response.nodes_config.nodes.add()
+                # Fill "name" field
                 _node.name = node['name']
+                # Fill "grpc_ip" field
                 _node.grpc_ip = node['grpc_ip']
+                # Fill "grpc_port" field
                 _node.grpc_port = node['grpc_port']
+                # Fill "uN" field
                 _node.uN = node['uN']
+                # Fill "uDT" field
                 _node.uDT = node['uDT']
+                # Fill "fwd_engine" field
                 _node.fwd_engine = node['fwd_engine']
             # Set status code
             response.status = nb_commons_pb2.STATUS_SUCCESS
