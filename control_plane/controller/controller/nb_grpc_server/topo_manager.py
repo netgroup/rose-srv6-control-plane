@@ -491,6 +491,3 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         finally:
             # Done, return the reply
             return response
-
-
-# TODO fix errors
