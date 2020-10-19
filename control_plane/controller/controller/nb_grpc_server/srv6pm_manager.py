@@ -33,9 +33,11 @@ control plane functionalities to setup SRv6 entities
 # General imports
 import logging
 import os
-# Controller dependencies
+# Proto dependencies
+import nb_commons_pb2
 import srv6pm_manager_pb2
 import srv6pm_manager_pb2_grpc
+# Controller dependencies
 from controller import srv6_pm, utils
 from controller import arangodb_driver
 
@@ -70,11 +72,15 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         """
         Configure sender and reflector nodes for running an experiment.
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
+        # Establish a gRPC connection to the sender and to the reflector
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
             utils.get_grpc_session(request.reflector.address,
                                    request.reflector.port) as refl_channel:
+            # Set the configuration
+            logger.debug('Trying to set the experiment configuration')
             res = srv6_pm.set_configuration(
                 sender_channel=sender_channel,
                 reflector_channel=refl_channel,
@@ -85,13 +91,19 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 number_of_color=request.color_options.number_of_color,
                 pm_driver=request.pm_driver
             )
+            logger.debug('Configuration installed successfully')
+            # TODO set_configuration should return an exception in case of error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
-        # TODO return value
+        # Done, create a reply
+        return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
+            status=nb_commons_pb2.STATUS_SUCCESS
+        )
 
     def ResetConfiguration(self, request, context):
         """
         Clear node configuration.
         """
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
@@ -106,7 +118,7 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         """
         Start an experiment.
         """
-        # pylint: disable=too-many-arguments, too-many-locals
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
@@ -145,7 +157,7 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         """
         Get the results of a running experiment.
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
@@ -161,7 +173,7 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         """
         Stop a running experiment.
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         with utils.get_grpc_session(request.sender.address,
                                     request.sender.port) as sender_channel, \
                 utils.get_grpc_session(request.reflector.address,
