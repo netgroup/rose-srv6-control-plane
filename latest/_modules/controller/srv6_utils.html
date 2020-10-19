@@ -182,6 +182,7 @@
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">grpc</span>
 <span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">text_type</span>
@@ -191,6 +192,7 @@
 <span class="kn">import</span> <span class="nn">srv6_manager_pb2</span>
 <span class="c1"># Controller dependencies</span>
 <span class="kn">import</span> <span class="nn">srv6_manager_pb2_grpc</span>
+<span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">arangodb_driver</span>
 <span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">utils</span>
 
 <span class="c1"># Global variables definition</span>
@@ -225,9 +227,122 @@
     <span class="k">return</span> <span class="n">code</span></div>
 
 
+<span class="k">def</span> <span class="nf">del_srv6_path_db</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">encapmode</span><span class="o">=</span><span class="s2">&quot;encap&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                     <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span>
+    <span class="c1"># ArangoDB params</span>
+    <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+    <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+    <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+    <span class="c1"># Connect to ArangoDB</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+    <span class="c1"># Connect to the db</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+        <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+        <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+    <span class="p">)</span>
+    <span class="c1"># Find the paths matching the params</span>
+    <span class="n">srv6_paths</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_srv6_path</span><span class="p">(</span>
+        <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+        <span class="n">grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+        <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">encapmode</span><span class="o">=</span><span class="n">encapmode</span><span class="p">,</span>
+        <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+        <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+        <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">srv6_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Entity not found</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Entity not found&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span>
+    <span class="c1"># Remove the paths</span>
+    <span class="k">for</span> <span class="n">srv6_path</span> <span class="ow">in</span> <span class="n">srv6_paths</span><span class="p">:</span>
+        <span class="c1"># Initialize segments list</span>
+        <span class="k">if</span> <span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;segments&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Create request message</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">SRv6ManagerRequest</span><span class="p">()</span>
+        <span class="c1"># Create a new SRv6 path request</span>
+        <span class="n">path_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">srv6_path_request</span>       <span class="c1"># pylint: disable=no-member</span>
+        <span class="c1"># Create a new path</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path_request</span><span class="o">.</span><span class="n">paths</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="c1"># Set destination</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;destination&#39;</span><span class="p">])</span>
+        <span class="c1"># Set device</span>
+        <span class="c1"># If the device is not specified (i.e. empty string),</span>
+        <span class="c1"># it will be chosen by the gRPC server</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">])</span>
+        <span class="c1"># Set table ID</span>
+        <span class="c1"># If the table ID is not specified (i.e. table=-1),</span>
+        <span class="c1"># the main table will be used</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">])</span>
+        <span class="c1"># Set metric (i.e. preference value of the route)</span>
+        <span class="c1"># If the metric is not specified (i.e. metric=-1),</span>
+        <span class="c1"># the decision is left to the Linux kernel</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">])</span>
+        <span class="c1"># Set the BSID address (required for VPP)</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">bsid_addr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">])</span>
+        <span class="c1"># Forwarding engine (Linux or VPP)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">path_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span>
+                <span class="n">fwd_engine</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid forwarding engine: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Set encapmode</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">encapmode</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">encapmode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;*** Missing segments for seg6 route&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span>
+        <span class="c1"># Iterate on the segments and build the SID list</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+            <span class="c1"># Append the segment to the SID list</span>
+            <span class="n">srv6_segment</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">sr_path</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+            <span class="n">srv6_segment</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+        <span class="c1"># Get gRPC channel</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Get the reference of the stub</span>
+        <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6_manager_pb2_grpc</span><span class="o">.</span><span class="n">SRv6ManagerStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+        <span class="c1"># Remove the SRv6 path</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="c1"># Get the status code of the gRPC operation</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+        <span class="c1"># Remove the path from the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">delete_srv6_path</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;_key&#39;</span><span class="p">],</span>
+            <span class="n">grpc_address</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">grpc_port</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">destination</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;destination&#39;</span><span class="p">],</span>
+            <span class="n">segments</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;segments&#39;</span><span class="p">],</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">],</span>
+            <span class="n">encapmode</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;encapmode&#39;</span><span class="p">],</span>
+            <span class="n">table</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">],</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">],</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_path</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="c1"># Done, return the reply</span>
+    <span class="k">return</span> <span class="n">response</span>
+
+
 <div class="viewcode-block" id="handle_srv6_path"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_path">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_path</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">encapmode</span><span class="o">=</span><span class="s2">&quot;encap&quot;</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                     <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
+                     <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                     <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 Path</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -303,7 +418,39 @@
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
             <span class="c1"># Get the status code of the gRPC operation</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
-        <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;get&#39;</span><span class="p">:</span>
+            <span class="c1"># Store the path to the database</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span> <span class="ow">and</span> \
+                    <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="n">update_db</span><span class="p">:</span>
+                <span class="c1"># ArangoDB params</span>
+                <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+                <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+                <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+                <span class="c1"># Connect to ArangoDB</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+                <span class="c1"># Connect to the db</span>
+                <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+                    <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+                    <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+                    <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+                <span class="p">)</span>
+                <span class="c1"># Save the policy to the db</span>
+                <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">insert_srv6_path</span><span class="p">(</span>
+                    <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                    <span class="n">grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+                    <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">encapmode</span><span class="o">=</span><span class="n">encapmode</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+                    <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;get&#39;</span><span class="p">:</span>    <span class="c1"># TODO db</span>
             <span class="c1"># Get the SRv6 path</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Get</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
             <span class="c1"># Get the status code of the gRPC operation</span>
@@ -320,11 +467,60 @@
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Update</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
             <span class="c1"># Get the status code of the gRPC operation</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+            <span class="c1"># Remove the path from the database</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span> <span class="ow">and</span> \
+                    <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="n">update_db</span><span class="p">:</span>
+                <span class="c1"># ArangoDB params</span>
+                <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+                <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+                <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+                <span class="c1"># Connect to ArangoDB</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+                <span class="c1"># Connect to the db</span>
+                <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+                    <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+                    <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+                    <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+                <span class="p">)</span>
+                <span class="c1"># Save the policy to the db</span>
+                <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">update_srv6_path</span><span class="p">(</span>
+                    <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                    <span class="n">grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+                    <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">encapmode</span><span class="o">=</span><span class="n">encapmode</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+                    <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;del&#39;</span><span class="p">:</span>
             <span class="c1"># Remove the SRv6 path</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-            <span class="c1"># Get the status code of the gRPC operation</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="n">update_db</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">del_srv6_path_db</span><span class="p">(</span>
+                    <span class="n">channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+                    <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+                    <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">encapmode</span><span class="o">=</span><span class="n">encapmode</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+                    <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                    <span class="n">update_db</span><span class="o">=</span><span class="n">update_db</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Remove the SRv6 path</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="c1"># Get the status code of the gRPC operation</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Operation not supported</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Operation not supported&#39;</span><span class="p">)</span>
@@ -410,10 +606,132 @@
     <span class="k">return</span> <span class="n">response</span></div>
 
 
+<span class="k">def</span> <span class="nf">del_srv6_behavior_db</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                         <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nexthop</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">lookup_table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="n">interface</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span>
+    <span class="c1"># ArangoDB params</span>
+    <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+    <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+    <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+    <span class="c1"># Connect to ArangoDB</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+    <span class="c1"># Connect to the db</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+        <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+        <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+    <span class="p">)</span>
+    <span class="c1"># Find the behaviors matching the params</span>
+    <span class="n">srv6_behaviors</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_srv6_behavior</span><span class="p">(</span>
+        <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+        <span class="n">grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">segment</span><span class="o">=</span><span class="n">segment</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+        <span class="n">nexthop</span><span class="o">=</span><span class="n">nexthop</span><span class="p">,</span>
+        <span class="n">lookup_table</span><span class="o">=</span><span class="n">lookup_table</span><span class="p">,</span>
+        <span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span>
+        <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+        <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="n">key</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">srv6_behaviors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Entity not found</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Entity not found&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span>
+    <span class="c1"># Remove the behaviors</span>
+    <span class="k">for</span> <span class="n">srv6_behavior</span> <span class="ow">in</span> <span class="n">srv6_behaviors</span><span class="p">:</span>
+        <span class="c1"># Initialize segments list</span>
+        <span class="k">if</span> <span class="n">segments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Create request message</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">SRv6ManagerRequest</span><span class="p">()</span>
+        <span class="c1"># Create a new SRv6 behavior request</span>
+        <span class="n">behavior_request</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span>               <span class="c1"># pylint: disable=no-member</span>
+                            <span class="o">.</span><span class="n">srv6_behavior_request</span><span class="p">)</span>
+        <span class="c1"># Create a new SRv6 behavior</span>
+        <span class="n">behavior</span> <span class="o">=</span> <span class="n">behavior_request</span><span class="o">.</span><span class="n">behaviors</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="c1"># Set local segment for the seg6local route</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;segment&#39;</span><span class="p">]</span>
+        <span class="c1"># Set the table where the seg6local must be inserted</span>
+        <span class="c1"># If the table ID is not specified (i.e. table=-1),</span>
+        <span class="c1"># the main table will be used</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">]</span>
+        <span class="c1"># Set device</span>
+        <span class="c1"># If the device is not specified (i.e. empty string),</span>
+        <span class="c1"># it will be chosen by the gRPC server</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">]</span>
+        <span class="c1"># Set metric (i.e. preference value of the route)</span>
+        <span class="c1"># If the metric is not specified (i.e. metric=-1),</span>
+        <span class="c1"># the decision is left to the Linux kernel</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span>
+        <span class="c1"># Set the action for the seg6local route</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+        <span class="c1"># Set the nexthop for the L3 cross-connect actions</span>
+        <span class="c1"># (e.g. End.DX4, End.DX6)</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">nexthop</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">nexthop</span><span class="p">)</span>
+        <span class="c1"># Set the table for the &quot;decap and table lookup&quot; actions</span>
+        <span class="c1"># (e.g. End.DT4, End.DT6)</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">lookup_table</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lookup_table</span><span class="p">)</span>
+        <span class="c1"># Set the inteface for the L2 cross-connect actions</span>
+        <span class="c1"># (e.g. End.DX2)</span>
+        <span class="n">behavior</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+        <span class="c1"># Set the segments for the binding SID actions</span>
+        <span class="c1"># (e.g. End.B6, End.B6.Encaps)</span>
+        <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+            <span class="c1"># Create a new segment</span>
+            <span class="n">srv6_segment</span> <span class="o">=</span> <span class="n">behavior</span><span class="o">.</span><span class="n">segs</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+            <span class="n">srv6_segment</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="c1"># Forwarding engine (Linux or VPP)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">behavior_request</span><span class="o">.</span><span class="n">fwd_engine</span> <span class="o">=</span> <span class="n">srv6_manager_pb2</span><span class="o">.</span><span class="n">FwdEngine</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span>
+                <span class="n">fwd_engine</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid forwarding engine: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># Get gRPC channel</span>
+        <span class="n">channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Get the reference of the stub</span>
+        <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6_manager_pb2_grpc</span><span class="o">.</span><span class="n">SRv6ManagerStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+        <span class="c1"># Remove the SRv6 path</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="c1"># Get the status code of the gRPC operation</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+        <span class="c1"># Remove the path from the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">delete_srv6_behavior</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;_key&#39;</span><span class="p">],</span>
+            <span class="n">grpc_address</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">grpc_port</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">segment</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;segment&#39;</span><span class="p">],</span>
+            <span class="n">action</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">],</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">],</span>
+            <span class="n">table</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">],</span>
+            <span class="n">nexthop</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;nexthop&#39;</span><span class="p">],</span>
+            <span class="n">lookup_table</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;lookup_table&#39;</span><span class="p">],</span>
+            <span class="n">interface</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;interface&#39;</span><span class="p">],</span>
+            <span class="n">segments</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;segments&#39;</span><span class="p">],</span>
+            <span class="n">metric</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_behavior</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="c1"># Done, return the reply</span>
+    <span class="k">return</span> <span class="n">response</span>
+
+
 <div class="viewcode-block" id="handle_srv6_behavior"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.handle_srv6_behavior">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_behavior</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">segment</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
                          <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nexthop</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">lookup_table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                          <span class="n">interface</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">segments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
-                         <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
+                         <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Handle a SRv6 behavior</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -481,9 +799,46 @@
                 <span class="n">srv6_segment</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
             <span class="c1"># Create the SRv6 behavior</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Create</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="c1"># Get the status code of the gRPC operation</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+            <span class="c1"># Store the path to the database</span>
+            <span class="k">if</span> <span class="n">response</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span> <span class="ow">and</span> \
+                    <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="n">update_db</span><span class="p">:</span>
+                <span class="c1"># ArangoDB params</span>
+                <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+                <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+                <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+                <span class="c1"># Connect to ArangoDB</span>
+                <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+                <span class="c1"># Connect to the db</span>
+                <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+                    <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+                    <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+                    <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+                <span class="p">)</span>
+                <span class="c1"># Save the behavior to the db</span>
+                <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">insert_srv6_behavior</span><span class="p">(</span>
+                    <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                    <span class="n">grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">segment</span><span class="o">=</span><span class="n">segment</span><span class="p">,</span>
+                    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+                    <span class="n">nexthop</span><span class="o">=</span><span class="n">nexthop</span><span class="p">,</span>
+                    <span class="n">lookup_table</span><span class="o">=</span><span class="n">lookup_table</span><span class="p">,</span>
+                    <span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span>
+                    <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+                <span class="p">)</span>
         <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;get&#39;</span><span class="p">:</span>
             <span class="c1"># Get the SRv6 behavior</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Get</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="c1"># Get the status code of the gRPC operation</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
         <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;change&#39;</span><span class="p">:</span>
             <span class="c1"># Set the action for the seg6local route</span>
             <span class="n">behavior</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
@@ -504,14 +859,36 @@
                 <span class="n">srv6_segment</span><span class="o">.</span><span class="n">segment</span> <span class="o">=</span> <span class="n">text_type</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
             <span class="c1"># Update the SRv6 behavior</span>
             <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Update</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="c1"># Get the status code of the gRPC operation</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+            <span class="c1"># TODO update</span>
         <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;del&#39;</span><span class="p">:</span>
             <span class="c1"># Remove the SRv6 behavior</span>
-            <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+                    <span class="n">update_db</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">del_srv6_behavior_db</span><span class="p">(</span>
+                    <span class="n">channel</span><span class="o">=</span><span class="n">channel</span><span class="p">,</span>
+                    <span class="n">segment</span><span class="o">=</span><span class="n">segment</span><span class="p">,</span>
+                    <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                    <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
+                    <span class="n">nexthop</span><span class="o">=</span><span class="n">nexthop</span><span class="p">,</span>
+                    <span class="n">lookup_table</span><span class="o">=</span><span class="n">lookup_table</span><span class="p">,</span>
+                    <span class="n">interface</span><span class="o">=</span><span class="n">interface</span><span class="p">,</span>
+                    <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+                    <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
+                    <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+                    <span class="n">update_db</span><span class="o">=</span><span class="n">update_db</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Remove the SRv6 behavior</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">stub</span><span class="o">.</span><span class="n">Remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                <span class="c1"># Get the status code of the gRPC operation</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Invalid operation: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="c1"># Get the status code of the gRPC operation</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
     <span class="k">except</span> <span class="n">grpc</span><span class="o">.</span><span class="n">RpcError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
         <span class="c1"># An error occurred during the gRPC operation</span>
         <span class="c1"># Parse the error and return it</span>
@@ -528,7 +905,8 @@
 
 <div class="viewcode-block" id="create_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span>
                            <span class="n">destination</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span> <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                           <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
+                           <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Create a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;</span>
 
@@ -564,7 +942,8 @@
         <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
         <span class="n">segments</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># Pretty print status code</span>
     <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
@@ -591,7 +970,8 @@
             <span class="n">segment</span><span class="o">=</span><span class="n">localseg</span><span class="p">,</span>
             <span class="n">action</span><span class="o">=</span><span class="s1">&#39;End.DT6&#39;</span><span class="p">,</span>
             <span class="n">lookup_table</span><span class="o">=</span><span class="mi">254</span><span class="p">,</span>
-            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
         <span class="c1"># Pretty print status code</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
@@ -602,6 +982,37 @@
         <span class="c1"># If an error occurred, abort the operation</span>
         <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">res</span>
+    <span class="c1"># Add the tunnel to the database</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+            <span class="n">update_db</span><span class="p">:</span>
+        <span class="c1"># ArangoDB params</span>
+        <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+        <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+        <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+        <span class="c1"># Connect to ArangoDB</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+        <span class="c1"># Connect to the db</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+        <span class="p">)</span>
+        <span class="c1"># Save the tunnel to the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">insert_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">egress_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">egress_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">sidlist_lr</span><span class="o">=</span><span class="n">segments</span><span class="p">,</span>
+            <span class="n">dest_lr</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+            <span class="n">localseg_lr</span><span class="o">=</span><span class="n">localseg</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">key</span>
+        <span class="p">)</span>
     <span class="c1"># Success</span>
     <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span></div>
 
@@ -609,7 +1020,8 @@
 <div class="viewcode-block" id="create_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.create_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">create_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                        <span class="n">sidlist_lr</span><span class="p">,</span> <span class="n">sidlist_rl</span><span class="p">,</span> <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span>
                        <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">):</span>
+                       <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Create a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
 
@@ -654,7 +1066,8 @@
         <span class="n">segments</span><span class="o">=</span><span class="n">sidlist_lr</span><span class="p">,</span>
         <span class="n">localseg</span><span class="o">=</span><span class="n">localseg_lr</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># If an error occurred, abort the operation</span>
     <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
@@ -667,18 +1080,176 @@
         <span class="n">segments</span><span class="o">=</span><span class="n">sidlist_rl</span><span class="p">,</span>
         <span class="n">localseg</span><span class="o">=</span><span class="n">localseg_rl</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># If an error occurred, abort the operation</span>
     <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">res</span>
+    <span class="c1"># Add the tunnel to the database</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+            <span class="n">update_db</span><span class="p">:</span>
+        <span class="c1"># ArangoDB params</span>
+        <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+        <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+        <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+        <span class="c1"># Connect to ArangoDB</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+        <span class="c1"># Connect to the db</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+            <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+        <span class="p">)</span>
+        <span class="c1"># Save the tunnel to the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">insert_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_r_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_r_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">sidlist_lr</span><span class="o">=</span><span class="n">sidlist_lr</span><span class="p">,</span>
+            <span class="n">sidlist_rl</span><span class="o">=</span><span class="n">sidlist_rl</span><span class="p">,</span>
+            <span class="n">dest_lr</span><span class="o">=</span><span class="n">dest_lr</span><span class="p">,</span>
+            <span class="n">dest_rl</span><span class="o">=</span><span class="n">dest_rl</span><span class="p">,</span>
+            <span class="n">localseg_lr</span><span class="o">=</span><span class="n">localseg_lr</span><span class="p">,</span>
+            <span class="n">localseg_rl</span><span class="o">=</span><span class="n">localseg_rl</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">key</span>
+        <span class="p">)</span>
     <span class="c1"># Success</span>
     <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span></div>
 
 
+<span class="k">def</span> <span class="nf">del_uni_srv6_tunnel_db</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+                           <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span>
+                           <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span>
+    <span class="c1"># ArangoDB params</span>
+    <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+    <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+    <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+    <span class="c1"># Connect to ArangoDB</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+    <span class="c1"># Connect to the db</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+        <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+        <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+    <span class="p">)</span>
+    <span class="c1"># Find the tunnels matching the params</span>
+    <span class="n">srv6_tunnels</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_srv6_tunnel</span><span class="p">(</span>
+        <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+        <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">egress_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">egress_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">dest_lr</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+        <span class="n">localseg_lr</span><span class="o">=</span><span class="n">localseg</span><span class="p">,</span>
+        <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">srv6_tunnels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Entity not found</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Entity not found&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span>
+    <span class="c1"># Remove the tunnels</span>
+    <span class="k">for</span> <span class="n">srv6_tunnel</span> <span class="ow">in</span> <span class="n">srv6_tunnels</span><span class="p">:</span>
+        <span class="c1"># Get a gRPC channel to the ingress node</span>
+        <span class="n">ingress_channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Get a gRPC channel to the egress node</span>
+        <span class="n">egress_channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Remove seg6 route from &lt;ingress&gt; to steer the packets sent to</span>
+        <span class="c1"># &lt;destination&gt; through the SID list &lt;segments&gt;</span>
+        <span class="c1">#</span>
+        <span class="c1"># Equivalent to the command:</span>
+        <span class="c1">#    ingress: ip -6 route del &lt;destination&gt; encap seg6 mode encap \</span>
+        <span class="c1">#             segs &lt;segments&gt; dev &lt;device&gt;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">handle_srv6_path</span><span class="p">(</span>
+            <span class="n">operation</span><span class="o">=</span><span class="s1">&#39;del&#39;</span><span class="p">,</span>
+            <span class="n">channel</span><span class="o">=</span><span class="n">ingress_channel</span><span class="p">,</span>
+            <span class="n">destination</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_lr&#39;</span><span class="p">],</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+            <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="c1"># Pretty print status code</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">res</span><span class="p">,</span>
+            <span class="n">success_msg</span><span class="o">=</span><span class="s1">&#39;Removed SRv6 Path&#39;</span><span class="p">,</span>
+            <span class="n">failure_msg</span><span class="o">=</span><span class="s1">&#39;Error in remove_srv6_path()&#39;</span>
+        <span class="p">)</span>
+        <span class="c1"># If an error occurred, abort the operation</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span><span class="p">:</span>
+            <span class="c1"># If the &#39;ignore_errors&#39; flag is set, continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_errors</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">res</span>
+        <span class="k">elif</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="c1"># Remove &quot;Decapsulaton and Specific IPv6 Table Lookup&quot; function</span>
+        <span class="c1"># from the egress node &lt;egress&gt;</span>
+        <span class="c1"># The decap function associated to the &lt;localseg&gt; passed in</span>
+        <span class="c1"># as argument. If argument &#39;localseg&#39; isn&#39;t passed in, the behavior</span>
+        <span class="c1"># is not removed</span>
+        <span class="c1">#</span>
+        <span class="c1"># Equivalent to the command:</span>
+        <span class="c1">#    egress: ip -6 route del &lt;localseg&gt; encap seg6local action \</span>
+        <span class="c1">#            End.DT6 table 254 dev &lt;device&gt;</span>
+        <span class="k">if</span> <span class="n">localseg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">handle_srv6_behavior</span><span class="p">(</span>
+                <span class="n">operation</span><span class="o">=</span><span class="s1">&#39;del&#39;</span><span class="p">,</span>
+                <span class="n">channel</span><span class="o">=</span><span class="n">egress_channel</span><span class="p">,</span>
+                <span class="n">segment</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_lr&#39;</span><span class="p">],</span>
+                <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+                <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="c1"># Pretty print status code</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">res</span><span class="p">,</span>
+                <span class="n">success_msg</span><span class="o">=</span><span class="s1">&#39;Removed SRv6 behavior&#39;</span><span class="p">,</span>
+                <span class="n">failure_msg</span><span class="o">=</span><span class="s1">&#39;Error in remove_srv6_behavior()&#39;</span>
+            <span class="p">)</span>
+            <span class="c1"># If an error occurred, abort the operation</span>
+            <span class="k">if</span> <span class="n">res</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span><span class="p">:</span>
+                <span class="c1"># If the &#39;ignore_errors&#39; flag is set, continue</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_errors</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">res</span>
+            <span class="k">elif</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">res</span>
+        <span class="c1"># Remove the path from the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">delete_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;_key&#39;</span><span class="p">],</span>
+            <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">dest_lr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_lr&#39;</span><span class="p">],</span>
+            <span class="n">localseg_lr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_lr&#39;</span><span class="p">],</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+            <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="c1"># Success</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span>
+
+
 <div class="viewcode-block" id="destroy_uni_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_uni_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_uni_srv6_tunnel</span><span class="p">(</span><span class="n">ingress_channel</span><span class="p">,</span> <span class="n">egress_channel</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
                             <span class="n">localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span>
-                            <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                            <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Destroy a unidirectional SRv6 tunnel from &lt;ingress&gt; to &lt;egress&gt;.</span>
 
@@ -701,6 +1272,17 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
+    <span class="c1"># Remove the SRv6 behavior</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">update_db</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">del_uni_srv6_tunnel_db</span><span class="p">(</span>
+            <span class="n">ingress_channel</span><span class="o">=</span><span class="n">ingress_channel</span><span class="p">,</span>
+            <span class="n">egress_channel</span><span class="o">=</span><span class="n">egress_channel</span><span class="p">,</span>
+            <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
+            <span class="n">localseg</span><span class="o">=</span><span class="n">localseg</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span>
+        <span class="p">)</span>
     <span class="c1"># Remove seg6 route from &lt;ingress&gt; to steer the packets sent to</span>
     <span class="c1"># &lt;destination&gt; through the SID list &lt;segments&gt;</span>
     <span class="c1">#</span>
@@ -712,7 +1294,8 @@
         <span class="n">channel</span><span class="o">=</span><span class="n">ingress_channel</span><span class="p">,</span>
         <span class="n">destination</span><span class="o">=</span><span class="n">destination</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># Pretty print status code</span>
     <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
@@ -741,7 +1324,8 @@
             <span class="n">operation</span><span class="o">=</span><span class="s1">&#39;del&#39;</span><span class="p">,</span>
             <span class="n">channel</span><span class="o">=</span><span class="n">egress_channel</span><span class="p">,</span>
             <span class="n">segment</span><span class="o">=</span><span class="n">localseg</span><span class="p">,</span>
-            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
         <span class="p">)</span>
         <span class="c1"># Pretty print status code</span>
         <span class="n">utils</span><span class="o">.</span><span class="n">print_status_message</span><span class="p">(</span>
@@ -760,10 +1344,110 @@
     <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span></div>
 
 
+<span class="k">def</span> <span class="nf">del_bidi_srv6_tunnel_db</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
+                            <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span> <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+                            <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span>
+    <span class="c1"># ArangoDB params</span>
+    <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
+    <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
+    <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
+    <span class="c1"># Connect to ArangoDB</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
+    <span class="c1"># Connect to the db</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
+        <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
+        <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
+    <span class="p">)</span>
+    <span class="c1"># Find the tunnels matching the params</span>
+    <span class="n">srv6_tunnels</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_srv6_tunnel</span><span class="p">(</span>
+        <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+        <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span>
+        <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_r_channel</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">node_r_channel</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">dest_lr</span><span class="o">=</span><span class="n">dest_lr</span><span class="p">,</span>
+        <span class="n">dest_rl</span><span class="o">=</span><span class="n">dest_rl</span><span class="p">,</span>
+        <span class="n">localseg_lr</span><span class="o">=</span><span class="n">localseg_lr</span><span class="p">,</span>
+        <span class="n">localseg_rl</span><span class="o">=</span><span class="n">localseg_rl</span><span class="p">,</span>
+        <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">srv6_tunnels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Entity not found</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Entity not found&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span>
+    <span class="c1"># Remove the tunnels</span>
+    <span class="k">for</span> <span class="n">srv6_tunnel</span> <span class="ow">in</span> <span class="n">srv6_tunnels</span><span class="p">:</span>
+        <span class="c1"># Get a gRPC channel to the ingress node</span>
+        <span class="n">node_l_channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Get a gRPC channel to the egress node</span>
+        <span class="n">node_r_channel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grpc_session</span><span class="p">(</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">server_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Remove unidirectional SRv6 tunnel from &lt;node_l&gt; to &lt;node_r&gt;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">destroy_uni_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">ingress_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>
+            <span class="n">egress_channel</span><span class="o">=</span><span class="n">node_r_channel</span><span class="p">,</span>
+            <span class="n">destination</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_lr&#39;</span><span class="p">],</span>
+            <span class="n">localseg</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_lr&#39;</span><span class="p">],</span>
+            <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+            <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="c1"># If an error occurred, abort the operation</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="c1"># Remove unidirectional SRv6 tunnel from &lt;node_r&gt; to &lt;node_l&gt;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">destroy_uni_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">ingress_channel</span><span class="o">=</span><span class="n">node_r_channel</span><span class="p">,</span>
+            <span class="n">egress_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>
+            <span class="n">destination</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_rl&#39;</span><span class="p">],</span>
+            <span class="n">localseg</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_rl&#39;</span><span class="p">],</span>
+            <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+            <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="c1"># If an error occurred, abort the operation</span>
+        <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span>
+        <span class="c1"># Remove the path from the db</span>
+        <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">delete_srv6_tunnel</span><span class="p">(</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;_key&#39;</span><span class="p">],</span>
+            <span class="n">l_grpc_address</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">l_grpc_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;l_grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">r_grpc_address</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_address&#39;</span><span class="p">],</span>
+            <span class="n">r_grpc_port</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;r_grpc_port&#39;</span><span class="p">],</span>
+            <span class="n">dest_lr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_lr&#39;</span><span class="p">],</span>
+            <span class="n">dest_rl</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;dest_rl&#39;</span><span class="p">],</span>
+            <span class="n">localseg_lr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_lr&#39;</span><span class="p">],</span>
+            <span class="n">localseg_rl</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;localseg_rl&#39;</span><span class="p">],</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;bsid_addr&#39;</span><span class="p">],</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">srv6_tunnel</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+            <span class="n">is_unidirectional</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+        <span class="c1"># Success</span>
+        <span class="k">return</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span>
+
+
 <div class="viewcode-block" id="destroy_srv6_tunnel"><a class="viewcode-back" href="../../controller/api/srv6_utils.html#controller.srv6_utils.destroy_srv6_tunnel">[docs]</a><span class="k">def</span> <span class="nf">destroy_srv6_tunnel</span><span class="p">(</span><span class="n">node_l_channel</span><span class="p">,</span> <span class="n">node_r_channel</span><span class="p">,</span>
                         <span class="n">dest_lr</span><span class="p">,</span> <span class="n">dest_rl</span><span class="p">,</span> <span class="n">localseg_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">localseg_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">bsid_addr</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="o">=</span><span class="s1">&#39;linux&#39;</span><span class="p">,</span>
-                        <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                        <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">update_db</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Destroy a bidirectional SRv6 tunnel between &lt;node_l&gt; and &lt;node_r&gt;.</span>
 
@@ -801,6 +1485,20 @@
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
+    <span class="c1"># Remove the SRv6 behavior</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ENABLE_PERSISTENCY&#39;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;True&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+            <span class="n">update_db</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">del_bidi_srv6_tunnel_db</span><span class="p">(</span>
+            <span class="n">node_l_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>
+            <span class="n">node_r_channel</span><span class="o">=</span><span class="n">node_r_channel</span><span class="p">,</span>
+            <span class="n">dest_lr</span><span class="o">=</span><span class="n">dest_lr</span><span class="p">,</span>
+            <span class="n">dest_rl</span><span class="o">=</span><span class="n">dest_rl</span><span class="p">,</span>
+            <span class="n">localseg_lr</span><span class="o">=</span><span class="n">localseg_lr</span><span class="p">,</span>
+            <span class="n">localseg_rl</span><span class="o">=</span><span class="n">localseg_rl</span><span class="p">,</span>
+            <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
+            <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+            <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span>
+        <span class="p">)</span>
     <span class="c1"># Remove unidirectional SRv6 tunnel from &lt;node_l&gt; to &lt;node_r&gt;</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">destroy_uni_srv6_tunnel</span><span class="p">(</span>
         <span class="n">ingress_channel</span><span class="o">=</span><span class="n">node_l_channel</span><span class="p">,</span>
@@ -809,7 +1507,8 @@
         <span class="n">localseg</span><span class="o">=</span><span class="n">localseg_lr</span><span class="p">,</span>
         <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># If an error occurred, abort the operation</span>
     <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
@@ -822,7 +1521,8 @@
         <span class="n">localseg</span><span class="o">=</span><span class="n">localseg_rl</span><span class="p">,</span>
         <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">,</span>
         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span>
+        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">fwd_engine</span><span class="p">,</span>
+        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
     <span class="c1"># If an error occurred, abort the operation</span>
     <span class="k">if</span> <span class="n">res</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>

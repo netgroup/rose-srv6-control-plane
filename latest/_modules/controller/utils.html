@@ -183,7 +183,9 @@
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">ipaddress</span> <span class="kn">import</span> <span class="n">AddressValueError</span><span class="p">,</span> <span class="n">IPv4Interface</span><span class="p">,</span> <span class="n">IPv6Interface</span>
+<span class="kn">from</span> <span class="nn">ipaddress</span> <span class="kn">import</span> <span class="n">ip_address</span>
 <span class="kn">from</span> <span class="nn">socket</span> <span class="kn">import</span> <span class="n">AF_INET</span><span class="p">,</span> <span class="n">AF_INET6</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="c1"># gRPC dependencies</span>
 <span class="kn">import</span> <span class="nn">grpc</span>
@@ -357,6 +359,22 @@
     <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_ALREADY_CONFIGURED</span><span class="p">:</span> <span class="s1">&#39;Error: Already configured&#39;</span><span class="p">,</span>
     <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_DEVICE</span><span class="p">:</span> <span class="s1">&#39;Error: Device not found&#39;</span><span class="p">,</span>
 <span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">parse_ip_port</span><span class="p">(</span><span class="n">netloc</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">netloc</span><span class="p">)</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="s1">&#39;//</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">netloc</span><span class="p">))</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">port</span>
+    <span class="k">return</span> <span class="n">ip</span><span class="p">,</span> <span class="n">port</span>
+
+
+<span class="k">def</span> <span class="nf">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
+    <span class="n">address</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">parse_ip_port</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">_channel</span><span class="o">.</span><span class="n">target</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">),</span> <span class="n">port</span>
 </pre></div>
 
            </div>

@@ -1176,7 +1176,8 @@
                         <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
                         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-                        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">ingress_node</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">]</span>
+                        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">ingress_node</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+                        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
                         <span class="c1"># Error</span>
@@ -1338,7 +1339,8 @@
                         <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">,</span>
                         <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span>
                         <span class="n">bsid_addr</span><span class="o">=</span><span class="n">bsid_addr</span><span class="p">,</span>
-                        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">egress_node</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">]</span>
+                        <span class="n">fwd_engine</span><span class="o">=</span><span class="n">egress_node</span><span class="p">[</span><span class="s1">&#39;fwd_engine&#39;</span><span class="p">],</span>
+                        <span class="n">update_db</span><span class="o">=</span><span class="kc">False</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">response</span> <span class="o">!=</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
                         <span class="c1"># Error</span>
