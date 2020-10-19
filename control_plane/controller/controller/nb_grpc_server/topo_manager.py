@@ -82,7 +82,6 @@ class TopoManagerException(Exception):
     """
     Generic topology manager exception.
     """
-    pass
 
 
 def extract_topology_isis(nodes, password, addrs_config=None,
@@ -179,7 +178,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         Extract the network topology from a set of nodes running
         a distance vector routing protocol (e.g. IS-IS).
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         #
         # Create the reply message
         response = topology_manager_pb2.TopologyManagerReply()
@@ -260,7 +259,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         """
         Load a network topology on a Arango database.
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         #
         # Extract the parameters from the gRPC request
         #
@@ -305,7 +304,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         routing protocol (e.g. IS-IS) and load it on a Arango database.
         This is a stream RPC.
         """
-        # pylint: disable=too-many-arguments
+        # pylint: disable=invalid-name, unused-argument, no-self-use
         #
         # Create the reply message
         response = topology_manager_pb2.TopologyManagerReply()
@@ -392,7 +391,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                     yield response
             except arangodb_utils.TopologyExtractionException as err:
                 # Something went wrong in topology extraction
-                logger.error('Error in topology extraction: ', str(err))
+                logger.error('Error in topology extraction: %s', str(err))
                 response.status = nb_commons_pb2.STATUS_INTERNAL_ERROR
                 return response
         else:
@@ -418,6 +417,8 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
              -    uDT: uDT SID (used for the decap operation),
              -    fwd_engine: forwarding engine.
         """
+        # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
         # Nodes configuration
         nodes_config = {
             'locator_bits': request.nodes_config.locator_bits,
@@ -458,6 +459,8 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
              -    uDT: uDT SID (used for the decap operation),
              -    fwd_engine: forwarding engine.
         """
+        # pylint: disable=invalid-name, unused-argument, no-self-use
+        #
         # Create reply message
         response = topology_manager_pb2.NodesConfigReply()
         try:
