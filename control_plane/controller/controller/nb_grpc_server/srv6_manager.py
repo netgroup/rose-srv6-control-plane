@@ -51,6 +51,9 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def srv6_mgr_error_handling():
+    """
+    This function handles the exceptions that can be raised by SRv6 functions.
+    """
     # Create reply message
     response = nb_srv6_manager_pb2.SRv6ManagerReply()
     try:
