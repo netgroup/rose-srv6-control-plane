@@ -402,47 +402,6 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             return response
 
-    def topology_information_extraction_isis(self, request, context):
-        '''
-        Run periodical topology extraction.
-        '''
-        # pylint: disable=too-many-arguments, unused-argument
-        #
-        # Extract the parameters from the gRPC request
-        #
-        # Param isis_nodes: list of ip-port
-        # (e.g. [2000::1-2608,2000::2-2608])
-        nodes = list()
-        for node in request.nodes:
-            nodes.append('%s-%s' % (node.address, node.port))
-        # Password of the routing protocol
-        password = request.password
-        # ArangoDB URL
-        arango_url = request.db_config.url
-        # ArangoDB username
-        arango_user = request.db_config.username
-        # ArangoDB password
-        arango_password = request.db_config.password
-        # Interval between two consecutive extractions
-        period = request.period
-        # Verbose mode
-        verbose = request.verbose
-        #
-        # Extract the topology
-        arangodb_utils.extract_topo_from_isis_and_load_on_arango(
-            isis_nodes=nodes,
-            isisd_pwd=password,
-            arango_url=arango_url,
-            arango_user=arango_user,
-            arango_password=arango_password,
-            nodes_yaml=None,    # TODO
-            edges_yaml=None,    # TODO
-            addrs_yaml=None,    # TODO
-            hosts_yaml=None,    # TODO
-            period=period,
-            verbose=verbose
-        )
-
     def PushNodesConfig(self, request, context):
         '''
         Load nodes configuration.
