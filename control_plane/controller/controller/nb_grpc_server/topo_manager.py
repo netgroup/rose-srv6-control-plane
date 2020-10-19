@@ -255,9 +255,6 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         '''
         # pylint: disable=too-many-arguments
         #
-        # Create the reply message
-        response = topology_manager_pb2.TopologyManagerReply()
-        #
         # Extract the parameters from the gRPC request
         #
         # ArangoDB URL
