@@ -61,6 +61,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         :type db_client: class: `arango.client.ArangoClient`
         """
         # Establish a connection to the "srv6" database
+        # We will keep the connection open forever
         self.db_conn = arangodb_driver.connect_db(
             client=db_client,
             db_name='srv6',
@@ -72,17 +73,21 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         """
         Handle a SRv6 uSID policy.
         """
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # Extract "nodes_lr" from gRPC request
+        nodes_lr = None
+        if request.nodes_lr is not None:
+            nodes_lr = list(request.nodes_lr)
+        # Extract "nodes_rl" from gRPC request
+        nodes_rl = None
+        if request.nodes_rl is not None:
+            nodes_rl = list(request.nodes_rl)
         # Handle SRv6 uSID policy
         res = srv6_usid.handle_srv6_usid_policy(
             operation=request.operation,
             lr_destination=request.lr_destination,
             rl_destination=request.rl_destination,
-            nodes_lr=list(request.nodes_lr)
-            if request.nodes_lr is not None else None,
-            nodes_rl=list(request.nodes_rl)
-            if request.nodes_rl is not None else None,
+            nodes_lr=nodes_lr,
+            nodes_rl=nodes_rl,
             table=request.table,
             metric=request.metric,
             _id=request._id,
@@ -100,6 +105,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         )
         if res is not None:
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
+        # Create reply message
+        response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Set status code
         response.status = nb_utils.sb_status_to_nb_status[res]
         # Done, return the reply
