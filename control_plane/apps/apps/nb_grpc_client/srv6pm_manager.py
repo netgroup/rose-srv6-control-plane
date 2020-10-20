@@ -24,10 +24,10 @@
 #
 
 
-'''
+"""
 This module provides an implementation of a SRv6-PM Manager for the Northbound
 gRPC client.
-'''
+"""
 
 # Controller dependencies
 import nb_commons_pb2
@@ -40,9 +40,9 @@ def set_configuration(controller_channel, sender, reflector,
                       refl_udp_port, interval_duration, delay_margin,
                       number_of_color, pm_driver, in_interfaces=None,
                       out_interfaces=None):
-    '''
+    """
     Configure a node.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -87,9 +87,9 @@ def set_configuration(controller_channel, sender, reflector,
 
 def reset_configuration(controller_channel, sender, reflector,
                         sender_port, reflector_port):
-    '''
+    """
     Clear node configuration.
-    '''
+    """
     # Create request message
     request = srv6pm_manager_pb2.SRv6PMConfigurationRequest()
     # Set the gRPC IP address of the sender node
@@ -121,9 +121,9 @@ def start_experiment(controller_channel, sender, reflector,
                      padding_mbz, loss_measurement_mode, measure_id=None,
                      send_refl_localseg=None, refl_send_localseg=None,
                      force=False):
-    '''
+    """
     Start an experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments, too-many-locals
     #
     # Create request message
@@ -186,9 +186,9 @@ def start_experiment(controller_channel, sender, reflector,
 def get_experiment_results(controller_channel, sender, reflector,
                            sender_port, reflector_port,
                            send_refl_sidlist, refl_send_sidlist):
-    '''
+    """
     Get the results of a running experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -221,9 +221,9 @@ def stop_experiment(controller_channel, sender, reflector,
                     sender_port, reflector_port, send_refl_dest,
                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                     send_refl_localseg=None, refl_send_localseg=None):
-    '''
+    """
     Stop a running experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message

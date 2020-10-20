@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 Utilities functions used by gRPC client.
-'''
+"""
 
 # General imports
 import logging
@@ -74,15 +74,15 @@ STATUS_CODE_TO_DESC = {
 
 
 class InvalidArgumentError(Exception):
-    '''
+    """
     Invalid argument.
-    '''
+    """
 
 
 class NodesConfigNotLoadedError(Exception):
-    '''
+    """
     NodesConfigNotLoadedError
-    '''
+    """
 
 
 def raise_exception_on_error(error_code):   # TODO exeptions more specific
@@ -118,9 +118,9 @@ def raise_exception_on_error(error_code):   # TODO exeptions more specific
 # Utiliy function to check if the IP
 # is a valid IPv6 address
 def validate_ipv6_address(ip_address):
-    '''
+    """
     Return True if the provided IP address is a valid IPv6 address
-    '''
+    """
     if ip_address is None:
         return False
     try:
@@ -133,9 +133,9 @@ def validate_ipv6_address(ip_address):
 # Utiliy function to check if the IP
 # is a valid IPv4 address
 def validate_ipv4_address(ip_address):
-    '''
+    """
     Return True if the provided IP address is a valid IPv4 address
-    '''
+    """
     if ip_address is None:
         return False
     try:
@@ -147,10 +147,10 @@ def validate_ipv4_address(ip_address):
 
 # Utiliy function to get the IP address family
 def get_address_family(ip_address):
-    '''
+    """
     Return the family of the provided IP address
     or None if the IP is invalid
-    '''
+    """
     if validate_ipv6_address(ip_address):
         # IPv6 address
         return AF_INET6
@@ -163,7 +163,7 @@ def get_address_family(ip_address):
 
 # Build a grpc stub
 def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
-    '''
+    """
     Create a Channel to a server.
 
     :param server_ip: The IP address of the gRPC server
@@ -172,7 +172,7 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
     :type server_port: int
     :return: The requested gRPC Channel or None if the operation has failed.
     :rtype: class: `grpc._channel.Channel`
-    '''
+    """
     # Get family of the gRPC IP
     addr_family = get_address_family(server_ip)
     # Build address depending on the family

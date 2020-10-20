@@ -24,10 +24,10 @@
 #
 
 
-'''
+"""
 This module provides an implementation of a Topology Manager for the
 Northbound gRPC client.
-'''
+"""
 
 # Controller dependencies
 import nb_commons_pb2
@@ -39,10 +39,10 @@ from apps.nb_grpc_client import utils
 def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
                            addrs_config=None, hosts_config=None,
                            verbose=False):
-    '''
+    """
     Extract the network topology from a set of nodes running
     ISIS protocol.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -101,9 +101,9 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
 
 def load_topo_on_arango(controller_channel, nodes_config, edges_config,
                         verbose=False):
-    '''
+    """
     Load a network topology on a Arango database.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -163,10 +163,10 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
                                               addrs_config=None,
                                               hosts_config=None,
                                               period=0, verbose=False):
-    '''
+    """
     Extract the topology from a set of nodes running ISIS protocol
     and load it on a Arango database
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -231,9 +231,9 @@ def topology_information_extraction_isis(controller_channel,
                                          routers, period, isisd_pwd,
                                          addrs_config=None, hosts_config=None,
                                          verbose=False):
-    '''
+    """
     Run periodical topology extraction
-    '''
+    """
     # pylint: disable=too-many-arguments, unused-argument
     #
     # Create request message
@@ -295,9 +295,9 @@ def topology_information_extraction_isis(controller_channel,
 
 
 def push_nodes_config(controller_channel, nodes_config):
-    '''
+    """
     Push nodes configuration.
-    '''
+    """
     # Create request message
     request = topology_manager_pb2.NodesConfigRequest()
     # Set the locator bits
@@ -324,9 +324,9 @@ def push_nodes_config(controller_channel, nodes_config):
 
 
 def get_nodes_config(controller_channel):
-    '''
+    """
     Get nodes configuration.
-    '''
+    """
     # Create request message
     request = topology_manager_pb2.NodesConfigRequest()
     # Get the reference of the stub

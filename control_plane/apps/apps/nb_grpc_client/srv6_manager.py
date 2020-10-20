@@ -24,10 +24,10 @@
 #
 
 
-'''
+"""
 This module provides an implementation of a SRv6 Manager for the Northbound
 gRPC client.
-'''
+"""
 
 # General imports
 
@@ -47,9 +47,9 @@ def handle_srv6_usid_policy(controller_channel, operation,
                             l_fwd_engine=None, r_grpc_ip=None,
                             r_grpc_port=None, r_fwd_engine=None,
                             decap_sid=None, locator=None):
-    '''
+    """
     Handle a SRv6 uSID policy.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -105,9 +105,9 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
                      destination='', segments="", device='', encapmode="encap",
                      table=-1, metric=-1, bsid_addr='', fwd_engine='linux',
                      key=''):
-    '''
+    """
     Handle a SRv6 path.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -162,9 +162,9 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
                          grpc_port, segment, action='', device='',
                          table=-1, nexthop="", lookup_table=-1, interface="",
                          segments="", metric=-1, fwd_engine='linux', key=''):
-    '''
+    """
     Handle a SRv6 behavior.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -219,9 +219,9 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
                           ingress_port, egress_ip, egress_port,
                           destination, segments=None, localseg=None,
                           bsid_addr='', fwd_engine='linux', key=''):
-    '''
+    """
     Handle a SRv6 unidirectional tunnel.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Create request message
@@ -268,9 +268,9 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
                            dest_lr, dest_rl, sidlist_lr=None, sidlist_rl=None,
                            localseg_lr=None, localseg_rl=None,
                            bsid_addr='', fwd_engine='linux', key=''):
-    '''
+    """
     Handle SRv6 bidirectional tunnel.
-    '''
+    """
     # pylint: disable=too-many-arguments,too-many-locals
     #
     # Create request message
