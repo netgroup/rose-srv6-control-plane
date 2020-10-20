@@ -30,11 +30,17 @@ Northbound gRPC client.
 """
 
 # General imports
+import logging
 from enum import Enum
 # Proto dependencies
 import topology_manager_pb2
 import topology_manager_pb2_grpc
 from apps.nb_grpc_client import utils
+
+
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
 
 
 # ############################################################################
@@ -48,13 +54,54 @@ class RoutingProtocol(Enum):
 
 # Mapping python representation of Routing Protocol to gRPC representation
 py_to_grpc_routing_protocol = {
-    'ebpf': 'EBPF',
-    'ipset': 'IPSET'
+    'isis': RoutingProtocol.ISIS
 }
 
 # Mapping gRPC representation of Routing Protocol to python representation
 grpc_to_py_routing_protocol = {
     v: k for k, v in py_to_grpc_routing_protocol.items()}
+
+
+# ############################################################################
+# Node Type
+class NodeType(Enum):
+    """
+    Node type.
+    """
+    ROUTER = topology_manager_pb2.NodeType.Value('ROUTER')
+    HOST = topology_manager_pb2.NodeType.Value('HOST')
+
+
+# Mapping python representation of Node Type to gRPC representation
+py_to_grpc_node_type = {
+    'router': NodeType.ROUTER,
+    'host': NodeType.HOST
+}
+
+# Mapping gRPC representation of Node Type to python representation
+grpc_to_py_node_type = {
+    v: k for k, v in py_to_grpc_node_type.items()}
+
+
+# ############################################################################
+# Link Type
+class LinkType(Enum):
+    """
+    Link type.
+    """
+    CORE = topology_manager_pb2.LinkType.Value('CORE')
+    EDGE = topology_manager_pb2.LinkType.Value('EDGE')
+
+
+# Mapping python representation of Link Type to gRPC representation
+py_to_grpc_link_type = {
+    'core': LinkType.CORE,
+    'edge': LinkType.EDGE
+}
+
+# Mapping gRPC representation of Link Type to python representation
+grpc_to_py_link_type = {
+    v: k for k, v in py_to_grpc_link_type.items()}
 
 
 # ############################################################################
@@ -106,22 +153,28 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     # Extract the nodes from the gRPC response
     nodes = list()
     for node in response.topology.nodes:
+        if node.type not in grpc_to_py_node_type:
+            # Invalid node type
+            logger.error('Invalid node type: %s', node.type)
+            raise utils.InvalidArgumentError
         nodes.append({
             '_key': node.id,
             'ext_reachability': node.ext_reachability,
             'ip_address': node.ip_address,
-            'type': utils.grpc_repr_to_node_type[
-                topology_manager_pb2.NodeType.Name(node.type)]
+            'type': grpc_to_py_node_type[node.type]
         })
     # Extract the edges from the gRPC response
     edges = list()
     for edge in response.topology.links:
+        if edge.type not in grpc_to_py_link_type:
+            # Invalid edge type
+            logger.error('Invalid link type: %s', edge.type)
+            raise utils.InvalidArgumentError
         edges.append({
             '_key': edge.id,
             '_from': edge.source,
             '_to': edge.target,
-            'type': utils.grpc_repr_to_edge_type[
-                topology_manager_pb2.LinkType.Name(edge.type)]
+            'type': grpc_to_py_link_type[edge.type]
         })
     # Done, return the topology
     return nodes, edges
@@ -146,16 +199,22 @@ def load_topo_on_arango(controller_channel, nodes_config, edges_config,
             _node.ext_reachability = node['ext_reachability']
         if 'ip_address' in node:
             _node.ip_address = node['ip_address']
-        _node.type = topology_manager_pb2.NodeType.Value(
-            utils.node_type_to_grpc_repr[node['type']])
+        if node['type'] not in py_to_grpc_node_type:
+            # Invalid node type
+            logger.error('Invalid node type %s', node['type'])
+            raise utils.InvalidArgumentError
+        _node.type = py_to_grpc_node_type[node['type']]
     # Set the edges
     for edge in edges_config:
         _edge = request.topology.links.add()
         _edge.id = edge['_key']
         _edge.source = edge['_from']
         _edge.target = edge['_to']
-        _edge.type = topology_manager_pb2.LinkType.Value(
-            utils.edge_type_to_grpc_repr[edge['type']])
+        if edge['type'] not in py_to_grpc_link_type:
+            # Invalid edge type
+            logger.error('Invalid link type %s', edge['type'])
+            raise utils.InvalidArgumentError
+        _edge.type = py_to_grpc_link_type[edge['type']]
     # Request message is ready
     #
     # Get the reference of the stub
@@ -169,22 +228,28 @@ def load_topo_on_arango(controller_channel, nodes_config, edges_config,
     # Extract the nodes from the gRPC response
     nodes = list()
     for node in response.topology.nodes:
+        if node.type not in grpc_to_py_node_type:
+            # Invalid node type
+            logger.error('Invalid node type: %s', node.type)
+            raise utils.InvalidArgumentError
         nodes.append({
             '_key': node.id,
             'ext_reachability': node.ext_reachability,
             'ip_address': node.ip_address,
-            'type': utils.grpc_repr_to_node_type[
-                topology_manager_pb2.NodeType.Name(node.type)]
+            'type': grpc_to_py_node_type[node.type]
         })
     # Extract the edges from the gRPC response
     edges = list()
     for edge in response.topology.links:
+        if edge.type not in grpc_to_py_link_type:
+            # Invalid edge type
+            logger.error('Invalid link type: %s', edge.type)
+            raise utils.InvalidArgumentError
         edges.append({
             '_key': edge.id,
             '_from': edge.source,
             '_to': edge.target,
-            'type': utils.grpc_repr_to_edge_type[
-                topology_manager_pb2.LinkType.Name(edge.type)]
+            'type': grpc_to_py_link_type[edge.type]
         })
     # Done, return the topology
     return nodes, edges
@@ -242,22 +307,28 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
         # Extract the nodes from the gRPC response
         nodes = list()
         for node in response.topology.nodes:
+            if node.type not in grpc_to_py_node_type:
+                # Invalid node type
+                logger.error('Invalid node type: %s', node.type)
+                raise utils.InvalidArgumentError
             nodes.append({
                 '_key': node.id,
                 'ext_reachability': node.ext_reachability,
                 'ip_address': node.ip_address,
-                'type': utils.grpc_repr_to_node_type[
-                    topology_manager_pb2.NodeType.Name(node.type)]
+                'type': grpc_to_py_node_type[node.type]
             })
         # Extract the edges from the gRPC response
         edges = list()
         for edge in response.topology.links:
+            if edge.type not in grpc_to_py_link_type:
+                # Invalid link type
+                logger.error('Invalid link type: %s', edge.type)
+                raise utils.InvalidArgumentError
             edges.append({
                 '_key': edge.id,
                 '_from': edge.source,
                 '_to': edge.target,
-                'type': utils.grpc_repr_to_edge_type[
-                    topology_manager_pb2.LinkType.Name(edge.type)]
+                'type': grpc_to_py_link_type[edge.type]
             })
         # Done, return the topology
         yield nodes, edges
@@ -313,22 +384,28 @@ def topology_information_extraction_isis(controller_channel,
         # Extract the nodes from the gRPC response
         nodes = list()
         for node in response.topology.nodes:
+            if node.type not in grpc_to_py_node_type:
+                # Invalid node type
+                logger.error('Invalid node type: %s', node.type)
+                raise utils.InvalidArgumentError
             nodes.append({
                 '_key': node.id,
                 'ext_reachability': node.ext_reachability,
                 'ip_address': node.ip_address,
-                'type': utils.grpc_repr_to_node_type[
-                    topology_manager_pb2.NodeType.Name(node.type)]
+                'type': grpc_to_py_node_type[node.type]
             })
         # Extract the edges from the gRPC response
         edges = list()
         for edge in response.topology.links:
+            if edge.type not in grpc_to_py_link_type:
+                # Invalid link type
+                logger.error('Invalid link type: %s', edge.type)
+                raise utils.InvalidArgumentError
             edges.append({
                 '_key': edge.id,
                 '_from': edge.source,
                 '_to': edge.target,
-                'type': utils.grpc_repr_to_edge_type[
-                    topology_manager_pb2.LinkType.Name(edge.type)]
+                'type': grpc_to_py_link_type[edge.type]
             })
         # Done, return the topology
         yield nodes, edges
