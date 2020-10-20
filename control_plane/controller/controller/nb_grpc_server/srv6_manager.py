@@ -188,11 +188,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # The "with" block is used to avoid duplicating the error handling
             # code
             with srv6_mgr_error_handling():
-                channel = None
-                if srv6_path.grpc_address not in [None, ''] and \
-                        srv6_path.grpc_port not in [None, -1]:
-                    channel = utils.get_grpc_session(srv6_path.grpc_address,
-                                                     srv6_path.grpc_port)
                 # Extract the encap mode
                 encapmode = nb_commons_pb2.EncapMode.Name(srv6_path.encapmode)
                 if encapmode == 'ENCAP_MODE_UNSPEC':
@@ -205,7 +200,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 # Handle SRv6 path
                 srv6_paths = srv6_utils.handle_srv6_path(
                     operation=srv6_path.operation,
-                    channel=channel,
+                    grpc_address=srv6_path.grpc_address,
+                    grpc_port=srv6_path.grpc_port,
                     destination=srv6_path.destination,
                     segments=list(srv6_path.segments),
                     device=srv6_path.device,
@@ -217,8 +213,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     key=srv6_path.key if srv6_path.key != '' else None,
                     db_conn=self.db_conn
                 )
-                if channel is not None:
-                    channel.close()
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
@@ -254,11 +248,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # The "with" block is used to avoid duplicating the error handling
             # code
             with srv6_mgr_error_handling():
-                channel = None
-                if srv6_behavior.grpc_address not in [None, ''] and \
-                        srv6_behavior.grpc_port not in [None, -1]:
-                    channel = utils.get_grpc_session(srv6_behavior.grpc_address,
-                                                     srv6_behavior.grpc_port)
                 # Extract the SRv6 action
                 if nb_commons_pb2.SRv6Action.Name(srv6_behavior.action) == 'SRV6_ACTION_UNSPEC':
                     action = ''
@@ -267,7 +256,8 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 # Handle the behavior
                 srv6_behaviors = srv6_utils.handle_srv6_behavior(
                     operation=srv6_behavior.operation,
-                    channel=channel,
+                    grpc_address=srv6_behavior.grpc_address,
+                    grpc_port=srv6_behavior.grpc_port,
                     segment=srv6_behavior.segment,
                     action=action,
                     device=srv6_behavior.device,
@@ -282,8 +272,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     key=srv6_behavior.key if srv6_behavior.key != '' else None,
                     db_conn=self.db_conn
                 )
-                if channel is not None:
-                    channel.close()
                 logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
@@ -321,25 +309,17 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # The "with" block is used to avoid duplicating the error handling
             # code
             with srv6_mgr_error_handling():
-                ingress_channel = None
-                egress_channel = None
                 srv6_tunnels = None
-                if srv6_tunnel.ingress_ip not in [None, ''] and \
-                        srv6_tunnel.ingress_port not in [None, -1] and \
-                        srv6_tunnel.egress_ip not in [None, ''] and \
-                        srv6_tunnel.egress_port not in [None, -1]:
-                    ingress_channel = utils.get_grpc_session(srv6_tunnel.ingress_ip,
-                                                srv6_tunnel.ingress_port)
-                    egress_channel = utils.get_grpc_session(srv6_tunnel.egress_ip,
-                                                srv6_tunnel.egress_port)
                 fwd_engine = \
                     nb_commons_pb2.FwdEngine.Name(srv6_tunnel.fwd_engine)
                 if fwd_engine == 'FWD_ENGINE_UNSPEC':
                     fwd_engine = ''
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_uni_srv6_tunnel(
-                        ingress_channel=ingress_channel,
-                        egress_channel=egress_channel,
+                        ingress_ip=srv6_tunnel.ingress_ip,
+                        ingress_port=srv6_tunnel.ingress_port,
+                        egress_ip=srv6_tunnel.egress_ip,
+                        egress_port=srv6_tunnel.egress_port,
                         destination=srv6_tunnel.destination,
                         segments=list(srv6_tunnel.segments),
                         localseg=srv6_tunnel.localseg,
@@ -349,15 +329,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if ingress_channel is not None:
-                        ingress_channel.close()
-                    if egress_channel is not None:
-                        egress_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'del':
                     srv6_utils.destroy_uni_srv6_tunnel(
-                        ingress_channel=ingress_channel,
-                        egress_channel=egress_channel,
+                        ingress_ip=srv6_tunnel.ingress_ip,
+                        ingress_port=srv6_tunnel.ingress_port,
+                        egress_ip=srv6_tunnel.egress_ip,
+                        egress_port=srv6_tunnel.egress_port,
                         destination=srv6_tunnel.destination,
                         localseg=srv6_tunnel.localseg,
                         bsid_addr=srv6_tunnel.bsid_addr,
@@ -366,15 +344,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if ingress_channel is not None:
-                        ingress_channel.close()
-                    if egress_channel is not None:
-                        egress_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'get':
                     srv6_tunnels = srv6_utils.get_uni_srv6_tunnel(
-                        ingress_channel=ingress_channel,
-                        egress_channel=egress_channel,
+                        ingress_ip=srv6_tunnel.ingress_ip,
+                        ingress_port=srv6_tunnel.ingress_port,
+                        egress_ip=srv6_tunnel.egress_ip,
+                        egress_port=srv6_tunnel.egress_port,
                         destination=srv6_tunnel.destination if srv6_tunnel.destination != '' else None,
                         segments=list(srv6_tunnel.segments) if srv6_tunnel.segments != [''] else None,
                         localseg=srv6_tunnel.localseg if srv6_tunnel.localseg != '' else None,
@@ -384,10 +360,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if ingress_channel is not None:
-                        ingress_channel.close()
-                    if egress_channel is not None:
-                        egress_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 else:
                     logger.error('Invalid operation %s', srv6_tunnel.operation)
@@ -428,25 +400,17 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # The "with" block is used to avoid duplicating the error handling
             # code
             with srv6_mgr_error_handling():
-                node_l_channel = None
-                node_r_channel = None
                 srv6_tunnels = None
-                if srv6_tunnel.node_l_ip not in [None, ''] and \
-                        srv6_tunnel.node_l_port not in [None, -1] and \
-                        srv6_tunnel.node_r_ip not in [None, ''] and \
-                        srv6_tunnel.node_r_port not in [None, -1]:
-                    node_l_channel = utils.get_grpc_session(srv6_tunnel.node_l_ip,
-                                                srv6_tunnel.node_l_port)
-                    node_r_channel = utils.get_grpc_session(srv6_tunnel.node_r_ip,
-                                                srv6_tunnel.node_r_port)
                 fwd_engine = \
                     nb_commons_pb2.FwdEngine.Name(srv6_tunnel.fwd_engine)
                 if fwd_engine == 'FWD_ENGINE_UNSPEC':
                     fwd_engine = ''
                 if srv6_tunnel.operation == 'add':
                     res = srv6_utils.create_srv6_tunnel(
-                        node_l_channel=node_l_channel,
-                        node_r_channel=node_r_channel,
+                        node_l_ip=srv6_tunnel.node_l_ip,
+                        node_l_port=srv6_tunnel.node_l_port,
+                        node_r_ip=srv6_tunnel.node_r_ip,
+                        node_r_port=srv6_tunnel.node_r_port,
                         sidlist_lr=list(srv6_tunnel.sidlist_lr),
                         sidlist_rl=list(srv6_tunnel.sidlist_rl),
                         dest_lr=srv6_tunnel.dest_lr,
@@ -459,15 +423,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if node_l_channel is not None:
-                        node_l_channel.close()
-                    if node_r_channel is not None:
-                        node_r_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'del':
                     res = srv6_utils.destroy_srv6_tunnel(
-                        node_l_channel=node_l_channel,
-                        node_r_channel=node_r_channel,
+                        node_l_ip=srv6_tunnel.node_l_ip,
+                        node_l_port=srv6_tunnel.node_l_port,
+                        node_r_ip=srv6_tunnel.node_r_ip,
+                        node_r_port=srv6_tunnel.node_r_port,
                         dest_lr=srv6_tunnel.dest_lr,
                         dest_rl=srv6_tunnel.dest_rl,
                         localseg_lr=srv6_tunnel.localseg_lr,
@@ -478,15 +440,13 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if node_l_channel is not None:
-                        node_l_channel.close()
-                    if node_r_channel is not None:
-                        node_r_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'get':
                     srv6_tunnels = srv6_utils.get_srv6_tunnel(
-                        node_l_channel=node_l_channel,
-                        node_r_channel=node_r_channel,
+                        node_l_ip=srv6_tunnel.node_l_ip,
+                        node_l_port=srv6_tunnel.node_l_port,
+                        node_r_ip=srv6_tunnel.node_r_ip,
+                        node_r_port=srv6_tunnel.node_r_port,
                         sidlist_lr=list(srv6_tunnel.sidlist_lr) if srv6_tunnel.sidlist_lr != [''] else None,
                         sidlist_rl=list(srv6_tunnel.sidlist_rl) if srv6_tunnel.sidlist_rl != [''] else None,
                         dest_lr=srv6_tunnel.dest_lr if srv6_tunnel.dest_lr != '' else None,
@@ -498,10 +458,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
-                    if node_l_channel is not None:
-                        node_l_channel.close()
-                    if node_r_channel is not None:
-                        node_r_channel.close()
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 else:
                     logger.error('Invalid operation %s', srv6_tunnel.operation)

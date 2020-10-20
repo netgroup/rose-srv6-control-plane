@@ -182,15 +182,19 @@ def del_srv6_path_db(channel, destination, segments=None,
     return response
 
 
-def handle_srv6_path(operation, channel, destination, segments=None,
-                     device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='linux', key=None,
-                     update_db=True, db_conn=None):
+def handle_srv6_path(operation, grpc_address, grpc_port, destination,
+                     segments=None, device='', encapmode="encap", table=-1,
+                     metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                     update_db=True, db_conn=None, channel=None):
     '''
     Handle a SRv6 Path
     '''
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if channel is None:
+        if grpc_address not in [None, ''] and grpc_port not in [None, -1]:
+            channel = utils.get_grpc_session(grpc_address, grpc_port)
     # Check if a SRv6 path with the same key already exists
     if operation == 'add' and key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
@@ -401,14 +405,19 @@ def handle_srv6_path(operation, channel, destination, segments=None,
         utils.raise_exception_on_error(response)
 
 
-def handle_srv6_policy(operation, channel, bsid_addr, segments=None,
-                       table=-1, metric=-1, fwd_engine='linux'):
+def handle_srv6_policy(operation, grpc_address, grpc_port,
+                       bsid_addr, segments=None, table=-1, metric=-1,
+                       fwd_engine='linux', channel=None):
     '''
     Handle a SRv6 Path
     '''
 
     # pylint: disable=too-many-locals, too-many-arguments
-
+    #
+    # Establish a gRPC channel, if no channel has been provided
+    if channel is None:
+        if grpc_address not in [None, ''] and grpc_port not in [None, -1]:
+            channel = utils.get_grpc_session(grpc_address, grpc_port)
     if segments is None:
         segments = []
     # Create request message
@@ -592,16 +601,20 @@ def del_srv6_behavior_db(channel, segment, action='', device='',
     return response
 
 
-def handle_srv6_behavior(operation, channel, segment, action='', device='',
-                         table=-1, nexthop="", lookup_table=-1,
-                         interface="", segments=None, metric=-1,
-                         fwd_engine='linux', key=None, update_db=True,
-                         db_conn=None):
+def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
+                         action='', device='', table=-1, nexthop="",
+                         lookup_table=-1, interface="", segments=None,
+                         metric=-1, fwd_engine='linux', key=None,
+                         update_db=True, db_conn=None, channel=None):
     '''
     Handle a SRv6 behavior
     '''
     # pylint: disable=too-many-arguments, too-many-locals
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if channel is None:
+        if grpc_address not in [None, ''] and grpc_port not in [None, -1]:
+            channel = utils.get_grpc_session(grpc_address, grpc_port)
     # Check if a SRv6 behavior with the same key already exists
     if operation == 'add' and key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
@@ -821,10 +834,11 @@ class SRv6Exception(Exception):
     '''
 
 
-def create_uni_srv6_tunnel(ingress_channel, egress_channel,
+def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                            destination, segments, localseg=None,
                            bsid_addr='', fwd_engine='linux', key=None,
-                           update_db=True, db_conn=None):
+                           update_db=True, db_conn=None,
+                           ingress_channel=None, egress_channel=None):
     '''
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -848,6 +862,17 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if ingress_channel is None:
+        if ingress_ip not in [None, ''] and \
+                ingress_port not in [None, -1]:
+            ingress_channel = utils.get_grpc_session(ingress_ip,
+                                        ingress_port)
+    if egress_channel is None:
+        if egress_ip not in [None, ''] and \
+                egress_port not in [None, -1]:
+            egress_channel = utils.get_grpc_session(egress_ip,
+                                        egress_port)
     # Check if a SRv6 tunnel with the same key already exists
     if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
@@ -914,11 +939,12 @@ def create_uni_srv6_tunnel(ingress_channel, egress_channel,
         )
 
 
-def create_srv6_tunnel(node_l_channel, node_r_channel,
+def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
                        bsid_addr='', fwd_engine='linux', update_db=True,
-                       key=None, db_conn=None):
+                       key=None, db_conn=None,
+                       node_l_channel=None, node_r_channel=None):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -955,6 +981,17 @@ def create_srv6_tunnel(node_l_channel, node_r_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if node_l_channel is None:
+        if node_l_ip not in [None, ''] and \
+                node_l_port not in [None, -1]:
+            node_l_channel = utils.get_grpc_session(node_l_ip,
+                                        node_l_port)
+    if node_r_channel is None:
+        if node_r_ip not in [None, ''] and \
+                node_r_port not in [None, -1]:
+            node_r_channel = utils.get_grpc_session(node_r_ip,
+                                        node_r_port)
     # Check if a SRv6 tunnel with the same key already exists
     if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
@@ -1124,10 +1161,11 @@ def del_uni_srv6_tunnel_db(ingress_channel, egress_channel, destination,
         return commons_pb2.STATUS_SUCCESS
 
 
-def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
-                            localseg=None, bsid_addr='', fwd_engine='linux',
-                            ignore_errors=False, key=None, update_db=True,
-                            db_conn=None):
+def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
+                            destination, localseg=None, bsid_addr='',
+                            fwd_engine='linux', ignore_errors=False, key=None,
+                            update_db=True, db_conn=None,
+                            ingress_channel=None, egress_channel=None):
     '''
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
@@ -1150,6 +1188,17 @@ def destroy_uni_srv6_tunnel(ingress_channel, egress_channel, destination,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if ingress_channel is None:
+        if ingress_ip not in [None, ''] and \
+                ingress_port not in [None, -1]:
+            ingress_channel = utils.get_grpc_session(ingress_ip,
+                                        ingress_port)
+    if egress_channel is None:
+        if egress_ip not in [None, ''] and \
+                egress_port not in [None, -1]:
+            egress_channel = utils.get_grpc_session(egress_ip,
+                                        egress_port)
     # Remove the SRv6 behavior
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and update_db:
         res = del_uni_srv6_tunnel_db(
@@ -1319,11 +1368,12 @@ def del_bidi_srv6_tunnel_db(node_l_channel, node_r_channel,
         return commons_pb2.STATUS_SUCCESS
 
 
-def destroy_srv6_tunnel(node_l_channel, node_r_channel,
+def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                         dest_lr, dest_rl, localseg_lr=None, localseg_rl=None,
                         bsid_addr='', fwd_engine='linux',
                         ignore_errors=False, key=None, update_db=True,
-                        db_conn=None):
+                        db_conn=None, node_l_channel=None,
+                        node_r_channel=None):
     '''
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1361,6 +1411,17 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if node_l_channel is None:
+        if node_l_ip not in [None, ''] and \
+                node_l_port not in [None, -1]:
+            node_l_channel = utils.get_grpc_session(node_l_ip,
+                                        node_l_port)
+    if node_r_channel is None:
+        if node_r_ip not in [None, ''] and \
+                node_r_port not in [None, -1]:
+            node_r_channel = utils.get_grpc_session(node_r_ip,
+                                        node_r_port)
     # Remove the SRv6 behavior
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -1409,10 +1470,11 @@ def destroy_srv6_tunnel(node_l_channel, node_r_channel,
     utils.raise_exception_on_error(res)
 
 
-def get_uni_srv6_tunnel(ingress_channel, egress_channel,
+def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                         destination, segments, localseg=None,
                         bsid_addr='', fwd_engine='linux', key=None,
-                        db_conn=None):
+                        db_conn=None, ingress_channel=None,
+                        egress_channel=None):
     '''
     Get a unidirectional SRv6 tunnel from <ingress> to <egress>
 
@@ -1435,6 +1497,18 @@ def get_uni_srv6_tunnel(ingress_channel, egress_channel,
     :type fwd_engine: str, optional
     '''
     # pylint: disable=too-many-arguments
+    #
+    # Establish a gRPC channel, if no channel has been provided
+    if ingress_channel is None:
+        if ingress_ip not in [None, ''] and \
+                ingress_port not in [None, -1]:
+            ingress_channel = utils.get_grpc_session(ingress_ip,
+                                        ingress_port)
+    if egress_channel is None:
+        if egress_ip not in [None, ''] and \
+                egress_port not in [None, -1]:
+            egress_channel = utils.get_grpc_session(egress_ip,
+                                        egress_port)
     #
     if os.getenv('ENABLE_PERSISTENCY') not in ['true', 'True']:
         logger.error('Get tunnel requires ENABLE_PERSISTENCY')
@@ -1461,11 +1535,12 @@ def get_uni_srv6_tunnel(ingress_channel, egress_channel,
     )
 
 
-def get_srv6_tunnel(node_l_channel, node_r_channel,
+def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                        sidlist_lr, sidlist_rl, dest_lr, dest_rl,
                        localseg_lr=None, localseg_rl=None,
                        bsid_addr='', fwd_engine='linux', update_db=True,
-                       key=None, db_conn=None):
+                       key=None, db_conn=None, node_l_channel=None,
+                       node_r_channel=None):
     '''
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
@@ -1502,6 +1577,18 @@ def get_srv6_tunnel(node_l_channel, node_r_channel,
     '''
     # pylint: disable=too-many-arguments
     #
+    # Establish a gRPC channel, if no channel has been provided
+    if node_l_channel is None:
+        if node_l_ip not in [None, ''] and \
+                node_l_port not in [None, -1]:
+            node_l_channel = utils.get_grpc_session(node_l_ip,
+                                        node_l_port)
+    if node_r_channel is None:
+        if node_r_ip not in [None, ''] and \
+                node_r_port not in [None, -1]:
+            node_r_channel = utils.get_grpc_session(node_r_ip,
+                                        node_r_port)
+    #
     if os.getenv('ENABLE_PERSISTENCY') not in ['true', 'True']:
         logger.error('Get tunnel requires ENABLE_PERSISTENCY')
         raise utils.InvalidArgumentError
@@ -1525,3 +1612,5 @@ def get_srv6_tunnel(node_l_channel, node_r_channel,
         fwd_engine=fwd_engine if fwd_engine != '' else None,
         is_unidirectional=False
     )
+
+# TODO close gRPC channel after the execution
