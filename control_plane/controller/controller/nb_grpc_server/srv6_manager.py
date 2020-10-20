@@ -406,7 +406,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 if fwd_engine == 'FWD_ENGINE_UNSPEC':
                     fwd_engine = ''
                 if srv6_tunnel.operation == 'add':
-                    res = srv6_utils.create_srv6_tunnel(
+                    srv6_utils.create_srv6_tunnel(
                         node_l_ip=srv6_tunnel.node_l_ip,
                         node_l_port=srv6_tunnel.node_l_port,
                         node_r_ip=srv6_tunnel.node_r_ip,
@@ -425,7 +425,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     )
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'del':
-                    res = srv6_utils.destroy_srv6_tunnel(
+                    srv6_utils.destroy_srv6_tunnel(
                         node_l_ip=srv6_tunnel.node_l_ip,
                         node_l_port=srv6_tunnel.node_l_port,
                         node_r_ip=srv6_tunnel.node_r_ip,
