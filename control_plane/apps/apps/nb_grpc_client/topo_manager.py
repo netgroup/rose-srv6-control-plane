@@ -29,12 +29,36 @@ This module provides an implementation of a Topology Manager for the
 Northbound gRPC client.
 """
 
-# Controller dependencies
-import nb_commons_pb2
+# General imports
+from enum import Enum
+# Proto dependencies
 import topology_manager_pb2
 import topology_manager_pb2_grpc
 from apps.nb_grpc_client import utils
 
+
+# ############################################################################
+# Routing Protocol
+class RoutingProtocol(Enum):
+    """
+    Routing protocol.
+    """
+    ISIS = topology_manager_pb2.Protocol.Value('ISIS')
+
+
+# Mapping python representation of Routing Protocol to gRPC representation
+py_to_grpc_routing_protocol = {
+    'ebpf': 'EBPF',
+    'ipset': 'IPSET'
+}
+
+# Mapping gRPC representation of Routing Protocol to python representation
+grpc_to_py_routing_protocol = {
+    v: k for k, v in py_to_grpc_routing_protocol.items()}
+
+
+# ############################################################################
+# gRPC client APIs
 
 def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
                            addrs_config=None, hosts_config=None,
@@ -48,7 +72,7 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
+    request.protocol = RoutingProtocol.ISIS
     # Set the IS-IS nodes
     for isis_node in isis_nodes.split(','):
         node = request.nodes.add()
@@ -172,7 +196,7 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
+    request.protocol = RoutingProtocol.ISIS
     # Set the IS-IS nodes
     for isis_node in isis_nodes:
         node = request.nodes.add()
@@ -239,7 +263,7 @@ def topology_information_extraction_isis(controller_channel,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = topology_manager_pb2.Protocol.Value('ISIS')
+    request.protocol = RoutingProtocol.ISIS
     # Set the IS-IS nodes
     for isis_node in routers.split(','):
         node = request.nodes.add()
