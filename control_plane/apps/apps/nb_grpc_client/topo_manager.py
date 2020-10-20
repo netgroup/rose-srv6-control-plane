@@ -93,12 +93,16 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
         _host.name = host['name']
         _host.ip_address = host['ip_address']
         _host.gateway = host['gw']
+    # Request message is ready
+    #
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
     response = stub.ExtractTopology(request)
     # Check the status code
     utils.raise_exception_on_error(response.status)
+    # No errors during the topology extraction
+    #
     # Extract the nodes from the gRPC response
     nodes = list()
     for node in response.topology.nodes:
@@ -152,12 +156,16 @@ def load_topo_on_arango(controller_channel, nodes_config, edges_config,
         _edge.target = edge['_to']
         _edge.type = topology_manager_pb2.LinkType.Value(
             utils.edge_type_to_grpc_repr[edge['type']])
+    # Request message is ready
+    #
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
     response = stub.LoadTopology(request)
     # Check the status code
     utils.raise_exception_on_error(response.status)
+    # No errors during the operation
+    #
     # Extract the nodes from the gRPC response
     nodes = list()
     for node in response.topology.nodes:
@@ -221,12 +229,16 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
             _host.name = host['name']
             _host.ip_address = host['ip_address']
             _host.gateway = host['gw']
+    # Request message is ready
+    #
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
     for response in stub.ExtractAndLoadTopology(request):
         # Check the status code
         utils.raise_exception_on_error(response.status)
+        # No errors during the topology extraction
+        #
         # Extract the nodes from the gRPC response
         nodes = list()
         for node in response.topology.nodes:
@@ -288,12 +300,16 @@ def topology_information_extraction_isis(controller_channel,
             _host.name = host['name']
             _host.ip_address = host['ip_address']
             _host.gateway = host['gw']
+    # Request message is ready
+    #
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Extract the topology
     for response in stub.ExtractAndLoadTopology(request):
         # Check the status code
         utils.raise_exception_on_error(response.status)
+        # No errors during the topology extraction
+        #
         # Extract the nodes from the gRPC response
         nodes = list()
         for node in response.topology.nodes:
@@ -338,6 +354,7 @@ def push_nodes_config(controller_channel, nodes_config):
         _node.uN = node['uN']
         _node.uDT = node['uDT']
         _node.fwd_engine = node['fwd_engine']
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
@@ -357,6 +374,7 @@ def get_nodes_config(controller_channel):
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.GetNodesConfig(request)
+    # No errors during the operation
     #
     # Extract the nodes config
     nodes_config = {
