@@ -50,8 +50,8 @@ class PMDriver(Enum):
 
 # Mapping python representation of PM Driver to gRPC representation
 py_to_grpc_pmdriver = {
-    'ebpf': 'EBPF',
-    'ipset': 'IPSET'
+    'ebpf': PMDriver.EBPF,
+    'ipset': PMDriver.IPSET
 }
 
 # Mapping gRPC representation of PM Driver to python representation
@@ -70,8 +70,8 @@ class MeasurementProtocol(Enum):
 
 # Mapping python representation of Measurement Protocol to gRPC representation
 py_to_grpc_measurement_protocol = {
-    'twamp': 'TWAMP',
-    'stamp': 'STAMP'
+    'twamp': MeasurementProtocol.TWAMP,
+    'stamp': MeasurementProtocol.STAMP
 }
 
 # Mapping gRPC representation of Measurement Protocol to python representation
@@ -91,8 +91,8 @@ class MeasurementType(Enum):
 
 # Mapping python representation of Measurement Type to gRPC representation
 py_to_grpc_measurement_type = {
-    'delay': 'DELAY',
-    'loss': 'LOSS'
+    'delay': MeasurementType.DELAY,
+    'loss': MeasurementType.LOSS
 }
 
 # Mapping gRPC representation of Measurement Type to python representation
@@ -111,7 +111,7 @@ class AuthenticationMode(Enum):
 
 # Mapping python representation of Authentication Mode to gRPC representation
 py_to_grpc_authentication_mode = {
-    'hmac_sha_256': 'HMAC_SHA_256'
+    'hmac_sha_256': AuthenticationMode.HMAC_SHA_256
 }
 
 # Mapping gRPC representation of Authentication Mode to python representation
@@ -131,8 +131,8 @@ class TimestampFormat(Enum):
 
 # Mapping python representation of Timestamp Format to gRPC representation
 py_to_grpc_timestamp_format = {
-    'ptpv2': 'PTPv2',
-    'ntp': 'NTP',
+    'ptpv2': TimestampFormat.PTPv2,
+    'ntp': TimestampFormat.NTP,
 }
 
 # Mapping gRPC representation of Timestamp Format to python representation
@@ -154,9 +154,9 @@ class DelayMeasurmentMode(Enum):
 # Mapping python representation of Delay Measurement Mode to gRPC
 # representation
 py_to_grpc_delay_measurement_mode = {
-    'oneway': 'OneWay',
-    'twoway': 'TwoWay',
-    'loopback': 'LoopbackMode'
+    'oneway': DelayMeasurmentMode.ONE_WAY,
+    'twoway': DelayMeasurmentMode.TWO_WAY,
+    'loopback': DelayMeasurmentMode.LOOPBACK_MODE
 }
 
 # Mapping gRPC representation of Delay Measurement Mode to python
@@ -178,8 +178,8 @@ class LossMeasurmentMode(Enum):
 # Mapping python representation of Loss Measurement Mode to gRPC
 # representation
 py_to_grpc_loss_measurement_mode = {
-    'inferred': 'Inferred',
-    'direct': 'Direct'
+    'inferred': LossMeasurmentMode.INFERRED,
+    'direct': LossMeasurmentMode.DIRECT
 }
 
 # Mapping gRPC representation of Loss Measurement Mode to python
