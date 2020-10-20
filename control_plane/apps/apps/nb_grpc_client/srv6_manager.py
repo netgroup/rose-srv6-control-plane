@@ -30,14 +30,110 @@ gRPC client.
 """
 
 # General imports
-
+import logging
+from enum import Enum
 # Proto dependencies
 import nb_commons_pb2
 import nb_srv6_manager_pb2
 import nb_srv6_manager_pb2_grpc
-
 # gRPC client dependencies
 from apps.nb_grpc_client import utils
+
+
+# Logger reference
+logging.basicConfig(level=logging.NOTSET)
+logger = logging.getLogger(__name__)
+
+
+# ############################################################################
+# SRv6 Action
+class SRv6Action(Enum):
+    """
+    SRv6 action.
+    """
+    UNSPEC = nb_commons_pb2.SRv6Action.Value('SRV6_ACTION_UNSPEC')
+    END = nb_commons_pb2.SRv6Action.Value('END')
+    END_X = nb_commons_pb2.SRv6Action.Value('END_X')
+    END_T = nb_commons_pb2.SRv6Action.Value('END_T')
+    END_DX4 = nb_commons_pb2.SRv6Action.Value('END_DX4')
+    END_DX6 = nb_commons_pb2.SRv6Action.Value('END_DX6')
+    END_DX2 = nb_commons_pb2.SRv6Action.Value('END_DX2')
+    END_DT4 = nb_commons_pb2.SRv6Action.Value('END_DT4')
+    END_DT6 = nb_commons_pb2.SRv6Action.Value('END_DT6')
+    END_B6 = nb_commons_pb2.SRv6Action.Value('END_B6')
+    END_B6_ENCAPS = nb_commons_pb2.SRv6Action.Value('END_B6_ENCAPS')
+
+
+# Mapping python representation of SRv6 Action to gRPC representation
+py_to_grpc_srv6_action = {
+    'unspec': SRv6Action.UNSPEC,
+    'End': SRv6Action.END,
+    'End.X': SRv6Action.END_X,
+    'End.T': SRv6Action.END_T,
+    'End.DX4': SRv6Action.END_DX4,
+    'End.DX6': SRv6Action.END_DX6,
+    'End.DX2': SRv6Action.END_DX2,
+    'End.DT4': SRv6Action.END_DT4,
+    'End.DT6': SRv6Action.END_DT6,
+    'End.B6': SRv6Action.END_B6,
+    'End.B6.Encaps': SRv6Action.END_B6_ENCAPS
+}
+
+# Mapping gRPC representation of SRv6 Action to python representation
+grpc_to_py_srv6_action = {
+    v: k for k, v in py_to_grpc_srv6_action.items()}
+
+
+# ############################################################################
+# Forwarding Engine
+class FwdEngine(Enum):
+    """
+    Forwarding Engine.
+    """
+    UNSPEC = nb_commons_pb2.FwdEngine.Value('FWD_ENGINE_UNSPEC')
+    LINUX = nb_commons_pb2.FwdEngine.Value('LINUX')
+    VPP = nb_commons_pb2.FwdEngine.Value('VPP')
+
+
+# Mapping python representation of Forwarding Engine to gRPC representation
+py_to_grpc_fwd_engine = {
+    'unspec': FwdEngine.UNSPEC,
+    'linux': FwdEngine.LINUX,
+    'vpp': FwdEngine.VPP
+}
+
+# Mapping gRPC representation of Forwarding Engine to python representation
+grpc_to_py_fwd_engine = {
+    v: k for k, v in py_to_grpc_fwd_engine.items()}
+
+
+# ############################################################################
+# Encap Mode
+class EncapMode(Enum):
+    """
+    Encap Mode.
+    """
+    UNSPEC = nb_commons_pb2.EncapMode.Value('ENCAP_MODE_UNSPEC')
+    INLINE = nb_commons_pb2.EncapMode.Value('INLINE')
+    ENCAP = nb_commons_pb2.EncapMode.Value('ENCAP')
+    L2ENCAP = nb_commons_pb2.EncapMode.Value('L2ENCAP')
+
+
+# Mapping python representation of Encap Mode to gRPC representation
+py_to_grpc_encap_mode = {
+    'unspec': EncapMode.UNSPEC,
+    'inline': EncapMode.INLINE,
+    'encap': EncapMode.ENCAP,
+    'l2encap': EncapMode.L2ENCAP
+}
+
+# Mapping gRPC representation of Encap Mode to python representation
+grpc_to_py_encap_mode = {
+    v: k for k, v in py_to_grpc_encap_mode.items()}
+
+
+# ############################################################################
+# gRPC client APIs
 
 
 def handle_srv6_usid_policy(controller_channel, operation,
@@ -77,19 +173,28 @@ def handle_srv6_usid_policy(controller_channel, operation,
     # Set the gRPC port number of the left node
     micro_sid.l_grpc_port = l_grpc_port
     # Set the forwarding engine of the left node
-    micro_sid.l_fwd_engine = nb_commons_pb2.FwdEngine.Value(l_fwd_engine.upper())
+    if l_fwd_engine not in py_to_grpc_fwd_engine:
+        # Invalid forwarding engine
+        logger.error('Invalid forwarding engine: %s', l_fwd_engine)
+        raise utils.InvalidArgumentError
+    micro_sid.l_fwd_engine = py_to_grpc_fwd_engine[l_fwd_engine]
     # Set the gRPC address of the right node
     micro_sid.r_grpc_ip = r_grpc_ip
     # Set the gRPC port number of the right node
     micro_sid.r_grpc_port = r_grpc_port
     # Set the forwarding engine of the right node
-    micro_sid.r_fwd_engine = nb_commons_pb2.FwdEngine.Value(r_fwd_engine.upper())
+    if r_fwd_engine not in py_to_grpc_fwd_engine:
+        # Invalid forwarding engine
+        logger.error('Invalid forwarding engine: %s', r_fwd_engine)
+        raise utils.InvalidArgumentError
+    micro_sid.r_fwd_engine = py_to_grpc_fwd_engine[r_fwd_engine]
     # Set the decapsulation SID
     micro_sid.decap_sid = decap_sid
     # Set the locator
     micro_sid.locator = locator
     # Set the nodes configuration
     micro_sid.nodes_config = None     # TODO
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -131,9 +236,13 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
     srv6_path.device = device
     # Set the encap mode
     if encapmode == '':
-        srv6_path.encapmode = nb_commons_pb2.EncapMode.Value('ENCAP_MODE_UNSPEC')
+        srv6_path.encapmode = EncapMode.UNSPEC
     else:
-        srv6_path.encapmode = nb_commons_pb2.EncapMode.Value(encapmode.upper())
+        if encapmode not in py_to_grpc_encap_mode:
+            # Invalid encap mode
+            logger.error('Invalid encap mode: %s', encapmode)
+            raise utils.InvalidArgumentError
+        srv6_path.encapmode = py_to_grpc_encap_mode[encapmode]
     # Set the table ID
     srv6_path.table = table
     # Set the metric
@@ -142,11 +251,16 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
     srv6_path.bsid_addr = bsid_addr
     # Set the forwarding engine
     if encapmode == '':
-        srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value('FWD_ENGINE_UNSPEC')
+        srv6_path.fwd_engine = FwdEngine.UNSPEC
     else:
-        srv6_path.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+        if fwd_engine not in py_to_grpc_fwd_engine:
+            # Invalid forwarding engine
+            logger.error('Invalid forwarding engine: %s', fwd_engine)
+            raise utils.InvalidArgumentError
+        srv6_path.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
     # Set the key
     srv6_path.key = key
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -181,11 +295,13 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     srv6_behavior.segment = segment
     # Set the action
     if action == '':
-        srv6_behavior.action = \
-            nb_commons_pb2.SRv6Action.Value('SRV6_ACTION_UNSPEC')
+        srv6_behavior.action = SRv6Action.UNSPEC
     else:
-        srv6_behavior.action = \
-            nb_commons_pb2.SRv6Action.Value(utils.action_to_grpc_repr[action])
+        if action not in py_to_grpc_srv6_action:
+            # Invalid SRv6 action
+            logger.error('Invalid SRv6 action: %s', action)
+            raise utils.InvalidArgumentError
+        srv6_behavior.action = py_to_grpc_srv6_action[action]
     # Set the device
     srv6_behavior.device = device
     # Set the table ID
@@ -201,9 +317,14 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     # Set the metric
     srv6_behavior.metric = metric
     # Set the forwarding engine
-    srv6_behavior.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    if fwd_engine not in py_to_grpc_fwd_engine:
+        # Invalid forwarding engine
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
+    srv6_behavior.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
     # Set the key
     srv6_behavior.key = key
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -249,9 +370,14 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     # Set the BSID address
     srv6_unitunnel.bsid_addr = bsid_addr
     # Set the forwarding engine
-    srv6_unitunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    if fwd_engine not in py_to_grpc_fwd_engine:
+        # Invalid forwarding engine
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
+    srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
     # Set the key
     srv6_unitunnel.key = key
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
@@ -306,9 +432,14 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     # BSID address
     srv6_biditunnel.bsid_addr = bsid_addr
     # Forwarding engine
-    srv6_biditunnel.fwd_engine = nb_commons_pb2.FwdEngine.Value(fwd_engine.upper())
+    if fwd_engine not in py_to_grpc_fwd_engine:
+        # Invalid forwarding engine
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
+    srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
     # Set the key
     srv6_biditunnel.key = key
+    # Request message is ready
     #
     # Get the reference of the stub
     stub = nb_srv6_manager_pb2_grpc.SRv6ManagerStub(controller_channel)
