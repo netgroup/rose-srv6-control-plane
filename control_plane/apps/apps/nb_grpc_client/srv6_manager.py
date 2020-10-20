@@ -192,8 +192,6 @@ def handle_srv6_usid_policy(controller_channel, operation,
     micro_sid.decap_sid = decap_sid
     # Set the locator
     micro_sid.locator = locator
-    # Set the nodes configuration
-    micro_sid.nodes_config = None     # TODO
     # Request message is ready
     #
     # Get the reference of the stub
