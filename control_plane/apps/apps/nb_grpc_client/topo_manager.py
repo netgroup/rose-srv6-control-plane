@@ -374,6 +374,8 @@ def get_nodes_config(controller_channel):
     stub = topology_manager_pb2_grpc.TopologyManagerStub(controller_channel)
     # Send the request to the gRPC server
     response = stub.GetNodesConfig(request)
+    # Check the status code and raise an exception if an error occurred
+    utils.raise_exception_on_error(response.status)
     # No errors during the operation
     #
     # Extract the nodes config
@@ -392,7 +394,5 @@ def get_nodes_config(controller_channel):
             'uDT': node.uDT,
             'fwd_engine': node.fwd_engine
         })
-    # Check the status code and raise an exception if an error occurred
-    utils.raise_exception_on_error(response.status)
     # Return the nodes config
     return nodes_config
