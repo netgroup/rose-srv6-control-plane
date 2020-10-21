@@ -70,10 +70,12 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     # Save edges to a YAML file
     if edges_yaml is not None:
         cli_utils.save_yaml_dump(edges, edges_yaml)
-    # Print the nodes
-    print('\nNodes: %s\n' % nodes)
-    # Print the edges
-    print('\nEdges: %s\n' % edges)
+    # Print the extracted topology
+    if verbose:
+        # Print the nodes
+        print('\nNodes: %s\n' % nodes)
+        # Print the edges
+        print('\nEdges: %s\n' % edges)
 
 
 def load_topo_on_arango(controller_channel, nodes_yaml, edges_yaml,
@@ -105,11 +107,13 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
     Extract the topology from a set of nodes running ISIS protocol
     and load it on a Arango database.
     """
+    # pylint: disable=too-many-arguments
+    #
     # Read addresses configuration from YAML file
     addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
     # Read hosts configuration from YAML file
     hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
-    # pylint: disable=too-many-arguments
+    # Start periodic extraction
     for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
                 controller_channel=controller_channel,
                 isis_nodes=isis_nodes,
@@ -125,12 +129,14 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
         # Save edges to a YAML file
         if edges_yaml is not None:
             cli_utils.save_yaml_dump(edges, edges_yaml)
-        # Print the nodes
-        print('\nNodes: %s\n' % nodes)
-        # Print the edges
-        print('\nEdges: %s\n' % edges)
-        # Separation line
-        print('\n******************************\n')
+        # Print the extracted topology
+        if verbose:
+            # Print the nodes
+            print('\nNodes: %s\n' % nodes)
+            # Print the edges
+            print('\nEdges: %s\n' % edges)
+            # Separation line
+            print('\n******************************\n')
 
 
 def topology_information_extraction_isis(controller_channel,
@@ -167,10 +173,14 @@ def topology_information_extraction_isis(controller_channel,
         # Save edges to a YAML file
         if edges_file_yaml is not None:
             cli_utils.save_yaml_dump(edges, edges_file_yaml)
-        # Print the nodes
-        print('\nNodes: %s\n' % nodes)
-        # Print the edges
-        print('\nEdges: %s\n' % edges)
+        # Print the extracted topology
+        if verbose:
+            # Print the nodes
+            print('\nNodes: %s\n' % nodes)
+            # Print the edges
+            print('\nEdges: %s\n' % edges)
+            # Separation line
+            print('\n******************************\n')
 
 
 def push_nodes_config(controller_channel, nodes_config_filename):
