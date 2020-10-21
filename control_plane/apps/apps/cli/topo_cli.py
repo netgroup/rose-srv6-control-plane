@@ -29,13 +29,11 @@ ArangoDB utilities for Controller CLI.
 """
 
 # General imports
-import os
 import sys
 import yaml
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import arangodb_utils
 from apps.nb_grpc_client import topo_manager
 from apps.cli import utils as cli_utils
 

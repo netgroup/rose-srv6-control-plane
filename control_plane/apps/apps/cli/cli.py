@@ -48,8 +48,6 @@ from argparse import ArgumentParser
 from cmd import Cmd
 
 # Controller dependencies
-from controller import arangodb_driver
-from controller import srv6_usid
 from apps.cli import srv6_cli, srv6pm_cli, topo_cli
 from apps.nb_grpc_client import utils as nb_utils
 
@@ -58,6 +56,7 @@ BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 # Logger reference
+logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 # Default parameters
@@ -67,6 +66,11 @@ DEFAULT_CONTROLLER_ADDRESS = 'localhost'
 # Controller gRPC port
 DEFAULT_CONTROLLER_PORT = 12345
 
+# Path to the command history
+HISTFILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            '.controller_history')
+# Size of the command history
+HISTFILE_SIZE = 1000
 
 # Set line delimiters, required for the auto-completion feature
 readline.set_completer_delims(' \t\n')
@@ -76,12 +80,15 @@ CONTROLLER_CHANNEL = None
 
 
 class CustomCmd(Cmd):
-    """This class extends the python class Cmd and implements a handler
-    for CTRL+C and CTRL+D"""
+    """
+    This class extends the python class Cmd and implements a handler
+    for CTRL+C and CTRL+D.
+    """
 
-    histfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            '.controller_history')
-    histfile_size = 1000
+    # Path to the command history
+    histfile = HISTFILE_PATH
+    # Size of the command history
+    histfile_size = HISTFILE_SIZE
 
     def preloop(self):
         if readline and os.path.exists(self.histfile):
@@ -93,7 +100,9 @@ class CustomCmd(Cmd):
             readline.write_history_file(self.histfile)
 
     def cmdloop(self, intro=None):
-        """ Command loop"""
+        """
+        Command loop.
+        """
 
         # pylint: disable=no-self-use
 

@@ -34,7 +34,6 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import srv6_usid
 from apps.cli import utils as cli_utils
 from apps.nb_grpc_client import utils as grpc_utils
 from apps.nb_grpc_client import srv6_manager
