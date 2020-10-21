@@ -380,6 +380,24 @@ def get_experiment_results(controller_channel, sender, reflector,
     response = stub.GetExperimentResults(request)
     # Check the status code and raise an exception if an error occurred
     utils.raise_exception_on_error(response.status)
+    # Extract the measurement data from the response message
+    measurement_data = list()
+    for data in response.measurement_data:
+        measurement_data.append({
+            'meas_id': data.meas_id,
+            'ssSeqNum': data.ssSeqNum,
+            'interval': data.interval,
+            'timestamp': data.timestamp,
+            'ssTxCounter': data.ssTxCounter,
+            'rfRxCounter': data.rfRxCounter,
+            'fwColor': data.fwColor,
+            'rfSeqNum': data.rfSeqNum,
+            'rfTxCounter': data.rfTxCounter,
+            'ssRxCounter': data.ssRxCounter,
+            'rvColor': data.rvColor,
+        })
+    # Done, return the list of collected data
+    return measurement_data
 
 
 def stop_experiment(controller_channel, sender, reflector,

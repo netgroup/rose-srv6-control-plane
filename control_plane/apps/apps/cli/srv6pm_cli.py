@@ -33,7 +33,7 @@ import sys
 from argparse import ArgumentParser
 
 # Controller dependencies
-from controller import srv6_pm, utils
+from apps.nb_grpc_client import srv6pm_manager
 from apps.cli import utils as cli_utils
 
 # Default CA certificate path
@@ -49,7 +49,9 @@ def set_configuration(controller_channel, sender, reflector,
     Configure a node.
     """
     # pylint: disable=too-many-arguments
-    res = srv6pm_manager.set_configuration(
+    #
+    # Set the configuration
+    srv6pm_manager.set_configuration(
         controller_channel=controller_channel,
         sender=sender,
         sender_port=sender_port,
@@ -64,7 +66,6 @@ def set_configuration(controller_channel, sender, reflector,
         in_interfaces=in_interfaces,
         out_interfaces=out_interfaces
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def reset_configuration(controller_channel, sender, reflector,
@@ -72,14 +73,15 @@ def reset_configuration(controller_channel, sender, reflector,
     """
     Clear node configuration.
     """
-    res = srv6pm_manager.reset_configuration(
+    #
+    # Clear the configuration
+    srv6pm_manager.reset_configuration(
         controller_channel=controller_channel,
         sender=sender,
         sender_port=sender_port,
         reflector=reflector,
         reflector_port=reflector_port
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def start_experiment(controller_channel, sender, reflector,
@@ -95,7 +97,9 @@ def start_experiment(controller_channel, sender, reflector,
     Start an experiment.
     """
     # pylint: disable=too-many-arguments, too-many-locals
-    res = srv6pm_manager.start_experiment(
+    #
+    # Start the SRv6 PM experiment
+    srv6pm_manager.start_experiment(
         controller_channel=controller_channel,
         sender=sender,
         reflector=reflector,
@@ -118,7 +122,6 @@ def start_experiment(controller_channel, sender, reflector,
         refl_send_localseg=refl_send_localseg,
         force=force
     )
-    print('%s\n\n' % utils.STATUS_CODE_TO_DESC[res])
 
 
 def get_experiment_results(controller_channel, sender, reflector,
@@ -128,7 +131,9 @@ def get_experiment_results(controller_channel, sender, reflector,
     Get the results of a running experiment.
     """
     # pylint: disable=too-many-arguments
-    print(srv6pm_manager.get_experiment_results(
+    #
+    # Get the experiment results
+    measurement_data = srv6pm_manager.get_experiment_results(
         controller_channel=controller_channel,
         sender=sender,
         reflector=reflector,
@@ -136,7 +141,9 @@ def get_experiment_results(controller_channel, sender, reflector,
         reflector_port=reflector_port,
         send_refl_sidlist=send_refl_sidlist.split(','),
         refl_send_sidlist=refl_send_sidlist.split(',')
-    ))
+    )
+    # Print the results
+    print(measurement_data)
 
 
 def stop_experiment(controller_channel, sender, reflector,
@@ -147,6 +154,8 @@ def stop_experiment(controller_channel, sender, reflector,
     Stop a running experiment.
     """
     # pylint: disable=too-many-arguments
+    #
+    # Stop the experiment
     srv6pm_manager.stop_experiment(
         controller_channel=controller_channel,
         sender=sender,
