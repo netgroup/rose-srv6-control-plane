@@ -266,8 +266,24 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
     response = stub.HandleSRv6Path(request)
     # Check the status code and raise an exception if an error occurred
     utils.raise_exception_on_error(response.status)
-    # Done, return the list of SRv6 paths, if any
-    return list(response.srv6_paths)
+    # Extract the SRv6 paths from the response message, if any
+    srv6_paths = []
+    for srv6_path in response.srv6_paths:
+        srv6_paths.append({
+            'grpc_address': srv6_path.grpc_address,
+            'grpc_port': srv6_path.grpc_port,
+            'destination': srv6_path.destination,
+            'segments': srv6_path.segments,
+            'device': srv6_path.device,
+            'encapmode': encapmode,
+            'table': srv6_path.table,
+            'metric': srv6_path.metric,
+            'bsid_addr': srv6_path.bsid_addr,
+            'fwd_engine': srv6_path.fwd_engine,
+            'key': srv6_path.key
+        })
+    # Done, return the list of SRv6 paths
+    return srv6_paths
 
 
 def handle_srv6_behavior(controller_channel, operation, grpc_address,
@@ -330,8 +346,26 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     response = stub.HandleSRv6Behavior(request)
     # Check the status code and raise an exception if an error occurred
     utils.raise_exception_on_error(response.status)
+    # Extract the SRv6 behaviors from the response message, if any
+    srv6_behaviors = []
+    for srv6_behavior in response.srv6_behaviors:
+        srv6_behaviors.append({
+            'grpc_address': srv6_behavior.grpc_address,
+            'grpc_port': srv6_behavior.grpc_port,
+            'segment': srv6_behavior.segment,
+            'action': srv6_behavior.action,
+            'device': srv6_behavior.device,
+            'table': srv6_behavior.table,
+            'nexthop': srv6_behavior.nexthop,
+            'lookup_table': srv6_behavior.lookup_table,
+            'interface': srv6_behavior.interface,
+            'segments': srv6_behavior.segments,
+            'metric': srv6_behavior.metric,
+            'fwd_engine': srv6_behavior.fwd_engine,
+            'key': srv6_behavior.key
+        })
     # Done, return the list of SRv6 behaviors, if any
-    return list(response.srv6_behaviors)
+    return srv6_behaviors
 
 
 def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
@@ -383,8 +417,22 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     response = stub.HandleSRv6UniTunnel(request)
     # Check the status code and raise an exception if an error occurred
     utils.raise_exception_on_error(response.status)
+    # Extract the SRv6 tunnels from the response message, if any
+    srv6_tunnels = []
+    for srv6_tunnel in response.srv6_unitunnels:
+        srv6_tunnels.append({
+            'ingress_ip': srv6_tunnel.ingress_ip,
+            'ingress_port': srv6_tunnel.ingress_port,
+            'egress_ip': srv6_tunnel.egress_ip,
+            'egress_port': srv6_tunnel.egress_port,
+            'destination': srv6_tunnel.destination,
+            'segments': srv6_tunnel.segments,
+            'bsid_addr': srv6_tunnel.bsid_addr,
+            'fwd_engine': srv6_tunnel.fwd_engine,
+            'key': srv6_tunnel.key
+        })
     # Done, return the list of SRv6 unidirectional tunnels, if any
-    return list(response.srv6_unitunnels)
+    return srv6_tunnels
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
@@ -445,5 +493,23 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     response = stub.HandleSRv6BidiTunnel(request)
     # Check the status code and raise an exception if an error occurred
     utils.raise_exception_on_error(response.status)
+    # Extract the SRv6 tunnels from the response message, if any
+    srv6_tunnels = []
+    for srv6_tunnel in response.srv6_biditunnels:
+        srv6_tunnels.append({
+            'node_l_ip': srv6_tunnel.node_l_ip,
+            'node_r_ip': srv6_tunnel.node_r_ip,
+            'node_l_port': srv6_tunnel.node_l_port,
+            'node_r_port': srv6_tunnel.node_r_port,
+            'sidlist_lr': srv6_tunnel.sidlist_lr,
+            'sidlist_rl': srv6_tunnel.sidlist_rl,
+            'dest_lr': srv6_tunnel.dest_lr,
+            'dest_rl': srv6_tunnel.dest_rl,
+            'localseg_lr': srv6_tunnel.localseg_lr,
+            'localseg_rl': srv6_tunnel.localseg_rl,
+            'bsid_addr': srv6_tunnel.bsid_addr,
+            'fwd_engine': srv6_tunnel.fwd_engine,
+            'key': srv6_tunnel.key
+        })
     # Done, return the list of SRv6 bidirectional tunnels, if any
-    return list(response.srv6_biditunnels)
+    return srv6_tunnels

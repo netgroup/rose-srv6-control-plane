@@ -89,7 +89,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     #
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
-    _srv6_paths = srv6_manager.handle_srv6_path(
+    srv6_paths = srv6_manager.handle_srv6_path(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -104,23 +104,9 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         fwd_engine=fwd_engine,
         key=key
     )
-    srv6_paths = []
-    for srv6_path in _srv6_paths:
-        srv6_paths.append({
-            'grpc_address': srv6_path.grpc_address,
-            'grpc_port': srv6_path.grpc_port,
-            'destination': srv6_path.destination,
-            'segments': srv6_path.segments,
-            'device': srv6_path.device,
-            'encapmode': encapmode,
-            'table': srv6_path.table,
-            'metric': srv6_path.metric,
-            'bsid_addr': srv6_path.bsid_addr,
-            'fwd_engine': srv6_path.fwd_engine,
-            'key': srv6_path.key
-        })
+    # If the operation is "get", print the SRv6 paths returned by the node
     if operation == 'get':
-        if srv6_paths is None:
+        if len(srv6_paths) == 0:
             print('Path not found\n')
         else:
             pprint.pprint(srv6_paths)
@@ -137,7 +123,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     #
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
-    _srv6_behaviors = srv6_manager.handle_srv6_behavior(
+    srv6_behaviors = srv6_manager.handle_srv6_behavior(
         controller_channel=controller_channel,
         operation=operation,
         grpc_address=grpc_address,
@@ -154,25 +140,9 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         fwd_engine=fwd_engine,
         key=key
     )
-    srv6_behaviors = []
-    for srv6_behavior in _srv6_behaviors:
-        srv6_behaviors.append({
-            'grpc_address': srv6_behavior.grpc_address,
-            'grpc_port': srv6_behavior.grpc_port,
-            'segment': srv6_behavior.segment,
-            'action': srv6_behavior.action,
-            'device': srv6_behavior.device,
-            'table': srv6_behavior.table,
-            'nexthop': srv6_behavior.nexthop,
-            'lookup_table': srv6_behavior.lookup_table,
-            'interface': srv6_behavior.interface,
-            'segments': srv6_behavior.segments,
-            'metric': srv6_behavior.metric,
-            'fwd_engine': srv6_behavior.fwd_engine,
-            'key': srv6_behavior.key
-        })
+    # If the operation is "get", print the SRv6 behaviors returned by the node
     if operation == 'get':
-        if srv6_behaviors is None:
+        if len(srv6_behaviors) == 0:
             print('Behavior not found\n')
         else:
             pprint.pprint(srv6_behaviors)
@@ -186,77 +156,31 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     Handle a SRv6 unidirectional tunnel.
     """
     # pylint: disable=too-many-arguments
-    if operation == 'add':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_unitunnel(
-            controller_channel=controller_channel,
-            operation='add',
-            ingress_ip=ingress_ip,
-            ingress_port=ingress_port,
-            egress_ip=egress_ip,
-            egress_port=egress_port,
-            destination=destination,
-            segments=segments.split(','),
-            localseg=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
-    if operation == 'del':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_unitunnel(
-            controller_channel=controller_channel,
-            operation='del',
-            ingress_ip=ingress_ip,
-            ingress_port=ingress_port,
-            egress_ip=egress_ip,
-            egress_port=egress_port,
-            destination=destination,
-            localseg=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
+    if operation not in ['add', 'del', 'get']:
+        # Invalid operation
+        raise grpc_utils.InvalidArgumentError
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    srv6_tunnels = srv6_manager.handle_srv6_unitunnel(
+        controller_channel=controller_channel,
+        operation=operation,
+        ingress_ip=ingress_ip,
+        ingress_port=ingress_port,
+        egress_ip=egress_ip,
+        egress_port=egress_port,
+        destination=destination,
+        segments=segments.split(',') if segments is not None else None,
+        localseg=localseg,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
+        key=key
+    )
+    # If the operation is "get", print the SRv6 tunnels returned by the node
     if operation == 'get':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        _srv6_tunnels = srv6_manager.handle_srv6_unitunnel(
-            controller_channel=controller_channel,
-            operation='get',
-            ingress_ip=ingress_ip,
-            ingress_port=ingress_port,
-            egress_ip=egress_ip,
-            egress_port=egress_port,
-            destination=destination,
-            localseg=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
-    srv6_tunnels = []
-    for srv6_tunnel in _srv6_tunnels:
-        srv6_tunnels.append({
-            'ingress_ip': srv6_tunnel.ingress_ip,
-            'ingress_port': srv6_tunnel.ingress_port,
-            'egress_ip': srv6_tunnel.egress_ip,
-            'egress_port': srv6_tunnel.egress_port,
-            'destination': srv6_tunnel.destination,
-            'segments': srv6_tunnel.segments,
-            'bsid_addr': srv6_tunnel.bsid_addr,
-            'fwd_engine': srv6_tunnel.fwd_engine,
-            'key': srv6_tunnel.key
-        })
-    if operation == 'get':
-        if srv6_tunnels is None or len(srv6_tunnels) == 0:
+        if len(srv6_tunnels) == 0:
             print('Tunnel not found\n')
-            return
         else:
             pprint.pprint(srv6_tunnels)
-            return
-    # Invalid operation
-    raise grpc_utils.InvalidArgumentError
 
 
 def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
@@ -268,88 +192,34 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     Handle SRv6 bidirectional tunnel.
     """
     # pylint: disable=too-many-arguments,too-many-locals
-    if operation == 'add':
-        # Perform the operationf
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_biditunnel(
-            controller_channel=controller_channel,
-            operation='add',
-            node_l_ip=node_l_ip,
-            node_l_port=node_l_port,
-            node_r_ip=node_r_ip,
-            node_r_port=node_r_port,
-            sidlist_lr=sidlist_lr.split(','),
-            sidlist_rl=sidlist_rl.split(','),
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
-    if operation == 'del':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        return srv6_manager.handle_srv6_biditunnel(
-            controller_channel=controller_channel,
-            operation='del',
-            node_l_ip=node_l_ip,
-            node_l_port=node_l_port,
-            node_r_ip=node_r_ip,
-            node_r_port=node_r_port,
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
+    if operation not in ['add', 'del', 'get']:
+        # Invalid operation
+        raise grpc_utils.InvalidArgumentError
+    # Perform the operation
+    # If an error occurs during the operation, an exception will be raised
+    srv6_tunnels = srv6_manager.handle_srv6_biditunnel(
+        controller_channel=controller_channel,
+        operation=operation,
+        node_l_ip=node_l_ip,
+        node_l_port=node_l_port,
+        node_r_ip=node_r_ip,
+        node_r_port=node_r_port,
+        sidlist_lr=sidlist_lr.split(',') if sidlist_lr is not None else None,
+        sidlist_rl=sidlist_rl.split(',') if sidlist_rl is not None else None,
+        dest_lr=dest_lr,
+        dest_rl=dest_rl,
+        localseg_lr=localseg_lr,
+        localseg_rl=localseg_rl,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
+        key=key
+    )    
+    # If the operation is "get", print the SRv6 tunnels returned by the node
     if operation == 'get':
-        # Perform the operation
-        # If an error occurs during the operation, an exception will be raised
-        _srv6_tunnels = srv6_manager.handle_srv6_biditunnel(
-            controller_channel=controller_channel,
-            operation='get',
-            node_l_ip=node_l_ip,
-            node_l_port=node_l_port,
-            node_r_ip=node_r_ip,
-            node_r_port=node_r_port,
-            dest_lr=dest_lr,
-            dest_rl=dest_rl,
-            localseg_lr=localseg_lr,
-            localseg_rl=localseg_rl,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            key=key
-        )
-    srv6_tunnels = []
-    for srv6_tunnel in _srv6_tunnels:
-        srv6_tunnels.append({
-            'node_l_ip': srv6_tunnel.node_l_ip,
-            'node_r_ip': srv6_tunnel.node_r_ip,
-            'node_l_port': srv6_tunnel.node_l_port,
-            'node_r_port': srv6_tunnel.node_r_port,
-            'sidlist_lr': srv6_tunnel.sidlist_lr,
-            'sidlist_rl': srv6_tunnel.sidlist_rl,
-            'dest_lr': srv6_tunnel.dest_lr,
-            'dest_rl': srv6_tunnel.dest_rl,
-            'localseg_lr': srv6_tunnel.localseg_lr,
-            'localseg_rl': srv6_tunnel.localseg_rl,
-            'bsid_addr': srv6_tunnel.bsid_addr,
-            'fwd_engine': srv6_tunnel.fwd_engine,
-            'key': srv6_tunnel.key
-        })
-    if operation == 'get':
-        if srv6_tunnels is None or len(srv6_tunnels) == 0:
+        if len(srv6_tunnels) == 0:
             print('Tunnel not found\n')
-            return
         else:
             pprint.pprint(srv6_tunnels)
-            return
-    # Invalid operation
-    raise grpc_utils.InvalidArgumentError
 
 
 def args_srv6_usid_policy():
