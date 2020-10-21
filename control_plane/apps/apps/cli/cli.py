@@ -194,8 +194,6 @@ class ControllerCLITopology(CustomCmd):
             pass
         except SystemExit:
             return False  # This workaround avoid exit in case of errors
-        # pylint: disable=no-self-use
-        #
         # Print the nodes
         srv6_cli.print_nodes(CONTROLLER_CHANNEL)
         # Return False in order to keep the CLI subsection open
@@ -203,10 +201,10 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_extract(self, args):
-        """Extract the network topology"""
-
+        """
+        Extract the network topology.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = (topo_cli
                     .parse_arguments_topology_information_extraction_isis(
@@ -231,11 +229,11 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_load_on_arango(self, args):
-        """Read nodes and edges YAML files and upload the topology
-        on ArangoDB"""
-
+        """
+        Read nodes and edges YAML files and upload the topology
+        on ArangoDB.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = topo_cli.parse_arguments_load_topo_on_arango(
                 prog='load_on_arango',
@@ -254,11 +252,11 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_extract_and_load_on_arango(self, args):
-        """Extract the network topology from a set of nodes running ISIS
-        and upload it on ArangoDB"""
-
+        """
+        Extract the network topology from a set of nodes running ISIS
+        and upload it on ArangoDB.
+        """
         # pylint: disable=no-self-use
-
         try:
             arg = (topo_cli
                    .parse_arguments_extract_topo_from_isis_and_load_on_arango(
@@ -321,10 +319,11 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def complete_show_nodes(self, text, line, start_idx, end_idx):
-        """Auto-completion for show_nodes command"""
-
+        """
+        Auto-completion for show_nodes command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -340,10 +339,11 @@ class ControllerCLITopology(CustomCmd):
         return srv6_cli.complete_print_nodes(text, prev_text)
 
     def complete_extract(self, text, line, start_idx, end_idx):
-        """Auto-completion for extract command"""
-
+        """
+        Auto-completion for extract command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -360,10 +360,11 @@ class ControllerCLITopology(CustomCmd):
             text, prev_text)
 
     def complete_load_on_arango(self, text, line, start_idx, end_idx):
-        """Auto-completion for load_on_arango command"""
-
+        """
+        Auto-completion for load_on_arango command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -380,10 +381,11 @@ class ControllerCLITopology(CustomCmd):
 
     def complete_extract_and_load_on_arango(self, text,
                                             line, start_idx, end_idx):
-        """Auto-completion for extract_and_load_on_arango command"""
-
+        """
+        Auto-completion for extract_and_load_on_arango command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -441,40 +443,48 @@ class ControllerCLITopology(CustomCmd):
         return topo_cli.complete_get_nodes_config(text, prev_text)
 
     def help_show_nodes(self):
-        """Show help usage for show_nodes config command"""
-        #
+        """
+        Show help usage for show_nodes config command.
+        """
         # pylint: disable=no-self-use
         #
+        # Help message from "show_nodes" command
         srv6_cli.parse_arguments_print_nodes(
             prog='show_nodes',
             args=['--help']
         )
 
     def help_extract(self):
-        """Show help usage for extract command"""
-
+        """
+        Show help usage for extract command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message from "extract" command
         topo_cli.parse_arguments_topology_information_extraction_isis(
             prog='extract',
             args=['--help']
         )
 
     def help_load_on_arango(self):
-        """Show help usage for load_topo_on_arango"""
-
+        """
+        Show help usage for load_topo_on_arango.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for load_on_arango
         topo_cli.parse_arguments_load_topo_on_arango(
             prog='load_on_arango',
             args=['--help']
         )
 
     def help_extract_and_load_on_arango(self):
-        """Show help usage for extract_and_load_on_arango"""
-
+        """
+        Show help usage for extract_and_load_on_arango.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "extract_and_load_on_arango" command
         topo_cli.parse_arguments_extract_topo_from_isis_and_load_on_arango(
             prog='extract_and_load_on_arango',
             args=['--help']
@@ -485,6 +495,8 @@ class ControllerCLITopology(CustomCmd):
         Show help usage for push_nodes_config.
         """
         # pylint: disable=no-self-use
+        #
+        # Help message for "push_nodes_config" command
         topo_cli.parse_arguments_push_nodes_config(
             prog='push_nodes_config',
             args=['--help']
@@ -495,6 +507,8 @@ class ControllerCLITopology(CustomCmd):
         Show help usage for get_nodes_config.
         """
         # pylint: disable=no-self-use
+        #
+        # Help message for "get_nodes_config" command
         topo_cli.parse_arguments_get_nodes_config(
             prog='get_nodes_config',
             args=['--help']
@@ -502,15 +516,18 @@ class ControllerCLITopology(CustomCmd):
 
 
 class ControllerCLISRv6PMConfiguration(CustomCmd):
-    """srv6pm->Configuration subsection"""
+    """
+    srv6pm->Configuration subsection.
+    """
 
+    # Command line prompt message
     prompt = "controller(srv6pm-configuration)> "
 
     def do_set(self, args):
-        """Set configuation"""
-
+        """
+        Set configuation.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6pm_cli.parse_arguments_set_configuration(
                 prog='start',
@@ -536,10 +553,10 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return False
 
     def do_reset(self, args):
-        """Clear configuration"""
-
+        """
+        Clear configuration.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6pm_cli.parse_arguments_reset_configuration(
                 prog='start',
@@ -559,10 +576,11 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return False
 
     def complete_set(self, text, line, start_idx, end_idx):
-        """Auto-completion for set command"""
-
+        """
+        Auto-completion for set command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -578,10 +596,11 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return srv6pm_cli.complete_set_configuration(text, prev_text)
 
     def complete_reset(self, text, line, start_idx, end_idx):
-        """Auto-completion for reset command"""
-
+        """
+        Auto-completion for reset command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -597,20 +616,24 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
         return srv6pm_cli.complete_reset_configuration(text, prev_text)
 
     def help_set(self):
-        """Show help usagte for set operation"""
-
+        """
+        Show help usagte for set operation.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "set_configuration" command
         srv6pm_cli.parse_arguments_set_configuration(
             prog='start',
             args=['--help']
         )
 
     def help_reset(self):
-        """Show help usage for reset operation"""
-
+        """
+        Show help usage for reset operation.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "reset_configuration" command
         srv6pm_cli.parse_arguments_reset_configuration(
             prog='start',
             args=['--help']
@@ -618,15 +641,18 @@ class ControllerCLISRv6PMConfiguration(CustomCmd):
 
 
 class ControllerCLISRv6PMExperiment(CustomCmd):
-    """srv6pm->experiment subsection"""
+    """
+    srv6pm->experiment subsection.
+    """
 
+    # Command line prompt message
     prompt = "controller(srv6pm-experiment)> "
 
     def do_start(self, args):
-        """Start an experiment"""
-
+        """
+        Start an experiment.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6pm_cli.parse_arguments_start_experiment(
                 prog='start',
@@ -667,10 +693,10 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return False
 
     def do_show(self, args):
-        """Show results of a running experiment"""
-
+        """
+        Show results of a running experiment.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6pm_cli.parse_arguments_get_experiment_results(
                 prog='show',
@@ -692,10 +718,10 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return False
 
     def do_stop(self, args):
-        """Stop a running experiment"""
-
+        """
+        Stop a running experiment.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6pm_cli.parse_arguments_stop_experiment(
                 prog='stop',
@@ -721,10 +747,11 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return False
 
     def complete_start(self, text, line, start_idx, end_idx):
-        """Auto-completion for start command"""
-
+        """
+        Auto-completion for start command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -740,10 +767,11 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return srv6pm_cli.complete_start_experiment(text, prev_text)
 
     def complete_show(self, text, line, start_idx, end_idx):
-        """Auto-completion for show command"""
-
+        """
+        Auto-completion for show command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -759,10 +787,11 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return srv6pm_cli.complete_get_experiment_results(text, prev_text)
 
     def complete_stop(self, text, line, start_idx, end_idx):
-        """Auto-completion for stop command"""
-
+        """
+        Auto-completion for stop command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -778,30 +807,36 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
         return srv6pm_cli.complete_stop_experiment(text, prev_text)
 
     def help_start(self):
-        """Show help usage for start operation"""
-
+        """
+        Show help usage for start operation.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "start_experiment" command
         srv6pm_cli.parse_arguments_start_experiment(
             prog='start',
             args=['--help']
         )
 
     def help_show(self):
-        """Show help usasge for show operation"""
-
+        """
+        Show help usasge for show operation.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "get_experiment_results" command
         srv6pm_cli.parse_arguments_get_experiment_results(
             prog='show',
             args=['--help']
         )
 
     def help_stop(self):
-        """Show help usage for stop operation"""
-
+        """
+        Show help usage for stop operation.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "stop_experiment" command
         srv6pm_cli.parse_arguments_stop_experiment(
             prog='stop',
             args=['--help']
@@ -809,23 +844,30 @@ class ControllerCLISRv6PMExperiment(CustomCmd):
 
 
 class ControllerCLISRv6PM(CustomCmd):
-    """srv6pm subcommmand"""
+    """
+    srv6pm subcommmand.
+    """
 
+    # Command line prompt message
     prompt = "controller(srv6pm)> "
 
     def do_experiment(self, args):
-        """Enter srv6pm-experiment subsection"""
-
+        """
+        Enter srv6pm-experiment subsection.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Open the SRv6PMExperiment CLI
         sub_cmd = ControllerCLISRv6PMExperiment()
         sub_cmd.cmdloop()
 
     def do_configuration(self, args):
-        """Enter srv6pm-configuration subsection"""
-
+        """
+        Enter srv6pm-configuration subsection.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Open the SRv6PMConfiguration CLI
         sub_cmd = ControllerCLISRv6PMConfiguration()
         sub_cmd.cmdloop()
 
@@ -833,19 +875,20 @@ class ControllerCLISRv6PM(CustomCmd):
 class ControllerCLISRv6(CustomCmd):
     """srv6 subsection"""
 
+    # Command line prompt message
     prompt = "controller(srv6)> "
 
     def __init__(self):
-        # Print the nodes
+        # Print the nodes available
         srv6_cli.print_nodes(CONTROLLER_CHANNEL)
         # Init superclass
         super().__init__()
 
     def do_path(self, args):
-        """Handle a SRv6 path"""
-
+        """
+        Handle a SRv6 path.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6_cli.parse_arguments_srv6_path(
                 prog='path',
@@ -873,10 +916,10 @@ class ControllerCLISRv6(CustomCmd):
         return False
 
     def do_behavior(self, args):
-        """Handle a SRv6 behavior"""
-
+        """
+        Handle a SRv6 behavior.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6_cli.parse_arguments_srv6_behavior(
                 prog='behavior',
@@ -906,10 +949,10 @@ class ControllerCLISRv6(CustomCmd):
         return False
 
     def do_unitunnel(self, args):
-        """Handle a SRv6 unidirectional tunnel"""
-
+        """
+        Handle a SRv6 unidirectional tunnel.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6_cli.parse_arguments_srv6_unitunnel(
                 prog='unitunnel',
@@ -936,10 +979,10 @@ class ControllerCLISRv6(CustomCmd):
         return False
 
     def do_biditunnel(self, args):
-        """Handle a SRv6 bidirectional tunnel"""
-
+        """
+        Handle a SRv6 bidirectional tunnel.
+        """
         # pylint: disable=no-self-use
-
         try:
             args = srv6_cli.parse_arguments_srv6_biditunnel(
                 prog='biditunnel',
@@ -969,10 +1012,10 @@ class ControllerCLISRv6(CustomCmd):
         return False
 
     def do_usid_policy(self, args):
-        """Handle a SRv6 uSID policy"""
-
+        """
+        Handle a SRv6 uSID policy.
+        """
         # pylint: disable=no-self-use, unused-argument
-
         try:
             args = srv6_cli.parse_arguments_srv6_usid_policy(
                 prog='usid_policy',
@@ -1007,10 +1050,11 @@ class ControllerCLISRv6(CustomCmd):
         return False
 
     def complete_path(self, text, line, start_idx, end_idx):
-        """Auto-completion for path command"""
-
+        """
+        Auto-completion for path command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1026,10 +1070,11 @@ class ControllerCLISRv6(CustomCmd):
         return srv6_cli.complete_srv6_path(text, prev_text)
 
     def complete_behavior(self, text, line, start_idx, end_idx):
-        """Auto-completion for behavior command"""
-
+        """
+        Auto-completion for behavior command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1045,10 +1090,11 @@ class ControllerCLISRv6(CustomCmd):
         return srv6_cli.complete_srv6_behavior(text, prev_text)
 
     def complete_unitunnel(self, text, line, start_idx, end_idx):
-        """Auto-completion for unitunnel command"""
-
+        """
+        Auto-completion for unitunnel command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1064,10 +1110,11 @@ class ControllerCLISRv6(CustomCmd):
         return srv6_cli.complete_srv6_unitunnel(text, prev_text)
 
     def complete_biditunnel(self, text, line, start_idx, end_idx):
-        """Auto-completion for biditunnel command"""
-
+        """
+        Auto-completion for biditunnel command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1083,10 +1130,11 @@ class ControllerCLISRv6(CustomCmd):
         return srv6_cli.complete_srv6_biditunnel(text, prev_text)
 
     def complete_usid_policy(self, text, line, start_idx, end_idx):
-        """Auto-completion for usid_policy command"""
-
+        """
+        Auto-completion for usid_policy command.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
         # Get the previous argument in the command
         # Depending on the previous argument, it is possible to
         # complete specific params, such as the paths
@@ -1102,50 +1150,60 @@ class ControllerCLISRv6(CustomCmd):
         return srv6_cli.complete_srv6_usid_policy(text, prev_text)
 
     def help_path(self):
-        """Show help usage for path command"""
-
+        """
+        Show help usage for path command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "path" command
         srv6_cli.parse_arguments_srv6_path(
             prog='path',
             args=['--help']
         )
 
     def help_behavior(self):
-        """Show help usage for behavior command"""
-
+        """
+        Show help usage for behavior command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "behavior" command
         srv6_cli.parse_arguments_srv6_behavior(
             prog='behavior',
             args=['--help']
         )
 
     def help_unitunnel(self):
-        """Show help usage for unitunnel command"""
-
+        """
+        Show help usage for unitunnel command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "unitunnel" command
         srv6_cli.parse_arguments_srv6_unitunnel(
             prog='unitunnel',
             args=['--help']
         )
 
     def help_biditunnel(self):
-        """Show help usage for biditunnel command"""
-
+        """
+        Show help usage for biditunnel command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "biditunnel" command
         srv6_cli.parse_arguments_srv6_biditunnel(
             prog='biditunnel',
             args=['-help']
         )
 
     def help_usid_policy(self):
-        """Show help usage for usid_policy command"""
-
+        """
+        Show help usage for usid_policy command.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "usid_policy" command
         srv6_cli.parse_arguments_srv6_usid_policy(
             prog='usid_policy',
             args=['--help']
@@ -1153,71 +1211,90 @@ class ControllerCLISRv6(CustomCmd):
 
 
 class ControllerCLI(CustomCmd):
-    """Controller CLI entry point"""
+    """
+    Controller CLI entry point.
+    """
 
+    # Command line prompt message
     prompt = 'controller> '
+    # Intro message, shown when the CLI is started
     intro = "Welcome! Type ? to list commands"
 
     def do_exit(self, args):
-        """Exit from the CLI"""
-
+        """
+        Exit from the CLI.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Print an exit message and return
         print("Bye")
         return True
 
     def do_srv6(self, args):
-        """Enter srv6 subsection"""
-
+        """
+        Enter srv6 CLI.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Open the "srv6" CLI
         sub_cmd = ControllerCLISRv6()
         sub_cmd.cmdloop()
 
     def do_srv6pm(self, args):
-        """Enter srv6pm subsection"""
-
+        """
+        Enter srv6pm CLI.
+        """
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Open the "srv6pm" CLI
         sub_cmd = ControllerCLISRv6PM()
         sub_cmd.cmdloop()
 
     def do_topology(self, args):
-        """Enter topology subsection"""
-
+        """Enter topology CLI"""
         # pylint: disable=no-self-use, unused-argument
-
+        #
+        # Open the "topology" CLI
         sub_cmd = ControllerCLITopology()
         sub_cmd.cmdloop()
 
     def default(self, line):
-        """Default behavior"""
-
+        """
+        Default behavior (if no function match the command requested).
+        """
+        # By default, "x" and "q" commands exit from the current section of
+        # the CLI
         if line in ['x', 'q']:
             return self.do_exit(line)
-
+        # For any other command, we print an error message
         print("Unrecognized command: {}".format(line))
+        # By returning False, we avoid that cmd closes the current CLI section
         return False
 
+    # Enforce the same behavior of "exit" for the "EOF" command
     do_EOF = do_exit
 
 
 # Parse options
 def parse_arguments():
-    """Command-line arguments parser"""
-
+    """
+    Command-line arguments parser.
+    """
     # Get parser
     parser = ArgumentParser(
         description='Command Line Interface (CLI)'
     )
+    # gRPC IP address of the controller
     parser.add_argument(
         '-a', '--controller-address', action='store',
         help='Controller IP address', default=DEFAULT_CONTROLLER_ADDRESS
     )
+    # gRPC port number of the controller
     parser.add_argument(
         '-p', '--controller-port', action='store', help='Controller port',
         default=DEFAULT_CONTROLLER_PORT
     )
+    # Define whether to enable or not debug logs
     parser.add_argument(
         '-d', '--debug', action='store_true', help='Activate debug logs'
     )
@@ -1231,12 +1308,14 @@ def __main():
     """
     Entry point for this module.
     """
+    # Controller channel is accessed by several functions in this module,
+    # so we need to make it global
     global CONTROLLER_CHANNEL
     # Parse command-line arguments
     args = parse_arguments()
-    # Controller IP address
+    # gRPC IP address of the controller
     controller_address = args.controller_address
-    # Controller port
+    # gRPC port of the controller
     controller_port = args.controller_port
     # Setup properly the logger
     if args.debug:
