@@ -187,12 +187,11 @@ def push_nodes_config(controller_channel, nodes_config_filename):
     """
     Push nodes configuration.
     """
-    # Read nodes config from file
-    with open(nodes_config_filename, 'r') as nodes_config_file:
-        try:
-            nodes_config = yaml.safe_load(nodes_config_file)
-        except yaml.YAMLError as err:
-            print(err)
+    # Read nodes config from YAML file
+    try:
+        nodes_config = cli_utils.load_yaml_dump(nodes_config_filename)
+    except yaml.YAMLError as err:
+        print(err)
     # Push nodes confiiguration to the controller
     topo_manager.push_nodes_config(
         controller_channel=controller_channel,
@@ -204,9 +203,11 @@ def get_nodes_config(controller_channel):
     """
     Get nodes configuration.
     """
+    # Get nodes configuration
     nodes_config = topo_manager.get_nodes_config(
         controller_channel=controller_channel
     )
+    # Print nodes configuration
     print(nodes_config)
 
 
