@@ -162,7 +162,7 @@ def init_usid_policies_collection(client, arango_username, arango_password,
         password=arango_password
     )
     # Get the API wrapper for database "usid_policies".
-    database = client.db('srv6_usid', username=arango_username,
+    database = client.db('srv6', username=arango_username,
                          password=arango_password)
     # Create "usid_policies" collection, if it does not exist
     if database.has_collection('usid_policies'):
