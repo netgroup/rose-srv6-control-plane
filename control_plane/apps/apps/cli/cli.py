@@ -120,6 +120,10 @@ class CustomCmd(Cmd):
                 # avoid annoying warnings
                 logging.exception(err)
                 print()
+                # However, we want to add the command to the history
+                if readline:
+                    readline.set_history_length(self.histfile_size)
+                    readline.write_history_file(self.histfile)
 
     def emptyline(self):
         """Avoid to execute the last command if empty line is entered"""
