@@ -103,9 +103,9 @@ class CustomCmd(Cmd):
         """
         Command loop.
         """
-
         # pylint: disable=no-self-use
-
+        #
+        # Loop
         while True:
             try:
                 super(CustomCmd, self).cmdloop(intro=intro)
@@ -126,48 +126,67 @@ class CustomCmd(Cmd):
                     readline.write_history_file(self.histfile)
 
     def emptyline(self):
-        """Avoid to execute the last command if empty line is entered"""
-
+        """
+        Avoid to execute the last command if empty line is entered.
+        """
         # pylint: disable=no-self-use
+        #
+        # Do nothing on empty line
+        # The default behavior for empty line is to repeat the last command
+        # This empty function is a workaround to override the default behavior
 
     def default(self, line):
-        """Default behavior"""
-
+        """
+        Default behavior (if no function match the command requested).
+        """
+        # By default, "x" and "q" commands exit from the current section of
+        # the CLI
         if line in ['x', 'q']:
             return self.do_exit(line)
-
+        # For any other command, we print an error message
         print("Unrecognized command: {}".format(line))
+        # By returning False, we avoid that cmd closes the current CLI section
         return False
 
     def do_exit(self, args):
-        """New line on exit"""
-
+        """
+        New line on exit.
+        """
         # pylint: disable=unused-argument, no-self-use
-
+        #
+        # On exit, we leave a blank line used as separator
         print()     # New line
+        # By returning True, we are telling cmd to exit from the current CLI
+        # section and return to the previous CLI section
         return True
 
     def help_exit(self):
-        """Help message for exit callback"""
-
+        """
+        Help message for exit callback.
+        """
         # pylint: disable=no-self-use
-
+        #
+        # Help message for "exit" command
         print('exit the application. Shorthand: x q Ctrl-D.')
 
+    # Enforce the same behavior of "exit" for the "EOF" command
     do_EOF = do_exit
     help_EOF = help_exit
 
 
 class ControllerCLITopology(CustomCmd):
-    """Topology subsection"""
+    """
+    Topology subsection.
+    """
 
+    # Command line prompt message
     prompt = "controller(topology)> "
 
     def do_show_nodes(self, args):
-        """Show nodes"""
-
+        """
+        Show nodes.
+        """
         # pylint: disable=no-self-use, unused-argument
-
         try:
             # args = (srv6_cli
             #         .parse_arguments_print_nodes(
