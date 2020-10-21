@@ -54,7 +54,7 @@ class RoutingProtocol(Enum):
 
 # Mapping python representation of Routing Protocol to gRPC representation
 py_to_grpc_routing_protocol = {
-    'isis': RoutingProtocol.ISIS
+    'isis': RoutingProtocol.ISIS.value
 }
 
 # Mapping gRPC representation of Routing Protocol to python representation
@@ -74,8 +74,8 @@ class NodeType(Enum):
 
 # Mapping python representation of Node Type to gRPC representation
 py_to_grpc_node_type = {
-    'router': NodeType.ROUTER,
-    'host': NodeType.HOST
+    'router': NodeType.ROUTER.value,
+    'host': NodeType.HOST.value
 }
 
 # Mapping gRPC representation of Node Type to python representation
@@ -95,8 +95,8 @@ class LinkType(Enum):
 
 # Mapping python representation of Link Type to gRPC representation
 py_to_grpc_link_type = {
-    'core': LinkType.CORE,
-    'edge': LinkType.EDGE
+    'core': LinkType.CORE.value,
+    'edge': LinkType.EDGE.value
 }
 
 # Mapping gRPC representation of Link Type to python representation
@@ -119,7 +119,7 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = RoutingProtocol.ISIS
+    request.protocol = RoutingProtocol.ISIS.value
     # Set the IS-IS nodes
     for isis_node in isis_nodes.split(','):
         node = request.nodes.add()
@@ -269,7 +269,7 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = RoutingProtocol.ISIS
+    request.protocol = RoutingProtocol.ISIS.value
     # Set the IS-IS nodes
     for isis_node in isis_nodes:
         node = request.nodes.add()
@@ -346,7 +346,7 @@ def topology_information_extraction_isis(controller_channel,
     # Create request message
     request = topology_manager_pb2.TopologyManagerRequest()
     # Set the protocol
-    request.protocol = RoutingProtocol.ISIS
+    request.protocol = RoutingProtocol.ISIS.value
     # Set the IS-IS nodes
     for isis_node in routers.split(','):
         node = request.nodes.add()
