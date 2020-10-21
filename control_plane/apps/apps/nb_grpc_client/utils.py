@@ -203,6 +203,7 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
     return channel
 
 
+''' TODO check if these functions can be safely removed
 action_to_grpc_repr = {
     'End': 'END',
     'End.X': 'END_x',
@@ -231,3 +232,4 @@ edge_type_to_grpc_repr = {
 }
 
 grpc_repr_to_edge_type = {v: k for k, v in edge_type_to_grpc_repr.items()}
+'''
