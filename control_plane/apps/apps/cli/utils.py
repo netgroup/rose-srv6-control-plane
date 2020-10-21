@@ -46,18 +46,18 @@ def complete_path(path):
 
 
 def save_yaml_dump(obj, filename):
-    '''
+    """
     Export an object to a YAML file
-    '''
+    """
     # Save file
     with open(filename, 'w') as outfile:
         yaml.dump(obj, outfile)
 
 
 def load_yaml_dump(filename):
-    '''
+    """
     Load a YAML file and return a dict representation
-    '''
+    """
     # Load YAML file
     with open(filename, 'r') as infile:
         return yaml.safe_load(infile)

@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 ArangoDB utilities for Controller CLI.
-'''
+"""
 
 # General imports
 import os
@@ -47,10 +47,10 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None,
                            verbose=False):
-    '''
+    """
     Extract the network topology from a set of nodes running
     ISIS protocol.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Read addresses configuration from YAML file
@@ -80,9 +80,9 @@ def extract_topo_from_isis(controller_channel, isis_nodes, isisd_pwd,
 
 def load_topo_on_arango(controller_channel, nodes_yaml, edges_yaml,
                         verbose=False):
-    '''
+    """
     Load a network topology on a Arango database.
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Read nodes YAML
@@ -103,10 +103,10 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
                                               verbose=False):
-    '''
+    """
     Extract the topology from a set of nodes running ISIS protocol
     and load it on a Arango database.
-    '''
+    """
     # Read addresses configuration from YAML file
     addrs_config = cli_utils.load_yaml_dump(addrs_yaml)
     # Read hosts configuration from YAML file
@@ -142,9 +142,9 @@ def topology_information_extraction_isis(controller_channel,
                                          edges_file_yaml=None,
                                          addrs_yaml=None, hosts_yaml=None,
                                          topo_graph=None, verbose=False):
-    '''
+    """
     Run periodical topology extraction.
-    '''
+    """
     # Read addresses configuration from YAML file
     addrs_config = None
     if addrs_yaml is not None:
@@ -176,9 +176,9 @@ def topology_information_extraction_isis(controller_channel,
 
 
 def push_nodes_config(controller_channel, nodes_config_filename):
-    '''
+    """
     Push nodes configuration.
-    '''
+    """
     # Read nodes config from file
     with open(nodes_config_filename, 'r') as nodes_config_file:
         try:
@@ -193,9 +193,9 @@ def push_nodes_config(controller_channel, nodes_config_filename):
 
 
 def get_nodes_config(controller_channel):
-    '''
+    """
     Get nodes configuration.
-    '''
+    """
     nodes_config = topo_manager.get_nodes_config(
         controller_channel=controller_channel
     )
@@ -203,13 +203,13 @@ def get_nodes_config(controller_channel):
 
 
 def args_extract_topo_from_isis():
-    '''
+    """
     Command-line arguments for the extract_topo_from_isis command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--isis-nodes'],
@@ -251,9 +251,9 @@ def args_extract_topo_from_isis():
 
 # Parse options
 def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for topolgy extraction function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -269,10 +269,10 @@ def parse_arguments_extract_topo_from_isis(prog=sys.argv[0], args=None):
 
 # TAB-completion for extract_topo_from_isis
 def complete_extract_topo_from_isis(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments from extract_topo_from_isis
     args = args_extract_topo_from_isis()
     # Paths auto-completion
@@ -303,13 +303,13 @@ def complete_extract_topo_from_isis(text, prev_text):
 
 
 def args_load_topo_on_arango():
-    '''
+    """
     Command-line arguments for the load_topo_on_arango command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--nodes-yaml'],
@@ -333,9 +333,9 @@ def args_load_topo_on_arango():
 
 # Parse options
 def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for load on Arango function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -351,10 +351,10 @@ def parse_arguments_load_topo_on_arango(prog=sys.argv[0], args=None):
 
 # TAB-completion for load_topo_on_arango
 def complete_load_topo_on_arango(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments for load_topo_on_arango
     args = args_load_topo_on_arango()
     # Paths auto-completion
@@ -383,13 +383,13 @@ def complete_load_topo_on_arango(text, prev_text):
 
 
 def args_extract_topo_from_isis_and_load_on_arango():
-    '''
+    """
     Command-line arguments for the extract_topo_from_isis_and_load_on_arango
     command. Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--isis-nodes'],
@@ -437,10 +437,10 @@ def args_extract_topo_from_isis_and_load_on_arango():
 # Parse options
 def parse_arguments_extract_topo_from_isis_and_load_on_arango(
         prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for
     extract_topo_from_isis_and_load_on_arango function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -456,10 +456,10 @@ def parse_arguments_extract_topo_from_isis_and_load_on_arango(
 
 # TAB-completion for extract_topo_from_isis_and_load_on_arango
 def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments for extract_topo_from_isis_and_load_on_arango
     args = args_extract_topo_from_isis_and_load_on_arango()
     # Paths auto-completion
@@ -489,13 +489,13 @@ def complete_extract_topo_from_isis_and_load_on_arango(text, prev_text):
 
 
 def args_topology_information_extraction_isis():
-    '''
+    """
     Command-line arguments for the topology_information_extraction_isis
     command. Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--routers'],
@@ -553,10 +553,10 @@ def args_topology_information_extraction_isis():
 # Parse options
 def parse_arguments_topology_information_extraction_isis(
         prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for topology information extraction
     function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -572,10 +572,10 @@ def parse_arguments_topology_information_extraction_isis(
 
 # TAB-completion for topology_information_extraction_isis
 def complete_topology_information_extraction_isis(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments for topology_information_extraction_isis
     args = args_topology_information_extraction_isis()
     # Paths auto-completion
@@ -605,13 +605,13 @@ def complete_topology_information_extraction_isis(text, prev_text):
 
 
 def args_push_nodes_config():
-    '''
+    """
     Command-line arguments for the args_push_nodes_config command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--nodes-config-filename'],
@@ -629,9 +629,9 @@ def args_push_nodes_config():
 
 # Parse options
 def parse_arguments_push_nodes_config(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for topolgy extraction function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -647,10 +647,10 @@ def parse_arguments_push_nodes_config(prog=sys.argv[0], args=None):
 
 # TAB-completion for push_nodes_config
 def complete_push_nodes_config(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments from push_nodes_config
     args = args_push_nodes_config()
     # Paths auto-completion
@@ -681,13 +681,13 @@ def complete_push_nodes_config(text, prev_text):
 
 
 def args_get_nodes_config():
-    '''
+    """
     Command-line arguments for the args_get_nodes_config command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--verbose'],
@@ -701,9 +701,9 @@ def args_get_nodes_config():
 
 # Parse options
 def parse_arguments_get_nodes_config(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for topolgy extraction function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -719,10 +719,10 @@ def parse_arguments_get_nodes_config(prog=sys.argv[0], args=None):
 
 # TAB-completion for get_nodes_config
 def complete_get_nodes_config(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get arguments from get_nodes_config
     args = args_get_nodes_config()
     # Paths auto-completion

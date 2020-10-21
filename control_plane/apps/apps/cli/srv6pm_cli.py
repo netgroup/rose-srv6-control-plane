@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 SRv6 PM utilities for Controller CLI.
-'''
+"""
 
 # General imports
 import sys
@@ -45,9 +45,9 @@ def set_configuration(controller_channel, sender, reflector,
                       refl_udp_port, interval_duration, delay_margin,
                       number_of_color, pm_driver, in_interfaces=None,
                       out_interfaces=None):
-    '''
+    """
     Configure a node.
-    '''
+    """
     # pylint: disable=too-many-arguments
     res = srv6pm_manager.set_configuration(
         controller_channel=controller_channel,
@@ -69,9 +69,9 @@ def set_configuration(controller_channel, sender, reflector,
 
 def reset_configuration(controller_channel, sender, reflector,
                         sender_port, reflector_port):
-    '''
+    """
     Clear node configuration.
-    '''
+    """
     res = srv6pm_manager.reset_configuration(
         controller_channel=controller_channel,
         sender=sender,
@@ -91,9 +91,9 @@ def start_experiment(controller_channel, sender, reflector,
                      padding_mbz, loss_measurement_mode, measure_id=None,
                      send_refl_localseg=None, refl_send_localseg=None,
                      force=False):
-    '''
+    """
     Start an experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments, too-many-locals
     res = srv6pm_manager.start_experiment(
         controller_channel=controller_channel,
@@ -124,9 +124,9 @@ def start_experiment(controller_channel, sender, reflector,
 def get_experiment_results(controller_channel, sender, reflector,
                            sender_port, reflector_port,
                            send_refl_sidlist, refl_send_sidlist):
-    '''
+    """
     Get the results of a running experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments
     print(srv6pm_manager.get_experiment_results(
         controller_channel=controller_channel,
@@ -143,9 +143,9 @@ def stop_experiment(controller_channel, sender, reflector,
                     sender_port, reflector_port, send_refl_dest,
                     refl_send_dest, send_refl_sidlist, refl_send_sidlist,
                     send_refl_localseg=None, refl_send_localseg=None):
-    '''
+    """
     Stop a running experiment.
-    '''
+    """
     # pylint: disable=too-many-arguments
     srv6pm_manager.stop_experiment(
         controller_channel=controller_channel,
@@ -163,13 +163,13 @@ def stop_experiment(controller_channel, sender, reflector,
 
 
 def args_set_configuration():
-    '''
+    """
     Command-line arguments for the set_configuration command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--sender-ip'],
@@ -249,9 +249,9 @@ def args_set_configuration():
 
 # Parse options
 def parse_arguments_set_configuration(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for set_configuration function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -267,10 +267,10 @@ def parse_arguments_set_configuration(prog=sys.argv[0], args=None):
 
 # TAB-completion for set_configuration
 def complete_set_configuration(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get the arguments for set_configuration
     args = args_set_configuration()
     # Paths auto-completion
@@ -299,13 +299,13 @@ def complete_set_configuration(text, prev_text):
 
 
 def args_reset_configuration():
-    '''
+    """
     Command-line arguments for the reset_configuration command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--sender-ip'],
@@ -345,9 +345,9 @@ def args_reset_configuration():
 
 # Parse options
 def parse_arguments_reset_configuration(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for reset_configuration function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -363,10 +363,10 @@ def parse_arguments_reset_configuration(prog=sys.argv[0], args=None):
 
 # TAB-completion for reset_configuration
 def complete_reset_configuration(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get the arguments for reset_configuration
     args = args_reset_configuration()
     # Paths auto-completion
@@ -395,13 +395,13 @@ def complete_reset_configuration(text, prev_text):
 
 
 def args_start_experiment():
-    '''
+    """
     Command-line arguments for the start_experiment command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
     the argparse library
-    '''
+    """
     return [
         {
             'args': ['--sender-ip'],
@@ -509,9 +509,9 @@ def args_start_experiment():
 
 # Parse options
 def parse_arguments_start_experiment(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for start_experiment function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -527,10 +527,10 @@ def parse_arguments_start_experiment(prog=sys.argv[0], args=None):
 
 # TAB-completion for start_experiment
 def complete_start_experiment(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get the arguments for start_experiment
     args = args_start_experiment()
     # Paths auto-completion
@@ -559,13 +559,13 @@ def complete_start_experiment(text, prev_text):
 
 
 def args_get_experiment_results():
-    '''
+    """
     Command-line arguments for the get_experiment_results command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--sender-ip'],
@@ -613,9 +613,9 @@ def args_get_experiment_results():
 
 # Parse options
 def parse_arguments_get_experiment_results(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for get_experiments_results function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -631,10 +631,10 @@ def parse_arguments_get_experiment_results(prog=sys.argv[0], args=None):
 
 # TAB-completion for get_experiment_results
 def complete_get_experiment_results(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get the arguments for get_experiment_results
     args = args_get_experiment_results()
     # Paths auto-completion
@@ -664,13 +664,13 @@ def complete_get_experiment_results(text, prev_text):
 
 
 def args_stop_experiment():
-    '''
+    """
     Command-line arguments for the stop_experiment command
     Arguments are represented as a dicts. Each dict has two items:
     - args, a list of names for the argument
     - kwargs, a dict containing the attributes for the argument required by
       the argparse library
-    '''
+    """
     return [
         {
             'args': ['--sender-ip'],
@@ -734,9 +734,9 @@ def args_stop_experiment():
 
 # Parse options
 def parse_arguments_stop_experiment(prog=sys.argv[0], args=None):
-    '''
+    """
     Command-line arguments parser for stop_experiment function.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         prog=prog, description=''
@@ -752,10 +752,10 @@ def parse_arguments_stop_experiment(prog=sys.argv[0], args=None):
 
 # TAB-completion for stop_experiment
 def complete_stop_experiment(text, prev_text):
-    '''
+    """
     This function receives a string as argument and returns
     a list of parameters candidate for the auto-completion of the string.
-    '''
+    """
     # Get the arguments for stop_experiment
     args = args_stop_experiment()
     # Paths auto-completion

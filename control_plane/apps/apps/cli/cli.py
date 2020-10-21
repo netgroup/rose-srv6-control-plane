@@ -24,7 +24,9 @@
 #
 
 
-"""Implementation of a CLI for the SRv6 Controller"""
+"""
+Implementation of a CLI for the SRv6 Controller.
+"""
 
 # This comment avoids the annoying warning "Too many lines in module"
 # of pylint. Maybe we should split this module in the future.
@@ -248,9 +250,9 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_push_nodes_config(self, args):
-        '''
+        """
         Push nodes configuration to the controller.
-        '''
+        """
         # pylint: disable=no-self-use
         try:
             arg = (topo_cli
@@ -268,9 +270,9 @@ class ControllerCLITopology(CustomCmd):
         return False
 
     def do_get_nodes_config(self, args):
-        '''
+        """
         Get nodes configuration from the controller.
-        '''
+        """
         # pylint: disable=no-self-use
         # try:
         #     arg = (topo_cli
@@ -367,9 +369,9 @@ class ControllerCLITopology(CustomCmd):
                     text, prev_text))
 
     def complete_push_nodes_config(self, text, line, start_idx, end_idx):
-        '''
+        """
         Auto-completion for push_nodes_config command.
-        '''
+        """
         # pylint: disable=no-self-use, unused-argument
         #
         # Get the previous argument in the command
@@ -387,9 +389,9 @@ class ControllerCLITopology(CustomCmd):
         return topo_cli.complete_push_nodes_config(text, prev_text)
 
     def complete_get_nodes_config(self, text, line, start_idx, end_idx):
-        '''
+        """
         Auto-completion for get_nodes_config command.
-        '''
+        """
         # pylint: disable=no-self-use, unused-argument
         #
         # Get the previous argument in the command
@@ -447,9 +449,9 @@ class ControllerCLITopology(CustomCmd):
         )
 
     def help_push_nodes_config(self):
-        '''
+        """
         Show help usage for push_nodes_config.
-        '''
+        """
         # pylint: disable=no-self-use
         topo_cli.parse_arguments_push_nodes_config(
             prog='push_nodes_config',
@@ -457,9 +459,9 @@ class ControllerCLITopology(CustomCmd):
         )
 
     def help_get_nodes_config(self):
-        '''
+        """
         Show help usage for get_nodes_config.
-        '''
+        """
         # pylint: disable=no-self-use
         topo_cli.parse_arguments_get_nodes_config(
             prog='get_nodes_config',
@@ -1194,9 +1196,9 @@ def parse_arguments():
 
 
 def __main():
-    '''
+    """
     Entry point for this module.
-    '''
+    """
     global CONTROLLER_CHANNEL
     # Parse command-line arguments
     args = parse_arguments()
