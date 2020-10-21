@@ -182,6 +182,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         Handle a SRv6 path.
         """
         # Iterate on the SRv6 paths
+        srv6_paths = None
         for srv6_path in request.srv6_paths:
             # Perform the operation
             #
@@ -242,6 +243,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         Handle a SRv6 behavior.
         """
         # Iterate on the SRv6 behaviors
+        srv6_behaviors = None
         for srv6_behavior in request.srv6_behaviors:
             # Perform the operation
             #
@@ -305,6 +307,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
+        srv6_tunnels = None
         for srv6_tunnel in request.srv6_unitunnels:
             # The "with" block is used to avoid duplicating the error handling
             # code
@@ -396,6 +399,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         # Create reply message
         response = nb_srv6_manager_pb2.SRv6ManagerReply()
         # Perform the operation
+        srv6_tunnels = None
         for srv6_tunnel in request.srv6_biditunnels:
             # The "with" block is used to avoid duplicating the error handling
             # code
