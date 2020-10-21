@@ -66,17 +66,17 @@ class SRv6Action(Enum):
 
 # Mapping python representation of SRv6 Action to gRPC representation
 py_to_grpc_srv6_action = {
-    'unspec': SRv6Action.UNSPEC,
-    'End': SRv6Action.END,
-    'End.X': SRv6Action.END_X,
-    'End.T': SRv6Action.END_T,
-    'End.DX4': SRv6Action.END_DX4,
-    'End.DX6': SRv6Action.END_DX6,
-    'End.DX2': SRv6Action.END_DX2,
-    'End.DT4': SRv6Action.END_DT4,
-    'End.DT6': SRv6Action.END_DT6,
-    'End.B6': SRv6Action.END_B6,
-    'End.B6.Encaps': SRv6Action.END_B6_ENCAPS
+    'unspec': SRv6Action.UNSPEC.value,
+    'End': SRv6Action.END.value,
+    'End.X': SRv6Action.END_X.value,
+    'End.T': SRv6Action.END_T.value,
+    'End.DX4': SRv6Action.END_DX4.value,
+    'End.DX6': SRv6Action.END_DX6.value,
+    'End.DX2': SRv6Action.END_DX2.value,
+    'End.DT4': SRv6Action.END_DT4.value,
+    'End.DT6': SRv6Action.END_DT6.value,
+    'End.B6': SRv6Action.END_B6.value,
+    'End.B6.Encaps': SRv6Action.END_B6_ENCAPS.value
 }
 
 # Mapping gRPC representation of SRv6 Action to python representation
@@ -97,9 +97,9 @@ class FwdEngine(Enum):
 
 # Mapping python representation of Forwarding Engine to gRPC representation
 py_to_grpc_fwd_engine = {
-    'unspec': FwdEngine.UNSPEC,
-    'linux': FwdEngine.LINUX,
-    'vpp': FwdEngine.VPP
+    'unspec': FwdEngine.UNSPEC.value,
+    'linux': FwdEngine.LINUX.value,
+    'vpp': FwdEngine.VPP.value
 }
 
 # Mapping gRPC representation of Forwarding Engine to python representation
@@ -121,10 +121,10 @@ class EncapMode(Enum):
 
 # Mapping python representation of Encap Mode to gRPC representation
 py_to_grpc_encap_mode = {
-    'unspec': EncapMode.UNSPEC,
-    'inline': EncapMode.INLINE,
-    'encap': EncapMode.ENCAP,
-    'l2encap': EncapMode.L2ENCAP
+    'unspec': EncapMode.UNSPEC.value,
+    'inline': EncapMode.INLINE.value,
+    'encap': EncapMode.ENCAP.value,
+    'l2encap': EncapMode.L2ENCAP.value
 }
 
 # Mapping gRPC representation of Encap Mode to python representation
@@ -234,7 +234,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
     srv6_path.device = device
     # Set the encap mode
     if encapmode == '':
-        srv6_path.encapmode = EncapMode.UNSPEC
+        srv6_path.encapmode = EncapMode.UNSPEC.value
     else:
         if encapmode not in py_to_grpc_encap_mode:
             # Invalid encap mode
@@ -249,7 +249,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port=-1,
     srv6_path.bsid_addr = bsid_addr
     # Set the forwarding engine
     if encapmode == '':
-        srv6_path.fwd_engine = FwdEngine.UNSPEC
+        srv6_path.fwd_engine = FwdEngine.UNSPEC.value
     else:
         if fwd_engine not in py_to_grpc_fwd_engine:
             # Invalid forwarding engine
@@ -309,7 +309,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     srv6_behavior.segment = segment
     # Set the action
     if action == '':
-        srv6_behavior.action = SRv6Action.UNSPEC
+        srv6_behavior.action = SRv6Action.UNSPEC.value
     else:
         if action not in py_to_grpc_srv6_action:
             # Invalid SRv6 action

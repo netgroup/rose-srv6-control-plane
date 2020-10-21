@@ -44,14 +44,14 @@ class PMDriver(Enum):
     """
     Driver used for Performance Measurement.
     """
-    EBPF = srv6pm_manager_pb2.Value('EBPF')
-    IPSET = srv6pm_manager_pb2.Value('IPSET')
+    EBPF = srv6pm_manager_pb2.PMDriver.Value('EBPF')
+    IPSET = srv6pm_manager_pb2.PMDriver.Value('IPSET')
 
 
 # Mapping python representation of PM Driver to gRPC representation
 py_to_grpc_pmdriver = {
-    'ebpf': PMDriver.EBPF,
-    'ipset': PMDriver.IPSET
+    'ebpf': PMDriver.EBPF.value,
+    'ipset': PMDriver.IPSET.value
 }
 
 # Mapping gRPC representation of PM Driver to python representation
@@ -64,14 +64,14 @@ class MeasurementProtocol(Enum):
     """
     Measurement protocol.
     """
-    TWAMP = srv6pm_manager_pb2.Value('TWAMP')
-    STAMP = srv6pm_manager_pb2.Value('STAMP')
+    TWAMP = srv6pm_manager_pb2.MeasurementProtocol.Value('TWAMP')
+    STAMP = srv6pm_manager_pb2.MeasurementProtocol.Value('STAMP')
 
 
 # Mapping python representation of Measurement Protocol to gRPC representation
 py_to_grpc_measurement_protocol = {
-    'twamp': MeasurementProtocol.TWAMP,
-    'stamp': MeasurementProtocol.STAMP
+    'twamp': MeasurementProtocol.TWAMP.value,
+    'stamp': MeasurementProtocol.STAMP.value
 }
 
 # Mapping gRPC representation of Measurement Protocol to python representation
@@ -85,14 +85,14 @@ class MeasurementType(Enum):
     """
     Measurement type.
     """
-    DELAY = srv6pm_manager_pb2.Value('DELAY')
-    LOSS = srv6pm_manager_pb2.Value('LOSS')
+    DELAY = srv6pm_manager_pb2.MeasurementType.Value('DELAY')
+    LOSS = srv6pm_manager_pb2.MeasurementType.Value('LOSS')
 
 
 # Mapping python representation of Measurement Type to gRPC representation
 py_to_grpc_measurement_type = {
-    'delay': MeasurementType.DELAY,
-    'loss': MeasurementType.LOSS
+    'delay': MeasurementType.DELAY.value,
+    'loss': MeasurementType.LOSS.value
 }
 
 # Mapping gRPC representation of Measurement Type to python representation
@@ -106,12 +106,12 @@ class AuthenticationMode(Enum):
     """
     Authentication mode.
     """
-    HMAC_SHA_256 = srv6pm_manager_pb2.Value('HMAC_SHA_256')
+    HMAC_SHA_256 = srv6pm_manager_pb2.AuthenticationMode.Value('HMAC_SHA_256')
 
 
 # Mapping python representation of Authentication Mode to gRPC representation
 py_to_grpc_authentication_mode = {
-    'hmac_sha_256': AuthenticationMode.HMAC_SHA_256
+    'hmac_sha_256': AuthenticationMode.HMAC_SHA_256.value
 }
 
 # Mapping gRPC representation of Authentication Mode to python representation
@@ -125,14 +125,14 @@ class TimestampFormat(Enum):
     """
     Timestamp format.
     """
-    PTPv2 = srv6pm_manager_pb2.Value('PTPv2')
-    NTP = srv6pm_manager_pb2.Value('NTP')
+    PTPv2 = srv6pm_manager_pb2.TimestampFormat.Value('PTPv2')
+    NTP = srv6pm_manager_pb2.TimestampFormat.Value('NTP')
 
 
 # Mapping python representation of Timestamp Format to gRPC representation
 py_to_grpc_timestamp_format = {
-    'ptpv2': TimestampFormat.PTPv2,
-    'ntp': TimestampFormat.NTP,
+    'ptpv2': TimestampFormat.PTPv2.value,
+    'ntp': TimestampFormat.NTP.value,
 }
 
 # Mapping gRPC representation of Timestamp Format to python representation
@@ -142,21 +142,21 @@ grpc_to_py_timestamp_format = {
 
 # ############################################################################
 # Delay Measurement Mode
-class DelayMeasurmentMode(Enum):
+class DelayMeasurementMode(Enum):
     """
     Delay measurement mode.
     """
-    ONE_WAY = srv6pm_manager_pb2.Value('OneWay')
-    TWO_WAY = srv6pm_manager_pb2.Value('TwoWay')
-    LOOPBACK_MODE = srv6pm_manager_pb2.Value('LoopbackMode')
+    ONE_WAY = srv6pm_manager_pb2.DelayMeasurementMode.Value('OneWay')
+    TWO_WAY = srv6pm_manager_pb2.DelayMeasurementMode.Value('TwoWay')
+    LOOPBACK_MODE = srv6pm_manager_pb2.DelayMeasurementMode.Value('LoopbackMode')
 
 
 # Mapping python representation of Delay Measurement Mode to gRPC
 # representation
 py_to_grpc_delay_measurement_mode = {
-    'oneway': DelayMeasurmentMode.ONE_WAY,
-    'twoway': DelayMeasurmentMode.TWO_WAY,
-    'loopback': DelayMeasurmentMode.LOOPBACK_MODE
+    'oneway': DelayMeasurementMode.ONE_WAY.value,
+    'twoway': DelayMeasurementMode.TWO_WAY.value,
+    'loopback': DelayMeasurementMode.LOOPBACK_MODE.value
 }
 
 # Mapping gRPC representation of Delay Measurement Mode to python
@@ -167,19 +167,19 @@ grpc_to_py_delay_measurement_mode = {
 
 # ############################################################################
 # Loss Measurement Mode
-class LossMeasurmentMode(Enum):
+class LossMeasurementMode(Enum):
     """
     Loss measurement mode.
     """
-    INFERRED = srv6pm_manager_pb2.Value('Inferred')
-    DIRECT = srv6pm_manager_pb2.Value('Direct')
+    INFERRED = srv6pm_manager_pb2.LossMeasurementMode.Value('Inferred')
+    DIRECT = srv6pm_manager_pb2.LossMeasurementMode.Value('Direct')
 
 
 # Mapping python representation of Loss Measurement Mode to gRPC
 # representation
 py_to_grpc_loss_measurement_mode = {
-    'inferred': LossMeasurmentMode.INFERRED,
-    'direct': LossMeasurmentMode.DIRECT
+    'inferred': LossMeasurementMode.INFERRED.value,
+    'direct': LossMeasurementMode.DIRECT.value
 }
 
 # Mapping gRPC representation of Loss Measurement Mode to python
