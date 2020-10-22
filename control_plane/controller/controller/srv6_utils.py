@@ -54,21 +54,26 @@ logger = logging.getLogger(__name__)
 # Parser for gRPC errors
 def parse_grpc_error(err):
     """
-    Parse a gRPC error
-    """
+    Convert a gRPC error to a status code.
 
+    :param err: The error returned by gRPC.
+    :type err: class `grpc.RpcError`
+    :return: The status code corresponding to the gRPC error.
+    :rtype: int
+    """
+    # Extract the error code from the gRPC exception
     status_code = err.code()
+    # Extract the error details from the gRPC exception
     details = err.details()
+    # Log the error
     logger.error('gRPC client reported an error: %s, %s',
                  status_code, details)
+    # Return the status code corresponding to the error code
     if grpc.StatusCode.UNAVAILABLE == status_code:
-        code = commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
-    elif grpc.StatusCode.UNAUTHENTICATED == status_code:
-        code = commons_pb2.STATUS_GRPC_UNAUTHORIZED
-    else:
-        code = commons_pb2.STATUS_INTERNAL_ERROR
-    # Return an error message
-    return code
+        return commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE
+    if grpc.StatusCode.UNAUTHENTICATED == status_code:
+        return commons_pb2.STATUS_GRPC_UNAUTHORIZED
+    return commons_pb2.STATUS_INTERNAL_ERROR
 
 
 def del_srv6_path_db(channel, destination, segments=None,
