@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 Control-Plane functionalities for SRv6 Manager
-'''
+"""
 
 # General imports
 import logging
@@ -57,9 +57,9 @@ DEFAULT_USID_ID_BITS = 16
 
 # Parser for gRPC errors
 def parse_grpc_error(err):
-    '''
+    """
     Parse a gRPC error
-    '''
+    """
 
     status_code = err.code()
     details = err.details()
@@ -186,9 +186,9 @@ def handle_srv6_path(operation, grpc_address, grpc_port, destination,
                      segments=None, device='', encapmode="encap", table=-1,
                      metric=-1, bsid_addr='', fwd_engine='linux', key=None,
                      update_db=True, db_conn=None, channel=None):
-    '''
+    """
     Handle a SRv6 Path
-    '''
+    """
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -408,9 +408,9 @@ def handle_srv6_path(operation, grpc_address, grpc_port, destination,
 def handle_srv6_policy(operation, grpc_address, grpc_port,
                        bsid_addr, segments=None, table=-1, metric=-1,
                        fwd_engine='linux', channel=None):
-    '''
+    """
     Handle a SRv6 Path
-    '''
+    """
 
     # pylint: disable=too-many-locals, too-many-arguments
     #
@@ -606,9 +606,9 @@ def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
                          lookup_table=-1, interface="", segments=None,
                          metric=-1, fwd_engine='linux', key=None,
                          update_db=True, db_conn=None, channel=None):
-    '''
+    """
     Handle a SRv6 behavior
-    '''
+    """
     # pylint: disable=too-many-arguments, too-many-locals
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -829,9 +829,9 @@ def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
 
 
 class SRv6Exception(Exception):
-    '''
+    """
     Generic SRv6 Exception.
-    '''
+    """
 
 
 def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
@@ -839,7 +839,7 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                            bsid_addr='', fwd_engine='linux', key=None,
                            update_db=True, db_conn=None,
                            ingress_channel=None, egress_channel=None):
-    '''
+    """
     Create a unidirectional SRv6 tunnel from <ingress> to <egress>
 
     :param ingress_channel: The gRPC Channel to the ingress node
@@ -859,7 +859,7 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     :type localseg: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -945,7 +945,7 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                        bsid_addr='', fwd_engine='linux', update_db=True,
                        key=None, db_conn=None,
                        node_l_channel=None, node_r_channel=None):
-    '''
+    """
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
@@ -978,7 +978,7 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
     :type localseg_rl: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -1166,7 +1166,7 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                             fwd_engine='linux', ignore_errors=False, key=None,
                             update_db=True, db_conn=None,
                             ingress_channel=None, egress_channel=None):
-    '''
+    """
     Destroy a unidirectional SRv6 tunnel from <ingress> to <egress>.
 
     :param ingress_channel: The gRPC Channel to the ingress node
@@ -1185,7 +1185,7 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -1374,7 +1374,7 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                         ignore_errors=False, key=None, update_db=True,
                         db_conn=None, node_l_channel=None,
                         node_r_channel=None):
-    '''
+    """
     Destroy a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC channel to the left endpoint of the
@@ -1408,7 +1408,7 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
     :param ignore_errors: Whether to ignore "No such process" errors or not
                           (default is False)
     :type ignore_errors: bool, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -1475,7 +1475,7 @@ def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                         bsid_addr='', fwd_engine='linux', key=None,
                         db_conn=None, ingress_channel=None,
                         egress_channel=None):
-    '''
+    """
     Get a unidirectional SRv6 tunnel from <ingress> to <egress>
 
     :param ingress_channel: The gRPC Channel to the ingress node
@@ -1495,7 +1495,7 @@ def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     :type localseg: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided
@@ -1541,7 +1541,7 @@ def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                        bsid_addr='', fwd_engine='linux', update_db=True,
                        key=None, db_conn=None, node_l_channel=None,
                        node_r_channel=None):
-    '''
+    """
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
     :param node_l_channel: The gRPC Channel to the left endpoint (node_l)
@@ -1574,7 +1574,7 @@ def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
     :type localseg_rl: str, optional
     :param fwd_engine: Forwarding engine for the SRv6 route. Default: Linux.
     :type fwd_engine: str, optional
-    '''
+    """
     # pylint: disable=too-many-arguments
     #
     # Establish a gRPC channel, if no channel has been provided

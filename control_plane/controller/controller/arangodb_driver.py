@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 ArangoDB driver
-'''
+"""
 
 # pylint: disable=too-many-arguments
 
@@ -36,25 +36,25 @@ from arango import ArangoClient
 
 
 class NodesConfigNotLoadedError(Exception):
-    '''
+    """
     NodesConfigNotLoadedError
-    '''
+    """
 
 
 def connect_arango(url):
-    '''
+    """
     Initialize the ArangoDB client.
 
     :param url: ArangoDB URL or list of URLs.
     :type url: str
     :return: ArangoDB client
     :rtype: arango.client.ArangoClient
-    '''
+    """
     return ArangoClient(hosts=url)
 
 
 def connect_db(client, db_name, username, password):
-    '''
+    """
     Connect to a Arango database.
 
     :param db_name: Database name.
@@ -65,13 +65,13 @@ def connect_db(client, db_name, username, password):
     :type password: str
     :return: Standard database API wrapper.
     :rtype: arango.database.StandardDatabase
-    '''
+    """
     # Connect to "db_name" database.
     return client.db(db_name, username=username, password=password)
 
 
 def connect_srv6_usid_db(client, username, password):
-    '''
+    """
     Connect to "srv6_usid" database.
 
     :param client: ArangoDB client.
@@ -82,14 +82,14 @@ def connect_srv6_usid_db(client, username, password):
     :type password: str
     :return: Standard database API wrapper.
     :rtype: arango.database.StandardDatabase
-    '''
+    """
     # Connect to "srv6_usid" database.
     return connect_db(client=client, db_name='srv6_usid',
                       username=username, password=password)
 
 
 def init_db(client, arango_username, arango_password, db_name, force=False):
-    '''
+    """
     Initialize "srv6_usid" database.
 
     :param client: ArangoDB client.
@@ -108,7 +108,7 @@ def init_db(client, arango_username, arango_password, db_name, force=False):
              occurred.
     :rtype: bool
     :raises arango.exceptions.DatabaseCreateError: If create fails.
-    '''
+    """
     # Connect to "_system" database as root user.
     # This returns an API wrapper for "_system" database.
     sys_db = connect_db(
@@ -137,7 +137,7 @@ def init_db(client, arango_username, arango_password, db_name, force=False):
 
 def init_usid_policies_collection(client, arango_username, arango_password,
                                   force=False):
-    '''
+    """
     Initialize "usid_policies" collection.
 
     :param client: ArangoDB client.
@@ -153,7 +153,7 @@ def init_usid_policies_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -183,7 +183,7 @@ def init_usid_policies_collection(client, arango_username, arango_password,
 
 def init_srv6_paths_collection(client, arango_username, arango_password,
                                force=False):
-    '''
+    """
     Initialize "srv6_paths" collection.
 
     :param client: ArangoDB client.
@@ -199,7 +199,7 @@ def init_srv6_paths_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -229,7 +229,7 @@ def init_srv6_paths_collection(client, arango_username, arango_password,
 
 def init_srv6_behaviors_collection(client, arango_username, arango_password,
                                    force=False):
-    '''
+    """
     Initialize "srv6_behaviors" collection.
 
     :param client: ArangoDB client.
@@ -245,7 +245,7 @@ def init_srv6_behaviors_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -275,7 +275,7 @@ def init_srv6_behaviors_collection(client, arango_username, arango_password,
 
 def init_srv6_tunnels_collection(client, arango_username, arango_password,
                                  force=False):
-    '''
+    """
     Initialize "srv6_tunnels" collection.
 
     :param client: ArangoDB client.
@@ -291,7 +291,7 @@ def init_srv6_tunnels_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -321,7 +321,7 @@ def init_srv6_tunnels_collection(client, arango_username, arango_password,
 
 def init_srv6_policies_collection(client, arango_username, arango_password,
                                   force=False):
-    '''
+    """
     Initialize "srv6_policies" collection.
 
     :param client: ArangoDB client.
@@ -337,7 +337,7 @@ def init_srv6_policies_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -367,7 +367,7 @@ def init_srv6_policies_collection(client, arango_username, arango_password,
 
 def init_nodes_config_collection(client, arango_username, arango_password,
                                  force=False):
-    '''
+    """
     Initialize "nodes_config" collection.
 
     :param client: ArangoDB client.
@@ -383,7 +383,7 @@ def init_nodes_config_collection(client, arango_username, arango_password,
     :return: Standard collection API wrapper.
     :rtype: arango.collection.StandardCollection
     :raises arango.exceptions.CollectionCreateError: If create fails.
-    '''
+    """
     # Connect to "srv6_usid" database as root user.
     # This returns an API wrapper for "srv6_usid" database.
     database = connect_srv6_usid_db(
@@ -416,7 +416,7 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
                        l_grpc_port=None, l_fwd_engine=None,
                        r_grpc_ip=None, r_grpc_port=None,
                        r_fwd_engine=None, decap_sid=None, locator=None):
-    '''
+    """
     Insert a uSID policy into the 'usid_policies' collection of a Arango
     database.
 
@@ -465,7 +465,7 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
                                                                      fails.
-    '''
+    """
     # Build a dict-representation of the uSID policy
     policy = {
         'lr_dst': lr_dst,
@@ -495,7 +495,7 @@ def insert_usid_policy(database, lr_dst, rl_dst, lr_nodes, rl_nodes,
 def find_usid_policy(database, key=None, lr_dst=None,
                      rl_dst=None, lr_nodes=None, rl_nodes=None,
                      table=None, metric=None):
-    '''
+    """
     Find a uSID policy in the 'usid_policies' collection of a Arango database.
 
     :param database: Database where to lookup the uSID policy.
@@ -519,7 +519,7 @@ def find_usid_policy(database, key=None, lr_dst=None,
     :return: Document cursor.
     :rtype: arango.cursor.Cursor
     :raises arango.exceptions.DocumentGetError: If retrieval fails.
-    '''
+    """
     # Get the uSID policy collection
     # This returns an API wrapper for "usid_policies" collection
     usid_policies = database.collection('usid_policies')
@@ -546,7 +546,7 @@ def find_usid_policy(database, key=None, lr_dst=None,
 
 def update_usid_policy(database, key=None, lr_dst=None, rl_dst=None,
                        lr_nodes=None, rl_nodes=None, table=None, metric=None):
-    '''
+    """
     Update a uSID policy into a ArangoDB database.
 
     :param database: Database where the uSID policy to be updated is saved.
@@ -571,7 +571,7 @@ def update_usid_policy(database, key=None, lr_dst=None, rl_dst=None,
     :rtype: bool
     :raises arango.exceptions.DocumentUpdateError: If update fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Operation not yet implemented
     raise NotImplementedError
 
@@ -579,7 +579,7 @@ def update_usid_policy(database, key=None, lr_dst=None, rl_dst=None,
 def delete_usid_policy(database, key, lr_dst=None,
                        rl_dst=None, lr_nodes=None, rl_nodes=None,
                        table=None, metric=None, ignore_missing=False):
-    '''
+    """
     Remove a uSID policy from the 'usid_policies' collection of a ArangoDB
     database.
 
@@ -607,7 +607,7 @@ def delete_usid_policy(database, key, lr_dst=None,
     :rtype: bool
     :raises arango.exceptions.DocumentDeleteError: If delete fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Get the uSID policy collection
     # This returns an API wrapper for "usid_policies" collection
     usid_policies = database.collection('usid_policies')
@@ -636,7 +636,7 @@ def delete_usid_policy(database, key, lr_dst=None,
 
 
 def insert_nodes_config(database, nodes):
-    '''
+    """
     Load nodes configuration on a database.
 
     :param database: Database where the nodes configuration must be saved.
@@ -652,7 +652,7 @@ def insert_nodes_config(database, nodes):
     :type nodes: dict
     :return: True.
     :rtype: bool
-    '''
+    """
     # Delete the collection if it already exists
     database.delete_collection(name='nodes_config', ignore_missing=True)
     # Create a new 'nodes_config' collection
@@ -662,7 +662,7 @@ def insert_nodes_config(database, nodes):
 
 
 def get_nodes_config(database):
-    '''
+    """
     Get the nodes configuration saved to a database.
 
     :param database: Database where the nodes configuration is saved.
@@ -673,7 +673,7 @@ def get_nodes_config(database):
     :raises controller.arangodb_driver.NodesConfigNotLoadedError: If nodes are
                                                                   not loaded
                                                                   on db.
-    '''
+    """
     # Does the collection 'nodes_config' exist?
     if not database.has_collection('nodes_config'):
         raise NodesConfigNotLoadedError
@@ -692,7 +692,7 @@ def insert_srv6_path(database, grpc_address, grpc_port, destination,
                      segments=None, device=None, encapmode=None,
                      table=None, metric=None, bsid_addr=None,
                      fwd_engine=None, key=None):
-    '''
+    """
     Insert a SRv6 path into the 'srv6_paths' collection of a Arango database.
     :param database: Database where the nodes configuration must be saved.
     :type database: arango.database.StandardDatabase
@@ -728,7 +728,7 @@ def insert_srv6_path(database, grpc_address, grpc_port, destination,
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
                                                                      fails.
-    '''
+    """
     # Build a dict-representation of the SRv6 path
     path = {
         'grpc_address': grpc_address,
@@ -758,7 +758,7 @@ def find_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
                    destination=None, segments=None, device=None,
                    encapmode=None, table=None, metric=None,
                    bsid_addr=None, fwd_engine=None):
-    '''
+    """
     Find a SRv6 path in the 'srv6_paths' collection of a Arango database.
     :param database: Database where to lookup the SRv6 path.
     :type database: arango.database.StandardDatabase
@@ -791,7 +791,7 @@ def find_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
     :return: Document cursor.
     :rtype: arango.cursor.Cursor
     :raises arango.exceptions.DocumentGetError: If retrieval fails.
-    '''
+    """
     # Get the SRv6 path collection
     # This returns an API wrapper for "srv6_paths" collection
     srv6_paths = database.collection('srv6_paths')
@@ -828,7 +828,7 @@ def update_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
                      destination=None, segments=None, device=None,
                      encapmode=None, table=None, metric=None,
                      bsid_addr=None, fwd_engine=None):
-    '''
+    """
     Update a SRv6 path into a ArangoDB database.
     :param database: Database where the SRv6 path to be updated is saved.
     :type database: arango.database.StandardDatabase
@@ -862,7 +862,7 @@ def update_srv6_path(database, key=None, grpc_address=None, grpc_port=None,
     :rtype: bool
     :raises arango.exceptions.DocumentUpdateError: If update fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Operation not yet implemented
     raise NotImplementedError
 
@@ -871,7 +871,7 @@ def delete_srv6_path(database, key, grpc_address=None, grpc_port=None,
                      destination=None, segments=None, device=None,
                      encapmode=None, table=None, metric=None,
                      bsid_addr=None, fwd_engine=None, ignore_missing=False):
-    '''
+    """
     Remove a SRv6 path from the 'srv6_paths' collection of a ArangoDB
     database.
     :param database: Database where the SRv6 path to be removed is saved.
@@ -911,7 +911,7 @@ def delete_srv6_path(database, key, grpc_address=None, grpc_port=None,
     :rtype: bool
     :raises arango.exceptions.DocumentDeleteError: If delete fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Get the SRv6 path collection
     # This returns an API wrapper for "srv6_paths" collection
     srv6_paths = database.collection('srv6_paths')
@@ -952,7 +952,7 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
                               encapmode=None, table=None, metric=None,
                               bsid_addr=None, fwd_engine=None,
                               ignore_missing=False):
-    '''
+    """
     Find and remove a SRv6 path from the 'srv6_paths' collection of a ArangoDB
     database.
     :param database: Database where the SRv6 path to be removed is saved.
@@ -992,7 +992,7 @@ def find_and_delete_srv6_path(database, key=None, grpc_address=None,
     :rtype: bool
     :raises arango.exceptions.DocumentDeleteError: If delete fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Get the SRv6 path collection
     # This returns an API wrapper for "srv6_paths" collection
     srv6_paths = database.collection('srv6_paths')
@@ -1035,7 +1035,7 @@ def insert_srv6_behavior(database, grpc_address, grpc_port, segment,
                          action=None, device=None, table=None, nexthop=None,
                          lookup_table=None, interface=None, segments=None,
                          metric=None, fwd_engine=None, key=None):
-    '''
+    """
     Insert a SRv6 behavior into the 'srv6_behaviors' collection of a Arango
     database.
     :param database: Database where the nodes configuration must be saved.
@@ -1072,7 +1072,7 @@ def insert_srv6_behavior(database, grpc_address, grpc_port, segment,
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
                                                                      fails.
-    '''
+    """
     # Build a dict-representation of the SRv6 behavior
     behavior = {
         'grpc_address': grpc_address,
@@ -1104,7 +1104,7 @@ def find_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
                        segment=None, action=None, device=None, table=None,
                        nexthop=None, lookup_table=None, interface=None,
                        segments=None, metric=None, fwd_engine=None):
-    '''
+    """
     Find a SRv6 behavior in the 'srv6_behaviors' collection of a Arango
     database.
     :param database: Database where to lookup the SRv6 behavior.
@@ -1142,7 +1142,7 @@ def find_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
     :return: Document cursor.
     :rtype: arango.cursor.Cursor
     :raises arango.exceptions.DocumentGetError: If retrieval fails.
-    '''
+    """
     # Get the SRv6 behavior collection
     # This returns an API wrapper for "srv6_behaviors" collection
     srv6_behaviors = database.collection('srv6_behaviors')
@@ -1183,7 +1183,7 @@ def update_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
                          segment=None, action=None, device=None, table=None,
                          nexthop=None, lookup_table=None, interface=None,
                          segments=None, metric=None, fwd_engine=None):
-    '''
+    """
     Update a SRv6 behavior into a ArangoDB database.
     :param database: Database where the SRv6 behavior to be updated is saved.
     :type database: arango.database.StandardDatabase
@@ -1221,7 +1221,7 @@ def update_srv6_behavior(database, key=None, grpc_address=None, grpc_port=None,
     :rtype: bool
     :raises arango.exceptions.DocumentUpdateError: If update fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Operation not yet implemented
     raise NotImplementedError
 
@@ -1231,7 +1231,7 @@ def delete_srv6_behavior(database, key, grpc_address=None, grpc_port=None,
                          nexthop=None, lookup_table=None, interface=None,
                          segments=None, metric=None, fwd_engine=None,
                          ignore_missing=False):
-    '''
+    """
     Remove a SRv6 behavior from the 'srv6_behaviors' collection of a ArangoDB
     database.
     :param database: Database where the SRv6 behavior to be removed is saved.
@@ -1275,7 +1275,7 @@ def delete_srv6_behavior(database, key, grpc_address=None, grpc_port=None,
     :rtype: bool
     :raises arango.exceptions.DocumentDeleteError: If delete fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Get the SRv6 behavior collection
     # This returns an API wrapper for "srv6_behaviors" collection
     srv6_behaviors = database.collection('srv6_behaviors')
@@ -1320,7 +1320,7 @@ def insert_srv6_tunnel(database, l_grpc_address, l_grpc_port, r_grpc_address,
                        dest_lr=None, dest_rl=None, localseg_lr=None,
                        localseg_rl=None, bsid_addr=None, fwd_engine=None,
                        is_unidirectional=False, key=None):
-    '''
+    """
     Insert a SRv6 tunnel into the 'srv6_tunnels' collection of a Arango
     database.
     :param database: Database where the nodes configuration must be saved.
@@ -1365,7 +1365,7 @@ def insert_srv6_tunnel(database, l_grpc_address, l_grpc_port, r_grpc_address,
     :rtype: bool
     :raises arango.exceptions.arango.exceptions.DocumentInsertError: If insert
                                                                      fails.
-    '''
+    """
     # Build a dict-representation of the SRv6 tunnel
     tunnel = {
         'l_grpc_address': l_grpc_address,
@@ -1400,7 +1400,7 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
                      dest_lr=None, dest_rl=None, localseg_lr=None,
                      localseg_rl=None, bsid_addr=None, fwd_engine=None,
                      is_unidirectional=False):
-    '''
+    """
     Find a SRv6 tunnel in the 'srv6_tunnels' collection of a Arango
     database.
     :param database: Database where to lookup the SRv6 tunnel.
@@ -1446,7 +1446,7 @@ def find_srv6_tunnel(database, key=None, l_grpc_address=None,
     :return: Document cursor.
     :rtype: arango.cursor.Cursor
     :raises arango.exceptions.DocumentGetError: If retrieval fails.
-    '''
+    """
     # Get the SRv6 tunnel collection
     # This returns an API wrapper for "srv6_tunnels" collection
     srv6_tunnels = database.collection('srv6_tunnels')
@@ -1491,7 +1491,7 @@ def update_srv6_tunnel(database, key=None, l_grpc_address=None,
                        dest_rl=None, localseg_lr=None,
                        localseg_rl=None, bsid_addr=None, fwd_engine=None,
                        is_unidirectional=False):
-    '''
+    """
     Update a SRv6 tunnel into a ArangoDB database.
     :param database: Database where the SRv6 tunnel to be updated is saved.
     :type database: arango.database.StandardDatabase
@@ -1537,7 +1537,7 @@ def update_srv6_tunnel(database, key=None, l_grpc_address=None,
     :rtype: bool
     :raises arango.exceptions.DocumentUpdateError: If update fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Operation not yet implemented
     raise NotImplementedError
 
@@ -1548,7 +1548,7 @@ def delete_srv6_tunnel(database, key, l_grpc_address=None, l_grpc_port=None,
                        localseg_lr=None, localseg_rl=None, bsid_addr=None,
                        fwd_engine=None, is_unidirectional=False,
                        ignore_missing=False):
-    '''
+    """
     Remove a SRv6 tunnel from the 'srv6_tunnels' collection of a ArangoDB
     database.
     :param database: Database where the SRv6 tunnel to be updated is saved.
@@ -1600,7 +1600,7 @@ def delete_srv6_tunnel(database, key, l_grpc_address=None, l_grpc_port=None,
     :rtype: bool
     :raises arango.exceptions.DocumentDeleteError: If delete fails.
     :raises arango.exceptions.DocumentRevisionError: If revisions mismatch.
-    '''
+    """
     # Get the SRv6 tunnel collection
     # This returns an API wrapper for "srv6_tunnels" collection
     srv6_tunnels = database.collection('srv6_tunnels')

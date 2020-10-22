@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 ArangoDB utilities
-'''
+"""
 
 # General imports
 import ipaddress
@@ -55,27 +55,27 @@ class TopologyExtractionException(Exception):
 
 
 def save_yaml_dump(obj, filename):
-    '''
+    """
     Export an object to a YAML file
-    '''
+    """
     # Save file
     with open(filename, 'w') as outfile:
         yaml.dump(obj, outfile)
 
 
 def load_yaml_dump(filename):
-    '''
+    """
     Load a YAML file and return a dict representation
-    '''
+    """
     # Load YAML file
     with open(filename, 'r') as infile:
         return yaml.safe_load(infile)
 
 
 def fill_ip_addresses(nodes, addresses_yaml):    # TODO reuse fill_ip_addresses_from_list
-    '''
+    """
     Add addresses to a nodes dict
-    '''
+    """
     # Read IP addresses information from a YAML file and
     # add addresses to the nodes
     logger.info('*** Filling nodes YAML file with IP addresses')
@@ -96,9 +96,9 @@ def fill_ip_addresses(nodes, addresses_yaml):    # TODO reuse fill_ip_addresses_
 
 
 def add_hosts(nodes, edges, hosts_yaml):    # TODO reuse add_hosts_from_list
-    '''
+    """
     Add hosts to a topology
-    '''
+    """
     # Read hosts information from a YAML file and
     # add hosts to the nodes and edges lists
     logger.info('*** Adding hosts to the topology')
@@ -140,9 +140,9 @@ def add_hosts(nodes, edges, hosts_yaml):    # TODO reuse add_hosts_from_list
 
 
 def fill_ip_addresses_from_list(nodes, addrs_config):
-    '''
+    """
     Add addresses to a nodes dict
-    '''
+    """
     # Read IP addresses information from a YAML file and
     # add addresses to the nodes
     logger.info('*** Filling nodes YAML file with IP addresses')
@@ -160,9 +160,9 @@ def fill_ip_addresses_from_list(nodes, addrs_config):
 
 
 def add_hosts_from_list(nodes, edges, hosts_config):
-    '''
+    """
     Add hosts to a topology
-    '''
+    """
     # Read hosts information from a YAML file and
     # add hosts to the nodes and edges lists
     logger.info('*** Adding hosts to the topology')
@@ -201,9 +201,9 @@ def add_hosts_from_list(nodes, edges, hosts_config):
 
 
 def initialize_db(arango_url, arango_user, arango_password, verbose=False):
-    '''
+    """
     Initialize database
-    '''
+    """
     #
     # pylint: disable=unused-argument
     #
@@ -218,10 +218,10 @@ def initialize_db(arango_url, arango_user, arango_password, verbose=False):
 def extract_topo_from_isis(isis_nodes, isisd_pwd,
                            nodes_yaml, edges_yaml,
                            addrs_yaml=None, hosts_yaml=None, verbose=False):
-    '''
+    """
     Extract the network topology
     from a set of nodes running ISIS protocol
-    '''
+    """
     #
     # pylint: disable=too-many-arguments
     #
@@ -262,9 +262,9 @@ def load_topo_on_arango(arango_url, user, password,
                         nodes, edges,
                         nodes_collection, edges_collection,
                         verbose=False):
-    '''
+    """
     Load a network topology on a database
-    '''
+    """
     #
     # Current Arango arguments are not used,
     # so we can skip the check
@@ -286,10 +286,10 @@ def extract_topo_from_isis_and_load_on_arango(isis_nodes, isisd_pwd,
                                               nodes_yaml=None, edges_yaml=None,
                                               addrs_yaml=None, hosts_yaml=None,
                                               period=0, verbose=False):
-    '''
+    """
     Extract the network topology from a set of nodes running ISIS protocol
     and upload it on a database
-    '''
+    """
     #
     # pylint: disable=too-many-arguments, too-many-locals
     #
@@ -367,10 +367,10 @@ def extract_topo_from_isis_and_load_on_arango_stream(isis_nodes, isisd_pwd,
                                                      addrs_config=None,
                                                      hosts_config=None,
                                                      period=0, verbose=False):
-    '''
+    """
     Extract the network topology from a set of nodes running ISIS protocol
     and upload it on a database
-    '''
+    """
     #
     # pylint: disable=too-many-arguments, too-many-locals
     #

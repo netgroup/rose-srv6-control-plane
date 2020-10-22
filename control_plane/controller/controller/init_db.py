@@ -24,10 +24,10 @@
 #
 
 
-'''
+"""
 This module provides a collection of utilities used to initialize a Arango
 database
-'''
+"""
 
 # General imports
 import os
@@ -43,9 +43,9 @@ ARANGO_PASSWORD = os.getenv('ARANGO_PASSWORD', '12345678')
 
 
 def init_db(db_name):
-    '''
+    """
     Initialize uSID database and uSID policies collection
-    '''
+    """
     # Connect to ArangoDB
     client = arangodb_driver.connect_arango(url=ARANGO_URL)
     # Initialize SRv6 uSID database
@@ -58,9 +58,9 @@ def init_db(db_name):
 
 
 def init_db_collections():
-    '''
+    """
     Initialize database collections.
-    '''
+    """
     # Connect to ArangoDB
     client = arangodb_driver.connect_arango(url=ARANGO_URL)
     # Initialize uSID policies collection

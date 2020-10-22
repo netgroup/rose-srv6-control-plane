@@ -24,10 +24,10 @@
 #
 
 
-'''
+"""
 This module provides a collection of utilities related to the topology
 management.
-'''
+"""
 
 # General imports
 import os
@@ -37,12 +37,12 @@ from controller import arangodb_driver
 
 
 def load_nodes_config(nodes):
-    '''
+    """
     Load the nodes configuration to a ArangoDB database.
 
     :param nodes: The list of nodes to add to the database.
     :type nodes: list
-    '''
+    """
     # ArangoDB params
     arango_url = os.getenv('ARANGO_URL')
     arango_user = os.getenv('ARANGO_USER')
@@ -64,12 +64,12 @@ def load_nodes_config(nodes):
 
 
 def get_nodes_config():
-    '''
+    """
     Retrieve the nodes configuration from a ArangoDB database.
 
     :return: The list of the nodes.
     :rtype: list
-    '''
+    """
     # ArangoDB params
     arango_url = os.getenv('ARANGO_URL')
     arango_user = os.getenv('ARANGO_USER')

@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 Topology Information Extraction utilities
-'''
+"""
 
 # General imports
 import errno
@@ -89,15 +89,15 @@ DEFAULT_VERBOSE = False
 
 
 class OptionalModuleNotLoadedError(Exception):
-    '''
+    """
     The requested feature depends on an optional module that has not been
     loaded
-    '''
+    """
 
 
 # Utility function to dump relevant information of the topology
 def dump_topo_json(graph, topo_file):
-    '''
+    """
     Dump the graph to a JSON file
 
     :param graph: The graph to be exported
@@ -109,7 +109,7 @@ def dump_topo_json(graph, topo_file):
     :raises OptionalModuleNotLoadedError: The NetworkX module required by
                                           dump_topo_json has not has not been
                                           loaded. Is it installed?
-    '''
+    """
     # Export the topology to a JSON file
     logger.debug('*** Exporting topology to %s', topo_file)
     #
@@ -150,10 +150,10 @@ def dump_topo_json(graph, topo_file):
 
 def dump_topo_yaml(nodes, edges, node_to_systemid,
                    nodes_file_yaml=None, edges_file_yaml=None):
-    '''
+    """
     Dump the provided set of nodes and edges to a dict representation.
     Optionally, nodes and edges are exported as YAML file
-    '''
+    """
     #
     # This function depends on the pyaml library, which is a
     # optional dependency for this script
@@ -199,9 +199,9 @@ def dump_topo_yaml(nodes, edges, node_to_systemid,
 
 
 def connect_telnet(router, port):
-    '''
+    """
     Establish a telnet connection to a router on a given port
-    '''
+    """
     #
     # Establish a telnet connection to the router
     try:
@@ -223,9 +223,9 @@ def connect_telnet(router, port):
 
 # Build NetworkX Topology graph
 def build_topo_graph(nodes, edges):
-    '''
+    """
     Convert nodes and edges to a NetworkX graph
-    '''
+    """
     #
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
@@ -251,9 +251,9 @@ def build_topo_graph(nodes, edges):
 
 # Utility function to export the network graph as an image file
 def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
-    '''
+    """
     Export the NetworkX graph to a SVG image
-    '''
+    """
     #
     # This function depends on the NetworkX library, which is a
     # optional dependency for this script
@@ -278,10 +278,10 @@ def draw_topo(graph, svg_topo_file, dot_topo_file=DOT_FILE_TOPO_GRAPH):
 def connect_and_extract_topology_isis(ips_ports,
                                       isisd_pwd=DEFAULT_ISISD_PASSWORD,
                                       verbose=DEFAULT_VERBOSE):
-    '''
+    """
     Establish a telnet connection to isisd process running on a router
     and extract the network topology from the router
-    '''
+    """
     #
     # pylint: disable=too-many-branches, too-many-locals, too-many-statements
     # ISIS password
@@ -449,10 +449,10 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
                                          edges_file_yaml=None,
                                          topo_graph=None,
                                          verbose=DEFAULT_VERBOSE):
-    '''
+    """
     Run Topology Information Extraction from a set of routers.
     Optionally export the topology to a JSON file, YAML file or SVG image
-    '''
+    """
     #
     # pylint: disable=too-many-arguments
     # Topology Information Extraction
@@ -489,9 +489,9 @@ def topology_information_extraction_isis(routers, period, isisd_pwd,
 
 # Parse command line options and dump results
 def parse_arguments():
-    '''
+    """
     Command-line arguments parser
-    '''
+    """
     # Initialize parser
     parser = ArgumentParser(
         description='Topology Information Extraction (from ISIS) '
@@ -554,9 +554,9 @@ def parse_arguments():
 
 
 def __main():
-    '''
+    """
     Entry point for this module
-    '''
+    """
     #
     # Let's parse input parameters
     args = parse_arguments()

@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 Control-Plane functionalities for SRv6 Manager
-'''
+"""
 
 # General imports
 import logging
@@ -60,54 +60,54 @@ DEFAULT_USID_ID_BITS = 16
 
 
 class InvalidConfigurationError(srv6_utils.SRv6Exception):
-    '''
+    """
     Configuration file is not valid.
-    '''
+    """
 
 
 class NodeNotFoundError(srv6_utils.SRv6Exception):
-    '''
+    """
     Node not found error.
-    '''
+    """
 
 
 class TooManySegmentsError(srv6_utils.SRv6Exception):
-    '''
+    """
     Too many segments error.
-    '''
+    """
 
 
 class SIDLocatorError(srv6_utils.SRv6Exception):
-    '''
+    """
     SID Locator is invalid error.
-    '''
+    """
 
 
 class InvalidSIDError(srv6_utils.SRv6Exception):
-    '''
+    """
     SID is invalid.
-    '''
+    """
 
 
 def print_nodes(nodes_dict):
-    '''
+    """
     Print the nodes.
 
     :param nodes_dict: Dict containing the nodes
     :type nodes_dict: dict
-    '''
+    """
     print(list(nodes_dict.keys()))
 
 
 def print_node_to_addr_mapping(nodes_filename):
-    '''
+    """
     This function reads a YAML file containing the mapping
     of node names to IP addresses and pretty print it
 
     :param node_to_addr_filename: Name of the YAML file containing the
                                   mapping of node names to IP addresses
     :type node_to_addr_filename: str
-    '''
+    """
     # Read the mapping from the file
     with open(nodes_filename, 'r') as nodes_file:
         nodes = yaml.safe_load(nodes_file)
@@ -150,7 +150,7 @@ def print_node_to_addr_mapping(nodes_filename):
 
 
 def read_nodes(nodes_filename):
-    '''
+    """
     Convert a list of node names into a list of IP addresses.
 
     :param nodes_filename: Name of the YAML file containing the
@@ -161,7 +161,7 @@ def read_nodes(nodes_filename):
     :raises NodeNotFoundError: Node name not found in the mapping file
     :raises InvalidConfigurationError: The mapping file is not a valid
                                        YAML file
-    '''
+    """
     # Read the mapping from the file
     with open(nodes_filename, 'r') as nodes_file:
         nodes = yaml.safe_load(nodes_file)
@@ -209,7 +209,7 @@ def read_nodes(nodes_filename):
 def segments_to_micro_segment(locator, segments,
                               locator_bits=DEFAULT_LOCATOR_BITS,
                               usid_id_bits=DEFAULT_USID_ID_BITS):
-    '''
+    """
     Convert a SID list (with #segments <= 6) into a uSID.
 
     :param locator: The SID Locator of the segments.
@@ -226,7 +226,7 @@ def segments_to_micro_segment(locator, segments,
     :raises TooManySegmentsError: segments arg contains too many segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
     :raises InvalidSIDError: SID is wrong for one or more segments
-    '''
+    """
     # Locator mask, used to extract the locator from the SIDs
     #
     # It is computed with a binary manipulation
@@ -290,7 +290,7 @@ def segments_to_micro_segment(locator, segments,
 
 
 def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
-    '''
+    """
     Get the SID Locator (i.e. the first 32 bits) from a SID List.
 
     :param sid_list: SID List
@@ -300,7 +300,7 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
     :return: SID Locator
     :rtype: str
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    '''
+    """
     # Locator mask, used to extract the locator from the SIDs
     #
     # It is computed with a binary manipulation
@@ -337,7 +337,7 @@ def get_sid_locator(sid_list, locator_bits=DEFAULT_LOCATOR_BITS):
 def sidlist_to_usidlist(sid_list, udt_sids=None,
                         locator_bits=DEFAULT_LOCATOR_BITS,
                         usid_id_bits=DEFAULT_USID_ID_BITS):
-    '''
+    """
     Convert a SID List into a uSID List.
 
     :param sid_list: SID List to be converted
@@ -350,7 +350,7 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
     :rtype: list
     :raises TooManySegmentsError: segments arg contains too many segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    '''
+    """
     if udt_sids is None:
         udt_sids = list()
     # Size of the group of SIDs to be compressed in one uSID
@@ -386,7 +386,7 @@ def sidlist_to_usidlist(sid_list, udt_sids=None,
 
 
 def nodes_to_micro_segments(nodes, node_addrs_filename):
-    '''
+    """
     Convert a list of nodes into a list of micro segments (uSID List)
 
     :param nodes: List of node names
@@ -401,7 +401,7 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
                                        YAML file
     :raises TooManySegmentsError: segments arg contains more than 6 segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
-    '''
+    """
 
     # Convert the list of nodes into a list of IP addresses (SID list)
     # Translation is based on a file containing the mapping
@@ -427,7 +427,7 @@ def nodes_to_micro_segments(nodes, node_addrs_filename):
 
 
 def validate_usid_id(usid_id):
-    '''
+    """
     Validate a uSID identifier. A valid uSID id should be an integer in the
     range (0, 0xffff).
 
@@ -435,7 +435,7 @@ def validate_usid_id(usid_id):
     :type usid_id: str
     :return: True if the uSID identifier is valid.
     :rtype: bool
-    '''
+    """
     try:
         # A valid uSID id should be an integer in the range (0, 0xffff)
         return int(usid_id, 16) >= 0x0 and int(usid_id, 16) <= 0xffff
@@ -446,7 +446,7 @@ def validate_usid_id(usid_id):
 
 
 def usid_id_to_usid(usid_id, locator):
-    '''
+    """
     Convert a uSID identifier into a SID.
 
     :param usid_id: uSID idenfier to convert.
@@ -455,14 +455,14 @@ def usid_id_to_usid(usid_id, locator):
     :type locator: str
     :return: Generated SID.
     :rtype: str
-    '''
+    """
     return str(IPv6Address(int(IPv6Address(locator)) +
                            (int(usid_id, 16) << 80)))
 
 
 def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
                          udt=None):
-    '''
+    """
     Get a dict-representation of a node (endpoint of the path), starting from
     gRPC IP and port, uDT sid, forwarding engine and locator.
 
@@ -490,7 +490,7 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
              - fwd_engine
     :rtype: dict
     :raises InvalidConfigurationError: If the node params are invalid.
-    '''
+    """
     # Validation checks
     #
     # Validate gRPC address
@@ -537,7 +537,7 @@ def encode_endpoint_node(node, grpc_ip, grpc_port, fwd_engine, locator,
 
 
 def encode_intermediate_node(node, locator):
-    '''
+    """
     Get a dict-representation of a node (intermediate node of the path),
     starting from gRPC IP and port, uDT sid, forwarding engine and locator.
     For the intermediate nodes, we don't need uDT, forwarding engine.
@@ -558,7 +558,7 @@ def encode_intermediate_node(node, locator):
              - fwd_engine (set to None)
     :rtype: dict
     :raises InvalidConfigurationError: If the node params are invalid.
-    '''
+    """
     # Validate params
     #
     # Validate locator
@@ -594,7 +594,7 @@ def encode_intermediate_node(node, locator):
 def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
                     l_fwd_engine=None, r_grpc_ip=None, r_grpc_port=None,
                     r_fwd_engine=None, decap_sid=None, locator=None):
-    '''
+    """
     Fill 'nodes_info' dict with the nodes containined in the 'nodes' list.
 
     :param nodes_info: Dict containined the nodes information where to add the
@@ -625,7 +625,7 @@ def fill_nodes_info(nodes_info, nodes, l_grpc_ip=None, l_grpc_port=None,
     :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).
     :type locator: str, optional
     :raises InvalidConfigurationError: If the node params are invalid.
-    '''
+    """
     # Convert decap SID to uDT
     udt = None
     if decap_sid is not None:
@@ -697,7 +697,7 @@ def handle_srv6_usid_policy(operation,
                             r_grpc_ip=None, r_grpc_port=None,
                             r_fwd_engine=None, decap_sid=None, locator=None,
                             db_conn=None):
-    '''
+    """
     Handle a SRv6 Policy using uSIDs
 
     :param operation: The operation to be performed on the uSID policy
@@ -747,7 +747,7 @@ def handle_srv6_usid_policy(operation,
     :raises TooManySegmentsError: segments arg contains more than 6 segments
     :raises SIDLocatorError: SID Locator is wrong for one or more segments
     :raises InvalidSIDError: SID is wrong for one or more segments
-    '''
+    """
     # pylint: disable=too-many-locals, too-many-arguments
     # pylint: disable=too-many-return-statements, too-many-branches
     # pylint: disable=too-many-statements
