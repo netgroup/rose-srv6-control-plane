@@ -51,6 +51,33 @@ logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
 
 
+# ############################################################################
+# Forwarding Engine
+class FwdEngine(Enum):
+    """
+    Forwarding Engine.
+    """
+    LINUX = nb_commons_pb2.FwdEngine.Value('LINUX')
+    VPP = nb_commons_pb2.FwdEngine.Value('VPP')
+    P4 = nb_commons_pb2.FwdEngine.Value('P4')
+
+
+# Mapping python representation of Forwarding Engine to gRPC representation
+py_to_grpc_fwd_engine = {
+    'linux': FwdEngine.LINUX.value,
+    'vpp': FwdEngine.VPP.value,
+    'p4': FwdEngine.P4.value
+}
+
+# Mapping gRPC representation of Forwarding Engine to python representation
+grpc_to_py_fwd_engine = {
+    v: k for k, v in py_to_grpc_fwd_engine.items()}
+
+
+# ############################################################################
+# Controller APIs
+
+
 # Parser for gRPC errors
 def parse_grpc_error(err):
     """
@@ -76,137 +103,259 @@ def parse_grpc_error(err):
     return commons_pb2.STATUS_INTERNAL_ERROR
 
 
-def del_srv6_path_db(channel, destination, segments=None,
-                     device='', encapmode="encap", table=-1, metric=-1,
-                     bsid_addr='', fwd_engine='linux', key=None,
-                     update_db=True, db_conn=None):
-    if not os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-        return commons_pb2.STATUS_INTERNAL_ERROR
-    # gRPC address
-    grpc_address = None
-    if channel is not None:
-        grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
-    # gRPC port number
-    grpc_port = None
-    if channel is not None:
-        grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
-    # Find the paths matching the params
-    srv6_paths = arangodb_driver.find_srv6_path(
-        database=db_conn,
-        key=key,
-        grpc_address=grpc_address,
-        grpc_port=grpc_port,
-        destination=destination,
-        segments=segments,
-        device=device,
-        encapmode=encapmode,
-        table=table,
-        metric=metric,
-        bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine
-    )
-    if len(srv6_paths) == 0:
-        # Entity not found
-        logger.error('Entity not found')
-        return commons_pb2.STATUS_NO_SUCH_PROCESS
-    # Remove the paths
-    for srv6_path in srv6_paths:
-        # Initialize segments list
-        if srv6_path['segments'] is None:
-            segments = []
-        # Create request message
-        request = srv6_manager_pb2.SRv6ManagerRequest()
-        # Create a new SRv6 path request
-        path_request = request.srv6_path_request       # pylint: disable=no-member
-        # Create a new path
-        path = path_request.paths.add()
-        # Set destination
-        path.destination = text_type(srv6_path['destination'])
-        # Set device
-        # If the device is not specified (i.e. empty string),
-        # it will be chosen by the gRPC server
-        path.device = text_type(srv6_path['device'])
-        # Set table ID
-        # If the table ID is not specified (i.e. table=-1),
-        # the main table will be used
-        path.table = int(srv6_path['table'])
-        # Set metric (i.e. preference value of the route)
-        # If the metric is not specified (i.e. metric=-1),
-        # the decision is left to the Linux kernel
-        path.metric = int(srv6_path['metric'])
-        # Set the BSID address (required for VPP)
-        path.bsid_addr = str(srv6_path['bsid_addr'])
-        # Forwarding engine (Linux or VPP)
-        try:
-            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(
-                srv6_path['fwd_engine'].upper())
-        except ValueError:
-            logger.error('Invalid forwarding engine: %s', srv6_path['fwd_engine'])
-            return commons_pb2.STATUS_INTERNAL_ERROR
-        # Set encapmode
-        path.encapmode = text_type(srv6_path['encapmode'])
-        if len(srv6_path['segments']) == 0:
-            logger.error('*** Missing segments for seg6 route')
-            return commons_pb2.STATUS_INTERNAL_ERROR
-        # Iterate on the segments and build the SID list
-        for segment in srv6_path['segments']:
-            # Append the segment to the SID list
-            srv6_segment = path.sr_path.add()
-            srv6_segment.segment = text_type(segment)
-        # Get gRPC channel
-        channel = utils.get_grpc_session(
-            server_ip=srv6_path['grpc_address'],
-            server_port=srv6_path['grpc_port']
-        )
-        # Get the reference of the stub
-        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-        # Remove the SRv6 path
-        response = stub.Remove(request)
-        # Get the status code of the gRPC operation
-        response = response.status
-        # Remove the path from the db
-        arangodb_driver.delete_srv6_path(
-            database=db_conn,
-            key=srv6_path['_key'],
-            grpc_address=srv6_path['grpc_address'],
-            grpc_port=srv6_path['grpc_port'],
-            destination=srv6_path['destination'],
-            segments=srv6_path['segments'],
-            device=srv6_path['device'],
-            encapmode=srv6_path['encapmode'],
-            table=srv6_path['table'],
-            metric=srv6_path['metric'],
-            bsid_addr=srv6_path['bsid_addr'],
-            fwd_engine=srv6_path['fwd_engine']
-        )
-    # Done, return the reply
-    return response
-
-
-def handle_srv6_path(operation, grpc_address, grpc_port, destination,
-                     segments=None, device='', encapmode="encap", table=-1,
-                     metric=-1, bsid_addr='', fwd_engine='linux', key=None,
-                     update_db=True, db_conn=None, channel=None):
-    """
-    Handle a SRv6 Path
-    """
-    # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-    #
-    # Establish a gRPC channel, if no channel has been provided
-    if channel is None:
-        if grpc_address not in [None, ''] and grpc_port not in [None, -1]:
-            channel = utils.get_grpc_session(grpc_address, grpc_port)
-    # Check if a SRv6 path with the same key already exists
-    if operation == 'add' and key is not None and \
+def add_srv6_path(grpc_address, grpc_port, destination,
+                  segments=None, device='', encapmode='encap', table=-1,
+                  metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                  update_db=True, db_conn=None, channel=None):
+    # Segment list is mandatory for "add" operation
+    if segments is None or len(segments) == 0:
+        logger.error('*** Missing segments for seg6 route')
+        raise utils.InvalidArgumentError
+    # If database persistency is enabled, we need to check if a SRv6 path with
+    # the same key already exists
+    if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # Perform a lookup by key into the database
         paths = arangodb_driver.find_srv6_path(
             database=db_conn,
             key=key
         )
+        # Check if we found a path with the same key
         if len(paths) > 0:
             logger.error('An entity with key %s already exists', key)
             raise utils.InvalidArgumentError
+    # All checks passed, we are ready to create the SRv6 path
     #
+    # In order to add a SRv6 path we need to interact with the node
+    # If no gRPC channel has been provided, we need to open a new channel
+    # to the node; in this case, grpc_address and grpc_port arguments are
+    # required
+    if channel is None:
+        # Check arguments
+        if grpc_address is None or \
+                grpc_address == '' or grpc_port is None or grpc_port == -1:
+            logger.error('"add" operation requires a gRPC channel or gRPC '
+                         'address/port')
+            raise utils.InvalidArgumentError
+        # Establish a gRPC channel to the destination
+        channel = utils.get_grpc_session(grpc_address, grpc_port)
+    # Create request message
+    request = srv6_manager_pb2.SRv6ManagerRequest()
+    # Create a new SRv6 path request
+    path_request = request.srv6_path_request       # pylint: disable=no-member
+    # Create a new path
+    path = path_request.paths.add()
+    # Set destination
+    path.destination = text_type(destination)
+    # Set device
+    # If the device is not specified (i.e. empty string),
+    # it will be chosen by the gRPC server
+    path.device = text_type(device)
+    # Set table ID
+    # If the table ID is not specified (i.e. table=-1),
+    # the main table will be used
+    path.table = int(table)
+    # Set metric (i.e. preference value of the route)
+    # If the metric is not specified (i.e. metric=-1),
+    # the decision is left to the Linux kernel
+    path.metric = int(metric)
+    # Set the BSID address (required for VPP)
+    path.bsid_addr = str(bsid_addr)
+    # Set the encapsulation mode
+    if encapmode != '':
+        # encap mode is an optional argument
+        # If it is specified, we use it
+        path.encapmode = text_type(encapmode)
+    else:
+        # By default, if encap mode is not specified, we use
+        # 'encap' mode
+        path.encapmode = 'encap'
+    # Iterate on the segments and build the SID list
+    for segment in segments:
+        # Append the segment to the SID list
+        srv6_segment = path.sr_path.add()
+        srv6_segment.segment = text_type(segment)
+    # Set the forwarding engine
+    try:
+        if fwd_engine is not None and fwd_engine != '':
+            # Encode fwd engine in a format supported by gRPC
+            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+        else:
+            # By default, if forwarding engine is not specified, we use
+            # Linux forwarding engine
+            path_request.fwd_engine = FwdEngine.LINUX.value
+    except ValueError:
+        # An invalid value for fwd_engine has been provided
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
+    # VPP forwarding engine requires some extra steps
+    if fwd_engine == 'vpp':
+        # VPP requires a SRv6 policy associated to the SRv6 path through the
+        # BSID address
+        # Let's check if we provided a BSID address
+        if bsid_addr is None or bsid_addr == '':
+            logger.error('"bsid_addr" argument is mandatory for VPP')
+            raise utils.InvalidArgumentError
+        # Create SRv6 policy
+        handle_srv6_policy(
+            operation='add',
+            channel=channel,
+            bsid_addr=bsid_addr,
+            segments=segments,
+            table=table,
+            metric=metric,
+            fwd_engine=fwd_engine
+        )
+    # The other steps are common for both Linux and VPP forwarding engines+
+    #
+    # Let's create the SRv6 path
+    try:
+        # Get the reference of the stub
+        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+        # Create the SRv6 path and get the status code
+        status = stub.Create(request).status
+    except grpc.RpcError as err:
+        # An error occurred during the gRPC operation
+        # Parse the gRPC error and get the status code
+        status = parse_grpc_error(err)
+    finally:
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(status)
+    # If the persistecy is enable, store the path to the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        # Save the path to the db
+        arangodb_driver.insert_srv6_path(
+            database=db_conn,
+            key=key,
+            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+
+
+def get_srv6_path(grpc_address, grpc_port, destination,
+                  segments=None, device='', encapmode='encap', table=-1,
+                  metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                  update_db=True, db_conn=None, channel=None):
+    # If segment list not provided, initialize it to an empty list
+    if segments is None:
+        segments = []
+    # We need to support two scenarios:
+    #  -  Persistency enabled
+    #  -  Persistency not enabled
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
+        # Persistency is enabled
+        #
+        # Perform a lookup in the database and store the SRv6 paths found
+        srv6_paths = arangodb_driver.find_srv6_path(
+            database=db_conn,
+            key=key if key != '' else None,
+            grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
+            grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
+            destination=destination if destination != '' else None,
+            segments=segments if segments != [''] else None,
+            device=device if device != '' else None,
+            encapmode=encapmode if encapmode != '' else None,
+            table=table if table != -1 else None,
+            metric=metric if metric != -1 else None,
+            bsid_addr=bsid_addr if bsid_addr != '' else None,
+            fwd_engine=fwd_engine if fwd_engine != '' else None
+        )
+    else:
+        # Persistency is not enabled
+        #
+        # We need to interact with the node to retrieve the SRv6 paths
+        try:
+            # In order to get a SRv6 path we need to interact with the node
+            # If no gRPC channel has been provided, we need to open a new channel
+            # to the node; in this case, grpc_address and grpc_port arguments are
+            # required
+            if channel is None:
+                if grpc_address is None or \
+                        grpc_address == '' or grpc_port is None or grpc_port == -1:
+                    logger.error('"get" operation requires a gRPC channel or gRPC '
+                                'address/port')
+                    raise utils.InvalidArgumentError
+            # Create request message
+            request = srv6_manager_pb2.SRv6ManagerRequest()
+            # Create a new SRv6 path request
+            path_request = request.srv6_path_request       # pylint: disable=no-member
+            # Create a new path
+            path = path_request.paths.add()
+            # Set destination
+            path.destination = text_type(destination)
+            # Set device
+            # If the device is not specified (i.e. empty string),
+            # it will be chosen by the gRPC server
+            path.device = text_type(device)
+            # Set table ID
+            # If the table ID is not specified (i.e. table=-1),
+            # the main table will be used
+            path.table = int(table)
+            # Set metric (i.e. preference value of the route)
+            # If the metric is not specified (i.e. metric=-1),
+            # the decision is left to the Linux kernel
+            path.metric = int(metric)
+            # Set the BSID address (required for VPP)
+            path.bsid_addr = str(bsid_addr)
+            # Set the forwarding engine
+            try:
+                if fwd_engine is not None and fwd_engine != '':
+                    # Encode fwd engine in a format supported by gRPC
+                    path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+                else:
+                    # By default, if forwarding engine is not specified, we use
+                    # Linux forwarding engine
+                    path_request.fwd_engine = FwdEngine.LINUX.value
+            except ValueError:
+                # An invalid value for fwd_engine has been provided
+                logger.error('Invalid forwarding engine: %s', fwd_engine)
+                raise utils.InvalidArgumentError
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+            # Get the SRv6 path
+            response = stub.Get(request)
+            # Get the status code of the operation
+            status = response.status
+        except grpc.RpcError as err:
+            # An error occurred during the gRPC operation
+            # Parse the gRPC error and get the status code
+            status = parse_grpc_error(err)
+        finally:
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(status)
+        # Extract the SRv6 paths from the gRPC response
+        srv6_paths = response.paths
+    # Return the paths
+    return srv6_paths
+
+
+def change_srv6_path(grpc_address, grpc_port, destination,
+                     segments=None, device='', encapmode='encap', table=-1,
+                     metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                     update_db=True, db_conn=None, channel=None):
+    # In order to add a SRv6 path we need to interact with the node
+    # If no gRPC channel has been provided, we need to open a new channel
+    # to the node; in this case, grpc_address and grpc_port arguments are
+    # required
+    if channel is None:
+        # Check the arguments
+        if grpc_address is None or \
+                grpc_address == '' or grpc_port is None or grpc_port == -1:
+            logger.error('"change" operation requires a gRPC channel or gRPC '
+                         'address/port')
+            raise utils.InvalidArgumentError
+        if grpc_address not in [None, ''] and grpc_port not in [None, -1]:
+            channel = utils.get_grpc_session(grpc_address, grpc_port)
+    # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
     # Create request message
@@ -231,179 +380,284 @@ def handle_srv6_path(operation, grpc_address, grpc_port, destination,
     path.metric = int(metric)
     # Set the BSID address (required for VPP)
     path.bsid_addr = str(bsid_addr)
-    # Handle SRv6 policy for VPP
-    if fwd_engine == 'vpp' and operation == 'add':
-        if bsid_addr == '':
-            logger.error('"bsid_addr" argument is mandatory for VPP')
-            raise utils.InvalidArgumentError
-        # Handle SRv6 policy
-        res = handle_srv6_policy(
-            operation=operation,
-            channel=channel,
-            bsid_addr=bsid_addr,
-            segments=segments,
-            table=table,
-            metric=metric,
-            fwd_engine=fwd_engine
-        )
-        if res != commons_pb2.STATUS_SUCCESS:
-            logger.error('Cannot create SRv6 policy: error %s', res)
-            utils.raise_exception_on_error(res)
-    # Forwarding engine (Linux or VPP)
+    # Set encapmode
+    path.encapmode = text_type(encapmode)
+    # Iterate on the segments and build the SID list
+    for segment in segments:
+        # Append the segment to the SID list
+        srv6_segment = path.sr_path.add()
+        srv6_segment.segment = text_type(segment)
+    # Set the forwarding engine
     try:
-        if fwd_engine != '':
-            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value(fwd_engine.upper())
+        if fwd_engine is not None and fwd_engine != '':
+            # Encode fwd engine in a format supported by gRPC
+            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
-            path_request.fwd_engine = srv6_manager_pb2.FwdEngine.Value('LINUX')
+            path_request.fwd_engine = FwdEngine.LINUX.value
     except ValueError:
+        # An invalid value for fwd_engine has been provided
         logger.error('Invalid forwarding engine: %s', fwd_engine)
         raise utils.InvalidArgumentError
+    # Let's update the SRv6 path
     try:
-        # Fill the request depending on the operation
-        # and send the request
-        if operation == 'add':
-            # Get the reference of the stub
-            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-            # Set encapmode
-            if encapmode != '':
-                path.encapmode = text_type(encapmode)
-            else:
-                # By default, if encap mode is not specified, we use
-                # 'encap' mode
-                path.encapmode = 'encap'
-            if len(segments) == 0:
-                logger.error('*** Missing segments for seg6 route')
-                utils.raise_exception_on_error(
-                    commons_pb2.STATUS_INTERNAL_ERROR)
-            # Iterate on the segments and build the SID list
-            for segment in segments:
-                # Append the segment to the SID list
-                srv6_segment = path.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Create the SRv6 path
-            response = stub.Create(request)
-            # Raise an exception if an error occurred
-            utils.raise_exception_on_error(response.status)
-            # Store the path to the database
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
-                    update_db:
-                # Save the policy to the db
-                arangodb_driver.insert_srv6_path(
-                    database=db_conn,
-                    key=key,
-                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
-                    destination=destination,
-                    segments=segments,
-                    device=device,
-                    encapmode=encapmode,
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=fwd_engine
-                )
-            return
-        elif operation == 'get':
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
-                # Find the paths
-                return arangodb_driver.find_srv6_path(
-                   database=db_conn,
-                   key=key if key != '' else None,
-                   grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
-                   grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
-                   destination=destination if destination != '' else None,
-                   segments=segments if segments != [''] else None,
-                   device=device if device != '' else None,
-                   encapmode=encapmode if encapmode != '' else None,
-                   table=table if table != -1 else None,
-                   metric=metric if metric != -1 else None,
-                   bsid_addr=bsid_addr if bsid_addr != '' else None,
-                   fwd_engine=fwd_engine if fwd_engine != '' else None
-                )
-            else:
-                # Get the reference of the stub
-                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-                # Get the SRv6 path
-                response = stub.Get(request)
-                # Raise an exception if an error occurred
-                utils.raise_exception_on_error(response.status)
-                # Return the paths
-                return response.paths
-        elif operation == 'change':
-            # Get the reference of the stub
-            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-            # Set encapmode
-            path.encapmode = text_type(encapmode)
-            # Iterate on the segments and build the SID list
-            for segment in segments:
-                # Append the segment to the SID list
-                srv6_segment = path.sr_path.add()
-                srv6_segment.segment = text_type(segment)
-            # Update the SRv6 path
-            response = stub.Update(request)
-            # Raise an exception if an error occurred
-            utils.raise_exception_on_error(response.status)
-            # Remove the path from the database
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
-                    update_db:
-                # Save the policy to the db
-                arangodb_driver.update_srv6_path(
-                    database=db_conn,
-                    key=key,
-                    grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-                    grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
-                    destination=destination,
-                    segments=segments,
-                    device=device,
-                    encapmode=encapmode,
-                    table=table,
-                    metric=metric,
-                    bsid_addr=bsid_addr,
-                    fwd_engine=fwd_engine
-                )
-            return
-        elif operation == 'del':
-            # Remove the SRv6 path
-            if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
-                    update_db:
-                response = del_srv6_path_db(
-                    channel=channel,
-                    key=key if key != '' else None,
-                    destination=destination if destination != '' else None,
-                    segments=segments if segments != [''] else None,
-                    device=device if device != '' else None,
-                    encapmode=encapmode if encapmode != '' else None,
-                    table=table if table != -1 else None,
-                    metric=metric if metric != -1 else None,
-                    bsid_addr=bsid_addr if bsid_addr != '' else None,
-                    fwd_engine=fwd_engine if fwd_engine != '' else None,
-                    update_db=update_db,
-                    db_conn=db_conn
-                )
-                # Raise an exception if an error occurred
-                utils.raise_exception_on_error(response)
-            else:
-                # Get the reference of the stub
-                stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
-                # Remove the SRv6 path
-                response = stub.Remove(request)
-                # Raise an exception if an error occurred
-                utils.raise_exception_on_error(response.status)
-            return
-        else:
-            # Operation not supported
-            logger.error('Operation not supported')
-            # Raise an exception
-            utils.raise_exception_on_error(
-                commons_pb2.STATUS_OPERATION_NOT_SUPPORTED)
+        # Get the reference of the stub
+        stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+        # Update the SRv6 path and get the status code
+        status = stub.Update(request).status
     except grpc.RpcError as err:
         # An error occurred during the gRPC operation
-        # Parse the error and return it
-        response = parse_grpc_error(err)
-        # Raise an exception
-        utils.raise_exception_on_error(response)
+        # Parse the gRPC error and get the status code
+        status = parse_grpc_error(err)
+    finally:
+        # Raise an exception if an error occurred
+        utils.raise_exception_on_error(status)
+    # Remove the path from the database
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        # Update the path on the db
+        arangodb_driver.update_srv6_path(
+            database=db_conn,
+            key=key,
+            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
+            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+
+
+def del_srv6_path(grpc_address, grpc_port, destination,
+                  segments=None, device='', encapmode='encap', table=-1,
+                  metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                  update_db=True, db_conn=None, channel=None):  # TODO currently channel argument is not used
+    # Remove the SRv6 path
+    #
+    # We need to support two scenarios:
+    #  -  Persistency enabled
+    #  -  Persistency not enabled
+    if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
+            update_db:
+        # Persistency is enabled
+        #
+        # gRPC address
+        grpc_address = None
+        if channel is not None:
+            grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+        # gRPC port number
+        grpc_port = None
+        if channel is not None:
+            grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
+        # Find the paths matching the params
+        srv6_paths = arangodb_driver.find_srv6_path(
+            database=db_conn,
+            key=key,
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
+        )
+        if len(srv6_paths) == 0:
+            # Entity not found
+            logger.error('Entity not found')
+            raise utils.NoSuchProcessException
+    else:
+        # Persistency is not enabled
+        #
+        # The path to be removed is the path specified through the arguments
+        srv6_paths = [{
+            'destination': destination,
+            'device': device,
+            'table': table,
+            'metric': metric,
+            'bsid_addr': bsid_addr,
+            'encapmode': encapmode,
+            'segments': segments,
+            'fwd_engine': fwd_engine,
+            '_key': key,
+            'grpc_address': grpc_address,
+            'grpc_port': grpc_port
+        }]
+        # Persistency is not enabled, so we don't need to update the database
+        update_db = False
+    # Let's remove the SRv6 paths
+    for srv6_path in srv6_paths:
+        # If segment list not provided, initialize it to an empty list
+        if srv6_path['segments'] is None:
+            segments = []
+        # Create request message
+        request = srv6_manager_pb2.SRv6ManagerRequest()
+        # Create a new SRv6 path request
+        path_request = request.srv6_path_request       # pylint: disable=no-member
+        # Create a new path
+        path = path_request.paths.add()
+        # Set destination
+        path.destination = text_type(srv6_path['destination'])
+        # Set device
+        # If the device is not specified (i.e. empty string),
+        # it will be chosen by the gRPC server
+        path.device = text_type(srv6_path['device'])
+        # Set table ID
+        # If the table ID is not specified (i.e. table=-1),
+        # the main table will be used
+        path.table = int(srv6_path['table'])
+        # Set metric (i.e. preference value of the route)
+        # If the metric is not specified (i.e. metric=-1),
+        # the decision is left to the Linux kernel
+        path.metric = int(srv6_path['metric'])
+        # Set the BSID address (required for VPP)
+        path.bsid_addr = str(srv6_path['bsid_addr'])
+        # Set the forwarding engine
+        try:
+            if fwd_engine is not None and fwd_engine != '':
+                # Encode fwd engine in a format supported by gRPC
+                path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            else:
+                # By default, if forwarding engine is not specified, we use
+                # Linux forwarding engine
+                path_request.fwd_engine = FwdEngine.LINUX.value
+        except ValueError:
+            # An invalid value for fwd_engine has been provided
+            logger.error('Invalid forwarding engine: %s', fwd_engine)
+            raise utils.InvalidArgumentError
+        # Set encapmode
+        path.encapmode = text_type(srv6_path['encapmode'])
+        if len(srv6_path['segments']) == 0:
+            logger.error('*** Missing segments for seg6 route')
+            return commons_pb2.STATUS_INTERNAL_ERROR
+        # Iterate on the segments and build the SID list
+        for segment in srv6_path['segments']:
+            # Append the segment to the SID list
+            srv6_segment = path.sr_path.add()
+            srv6_segment.segment = text_type(segment)
+        # Get gRPC channel
+        channel = utils.get_grpc_session(
+            server_ip=srv6_path['grpc_address'],
+            server_port=srv6_path['grpc_port']
+        )
+        try:
+            # Get the reference of the stub
+            stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
+            # Remove the SRv6 path and get the status code
+            status = stub.Remove(request).status
+        except grpc.RpcError as err:
+            # An error occurred during the gRPC operation
+            # Parse the gRPC error and get the status code
+            status = parse_grpc_error(err)
+        finally:
+            # Close the channel
+            channel.close()
+            # Raise an exception if an error occurred
+            utils.raise_exception_on_error(status)
+    # Remove the path from the db
+    if update_db:
+        arangodb_driver.delete_srv6_path(
+            database=db_conn,
+            key=srv6_path['_key'],
+            grpc_address=srv6_path['grpc_address'],
+            grpc_port=srv6_path['grpc_port'],
+            destination=srv6_path['destination'],
+            segments=srv6_path['segments'],
+            device=srv6_path['device'],
+            encapmode=srv6_path['encapmode'],
+            table=srv6_path['table'],
+            metric=srv6_path['metric'],
+            bsid_addr=srv6_path['bsid_addr'],
+            fwd_engine=srv6_path['fwd_engine']
+        )
+
+
+def handle_srv6_path(operation, grpc_address, grpc_port, destination,
+                     segments=None, device='', encapmode="encap", table=-1,
+                     metric=-1, bsid_addr='', fwd_engine='linux', key=None,
+                     update_db=True, db_conn=None, channel=None):
+    """
+    Handle a SRv6 Path.
+    """
+    # Dispatch depending on the operation
+    if operation == 'add':
+        return add_srv6_path(
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key,
+            update_db=update_db,
+            db_conn=db_conn,
+            channel=channel
+        )
+    if operation == 'get':
+        return get_srv6_path(
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key,
+            update_db=update_db,
+            db_conn=db_conn,
+            channel=channel
+        )
+    if operation == 'change':
+        return change_srv6_path(
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key,
+            update_db=update_db,
+            db_conn=db_conn,
+            channel=channel
+        )
+    if operation == 'del':
+        return del_srv6_path(
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            key=key,
+            update_db=update_db,
+            db_conn=db_conn,
+            channel=channel
+        )
+    # Operation not supported, raise an exception
+    logger.error('Operation not supported')
+    raise utils.OperationNotSupportedException
 
 
 def handle_srv6_policy(operation, grpc_address, grpc_port,
@@ -480,6 +734,9 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
         # An error occurred during the gRPC operation
         # Parse the error and return it
         response = parse_grpc_error(err)
+    if res != commons_pb2.STATUS_SUCCESS:
+        logger.error('Cannot create SRv6 policy: error %s', res)
+        utils.raise_exception_on_error(res)
     # Return the response
     return response
 
