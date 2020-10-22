@@ -49,10 +49,6 @@ from controller import utils
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
 logger = logging.getLogger(__name__)
-# Default number of bits for the SID Locator
-DEFAULT_LOCATOR_BITS = 32
-# Default number of bits for the uSID identifier
-DEFAULT_USID_ID_BITS = 16
 
 
 # Parser for gRPC errors
