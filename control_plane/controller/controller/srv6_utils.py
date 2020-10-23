@@ -31,8 +31,8 @@ Control-Plane functionalities for SRv6 Manager
 # General imports
 import logging
 import os
-
 import grpc
+from enum import Enum
 from six import text_type
 
 # Proto dependencies
@@ -57,9 +57,9 @@ class FwdEngine(Enum):
     """
     Forwarding Engine.
     """
-    LINUX = nb_commons_pb2.FwdEngine.Value('LINUX')
-    VPP = nb_commons_pb2.FwdEngine.Value('VPP')
-    P4 = nb_commons_pb2.FwdEngine.Value('P4')
+    LINUX = srv6_manager_pb2.FwdEngine.Value('LINUX')
+    VPP = srv6_manager_pb2.FwdEngine.Value('VPP')
+    P4 = srv6_manager_pb2.FwdEngine.Value('P4')
 
 
 # Mapping python representation of Forwarding Engine to gRPC representation
@@ -107,6 +107,8 @@ def add_srv6_path(grpc_address, grpc_port, destination,
                   segments=None, device='', encapmode='encap', table=-1,
                   metric=-1, bsid_addr='', fwd_engine='linux', key=None,
                   update_db=True, db_conn=None, channel=None):
+    # If the flag is True, the gRPC channel is closed after the RPC
+    close_channel_after_rpc = False
     # Segment list is mandatory for "add" operation
     if segments is None or len(segments) == 0:
         logger.error('*** Missing segments for seg6 route')
@@ -139,6 +141,8 @@ def add_srv6_path(grpc_address, grpc_port, destination,
             raise utils.InvalidArgumentError
         # Establish a gRPC channel to the destination
         channel = utils.get_grpc_session(grpc_address, grpc_port)
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 path request
@@ -219,6 +223,9 @@ def add_srv6_path(grpc_address, grpc_port, destination,
         # Parse the gRPC error and get the status code
         status = parse_grpc_error(err)
     finally:
+        # Close the channel
+        if close_channel_after_rpc:
+            channel.close()
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(status)
     # If the persistecy is enable, store the path to the database
@@ -245,6 +252,8 @@ def get_srv6_path(grpc_address, grpc_port, destination,
                   segments=None, device='', encapmode='encap', table=-1,
                   metric=-1, bsid_addr='', fwd_engine='linux', key=None,
                   update_db=True, db_conn=None, channel=None):
+    # If the flag is True, the gRPC channel is closed after the RPC
+    close_channel_after_rpc = False
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -332,6 +341,9 @@ def get_srv6_path(grpc_address, grpc_port, destination,
             # Parse the gRPC error and get the status code
             status = parse_grpc_error(err)
         finally:
+            # Close the channel
+            if close_channel_after_rpc:
+                channel.close()
             # Raise an exception if an error occurred
             utils.raise_exception_on_error(status)
         # Extract the SRv6 paths from the gRPC response
@@ -356,6 +368,8 @@ def change_srv6_path(grpc_address, grpc_port, destination,
                          'address/port')
             raise utils.InvalidArgumentError
         channel = utils.get_grpc_session(grpc_address, grpc_port)
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -412,6 +426,9 @@ def change_srv6_path(grpc_address, grpc_port, destination,
         # Parse the gRPC error and get the status code
         status = parse_grpc_error(err)
     finally:
+        # Close the channel
+        if close_channel_after_rpc:
+            channel.close()
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(status)
     # Remove the path from the database
@@ -549,6 +566,8 @@ def del_srv6_path(grpc_address, grpc_port, destination,
             server_ip=srv6_path['grpc_address'],
             server_port=srv6_path['grpc_port']
         )
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
         try:
             # Get the reference of the stub
             stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -560,7 +579,8 @@ def del_srv6_path(grpc_address, grpc_port, destination,
             status = parse_grpc_error(err)
         finally:
             # Close the channel
-            channel.close()
+            if close_channel_after_rpc:
+                channel.close()
             # Raise an exception if an error occurred
             utils.raise_exception_on_error(status)
         # Remove the path from the db
@@ -680,6 +700,8 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
                          'address/port')
             raise utils.InvalidArgumentError
         channel = utils.get_grpc_session(grpc_address, grpc_port)
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -744,6 +766,9 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
         # Parse the error and return it
         status = parse_grpc_error(err)
     finally:
+        # Close the channel
+        if close_channel_after_rpc:
+            channel.close()
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(status)
     # Extract the SRv6 policies from the gRPC response
@@ -788,6 +813,8 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
             raise utils.InvalidArgumentError
         # Establish a gRPC channel to the destination
         channel = utils.get_grpc_session(grpc_address, grpc_port)
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 behavior request
@@ -858,6 +885,9 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
         # Parse the gRPC error and get the status code
         status = parse_grpc_error(err)
     finally:
+        # Close the channel
+        if close_channel_after_rpc:
+            channel.close()
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(status)
     # If the persistecy is enable, store the behavior to the database
@@ -887,6 +917,8 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
                       lookup_table=-1, interface="", segments=None,
                       metric=-1, fwd_engine='linux', key=None,
                       update_db=True, db_conn=None, channel=None):
+    # If the flag is True, the gRPC channel is closed after the RPC
+    close_channel_after_rpc = False
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -980,6 +1012,9 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
             # Parse the gRPC error and get the status code
             status = parse_grpc_error(err)
         finally:
+            # Close the channel
+            if close_channel_after_rpc:
+                channel.close()
             # Raise an exception if an error occurred
             utils.raise_exception_on_error(status)
         # Extract the SRv6 behaviors from the gRPC response
@@ -1005,6 +1040,8 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
                          'address/port')
             raise utils.InvalidArgumentError
         channel = utils.get_grpc_session(grpc_address, grpc_port)
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -1074,6 +1111,9 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
         # Parse the gRPC error and get the status code
         status = parse_grpc_error(err)
     finally:
+        # Close the channel
+        if close_channel_after_rpc:
+            channel.close()
         # Raise an exception if an error occurred
         utils.raise_exception_on_error(status)
     # Remove the behavior from the database
@@ -1228,6 +1268,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
             server_ip=srv6_path['grpc_address'],
             server_port=srv6_path['grpc_port']
         )
+        # Set flag to close the channel after the RPC
+        close_channel_after_rpc = True
         try:
             # Get the reference of the stub
             stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -1239,7 +1281,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
             status = parse_grpc_error(err)
         finally:
             # Close the channel
-            channel.close()
+            if close_channel_after_rpc:
+                channel.close()
             # Raise an exception if an error occurred
             utils.raise_exception_on_error(status)
         # Remove the path from the db
@@ -1409,6 +1452,8 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             raise utils.InvalidArgumentError
         # Establish a gRPC channel to the destination
         ingress_channel = utils.get_grpc_session(ingress_ip, ingress_port)
+        # Set flag to close the channel after the RPC
+        close_ingress_channel_after_rpc = True
     if egress_channel is None:
         # Check arguments
         if egress_ip is None or \
@@ -1418,6 +1463,8 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             raise utils.InvalidArgumentError
         # Establish a gRPC channel to the destination
         egress_channel = utils.get_grpc_session(egress_ip, egress_port)
+        # Set flag to close the channel after the RPC
+        close_egress_channel_after_rpc = True
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
     #
@@ -1458,20 +1505,29 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
         # Save the tunnel to the db
-        arangodb_driver.insert_srv6_tunnel(
-            database=db_conn,
-            l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
-            l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
-            r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
-            r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
-            sidlist_lr=segments,
-            dest_lr=destination,
-            localseg_lr=localseg,
-            bsid_addr=bsid_addr,
-            fwd_engine=fwd_engine,
-            is_unidirectional=True,
-            key=key
-        )
+        try:
+            arangodb_driver.insert_srv6_tunnel(
+                database=db_conn,
+                l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
+                l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
+                r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
+                r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
+                sidlist_lr=segments,
+                dest_lr=destination,
+                localseg_lr=localseg,
+                bsid_addr=bsid_addr,
+                fwd_engine=fwd_engine,
+                is_unidirectional=True,
+                key=key
+            )
+        finally:
+            # Close the channel
+            if close_ingress_channel_after_rpc:
+                ingress_channel.close()
+            # Close the channel
+            if close_egress_channel_after_rpc:
+                egress_channel.close()
+
 
 
 def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
@@ -1539,6 +1595,8 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
             raise utils.InvalidArgumentError
         # Establish a gRPC channel to the destination
         node_l_channel = utils.get_grpc_session(node_l_ip, node_l_port)
+        # Set flag to close the channel after the RPC
+        close_lchannel_after_rpc = True
     if node_r_channel is None:
         # Check arguments
         if node_r_ip is None or \
@@ -1547,30 +1605,41 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                          'address/port')
             raise utils.InvalidArgumentError
         node_r_channel = utils.get_grpc_session(node_r_ip, node_r_port)
+        # Set flag to close the channel after the RPC
+        close_rchannel_after_rpc = True
     # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
-    create_uni_srv6_tunnel(
-        ingress_channel=node_l_channel,
-        egress_channel=node_r_channel,
-        destination=dest_lr,
-        segments=sidlist_lr,
-        localseg=localseg_lr,
-        bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine,
-        update_db=False,
-        db_conn=db_conn
-    )
-    # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
-    create_uni_srv6_tunnel(
-        ingress_channel=node_r_channel,
-        egress_channel=node_l_channel,
-        destination=dest_rl,
-        segments=sidlist_rl,
-        localseg=localseg_rl,
-        bsid_addr=bsid_addr,
-        fwd_engine=fwd_engine,
-        update_db=False,
-        db_conn=db_conn
-    )
+    try:
+        create_uni_srv6_tunnel(
+            ingress_channel=node_l_channel,
+            egress_channel=node_r_channel,
+            destination=dest_lr,
+            segments=sidlist_lr,
+            localseg=localseg_lr,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            update_db=False,
+            db_conn=db_conn
+        )
+        # Create a unidirectional SRv6 tunnel from <node_r> to <node_l>
+        create_uni_srv6_tunnel(
+            ingress_channel=node_r_channel,
+            egress_channel=node_l_channel,
+            destination=dest_rl,
+            segments=sidlist_rl,
+            localseg=localseg_rl,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine,
+            update_db=False,
+            db_conn=db_conn
+        )
+    finally:
+        # Close the channel
+        if close_lchannel_after_rpc:
+            node_l_channel.close()
+        # Close the channel
+        if close_rchannel_after_rpc:
+            node_r_channel.close()
+
     # If the persistecy is enable, store the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
@@ -1679,6 +1748,8 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             ingress_channel = utils.get_grpc_session(ingress_ip, ingress_port)
+            # Set flag to close the channel after the RPC
+            close_ingress_channel_after_rpc = True
         if egress_channel is None:
             # Check arguments
             if egress_ip is None or \
@@ -1688,6 +1759,8 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             egress_channel = utils.get_grpc_session(egress_ip, egress_port)
+            # Set flag to close the channel after the RPC
+            close_egress_channel_after_rpc = True
         # Remove seg6 route from <ingress> to steer the packets sent to
         # <destination> through the SID list <segments>
         #
@@ -1709,6 +1782,13 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             # If the 'ignore_errors' flag is set, continue
             if not ignore_errors:
                 pass
+        finally:
+            # Close the channel
+            if close_ingress_channel_after_rpc:
+                ingress_channel.close()
+            # Close the channel
+            if close_egress_channel_after_rpc:
+                egress_channel.close()
         # Remove "Decapsulaton and Specific IPv6 Table Lookup" function
         # from the egress node <egress>
         # The decap function associated to the <localseg> passed in
@@ -1733,6 +1813,13 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
                 # If the 'ignore_errors' flag is set, continue
                 if not ignore_errors:
                     pass
+            finally:
+                # Close the channel
+                if close_ingress_channel_after_rpc:
+                    ingress_channel.close()
+                # Close the channel
+                if close_egress_channel_after_rpc:
+                    egress_channel.close()
         # Remove the tunnel from the db
         if update_db:
             arangodb_driver.delete_srv6_tunnel(
@@ -1856,6 +1943,8 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             node_l_channel = utils.get_grpc_session(node_l_ip, node_l_port)
+            # Set flag to close the channel after the RPC
+            close_lchannel_after_rpc = True
         if node_r_channel is None:
             # Check arguments
             if node_r_ip is None or \
@@ -1865,30 +1954,40 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             node_r_channel = utils.get_grpc_session(node_r_ip, node_r_port)
-        # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
-        destroy_uni_srv6_tunnel(
-            ingress_channel=node_l_channel,
-            egress_channel=node_r_channel,
-            destination=srv6_tunnel['dest_lr'],
-            localseg=srv6_tunnel['localseg_lr'],
-            ignore_errors=ignore_errors,
-            bsid_addr=srv6_tunnel['bsid_addr'],
-            fwd_engine=srv6_tunnel['fwd_engine'],
-            update_db=False,
-            db_conn=db_conn
-        )
-        # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
-        destroy_uni_srv6_tunnel(
-            ingress_channel=node_r_channel,
-            egress_channel=node_l_channel,
-            destination=srv6_tunnel['dest_rl'],
-            localseg=srv6_tunnel['localseg_rl'],
-            ignore_errors=ignore_errors,
-            bsid_addr=srv6_tunnel['bsid_addr'],
-            fwd_engine=srv6_tunnel['fwd_engine'],
-            update_db=False,
-            db_conn=db_conn
-        )
+            # Set flag to close the channel after the RPC
+            close_rchannel_after_rpc = True
+        try:
+            # Remove unidirectional SRv6 tunnel from <node_l> to <node_r>
+            destroy_uni_srv6_tunnel(
+                ingress_channel=node_l_channel,
+                egress_channel=node_r_channel,
+                destination=srv6_tunnel['dest_lr'],
+                localseg=srv6_tunnel['localseg_lr'],
+                ignore_errors=ignore_errors,
+                bsid_addr=srv6_tunnel['bsid_addr'],
+                fwd_engine=srv6_tunnel['fwd_engine'],
+                update_db=False,
+                db_conn=db_conn
+            )
+            # Remove unidirectional SRv6 tunnel from <node_r> to <node_l>
+            destroy_uni_srv6_tunnel(
+                ingress_channel=node_r_channel,
+                egress_channel=node_l_channel,
+                destination=srv6_tunnel['dest_rl'],
+                localseg=srv6_tunnel['localseg_rl'],
+                ignore_errors=ignore_errors,
+                bsid_addr=srv6_tunnel['bsid_addr'],
+                fwd_engine=srv6_tunnel['fwd_engine'],
+                update_db=False,
+                db_conn=db_conn
+            )
+        finally:
+            # Close the channel
+            if close_lchannel_after_rpc:
+                node_l_channel.close()
+            # Close the channel
+            if close_rchannel_after_rpc:
+                node_r_channel.close()
         # Remove the tunnel from the db
         if update_db:
             arangodb_driver.delete_srv6_tunnel(
@@ -1947,7 +2046,7 @@ def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         l_grpc_address=ingress_ip,
         l_grpc_port=ingress_port,
         r_grpc_address=egress_ip,
-        r_grpc_port=egress_port
+        r_grpc_port=egress_port,
         sidlist_lr=list(segments) if len(segments) > 0 else None,
         sidlist_rl=None,
         dest_lr=destination if destination != '' else None,
@@ -2024,5 +2123,3 @@ def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
         fwd_engine=fwd_engine if fwd_engine != '' else None,
         is_unidirectional=False
     )
-
-# TODO close gRPC channel after the execution
