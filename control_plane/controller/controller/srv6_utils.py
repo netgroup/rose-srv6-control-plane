@@ -865,11 +865,11 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            behavior_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
-            path_request.fwd_engine = FwdEngine.LINUX.value
+            behavior_request.fwd_engine = FwdEngine.LINUX.value
     except ValueError:
         # An invalid value for fwd_engine has been provided
         logger.error('Invalid forwarding engine: %s', fwd_engine)
@@ -1215,23 +1215,23 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
         # Create a new SRv6 behavior
         behavior = behavior_request.behaviors.add()
         # Set local segment for the seg6local route
-        behavior.segment = text_type(srv6_path['segment'])
+        behavior.segment = text_type(srv6_behavior['segment'])
         # Set the device
         # If the device is not specified (i.e. empty string),
         # it will be chosen by the gRPC server
-        behavior.device = text_type(srv6_path['device'])
+        behavior.device = text_type(srv6_behavior['device'])
         # Set the table where the seg6local must be inserted
         # If the table ID is not specified (i.e. table=-1),
         # the main table will be used
-        behavior.table = int(srv6_path['table'])
+        behavior.table = int(srv6_behavior['table'])
         # Set device
         # If the device is not specified (i.e. empty string),
         # it will be chosen by the gRPC server
-        behavior.device = text_type(srv6_path['device'])
+        behavior.device = text_type(srv6_behavior['device'])
         # Set metric (i.e. preference value of the route)
         # If the metric is not specified (i.e. metric=-1),
         # the decision is left to the Linux kernel
-        behavior.metric = int(srv6_path['metric'])
+        behavior.metric = int(srv6_behavior['metric'])
         # Set the action for the seg6local route
         behavior.action = text_type(srv6_behavior['action'])
         # Set the nexthop for the L3 cross-connect actions
@@ -1254,7 +1254,7 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
             if fwd_engine is not None and fwd_engine != '':
                 # Encode fwd engine in a format supported by gRPC
                 behavior_request.fwd_engine = py_to_grpc_fwd_engine(
-                    srv6_path['fwd_engine'])
+                    srv6_behavior['fwd_engine'])
             else:
                 # By default, if forwarding engine is not specified, we use
                 # Linux forwarding engine
@@ -1265,8 +1265,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
             raise utils.InvalidArgumentError
         # Get gRPC channel
         channel = utils.get_grpc_session(
-            server_ip=srv6_path['grpc_address'],
-            server_port=srv6_path['grpc_port']
+            server_ip=srv6_behavior['grpc_address'],
+            server_port=srv6_behavior['grpc_port']
         )
         # Set flag to close the channel after the RPC
         close_channel_after_rpc = True
@@ -1720,16 +1720,16 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         # The tunnel to be removed is the tunnel specified through the arguments
         srv6_tunnels = [{
             '_key': key,
-            'l_grpc_address': utils.grpc_chan_to_addr_port(node_l_channel)[0],
-            'l_grpc_port': utils.grpc_chan_to_addr_port(node_l_channel)[1],
-            'r_grpc_address': utils.grpc_chan_to_addr_port(node_r_channel)[0],
-            'r_grpc_port': utils.grpc_chan_to_addr_port(node_r_channel)[1],
+            'l_grpc_address': ingress_ip,
+            'l_grpc_port': ingress_port,
+            'r_grpc_address': egress_ip,
+            'r_grpc_port': egress_port,
             'sidlist_lr': None,
             'sidlist_rl': None,
-            'dest_lr': dest_lr,
-            'dest_rl': dest_rl,
-            'localseg_lr': localseg_lr,
-            'localseg_rl': localseg_rl,
+            'dest_lr': destination,
+            'dest_rl': None,
+            'localseg_lr': localseg,
+            'localseg_rl': None,
             'bsid_addr': bsid_addr,
             'fwd_engine': fwd_engine,
             'is_unidirectional': True
