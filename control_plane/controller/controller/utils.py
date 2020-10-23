@@ -167,7 +167,7 @@ status_code_to_str = {
 }
 
 
-def print_status_message(status_code, success_msg, failure_msg):
+def print_status_message(status_code, success_msg, failure_msg):    # TODO to be removed
     """
     Print success or failure message depending of the status code
     returned by a gRPC operation.
