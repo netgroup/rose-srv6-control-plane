@@ -258,8 +258,10 @@ def get_srv6_path(grpc_address, grpc_port, destination,
         srv6_paths = arangodb_driver.find_srv6_path(
             database=db_conn,
             key=key if key != '' else None,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
+            grpc_address=utils.grpc_chan_to_addr_port(
+                channel)[0] if channel is not None else None,
+            grpc_port=utils.grpc_chan_to_addr_port(
+                channel)[1] if channel is not None else None,
             destination=destination if destination != '' else None,
             segments=segments if segments != [''] else None,
             device=device if device != '' else None,
@@ -282,7 +284,7 @@ def get_srv6_path(grpc_address, grpc_port, destination,
                 if grpc_address is None or \
                         grpc_address == '' or grpc_port is None or grpc_port == -1:
                     logger.error('"get" operation requires a gRPC channel or gRPC '
-                                'address/port')
+                                 'address/port')
                     raise utils.InvalidArgumentError
             # Create request message
             request = srv6_manager_pb2.SRv6ManagerRequest()
@@ -522,7 +524,8 @@ def del_srv6_path(grpc_address, grpc_port, destination,
         try:
             if fwd_engine is not None and fwd_engine != '':
                 # Encode fwd engine in a format supported by gRPC
-                path_request.fwd_engine = py_to_grpc_fwd_engine(srv6_path['fwd_engine'])
+                path_request.fwd_engine = py_to_grpc_fwd_engine(
+                    srv6_path['fwd_engine'])
             else:
                 # By default, if forwarding engine is not specified, we use
                 # Linux forwarding engine
@@ -710,6 +713,10 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
             policy_request.fwd_engine = FwdEngine.LINUX.value
+    except ValueError:
+        # An invalid value for fwd_engine has been provided
+        logger.error('Invalid forwarding engine: %s', fwd_engine)
+        raise utils.InvalidArgumentError
     try:
         # Get the reference of the stub
         stub = srv6_manager_pb2_grpc.SRv6ManagerStub(channel)
@@ -744,7 +751,7 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
     # Return the response
     return srv6_policies
 
-    
+
 def add_srv6_behavior(grpc_address, grpc_port, segment,
                       action='', device='', table=-1, nexthop="",
                       lookup_table=-1, interface="", segments=None,
@@ -836,15 +843,6 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
             path_request.fwd_engine = FwdEngine.LINUX.value
-    # Set the forwarding engine
-    try:
-        if fwd_engine is not None and fwd_engine != '':
-            # Encode fwd engine in a format supported by gRPC
-            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
-        else:
-            # By default, if forwarding engine is not specified, we use
-            # Linux forwarding engine
-            path_request.fwd_engine = FwdEngine.LINUX.value
     except ValueError:
         # An invalid value for fwd_engine has been provided
         logger.error('Invalid forwarding engine: %s', fwd_engine)
@@ -883,7 +881,7 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
             fwd_engine=fwd_engine
         )
 
-    
+
 def get_srv6_behavior(grpc_address, grpc_port, segment,
                       action='', device='', table=-1, nexthop="",
                       lookup_table=-1, interface="", segments=None,
@@ -902,8 +900,10 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
         srv6_behaviors = arangodb_driver.find_srv6_behavior(
             database=db_conn,
             key=key if key != '' else None,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0] if channel is not None else None,
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1] if channel is not None else None,
+            grpc_address=utils.grpc_chan_to_addr_port(
+                channel)[0] if channel is not None else None,
+            grpc_port=utils.grpc_chan_to_addr_port(
+                channel)[1] if channel is not None else None,
             segment=segment if segment != '' else None,
             action=action if action != '' else None,
             device=device if device != '' else None,
@@ -928,7 +928,7 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
                 if grpc_address is None or \
                         grpc_address == '' or grpc_port is None or grpc_port == -1:
                     logger.error('"get" operation requires a gRPC channel or gRPC '
-                                'address/port')
+                                 'address/port')
                     raise utils.InvalidArgumentError
             # Create request message
             request = srv6_manager_pb2.SRv6ManagerRequest()
@@ -954,12 +954,13 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
             # Set metric (i.e. preference value of the route)
             # If the metric is not specified (i.e. metric=-1),
             # the decision is left to the Linux kernel
-            behavior.metric = int(metric)            
+            behavior.metric = int(metric)
             # Set the forwarding engine
             try:
                 if fwd_engine is not None and fwd_engine != '':
                     # Encode fwd engine in a format supported by gRPC
-                    behavior_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+                    behavior_request.fwd_engine = py_to_grpc_fwd_engine(
+                        fwd_engine)
                 else:
                     # By default, if forwarding engine is not specified, we use
                     # Linux forwarding engine
@@ -1212,7 +1213,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
         try:
             if fwd_engine is not None and fwd_engine != '':
                 # Encode fwd engine in a format supported by gRPC
-                behavior_request.fwd_engine = py_to_grpc_fwd_engine(srv6_path['fwd_engine'])
+                behavior_request.fwd_engine = py_to_grpc_fwd_engine(
+                    srv6_path['fwd_engine'])
             else:
                 # By default, if forwarding engine is not specified, we use
                 # Linux forwarding engine
@@ -1258,7 +1260,7 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
                 metric=srv6_behavior['metric'],
                 fwd_engine=srv6_behavior['fwd_engine']
             )
-            
+
 
 def handle_srv6_behavior(operation, grpc_address, grpc_port, segment,
                          action='', device='', table=-1, nexthop="",
@@ -1666,14 +1668,14 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         # Persistency is not enabled, so we don't need to update the database
         update_db = False
     # Let's remove the SRv6 tunnels
-    for srv6_tunnel in srv6_tunnels: 
+    for srv6_tunnel in srv6_tunnels:
         # Establish a gRPC channel, if no channel has been provided
         if ingress_channel is None:
             # Check arguments
             if ingress_ip is None or \
                     ingress_ip == '' or ingress_port is None or ingress_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
-                            'address/port')
+                             'address/port')
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             ingress_channel = utils.get_grpc_session(ingress_ip, ingress_port)
@@ -1682,7 +1684,7 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             if egress_ip is None or \
                     egress_ip == '' or egress_port is None or egress_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
-                            'address/port')
+                             'address/port')
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             egress_channel = utils.get_grpc_session(egress_ip, egress_port)
@@ -1850,7 +1852,7 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
             if node_l_ip is None or \
                     node_l_ip == '' or node_l_port is None or node_l_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
-                            'address/port')
+                             'address/port')
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             node_l_channel = utils.get_grpc_session(node_l_ip, node_l_port)
@@ -1859,7 +1861,7 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
             if node_r_ip is None or \
                     node_r_ip == '' or node_r_port is None or node_r_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
-                            'address/port')
+                             'address/port')
                 raise utils.InvalidArgumentError
             # Establish a gRPC channel to the destination
             node_r_channel = utils.get_grpc_session(node_r_ip, node_r_port)
@@ -1959,11 +1961,11 @@ def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
 
 
 def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
-                       sidlist_lr, sidlist_rl, dest_lr, dest_rl,
-                       localseg_lr=None, localseg_rl=None,
-                       bsid_addr='', fwd_engine='linux', update_db=True,
-                       key=None, db_conn=None, node_l_channel=None,
-                       node_r_channel=None):
+                    sidlist_lr, sidlist_rl, dest_lr, dest_rl,
+                    localseg_lr=None, localseg_rl=None,
+                    bsid_addr='', fwd_engine='linux', update_db=True,
+                    key=None, db_conn=None, node_l_channel=None,
+                    node_r_channel=None):
     """
     Create a bidirectional SRv6 tunnel between <node_l> and <node_r>.
 
