@@ -286,14 +286,14 @@ def get_srv6_path(grpc_address, grpc_port, destination,
         # We need to interact with the node to retrieve the SRv6 paths
         try:
             # In order to get a SRv6 path we need to interact with the node
-            # If no gRPC channel has been provided, we need to open a new channel
-            # to the node; in this case, grpc_address and grpc_port arguments are
-            # required
+            # If no gRPC channel has been provided, we need to open a new
+            # channel to the node; in this case, grpc_address and grpc_port
+            # arguments are required
             if channel is None:
-                if grpc_address is None or \
-                        grpc_address == '' or grpc_port is None or grpc_port == -1:
-                    logger.error('"get" operation requires a gRPC channel or gRPC '
-                                 'address/port')
+                if grpc_address is None or grpc_address == '' or \
+                        grpc_port is None or grpc_port == -1:
+                    logger.error('"get" operation requires a gRPC channel or '
+                                 'gRPC address/port')
                     raise utils.InvalidArgumentError
             # Create request message
             request = srv6_manager_pb2.SRv6ManagerRequest()
@@ -454,7 +454,9 @@ def change_srv6_path(grpc_address, grpc_port, destination,
 def del_srv6_path(grpc_address, grpc_port, destination,
                   segments=None, device='', encapmode='encap', table=-1,
                   metric=-1, bsid_addr='', fwd_engine='linux', key=None,
-                  update_db=True, db_conn=None, channel=None):  # TODO currently channel argument is not used
+                  update_db=True, db_conn=None, channel=None):
+    # TODO currently channel argument is not used
+    #
     # Remove the SRv6 path
     #
     # We need to support two scenarios:
@@ -518,7 +520,7 @@ def del_srv6_path(grpc_address, grpc_port, destination,
         # Create request message
         request = srv6_manager_pb2.SRv6ManagerRequest()
         # Create a new SRv6 path request
-        path_request = request.srv6_path_request       # pylint: disable=no-member
+        path_request = request.srv6_path_request   # pylint: disable=no-member
         # Create a new path
         path = path_request.paths.add()
         # Set destination
@@ -785,8 +787,8 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
-    # If database persistency is enabled, we need to check if a SRv6 behavior with
-    # the same key already exists
+    # If database persistency is enabled, we need to check if a SRv6 behavior
+    # with the same key already exists
     if key is not None and \
             os.getenv('ENABLE_PERSISTENCY') in ['true', 'True']:
         # Perform a lookup by key into the database
@@ -953,19 +955,19 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
         # We need to interact with the node to retrieve the SRv6 behaviors
         try:
             # In order to get a SRv6 behavior we need to interact with the node
-            # If no gRPC channel has been provided, we need to open a new channel
-            # to the node; in this case, grpc_address and grpc_port arguments are
-            # required
+            # If no gRPC channel has been provided, we need to open a new
+            # channel to the node; in this case, grpc_address and grpc_port
+            # arguments are required
             if channel is None:
-                if grpc_address is None or \
-                        grpc_address == '' or grpc_port is None or grpc_port == -1:
-                    logger.error('"get" operation requires a gRPC channel or gRPC '
-                                 'address/port')
+                if grpc_address is None or grpc_address == '' or \
+                        grpc_port is None or grpc_port == -1:
+                    logger.error('"get" operation requires a gRPC channel or '
+                                 'gRPC address/port')
                     raise utils.InvalidArgumentError
             # Create request message
             request = srv6_manager_pb2.SRv6ManagerRequest()
             # Create a new SRv6 behavior request
-            behavior_request = (request               # pylint: disable=no-member
+            behavior_request = (request            # pylint: disable=no-member
                                 .srv6_behavior_request)
             # Create a new SRv6 behavior
             behavior = behavior_request.behaviors.add()
@@ -1184,7 +1186,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
     else:
         # Persistency is not enabled
         #
-        # The behavior to be removed is the behavior specified through the arguments
+        # The behavior to be removed is the behavior specified through the
+        # arguments
         srv6_behaviors = [{
             '_key': key,
             'grpc_address': grpc_address,
@@ -1508,7 +1511,8 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         try:
             arangodb_driver.insert_srv6_tunnel(
                 database=db_conn,
-                l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[0],
+                l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[
+                    0],
                 l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
                 r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
                 r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
@@ -1527,7 +1531,6 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             # Close the channel
             if close_egress_channel_after_rpc:
                 egress_channel.close()
-
 
 
 def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
@@ -1717,7 +1720,8 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     else:
         # Persistency is not enabled
         #
-        # The tunnel to be removed is the tunnel specified through the arguments
+        # The tunnel to be removed is the tunnel specified through the
+        # arguments
         srv6_tunnels = [{
             '_key': key,
             'l_grpc_address': ingress_ip,
@@ -1741,8 +1745,8 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         # Establish a gRPC channel, if no channel has been provided
         if ingress_channel is None:
             # Check arguments
-            if ingress_ip is None or \
-                    ingress_ip == '' or ingress_port is None or ingress_port == -1:
+            if ingress_ip is None or ingress_ip == '' or \
+                    ingress_port is None or ingress_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
                              'address/port')
                 raise utils.InvalidArgumentError
@@ -1752,8 +1756,8 @@ def destroy_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             close_ingress_channel_after_rpc = True
         if egress_channel is None:
             # Check arguments
-            if egress_ip is None or \
-                    egress_ip == '' or egress_port is None or egress_port == -1:
+            if egress_ip is None or egress_ip == '' or \
+                    egress_port is None or egress_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
                              'address/port')
                 raise utils.InvalidArgumentError
@@ -1912,7 +1916,8 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
     else:
         # Persistency is not enabled
         #
-        # The tunnel to be removed is the tunnel specified through the arguments
+        # The tunnel to be removed is the tunnel specified through the
+        # arguments
         srv6_tunnels = [{
             '_key': key,
             'l_grpc_address': utils.grpc_chan_to_addr_port(node_l_channel)[0],
@@ -1936,8 +1941,8 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
         # Establish a gRPC channel, if no channel has been provided
         if node_l_channel is None:
             # Check arguments
-            if node_l_ip is None or \
-                    node_l_ip == '' or node_l_port is None or node_l_port == -1:
+            if node_l_ip is None or node_l_ip == '' or \
+                    node_l_port is None or node_l_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
                              'address/port')
                 raise utils.InvalidArgumentError
@@ -1947,8 +1952,8 @@ def destroy_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
             close_lchannel_after_rpc = True
         if node_r_channel is None:
             # Check arguments
-            if node_r_ip is None or \
-                    node_r_ip == '' or node_r_port is None or node_r_port == -1:
+            if node_r_ip is None or node_r_ip == '' or \
+                    node_r_port is None or node_r_port == -1:
                 logger.error('"add" operation requires a gRPC channel or gRPC '
                              'address/port')
                 raise utils.InvalidArgumentError
