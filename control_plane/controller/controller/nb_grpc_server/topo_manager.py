@@ -301,14 +301,14 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 # Fill "to" field
                 _edge.target = edge['_to']
                 # Set edge type (e.g. "CORE" or "EDGE")
-                _edge.type = py_to_grpc_link_type(edge['type'])
+                _edge.type = py_to_grpc_link_type[edge['type']]
             # Set status code
             response.status = nb_commons_pb2.STATUS_SUCCESS
             # Send the reply
             return response
         # Unknown or unsupported routing protocol
         logger.error('Unknown/Unsupported routing protocol: %s',
-                     grpc_to_py_routing_protocol(request.protocol))
+                     grpc_to_py_routing_protocol[request.protocol])
         return topology_manager_pb2_grpc.TopologyManagerReply(
             status=nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         )
@@ -438,7 +438,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                         # Fill "to" field
                         _edge.target = edge['_to']
                         # Set edge type (e.g. "CORE" or "EDGE")
-                        _edge.type = py_to_grpc_link_type(edge['type'])
+                        _edge.type = py_to_grpc_link_type[edge['type']]
                     # Set status code
                     response.status = nb_commons_pb2.STATUS_SUCCESS
                     # Send the reply
@@ -451,7 +451,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         else:
             # Unknown or unsupported routing protocol
             logger.error('Unknown/Unsupported routing protocol: %s',
-                         grpc_to_py_routing_protocol(request.protocol))
+                         grpc_to_py_routing_protocol[request.protocol])
             response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             return response
 
