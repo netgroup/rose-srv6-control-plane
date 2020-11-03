@@ -293,16 +293,16 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 # Handle SRv6 path
                 srv6_paths = srv6_utils.handle_srv6_path(
                     operation=srv6_path.operation,
-                    grpc_address=srv6_path.grpc_address,
-                    grpc_port=srv6_path.grpc_port,
-                    destination=srv6_path.destination,
-                    segments=list(srv6_path.segments),
-                    device=srv6_path.device,
-                    encapmode=encapmode,
-                    table=srv6_path.table,
-                    metric=srv6_path.metric,
-                    bsid_addr=srv6_path.bsid_addr,
-                    fwd_engine=fwd_engine,
+                    grpc_address=srv6_path.grpc_address if srv6_path.grpc_address != '' else None,
+                    grpc_port=srv6_path.grpc_port if srv6_path.grpc_port != -1 else None,
+                    destination=srv6_path.destination if srv6_path.destination != '' else None,
+                    segments=list(srv6_path.segments) if len(srv6_path.segments) > 0 else None,
+                    device=srv6_path.device if srv6_path.device != '' else None,
+                    encapmode=encapmode if encapmode != '' else None,
+                    table=srv6_path.table if srv6_path.table != -1 else None,
+                    metric=srv6_path.metric if srv6_path.metric != -1 else None,
+                    bsid_addr=srv6_path.bsid_addr if srv6_path.bsid_addr != '' else None,
+                    fwd_engine=fwd_engine if fwd_engine != '' else None,
                     key=srv6_path.key if srv6_path.key != '' else None,
                     db_conn=self.db_conn
                 )
@@ -313,16 +313,17 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         if srv6_paths is not None:
             for path in srv6_paths:
                 _srv6_path = response.srv6_paths.add()
-                _srv6_path.grpc_address = path['grpc_address']
-                _srv6_path.grpc_port = path['grpc_port']
-                _srv6_path.destination = path['destination']
-                _srv6_path.segments.extend(path['segments'])
-                _srv6_path.encapmode = py_to_grpc_encap_mode[path['encapmode']]
-                _srv6_path.device = path['device']
-                _srv6_path.table = path['table']
-                _srv6_path.metric = path['metric']
-                _srv6_path.bsid_addr = path['bsid_addr']
-                _srv6_path.fwd_engine = py_to_grpc_fwd_engine[path['fwd_engine']]
+                _srv6_path.grpc_address = path['grpc_address'] if path['grpc_address'] is not None else ''
+                _srv6_path.grpc_port = path['grpc_port'] if path['grpc_port'] is not None else ''
+                _srv6_path.destination = path['destination'] if path['destination'] is not None else ''
+                if path['segments'] is not None:
+                    _srv6_path.segments.extend(path['segments'])
+                _srv6_path.encapmode = py_to_grpc_encap_mode[path['encapmode']] if path['encapmode'] is not None else EncapMode.UNSPEC.value
+                _srv6_path.device = path['device'] if path['device'] is not None else ''
+                _srv6_path.table = path['table'] if path['table'] is not None else -1
+                _srv6_path.metric = path['metric'] if path['metric'] is not None else -1
+                _srv6_path.bsid_addr = path['bsid_addr'] if path['bsid_addr'] is not None else ''
+                _srv6_path.fwd_engine = py_to_grpc_fwd_engine[path['fwd_engine']] if path['fwd_engine'] is not None else FwdEngine.UNSPEC.value
                 if '_key' in path:
                     _srv6_path.key = path['_key']
         # Done, return the reply
@@ -342,21 +343,25 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             with srv6_mgr_error_handling() as response:
                 # Extract the SRv6 action
                 action = grpc_to_py_srv6_action[srv6_behavior.action]
+                # Extract the forwarding engine
+                fwd_engine = grpc_to_py_fwd_engine[srv6_behavior.fwd_engine]
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
                 # Handle the behavior
                 srv6_behaviors = srv6_utils.handle_srv6_behavior(
                     operation=srv6_behavior.operation,
-                    grpc_address=srv6_behavior.grpc_address,
-                    grpc_port=srv6_behavior.grpc_port,
-                    segment=srv6_behavior.segment,
-                    action=action,
-                    device=srv6_behavior.device,
-                    table=srv6_behavior.table,
-                    nexthop=srv6_behavior.nexthop,
-                    lookup_table=srv6_behavior.lookup_table,
-                    interface=srv6_behavior.interface,
-                    segments=list(srv6_behavior.segments),
-                    metric=srv6_behavior.metric,
-                    fwd_engine=grpc_to_py_fwd_engine[srv6_behavior.fwd_engine],
+                    grpc_address=srv6_behavior.grpc_address if srv6_behavior.grpc_address != '' else None,
+                    grpc_port=srv6_behavior.grpc_port if srv6_behavior.grpc_port != -1 else None,
+                    segment=srv6_behavior.segment if srv6_behavior.segment != '' else None,
+                    action=action if action != '' else None,
+                    device=srv6_behavior.device if srv6_behavior.device != '' else None,
+                    table=srv6_behavior.table if srv6_behavior.table != -1 else None,
+                    nexthop=srv6_behavior.nexthop if srv6_behavior.nexthop != '' else None,
+                    lookup_table=srv6_behavior.lookup_table if srv6_behavior.lookup_table != -1 else None,
+                    interface=srv6_behavior.interface if srv6_behavior.interface != '' else None,
+                    segments=list(srv6_behavior.segments) if len(srv6_behavior.segments) > 0 else None,
+                    metric=srv6_behavior.metric if srv6_behavior.metric != -1 else None,
+                    fwd_engine=fwd_engine if fwd_engine != '' else None,
                     key=srv6_behavior.key if srv6_behavior.key != '' else None,
                     db_conn=self.db_conn
                 )
@@ -367,18 +372,19 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         if srv6_behaviors is not None:
             for behavior in srv6_behaviors:
                 _srv6_behavior = response.srv6_behaviors.add()
-                _srv6_behavior.grpc_address = behavior['grpc_address']
-                _srv6_behavior.grpc_port = behavior['grpc_port']
-                _srv6_behavior.segment = behavior['segment']
-                _srv6_behavior.action = py_to_grpc_srv6_action[behavior['action']]
-                _srv6_behavior.nexthop = behavior['nexthop']
-                _srv6_behavior.lookup_table = behavior['lookup_table']
-                _srv6_behavior.interface = behavior['interface']
-                _srv6_behavior.segments.extend(behavior['segments'])
-                _srv6_behavior.device = behavior['device']
-                _srv6_behavior.table = behavior['table']
-                _srv6_behavior.metric = behavior['metric']
-                _srv6_behavior.fwd_engine = py_to_grpc_fwd_engine[behavior['fwd_engine']]
+                _srv6_behavior.grpc_address = behavior['grpc_address'] if behavior['grpc_address'] is not None else ''
+                _srv6_behavior.grpc_port = behavior['grpc_port'] if behavior['grpc_port'] is not None else ''
+                _srv6_behavior.segment = behavior['segment'] if behavior['segment'] is not None else ''
+                _srv6_behavior.action = py_to_grpc_srv6_action[behavior['action']] if behavior['action'] is not None else SRv6Action.UNSPEC.value
+                _srv6_behavior.nexthop = behavior['nexthop'] if behavior['nexthop'] is not None else ''
+                _srv6_behavior.lookup_table = behavior['lookup_table'] if behavior['lookup_table'] is not None else -1
+                _srv6_behavior.interface = behavior['interface'] if behavior['interface'] is not None else ''
+                if behavior['segments'] is not None:
+                    _srv6_behavior.segments.extend(behavior['segments'])
+                _srv6_behavior.device = behavior['device'] if behavior['device'] is not None else ''
+                _srv6_behavior.table = behavior['table'] if behavior['table'] is not None else -1
+                _srv6_behavior.metric = behavior['metric'] if behavior['metric'] is not None else -1
+                _srv6_behavior.fwd_engine = py_to_grpc_fwd_engine[behavior['fwd_engine']] if behavior['fwd_engine'] is not None else FwdEngine.UNSPEC.value
                 if '_key' in behavior:
                     _srv6_behavior.key = behavior['_key']
         # Done, return the reply
@@ -397,47 +403,51 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling() as response:
                 srv6_tunnels = None
+                # Extract the forwarding engine
                 fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
+                # Handle the tunnel
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_uni_srv6_tunnel(
-                        ingress_ip=srv6_tunnel.ingress_ip,
-                        ingress_port=srv6_tunnel.ingress_port,
-                        egress_ip=srv6_tunnel.egress_ip,
-                        egress_port=srv6_tunnel.egress_port,
-                        destination=srv6_tunnel.destination,
-                        segments=list(srv6_tunnel.segments),
-                        localseg=srv6_tunnel.localseg,
-                        bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
+                        ingress_ip=srv6_tunnel.ingress_ip if srv6_tunnel.ingress_ip != '' else None,
+                        ingress_port=srv6_tunnel.ingress_port if srv6_tunnel.ingress_port != -1 else None,
+                        egress_ip=srv6_tunnel.egress_ip if srv6_tunnel.egress_ip != '' else None,
+                        egress_port=srv6_tunnel.egress_port if srv6_tunnel.egress_port != -1 else None,
+                        destination=srv6_tunnel.destination if srv6_tunnel.destination != '' else None,
+                        segments=list(srv6_tunnel.segments) if len(srv6_tunnel.segments) > 0 else None,
+                        localseg=srv6_tunnel.localseg if srv6_tunnel.localseg != '' else None,
+                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'del':
                     srv6_utils.destroy_uni_srv6_tunnel(
-                        ingress_ip=srv6_tunnel.ingress_ip,
-                        ingress_port=srv6_tunnel.ingress_port,
-                        egress_ip=srv6_tunnel.egress_ip,
-                        egress_port=srv6_tunnel.egress_port,
-                        destination=srv6_tunnel.destination,
-                        localseg=srv6_tunnel.localseg,
-                        bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
+                        ingress_ip=srv6_tunnel.ingress_ip if srv6_tunnel.ingress_ip != '' else None,
+                        ingress_port=srv6_tunnel.ingress_port if srv6_tunnel.ingress_port != -1 else None,
+                        egress_ip=srv6_tunnel.egress_ip if srv6_tunnel.egress_ip != '' else None,
+                        egress_port=srv6_tunnel.egress_port if srv6_tunnel.egress_port != -1 else None,
+                        destination=srv6_tunnel.destination if srv6_tunnel.destination != '' else None,
+                        localseg=srv6_tunnel.localseg if srv6_tunnel.localseg != '' else None,
+                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'get':
                     srv6_tunnels = srv6_utils.get_uni_srv6_tunnel(
-                        ingress_ip=srv6_tunnel.ingress_ip,
-                        ingress_port=srv6_tunnel.ingress_port,
-                        egress_ip=srv6_tunnel.egress_ip,
-                        egress_port=srv6_tunnel.egress_port,
+                        ingress_ip=srv6_tunnel.ingress_ip if srv6_tunnel.ingress_ip != '' else None,
+                        ingress_port=srv6_tunnel.ingress_port if srv6_tunnel.ingress_port != -1 else None,
+                        egress_ip=srv6_tunnel.egress_ip if srv6_tunnel.egress_ip != '' else None,
+                        egress_port=srv6_tunnel.egress_port if srv6_tunnel.egress_port != -1 else None,
                         destination=srv6_tunnel.destination if srv6_tunnel.destination != '' else None,
-                        segments=list(srv6_tunnel.segments) if srv6_tunnel.segments != [''] else None,
+                        segments=list(srv6_tunnel.segments) if len(srv6_tunnel.segments) > 0 else None,
                         localseg=srv6_tunnel.localseg if srv6_tunnel.localseg != '' else None,
-                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.localseg != '' else None,
-                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine] if srv6_tunnel.fwd_engine != '' else None,
+                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -455,15 +465,16 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         if srv6_tunnels is not None:
             for tunnel in srv6_tunnels:
                 _srv6_unitunnel = response.srv6_unitunnels.add()
-                _srv6_unitunnel.ingress_ip = tunnel['l_grpc_address']
-                _srv6_unitunnel.ingress_port = tunnel['l_grpc_port']
-                _srv6_unitunnel.egress_ip = tunnel['r_grpc_address']
-                _srv6_unitunnel.egress_port = tunnel['r_grpc_port']
-                _srv6_unitunnel.destination = tunnel['dest_lr']
-                _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
-                _srv6_unitunnel.localseg = tunnel['localseg_lr']
-                _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
-                _srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
+                _srv6_unitunnel.ingress_ip = tunnel['l_grpc_address'] if tunnel['l_grpc_address'] is not None else ''
+                _srv6_unitunnel.ingress_port = tunnel['l_grpc_port'] if tunnel['l_grpc_port'] is not None else ''
+                _srv6_unitunnel.egress_ip = tunnel['r_grpc_address'] if tunnel['r_grpc_address'] is not None else ''
+                _srv6_unitunnel.egress_port = tunnel['r_grpc_port'] if tunnel['r_grpc_port'] is not None else ''
+                _srv6_unitunnel.destination = tunnel['dest_lr'] if tunnel['dest_lr'] is not None else ''
+                if tunnel['sidlist_lr'] is not None:
+                    _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
+                _srv6_unitunnel.localseg = tunnel['localseg_lr'] if tunnel['localseg_lr'] is not None else ''
+                _srv6_unitunnel.bsid_addr = tunnel['bsid_addr'] if tunnel['bsid_addr'] is not None else ''
+                _srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']] if tunnel['fwd_engine'] is not None else FwdEngine.UNSPEC.value
                 if '_key' in tunnel:
                     _srv6_unitunnel.key = tunnel['_key']
         # Done, return the reply
@@ -482,47 +493,35 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling() as response:
                 srv6_tunnels = None
+                # Extract the forwarding engine
                 fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
+                if fwd_engine == 'FWD_ENGINE_UNSPEC':
+                    fwd_engine = ''
+                # Handle the tunnel
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_srv6_tunnel(
-                        node_l_ip=srv6_tunnel.node_l_ip,
-                        node_l_port=srv6_tunnel.node_l_port,
-                        node_r_ip=srv6_tunnel.node_r_ip,
-                        node_r_port=srv6_tunnel.node_r_port,
-                        sidlist_lr=list(srv6_tunnel.sidlist_lr),
-                        sidlist_rl=list(srv6_tunnel.sidlist_rl),
-                        dest_lr=srv6_tunnel.dest_lr,
-                        dest_rl=srv6_tunnel.dest_rl,
-                        localseg_lr=srv6_tunnel.localseg_lr,
-                        localseg_rl=srv6_tunnel.localseg_rl,
-                        bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
+                        node_l_ip=srv6_tunnel.node_l_ip if srv6_tunnel.node_l_ip != '' else None,
+                        node_l_port=srv6_tunnel.node_l_port if srv6_tunnel.node_l_port != -1 else None,
+                        node_r_ip=srv6_tunnel.node_r_ip if srv6_tunnel.node_r_ip != '' else None,
+                        node_r_port=srv6_tunnel.node_r_port if srv6_tunnel.node_r_port != -1 else None,
+                        sidlist_lr=list(srv6_tunnel.sidlist_lr) if len(srv6_tunnel.sidlist_lr) > 0 else None,
+                        sidlist_rl=list(srv6_tunnel.sidlist_rl) if len(srv6_tunnel.sidlist_rl) > 0 else None,
+                        dest_lr=srv6_tunnel.dest_lr if srv6_tunnel.dest_lr != '' else None,
+                        dest_rl=srv6_tunnel.dest_rl if srv6_tunnel.dest_rl != '' else None,
+                        localseg_lr=srv6_tunnel.localseg_lr if srv6_tunnel.localseg_lr != '' else None,
+                        localseg_rl=srv6_tunnel.localseg_rl if srv6_tunnel.localseg_rl != '' else None,
+                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
                     logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
                 elif srv6_tunnel.operation == 'del':
                     srv6_utils.destroy_srv6_tunnel(
-                        node_l_ip=srv6_tunnel.node_l_ip,
-                        node_l_port=srv6_tunnel.node_l_port,
-                        node_r_ip=srv6_tunnel.node_r_ip,
-                        node_r_port=srv6_tunnel.node_r_port,
-                        dest_lr=srv6_tunnel.dest_lr,
-                        dest_rl=srv6_tunnel.dest_rl,
-                        localseg_lr=srv6_tunnel.localseg_lr,
-                        localseg_rl=srv6_tunnel.localseg_rl,
-                        bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
-                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
-                        db_conn=self.db_conn
-                    )
-                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
-                elif srv6_tunnel.operation == 'get':
-                    srv6_tunnels = srv6_utils.get_srv6_tunnel(
-                        node_l_ip=srv6_tunnel.node_l_ip,
-                        node_l_port=srv6_tunnel.node_l_port,
-                        node_r_ip=srv6_tunnel.node_r_ip,
-                        node_r_port=srv6_tunnel.node_r_port,
+                        node_l_ip=srv6_tunnel.node_l_ip if srv6_tunnel.node_l_ip != '' else None,
+                        node_l_port=srv6_tunnel.node_l_port if srv6_tunnel.node_l_port != -1 else None,
+                        node_r_ip=srv6_tunnel.node_r_ip if srv6_tunnel.node_r_ip != '' else None,
+                        node_r_port=srv6_tunnel.node_r_port if srv6_tunnel.node_r_port != -1 else None,
                         sidlist_lr=list(srv6_tunnel.sidlist_lr) if srv6_tunnel.sidlist_lr != [''] else None,
                         sidlist_rl=list(srv6_tunnel.sidlist_rl) if srv6_tunnel.sidlist_rl != [''] else None,
                         dest_lr=srv6_tunnel.dest_lr if srv6_tunnel.dest_lr != '' else None,
@@ -530,7 +529,25 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         localseg_lr=srv6_tunnel.localseg_lr if srv6_tunnel.localseg_lr != '' else None,
                         localseg_rl=srv6_tunnel.localseg_rl if srv6_tunnel.localseg_rl != '' else None,
                         bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
-                        fwd_engine=srv6_tunnel.fwd_engine if srv6_tunnel.fwd_engine != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
+                        key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
+                        db_conn=self.db_conn
+                    )
+                    logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
+                elif srv6_tunnel.operation == 'get':
+                    srv6_tunnels = srv6_utils.get_srv6_tunnel(
+                        node_l_ip=srv6_tunnel.node_l_ip if srv6_tunnel.node_l_ip != '' else None,
+                        node_l_port=srv6_tunnel.node_l_port if srv6_tunnel.node_l_port != -1 else None,
+                        node_r_ip=srv6_tunnel.node_r_ip if srv6_tunnel.node_r_ip != '' else None,
+                        node_r_port=srv6_tunnel.node_r_port if srv6_tunnel.node_r_port != -1 else None,
+                        sidlist_lr=list(srv6_tunnel.sidlist_lr) if len(srv6_tunnel.sidlist_lr) > 0 else None,
+                        sidlist_rl=list(srv6_tunnel.sidlist_rl) if len(srv6_tunnel.sidlist_rl) > 0 else None,
+                        dest_lr=srv6_tunnel.dest_lr if srv6_tunnel.dest_lr != '' else None,
+                        dest_rl=srv6_tunnel.dest_rl if srv6_tunnel.dest_rl != '' else None,
+                        localseg_lr=srv6_tunnel.localseg_lr if srv6_tunnel.localseg_lr != '' else None,
+                        localseg_rl=srv6_tunnel.localseg_rl if srv6_tunnel.localseg_rl != '' else None,
+                        bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.bsid_addr != '' else None,
+                        fwd_engine=fwd_engine if fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -548,19 +565,21 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         if srv6_tunnels is not None:
             for tunnel in srv6_tunnels:
                 _srv6_biditunnel = response.srv6_biditunnels.add()
-                _srv6_biditunnel.node_l_ip = tunnel['l_grpc_address']
-                _srv6_biditunnel.node_l_port = tunnel['l_grpc_port']
-                _srv6_biditunnel.node_r_ip = tunnel['node_r_ip']
-                _srv6_biditunnel.node_r_port = tunnel['node_r_port']
-                _srv6_biditunnel.dest_lr = tunnel['dest_lr']
-                _srv6_biditunnel.dest_rl = tunnel['dest_rl']
-                _srv6_biditunnel.sidlist_lr.extend(tunnel['sidlist_lr'])
-                _srv6_biditunnel.sidlist_rl.extend(tunnel['sidlist_rl'])
-                _srv6_biditunnel.localseg_lr = tunnel['localseg_lr']
-                _srv6_biditunnel.localseg_rl = tunnel['localseg_rl']
-                _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
+                _srv6_biditunnel.node_l_ip = tunnel['l_grpc_address'] if tunnel['l_grpc_address'] is not None else ''
+                _srv6_biditunnel.node_l_port = tunnel['l_grpc_port'] if tunnel['l_grpc_port'] is not None else ''
+                _srv6_biditunnel.node_r_ip = tunnel['node_r_ip'] if tunnel['node_r_ip'] is not None else ''
+                _srv6_biditunnel.node_r_port = tunnel['node_r_port'] if tunnel['node_r_port'] is not None else ''
+                _srv6_biditunnel.dest_lr = tunnel['dest_lr'] if tunnel['dest_lr'] is not None else ''
+                _srv6_biditunnel.dest_rl = tunnel['dest_rl'] if tunnel['dest_rl'] is not None else ''
+                if tunnel['sidlist_lr'] is not None:
+                    _srv6_biditunnel.sidlist_lr.extend(tunnel['sidlist_lr'])
+                if tunnel['sidlist_rl'] is not None:
+                    _srv6_biditunnel.sidlist_rl.extend(tunnel['sidlist_rl'])
+                _srv6_biditunnel.localseg_lr = tunnel['localseg_lr'] if tunnel['localseg_lr'] is not None else ''
+                _srv6_biditunnel.localseg_rl = tunnel['localseg_rl'] if tunnel['localseg_rl'] is not None else ''
+                _srv6_biditunnel.bsid_addr = tunnel['bsid_addr'] if tunnel['bsid_addr'] is not None else ''
                 if '_key' in tunnel:
                     _srv6_biditunnel.key = tunnel['_key']
-                _srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
+                _srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']] if tunnel['fwd_engine'] is not None else FwdEngine.UNSPEC.value
         # Done, return the reply
         return response

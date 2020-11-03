@@ -158,19 +158,19 @@ def add_srv6_path(grpc_address, grpc_port, destination,
     # Set device
     # If the device is not specified (i.e. empty string),
     # it will be chosen by the gRPC server
-    path.device = text_type(device)
+    path.device = text_type(device) if device is not None else ''
     # Set table ID
     # If the table ID is not specified (i.e. table=-1),
     # the main table will be used
-    path.table = int(table)
+    path.table = int(table) if table is not None else -1
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
-    path.metric = int(metric)
+    path.metric = int(metric) if metric is not None else -1
     # Set the BSID address (required for VPP)
-    path.bsid_addr = str(bsid_addr)
+    path.bsid_addr = str(bsid_addr) if bsid_addr is not None else ''
     # Set the encapsulation mode
-    if encapmode != '':
+    if encapmode is not None and encapmode != '':
         # encap mode is an optional argument
         # If it is specified, we use it
         path.encapmode = text_type(encapmode)
@@ -258,9 +258,10 @@ def get_srv6_path(grpc_address, grpc_port, destination,
                   update_db=True, db_conn=None, channel=None):
     # If the flag is True, the gRPC channel is closed after the RPC
     close_channel_after_rpc = False
-    # If segment list not provided, initialize it to an empty list
-    if segments is None:
-        segments = []
+    # Extract gRPC address and port from the channel
+    if channel is not None:
+        grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+        grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # We need to support two scenarios:
     #  -  Persistency enabled
     #  -  Persistency not enabled
@@ -270,19 +271,17 @@ def get_srv6_path(grpc_address, grpc_port, destination,
         # Perform a lookup in the database and store the SRv6 paths found
         srv6_paths = arangodb_driver.find_srv6_path(
             database=db_conn,
-            key=key if key != '' else None,
-            grpc_address=utils.grpc_chan_to_addr_port(
-                channel)[0] if channel is not None else None,
-            grpc_port=utils.grpc_chan_to_addr_port(
-                channel)[1] if channel is not None else None,
-            destination=destination if destination != '' else None,
-            segments=segments if segments != [''] else None,
-            device=device if device != '' else None,
-            encapmode=encapmode if encapmode != '' else None,
-            table=table if table != -1 else None,
-            metric=metric if metric != -1 else None,
-            bsid_addr=bsid_addr if bsid_addr != '' else None,
-            fwd_engine=fwd_engine if fwd_engine != '' else None
+            key=key,
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            destination=destination,
+            segments=segments,
+            device=device,
+            encapmode=encapmode,
+            table=table,
+            metric=metric,
+            bsid_addr=bsid_addr,
+            fwd_engine=fwd_engine
         )
     else:
         # Persistency is not enabled
@@ -306,21 +305,21 @@ def get_srv6_path(grpc_address, grpc_port, destination,
             # Create a new path
             path = path_request.paths.add()
             # Set destination
-            path.destination = text_type(destination)
+            path.destination = text_type(destination) if destination is not None else ''
             # Set device
             # If the device is not specified (i.e. empty string),
             # it will be chosen by the gRPC server
-            path.device = text_type(device)
+            path.device = text_type(device) if device is not None else ''
             # Set table ID
             # If the table ID is not specified (i.e. table=-1),
             # the main table will be used
-            path.table = int(table)
+            path.table = int(table) if table is not None else -1
             # Set metric (i.e. preference value of the route)
             # If the metric is not specified (i.e. metric=-1),
             # the decision is left to the Linux kernel
-            path.metric = int(metric)
+            path.metric = int(metric) if metric is not None else -1
             # Set the BSID address (required for VPP)
-            path.bsid_addr = str(bsid_addr)
+            path.bsid_addr = str(bsid_addr) if bsid_addr is not None else ''
             # Set the forwarding engine
             try:
                 if fwd_engine is not None and fwd_engine != '':
@@ -378,9 +377,6 @@ def change_srv6_path(grpc_address, grpc_port, destination,
     grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
     # Extract the gRPC port from the channel
     grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
-    # If segment list not provided, initialize it to an empty list
-    if segments is None:
-        segments = []
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 path request
@@ -388,28 +384,29 @@ def change_srv6_path(grpc_address, grpc_port, destination,
     # Create a new path
     path = path_request.paths.add()
     # Set destination
-    path.destination = text_type(destination)
+    path.destination = text_type(destination) if destination is not None else ''
     # Set device
     # If the device is not specified (i.e. empty string),
     # it will be chosen by the gRPC server
-    path.device = text_type(device)
+    path.device = text_type(device) if device is not None else ''
     # Set table ID
     # If the table ID is not specified (i.e. table=-1),
     # the main table will be used
-    path.table = int(table)
+    path.table = int(table) if table is not None else -1
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
-    path.metric = int(metric)
+    path.metric = int(metric) if metric is not None else -1
     # Set the BSID address (required for VPP)
-    path.bsid_addr = str(bsid_addr)
+    path.bsid_addr = str(bsid_addr) if bsid_addr is not None else ''
     # Set encapmode
-    path.encapmode = text_type(encapmode)
+    path.encapmode = text_type(encapmode) if encapmode is not None else 'encap'
     # Iterate on the segments and build the SID list
-    for segment in segments:
-        # Append the segment to the SID list
-        srv6_segment = path.sr_path.add()
-        srv6_segment.segment = text_type(segment)
+    if segments is not None:
+        for segment in segments:
+            # Append the segment to the SID list
+            srv6_segment = path.sr_path.add()
+            srv6_segment.segment = text_type(segment)
     # Set the forwarding engine
     try:
         if fwd_engine is not None and fwd_engine != '':
@@ -524,7 +521,7 @@ def del_srv6_path(grpc_address, grpc_port, destination,
     for srv6_path in srv6_paths:
         # If segment list not provided, initialize it to an empty list
         if srv6_path['segments'] is None:
-            segments = []
+            srv6_path['segments'] = []
         # Create request message
         request = srv6_manager_pb2.SRv6ManagerRequest()
         # Create a new SRv6 path request
@@ -532,21 +529,21 @@ def del_srv6_path(grpc_address, grpc_port, destination,
         # Create a new path
         path = path_request.paths.add()
         # Set destination
-        path.destination = text_type(srv6_path['destination'])
+        path.destination = text_type(srv6_path['destination']) if srv6_path['destination'] is not None else ''
         # Set device
         # If the device is not specified (i.e. empty string),
         # it will be chosen by the gRPC server
-        path.device = text_type(srv6_path['device'])
+        path.device = text_type(srv6_path['device']) if srv6_path['device'] is not None else ''
         # Set table ID
         # If the table ID is not specified (i.e. table=-1),
         # the main table will be used
-        path.table = int(srv6_path['table'])
+        path.table = int(srv6_path['table']) if srv6_path['table'] is not None else -1
         # Set metric (i.e. preference value of the route)
         # If the metric is not specified (i.e. metric=-1),
         # the decision is left to the Linux kernel
-        path.metric = int(srv6_path['metric'])
+        path.metric = int(srv6_path['metric']) if srv6_path['metric'] is not None else -1
         # Set the BSID address (required for VPP)
-        path.bsid_addr = str(srv6_path['bsid_addr'])
+        path.bsid_addr = str(srv6_path['bsid_addr']) if srv6_path['bsid_addr'] is not None else ''
         # Set the forwarding engine
         try:
             if fwd_engine is not None and fwd_engine != '':
@@ -562,7 +559,7 @@ def del_srv6_path(grpc_address, grpc_port, destination,
             logger.error('Invalid forwarding engine: %s', fwd_engine)
             raise utils.InvalidArgumentError
         # Set encapmode
-        path.encapmode = text_type(srv6_path['encapmode'])
+        path.encapmode = text_type(srv6_path['encapmode']) if srv6_path['encapmode'] is not None else 'encap'
         if len(srv6_path['segments']) == 0:
             logger.error('*** Missing segments for seg6 route')
             raise utils.InvalidArgumentError
@@ -722,15 +719,15 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
     # Create a new path
     policy = policy_request.policies.add()
     # Set BSID address
-    policy.bsid_addr = text_type(bsid_addr)
+    policy.bsid_addr = text_type(bsid_addr) if bsid_addr is not None else ''
     # Set table ID
     # If the table ID is not specified (i.e. table=-1),
     # the main table will be used
-    policy.table = int(table)
+    policy.table = int(table) if table is not None else -1
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
-    policy.metric = int(metric)
+    policy.metric = int(metric) if metric is not None else -1
     # Iterate on the segments and build the SID list
     for segment in segments:
         # Append the segment to the SID list
@@ -841,34 +838,30 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
     # Set the device
     # If the device is not specified (i.e. empty string),
     # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
+    behavior.device = text_type(device) if device is not None else ''
     # Set the table where the seg6local must be inserted
     # If the table ID is not specified (i.e. table=-1),
     # the main table will be used
-    behavior.table = int(table)
-    # Set device
-    # If the device is not specified (i.e. empty string),
-    # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
+    behavior.table = int(table) if table is not None else -1
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
-    behavior.metric = int(metric)
+    behavior.metric = int(metric) if metric is not None else -1
     # Set the SRv6 action
-    if action == '':
+    if action is None or action == '':
         logger.error('*** Missing action for seg6local route')
         raise utils.InvalidArgumentError
     # Set the action for the seg6local route
     behavior.action = text_type(action)
     # Set the nexthop for the L3 cross-connect actions
     # (e.g. End.DX4, End.DX6)
-    behavior.nexthop = text_type(nexthop)
+    behavior.nexthop = text_type(nexthop) if nexthop is not None else ''
     # Set the table for the "decap and table lookup" actions
     # (e.g. End.DT4, End.DT6)
-    behavior.lookup_table = int(lookup_table)
+    behavior.lookup_table = int(lookup_table) if lookup_table is not None else ''
     # Set the inteface for the L2 cross-connect actions
     # (e.g. End.DX2)
-    behavior.interface = text_type(interface)
+    behavior.interface = text_type(interface) if interface is not None else ''
     # Set the segments for the binding SID actions
     # (e.g. End.B6, End.B6.Encaps)
     for seg in segments:
@@ -933,9 +926,10 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
                       update_db=True, db_conn=None, channel=None):
     # If the flag is True, the gRPC channel is closed after the RPC
     close_channel_after_rpc = False
-    # If segment list not provided, initialize it to an empty list
-    if segments is None:
-        segments = []
+    # Extract gRPC address and port from the channel
+    if channel is not None:
+        grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+        grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # We need to support two scenarios:
     #  -  Persistency enabled
     #  -  Persistency not enabled
@@ -945,21 +939,19 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
         # Perform a lookup in the database and store the SRv6 behaviors found
         srv6_behaviors = arangodb_driver.find_srv6_behavior(
             database=db_conn,
-            key=key if key != '' else None,
-            grpc_address=utils.grpc_chan_to_addr_port(
-                channel)[0] if channel is not None else None,
-            grpc_port=utils.grpc_chan_to_addr_port(
-                channel)[1] if channel is not None else None,
-            segment=segment if segment != '' else None,
-            action=action if action != '' else None,
-            device=device if device != '' else None,
-            table=table if table != -1 else None,
-            nexthop=nexthop if nexthop != '' else None,
-            lookup_table=lookup_table if lookup_table != -1 else None,
-            interface=interface if interface != '' else None,
-            segments=segments if segments != [''] else None,
-            metric=metric if metric != -1 else None,
-            fwd_engine=fwd_engine if fwd_engine != '' else None
+            key=key,
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
+            segment=segment,
+            action=action,
+            device=device,
+            table=table,
+            nexthop=nexthop,
+            lookup_table=lookup_table,
+            interface=interface,
+            segments=segments,
+            metric=metric,
+            fwd_engine=fwd_engine
         )
     else:
         # Persistency is not enabled
@@ -984,23 +976,19 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
             # Create a new SRv6 behavior
             behavior = behavior_request.behaviors.add()
             # Set local segment for the seg6local route
-            behavior.segment = text_type(segment)
+            behavior.segment = text_type(segment) if segment is not None else ''
             # Set the device
             # If the device is not specified (i.e. empty string),
             # it will be chosen by the gRPC server
-            behavior.device = text_type(device)
+            behavior.device = text_type(device) if device is not None else ''
             # Set the table where the seg6local must be inserted
             # If the table ID is not specified (i.e. table=-1),
             # the main table will be used
-            behavior.table = int(table)
-            # Set device
-            # If the device is not specified (i.e. empty string),
-            # it will be chosen by the gRPC server
-            behavior.device = text_type(device)
+            behavior.table = int(table) if table is not None else -1
             # Set metric (i.e. preference value of the route)
             # If the metric is not specified (i.e. metric=-1),
             # the decision is left to the Linux kernel
-            behavior.metric = int(metric)
+            behavior.metric = int(metric) if metric is not None else -1
             # Set the forwarding engine
             try:
                 if fwd_engine is not None and fwd_engine != '':
@@ -1060,9 +1048,6 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
     grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
     # Extract the gRPC port from the channel
     grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
-    # If segment list not provided, initialize it to an empty list
-    if segments is None:
-        segments = []
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 behavior request
@@ -1071,40 +1056,37 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
     # Create a new SRv6 behavior
     behavior = behavior_request.behaviors.add()
     # Set local segment for the seg6local route
-    behavior.segment = text_type(segment)
+    behavior.segment = text_type(segment) if segment is not None else ''
     # Set the device
     # If the device is not specified (i.e. empty string),
     # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
+    behavior.device = text_type(device) if device is not None else ''
     # Set the table where the seg6local must be inserted
     # If the table ID is not specified (i.e. table=-1),
     # the main table will be used
-    behavior.table = int(table)
-    # Set device
-    # If the device is not specified (i.e. empty string),
-    # it will be chosen by the gRPC server
-    behavior.device = text_type(device)
+    behavior.table = int(table) if table is not None else -1
     # Set metric (i.e. preference value of the route)
     # If the metric is not specified (i.e. metric=-1),
     # the decision is left to the Linux kernel
-    behavior.metric = int(metric)
+    behavior.metric = int(metric) if metric is not None else -1
     # Set the action for the seg6local route
-    behavior.action = text_type(action)
+    behavior.action = text_type(action) if action is not None else ''
     # Set the nexthop for the L3 cross-connect actions
     # (e.g. End.DX4, End.DX6)
-    behavior.nexthop = text_type(nexthop)
+    behavior.nexthop = text_type(nexthop) if nexthop is not None else ''
     # Set the table for the "decap and table lookup" actions
     # (e.g. End.DT4, End.DT6)
-    behavior.lookup_table = int(lookup_table)
+    behavior.lookup_table = int(lookup_table) if lookup_table is not None else -1
     # Set the inteface for the L2 cross-connect actions
     # (e.g. End.DX2)
-    behavior.interface = text_type(interface)
+    behavior.interface = text_type(interface) if interface is not None else ''
     # Set the segments for the binding SID actions
     # (e.g. End.B6, End.B6.Encaps)
-    for seg in segments:
-        # Create a new segment
-        srv6_segment = behavior.segs.add()
-        srv6_segment.segment = text_type(seg)
+    if segments is not None:
+        for seg in segments:
+            # Create a new segment
+            srv6_segment = behavior.segs.add()
+            srv6_segment.segment = text_type(seg)
     # Set the forwarding engine
     try:
         if fwd_engine is not None and fwd_engine != '':
@@ -1225,7 +1207,7 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
     for srv6_behavior in srv6_behaviors:
         # If segment list not provided, initialize it to an empty list
         if srv6_behavior['segments'] is None:
-            segments = []
+            srv6_behavior['segments'] = []
         # Create request message
         request = srv6_manager_pb2.SRv6ManagerRequest()
         # Create a new SRv6 behavior request
@@ -1234,34 +1216,30 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
         # Create a new SRv6 behavior
         behavior = behavior_request.behaviors.add()
         # Set local segment for the seg6local route
-        behavior.segment = text_type(srv6_behavior['segment'])
+        behavior.segment = text_type(srv6_behavior['segment']) if srv6_behavior['segment'] is not None else ''
         # Set the device
         # If the device is not specified (i.e. empty string),
         # it will be chosen by the gRPC server
-        behavior.device = text_type(srv6_behavior['device'])
+        behavior.device = text_type(srv6_behavior['device']) if srv6_behavior['device'] is not None else ''
         # Set the table where the seg6local must be inserted
         # If the table ID is not specified (i.e. table=-1),
         # the main table will be used
-        behavior.table = int(srv6_behavior['table'])
-        # Set device
-        # If the device is not specified (i.e. empty string),
-        # it will be chosen by the gRPC server
-        behavior.device = text_type(srv6_behavior['device'])
+        behavior.table = int(srv6_behavior['table']) if srv6_behavior['device'] is not None else -1
         # Set metric (i.e. preference value of the route)
         # If the metric is not specified (i.e. metric=-1),
         # the decision is left to the Linux kernel
-        behavior.metric = int(srv6_behavior['metric'])
+        behavior.metric = int(srv6_behavior['metric']) if srv6_behavior['metric'] is not None else -1
         # Set the action for the seg6local route
-        behavior.action = text_type(srv6_behavior['action'])
+        behavior.action = text_type(srv6_behavior['action']) if srv6_behavior['action'] is not None else ''
         # Set the nexthop for the L3 cross-connect actions
         # (e.g. End.DX4, End.DX6)
-        behavior.nexthop = text_type(srv6_behavior['nexthop'])
+        behavior.nexthop = text_type(srv6_behavior['nexthop']) if srv6_behavior['nexthop'] is not None else ''
         # Set the table for the "decap and table lookup" actions
         # (e.g. End.DT4, End.DT6)
-        behavior.lookup_table = int(srv6_behavior['lookup_table'])
+        behavior.lookup_table = int(srv6_behavior['lookup_table']) if srv6_behavior['lookup_table'] is not None else ''
         # Set the inteface for the L2 cross-connect actions
         # (e.g. End.DX2)
-        behavior.interface = text_type(srv6_behavior['interface'])
+        behavior.interface = text_type(srv6_behavior['interface']) if srv6_behavior['interface'] is not None else ''
         # Set the segments for the binding SID actions
         # (e.g. End.B6, End.B6.Encaps)
         for seg in srv6_behavior['segments']:
@@ -2077,19 +2055,19 @@ def get_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
     # Retrieve the tunnel from the database
     return arangodb_driver.find_srv6_tunnel(
         database=db_conn,
-        key=key if key != '' else None,
+        key=key,
         l_grpc_address=ingress_ip,
         l_grpc_port=ingress_port,
         r_grpc_address=egress_ip,
         r_grpc_port=egress_port,
-        sidlist_lr=list(segments) if len(segments) > 0 else None,
+        sidlist_lr=segments,
         sidlist_rl=None,
-        dest_lr=destination if destination != '' else None,
+        dest_lr=destination,
         dest_rl=None,
-        localseg_lr=localseg if localseg != '' else None,
+        localseg_lr=localseg,
         localseg_rl=None,
-        bsid_addr=bsid_addr if bsid_addr != '' else None,
-        fwd_engine=fwd_engine if fwd_engine != '' else None,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
         is_unidirectional=True
     )
 
@@ -2143,18 +2121,18 @@ def get_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
     # Retrieve the tunnel from the database
     return arangodb_driver.find_srv6_tunnel(
         database=db_conn,
-        key=key if key != '' else None,
+        key=key,
         l_grpc_address=node_l_ip,
         l_grpc_port=node_l_port,
         r_grpc_address=node_r_ip,
         r_grpc_port=node_r_port,
-        sidlist_lr=list(sidlist_lr) if len(sidlist_lr) > 0 else None,
-        sidlist_rl=list(sidlist_rl) if len(sidlist_rl) > 0 else None,
-        dest_lr=dest_lr if dest_lr != '' else None,
-        dest_rl=dest_rl if dest_rl != '' else None,
-        localseg_lr=localseg_lr if localseg_lr != '' else None,
-        localseg_rl=localseg_rl if localseg_rl != '' else None,
-        bsid_addr=bsid_addr if bsid_addr != '' else None,
-        fwd_engine=fwd_engine if fwd_engine != '' else None,
+        sidlist_lr=sidlist_lr,
+        sidlist_rl=sidlist_rl,
+        dest_lr=dest_lr,
+        dest_rl=dest_rl,
+        localseg_lr=localseg_lr,
+        localseg_rl=localseg_rl,
+        bsid_addr=bsid_addr,
+        fwd_engine=fwd_engine,
         is_unidirectional=False
     )

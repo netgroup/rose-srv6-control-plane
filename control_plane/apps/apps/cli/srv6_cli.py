@@ -55,6 +55,16 @@ def handle_srv6_usid_policy(controller_channel, operation,
     """
     # pylint: disable=too-many-arguments
     #
+    # Convert nodes_lr from string to list
+    if nodes_lr is not None:
+        nodes_lr = nodes_lr.split(',') if nodes_lr != '' else None
+    else:
+        nodes_lr = None
+    # Convert nodes_rl from string to list
+    if nodes_rl is not None:
+        nodes_rl = nodes_rl.split(',') if nodes_rl != '' else None
+    else:
+        nodes_rl = None
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
     return srv6_manager.handle_srv6_usid_policy(
@@ -62,8 +72,8 @@ def handle_srv6_usid_policy(controller_channel, operation,
         operation=operation,
         lr_destination=lr_destination,
         rl_destination=rl_destination,
-        nodes_lr=nodes_lr.split(',') if nodes_lr is not None else None,
-        nodes_rl=nodes_rl.split(',') if nodes_rl is not None else None,
+        nodes_lr=nodes_lr,
+        nodes_rl=nodes_rl,
         table=table,
         metric=metric,
         _id=_id,
@@ -87,6 +97,8 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
     """
     # pylint: disable=too-many-arguments
     #
+    # Convert the segments from string to list
+    segments = segments.split(',') if segments != '' else []
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
     srv6_paths = srv6_manager.handle_srv6_path(
@@ -95,7 +107,7 @@ def handle_srv6_path(controller_channel, operation, grpc_address, grpc_port,
         grpc_address=grpc_address,
         grpc_port=grpc_port,
         destination=destination,
-        segments=segments.split(','),
+        segments=segments,
         device=device,
         encapmode=encapmode,
         table=table,
@@ -121,6 +133,8 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
     """
     # pylint: disable=too-many-arguments
     #
+    # Convert the segments from string to list
+    segments = segments.split(',') if segments != '' else []
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
     srv6_behaviors = srv6_manager.handle_srv6_behavior(
@@ -135,7 +149,7 @@ def handle_srv6_behavior(controller_channel, operation, grpc_address,
         nexthop=nexthop,
         lookup_table=lookup_table,
         interface=interface,
-        segments=segments.split(','),
+        segments=segments,
         metric=metric,
         fwd_engine=fwd_engine,
         key=key
@@ -159,6 +173,11 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
     if operation not in ['add', 'del', 'get']:
         # Invalid operation
         raise grpc_utils.InvalidArgumentError
+    # Convert segments from string to list
+    if segments is not None:
+        segments = segments.split(',') if segments != '' else None
+    else:
+        segments = None
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
     srv6_tunnels = srv6_manager.handle_srv6_unitunnel(
@@ -169,7 +188,7 @@ def handle_srv6_unitunnel(controller_channel, operation, ingress_ip,
         egress_ip=egress_ip,
         egress_port=egress_port,
         destination=destination,
-        segments=segments.split(',') if segments is not None else None,
+        segments=segments,
         localseg=localseg,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
@@ -195,6 +214,16 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
     if operation not in ['add', 'del', 'get']:
         # Invalid operation
         raise grpc_utils.InvalidArgumentError
+    # Convert sidlist_lr from string to list
+    if sidlist_lr is not None:
+        sidlist_lr = sidlist_lr.split(',') if sidlist_lr != '' else None
+    else:
+        sidlist_lr = None
+    # Convert sidlist_rl from string to list
+    if sidlist_rl is not None:
+        sidlist_rl = sidlist_rl.split(',') if sidlist_rl != '' else None
+    else:
+        sidlist_rl = None
     # Perform the operation
     # If an error occurs during the operation, an exception will be raised
     srv6_tunnels = srv6_manager.handle_srv6_biditunnel(
@@ -204,8 +233,8 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
         node_l_port=node_l_port,
         node_r_ip=node_r_ip,
         node_r_port=node_r_port,
-        sidlist_lr=sidlist_lr.split(',') if sidlist_lr is not None else None,
-        sidlist_rl=sidlist_rl.split(',') if sidlist_rl is not None else None,
+        sidlist_lr=sidlist_lr,
+        sidlist_rl=sidlist_rl,
         dest_lr=dest_lr,
         dest_rl=dest_rl,
         localseg_lr=localseg_lr,
