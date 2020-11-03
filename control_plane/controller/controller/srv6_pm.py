@@ -30,9 +30,9 @@ This module implements control-plane functionalities for SRv6 PM
 
 # pylint: disable=too-many-lines
 
+# General imports
 import json
 import logging
-# General imports
 import os
 import sys
 import time

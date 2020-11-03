@@ -308,7 +308,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
             return response
         # Unknown or unsupported routing protocol
         logger.error('Unknown/Unsupported routing protocol: %s',
-                     grpc_to_py_routing_protocol(request.protocol)
+                     grpc_to_py_routing_protocol(request.protocol))
         return topology_manager_pb2_grpc.TopologyManagerReply(
             status=nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         )
@@ -451,7 +451,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         else:
             # Unknown or unsupported routing protocol
             logger.error('Unknown/Unsupported routing protocol: %s',
-                         grpc_to_py_routing_protocol(request.protocol)
+                         grpc_to_py_routing_protocol(request.protocol))
             response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
             return response
 

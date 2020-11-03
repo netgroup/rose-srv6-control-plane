@@ -33,6 +33,7 @@ control plane functionalities to setup SRv6 entities
 # General imports
 import logging
 import os
+from enum import Enum
 # Proto dependencies
 import nb_commons_pb2
 import srv6pm_manager_pb2

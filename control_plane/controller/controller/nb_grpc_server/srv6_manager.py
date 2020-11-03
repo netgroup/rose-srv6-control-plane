@@ -34,6 +34,7 @@ control plane functionalities to setup SRv6 entities.
 import logging
 import os
 from contextlib import contextmanager
+from enum import Enum
 # Proto dependencies
 import nb_commons_pb2
 import nb_srv6_manager_pb2
@@ -249,10 +250,10 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             _id=request._id,
             l_grpc_ip=request.l_grpc_ip,
             l_grpc_port=request.l_grpc_port,
-            l_fwd_engine=grpc_to_py_fwd_engine(request.l_fwd_engine),
+            l_fwd_engine=grpc_to_py_fwd_engine[request.l_fwd_engine],
             r_grpc_ip=request.r_grpc_ip,
             r_grpc_port=request.r_grpc_port,
-            r_fwd_engine=grpc_to_py_fwd_engine(request.r_fwd_engine),
+            r_fwd_engine=grpc_to_py_fwd_engine[request.r_fwd_engine],
             decap_sid=request.decap_sid,
             locator=request.locator,
             db_conn=self.db_conn
@@ -279,9 +280,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling():
                 # Extract the encap mode
-                encapmode = grpc_to_py_encap_mode(srv6_path.encapmode)
+                encapmode = grpc_to_py_encap_mode[srv6_path.encapmode]
                 # Extract the forwarding engine
-                fwd_engine = grpc_to_py_fwd_engine(srv6_path.fwd_engine)
+                fwd_engine = grpc_to_py_fwd_engine[srv6_path.fwd_engine]
                 if fwd_engine == 'FWD_ENGINE_UNSPEC':
                     fwd_engine = ''
                 # Handle SRv6 path
@@ -311,12 +312,12 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_path.grpc_port = path['grpc_port']
                 _srv6_path.destination = path['destination']
                 _srv6_path.segments.extend(path['segments'])
-                _srv6_path.encapmode = py_to_grpc_encap_mode(path['encapmode'])
+                _srv6_path.encapmode = py_to_grpc_encap_mode[path['encapmode']]
                 _srv6_path.device = path['device']
                 _srv6_path.table = path['table']
                 _srv6_path.metric = path['metric']
                 _srv6_path.bsid_addr = path['bsid_addr']
-                _srv6_path.fwd_engine = py_to_grpc_fwd_engine(path['fwd_engine'])
+                _srv6_path.fwd_engine = py_to_grpc_fwd_engine[path['fwd_engine']]
                 if '_key' in path:
                     _srv6_path.key = path['_key']
         # Set status code
@@ -337,7 +338,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling():
                 # Extract the SRv6 action
-                action = grpc_to_py_srv6_action(srv6_behavior.action)
+                action = grpc_to_py_srv6_action[srv6_behavior.action]
                 # Handle the behavior
                 srv6_behaviors = srv6_utils.handle_srv6_behavior(
                     operation=srv6_behavior.operation,
@@ -352,7 +353,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     interface=srv6_behavior.interface,
                     segments=list(srv6_behavior.segments),
                     metric=srv6_behavior.metric,
-                    fwd_engine=grpc_to_py_fwd_engine(srv6_behavior.fwd_engine)
+                    fwd_engine=grpc_to_py_fwd_engine[srv6_behavior.fwd_engine],
                     key=srv6_behavior.key if srv6_behavior.key != '' else None,
                     db_conn=self.db_conn
                 )
@@ -366,7 +367,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_behavior.grpc_address = behavior['grpc_address']
                 _srv6_behavior.grpc_port = behavior['grpc_port']
                 _srv6_behavior.segment = behavior['segment']
-                _srv6_behavior.action = py_to_grpc_srv6_action(behavior['action'])
+                _srv6_behavior.action = py_to_grpc_srv6_action[behavior['action']]
                 _srv6_behavior.nexthop = behavior['nexthop']
                 _srv6_behavior.lookup_table = behavior['lookup_table']
                 _srv6_behavior.interface = behavior['interface']
@@ -374,7 +375,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_behavior.device = behavior['device']
                 _srv6_behavior.table = behavior['table']
                 _srv6_behavior.metric = behavior['metric']
-                _srv6_behavior.fwd_engine = py_to_grpc_fwd_engine(behavior['fwd_engine'])
+                _srv6_behavior.fwd_engine = py_to_grpc_fwd_engine[behavior['fwd_engine']]
                 if '_key' in behavior:
                     _srv6_behavior.key = behavior['_key']
         # Set status code
@@ -395,7 +396,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling():
                 srv6_tunnels = None
-                fwd_engine = grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine)
+                fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_uni_srv6_tunnel(
                         ingress_ip=srv6_tunnel.ingress_ip,
@@ -406,7 +407,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         segments=list(srv6_tunnel.segments),
                         localseg=srv6_tunnel.localseg,
                         bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine),
+                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -420,7 +421,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         destination=srv6_tunnel.destination,
                         localseg=srv6_tunnel.localseg,
                         bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine),
+                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -435,7 +436,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         segments=list(srv6_tunnel.segments) if srv6_tunnel.segments != [''] else None,
                         localseg=srv6_tunnel.localseg if srv6_tunnel.localseg != '' else None,
                         bsid_addr=srv6_tunnel.bsid_addr if srv6_tunnel.localseg != '' else None,
-                        fwd_engine=grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine) if srv6_tunnel.fwd_engine != '' else None,
+                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine] if srv6_tunnel.fwd_engine != '' else None,
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -460,7 +461,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_unitunnel.segments.extend(tunnel['sidlist_lr'])
                 _srv6_unitunnel.localseg = tunnel['localseg_lr']
                 _srv6_unitunnel.bsid_addr = tunnel['bsid_addr']
-                _srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine(tunnel['fwd_engine'])
+                _srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
                 if '_key' in tunnel:
                     _srv6_unitunnel.key = tunnel['_key']
         # Set status code
@@ -481,7 +482,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             # code
             with srv6_mgr_error_handling():
                 srv6_tunnels = None
-                fwd_engine = grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine)
+                fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
                 if srv6_tunnel.operation == 'add':
                     srv6_utils.create_srv6_tunnel(
                         node_l_ip=srv6_tunnel.node_l_ip,
@@ -495,7 +496,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         localseg_lr=srv6_tunnel.localseg_lr,
                         localseg_rl=srv6_tunnel.localseg_rl,
                         bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine),
+                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -511,7 +512,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                         localseg_lr=srv6_tunnel.localseg_lr,
                         localseg_rl=srv6_tunnel.localseg_rl,
                         bsid_addr=srv6_tunnel.bsid_addr,
-                        fwd_engine=grpc_to_py_fwd_engine(srv6_tunnel.fwd_engine),
+                        fwd_engine=grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine],
                         key=srv6_tunnel.key if srv6_tunnel.key != '' else None,
                         db_conn=self.db_conn
                     )
@@ -559,7 +560,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_biditunnel.bsid_addr = tunnel['bsid_addr']
                 if '_key' in tunnel:
                     _srv6_biditunnel.key = tunnel['_key']
-                _srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine(tunnel['fwd_engine'])
+                _srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
         # Set status code
         response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply

@@ -183,7 +183,7 @@ def add_srv6_path(grpc_address, grpc_port, destination,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            path_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
@@ -321,7 +321,7 @@ def get_srv6_path(grpc_address, grpc_port, destination,
             try:
                 if fwd_engine is not None and fwd_engine != '':
                     # Encode fwd engine in a format supported by gRPC
-                    path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+                    path_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
                 else:
                     # By default, if forwarding engine is not specified, we use
                     # Linux forwarding engine
@@ -406,7 +406,7 @@ def change_srv6_path(grpc_address, grpc_port, destination,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            path_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            path_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
@@ -543,8 +543,8 @@ def del_srv6_path(grpc_address, grpc_port, destination,
         try:
             if fwd_engine is not None and fwd_engine != '':
                 # Encode fwd engine in a format supported by gRPC
-                path_request.fwd_engine = py_to_grpc_fwd_engine(
-                    srv6_path['fwd_engine'])
+                path_request.fwd_engine = py_to_grpc_fwd_engine[
+                    srv6_path['fwd_engine']]
             else:
                 # By default, if forwarding engine is not specified, we use
                 # Linux forwarding engine
@@ -732,7 +732,7 @@ def handle_srv6_policy(operation, grpc_address, grpc_port,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            policy_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            policy_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
@@ -867,7 +867,7 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            behavior_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            behavior_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
@@ -993,8 +993,8 @@ def get_srv6_behavior(grpc_address, grpc_port, segment,
             try:
                 if fwd_engine is not None and fwd_engine != '':
                     # Encode fwd engine in a format supported by gRPC
-                    behavior_request.fwd_engine = py_to_grpc_fwd_engine(
-                        fwd_engine)
+                    behavior_request.fwd_engine = py_to_grpc_fwd_engine[
+                        fwd_engine]
                 else:
                     # By default, if forwarding engine is not specified, we use
                     # Linux forwarding engine
@@ -1093,7 +1093,7 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
     try:
         if fwd_engine is not None and fwd_engine != '':
             # Encode fwd engine in a format supported by gRPC
-            behavior_request.fwd_engine = py_to_grpc_fwd_engine(fwd_engine)
+            behavior_request.fwd_engine = py_to_grpc_fwd_engine[fwd_engine]
         else:
             # By default, if forwarding engine is not specified, we use
             # Linux forwarding engine
@@ -1256,8 +1256,8 @@ def del_srv6_behavior(grpc_address, grpc_port, segment,
         try:
             if fwd_engine is not None and fwd_engine != '':
                 # Encode fwd engine in a format supported by gRPC
-                behavior_request.fwd_engine = py_to_grpc_fwd_engine(
-                    srv6_behavior['fwd_engine'])
+                behavior_request.fwd_engine = py_to_grpc_fwd_engine[
+                    srv6_behavior['fwd_engine']]
             else:
                 # By default, if forwarding engine is not specified, we use
                 # Linux forwarding engine
