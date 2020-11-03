@@ -266,7 +266,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 'gw': host_config.gateway
             })
         # Dispatch based on the routing protocol
-        if request.protocol == RoutingProtocol.ISIS:
+        if request.protocol == RoutingProtocol.ISIS.value:
             # Requested extraction from ISIS protocol
             #
             # Extract the topolgy
@@ -289,7 +289,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                 if 'ip_address' in node:
                     _node.ip_address = node['ip_address']
                 # Set node type (e.g. "ROUTER" or "HOST")
-                _node.type = py_to_grpc_node_type(node['type'])
+                _node.type = py_to_grpc_node_type[node['type']]
             # Add the edges to the response message
             for edge in edges:
                 # Add a new edge to the response message
@@ -398,7 +398,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         if len(hosts_config) == 0:
             hosts_config = None
         # Dispatch based on the routing protocol
-        if request.protocol == RoutingProtocol.ISIS:
+        if request.protocol == RoutingProtocol.ISIS.value:
             # ISIS protocol
             #
             # Extract the topology and load it on the Arango database
@@ -426,7 +426,7 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
                         if node.get('ip_address') is not None:
                             _node.ip_address = node['ip_address']
                         # Set node type (e.g. "ROUTER" or "HOST")
-                        _node.type = py_to_grpc_node_type(node['type'])
+                        _node.type = py_to_grpc_node_type[node['type']]
                     # Set the edges
                     for edge in edges:
                         # Add the edges to the response message
