@@ -143,6 +143,10 @@ def add_srv6_path(grpc_address, grpc_port, destination,
         channel = utils.get_grpc_session(grpc_address, grpc_port)
         # Set flag to close the channel after the RPC
         close_channel_after_rpc = True
+    # Extract the gRPC address from the channel
+    grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # Extract the gRPC port from the channel
+    grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 path request
@@ -235,8 +239,8 @@ def add_srv6_path(grpc_address, grpc_port, destination,
         arangodb_driver.insert_srv6_path(
             database=db_conn,
             key=key,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
             destination=destination,
             segments=segments,
             device=device,
@@ -370,6 +374,10 @@ def change_srv6_path(grpc_address, grpc_port, destination,
         channel = utils.get_grpc_session(grpc_address, grpc_port)
         # Set flag to close the channel after the RPC
         close_channel_after_rpc = True
+    # Extract the gRPC address from the channel
+    grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # Extract the gRPC port from the channel
+    grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -438,8 +446,8 @@ def change_srv6_path(grpc_address, grpc_port, destination,
         arangodb_driver.update_srv6_path(
             database=db_conn,
             key=key,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
             destination=destination,
             segments=segments,
             device=device,
@@ -817,6 +825,10 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
         channel = utils.get_grpc_session(grpc_address, grpc_port)
         # Set flag to close the channel after the RPC
         close_channel_after_rpc = True
+    # Extract the gRPC address from the channel
+    grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # Extract the gRPC port from the channel
+    grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # Create request message
     request = srv6_manager_pb2.SRv6ManagerRequest()
     # Create a new SRv6 behavior request
@@ -899,8 +911,8 @@ def add_srv6_behavior(grpc_address, grpc_port, segment,
         arangodb_driver.insert_srv6_behavior(
             database=db_conn,
             key=key,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
             segment=segment,
             action=action,
             device=device,
@@ -1044,6 +1056,10 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
         channel = utils.get_grpc_session(grpc_address, grpc_port)
         # Set flag to close the channel after the RPC
         close_channel_after_rpc = True
+    # Extract the gRPC address from the channel
+    grpc_address = utils.grpc_chan_to_addr_port(channel)[0]
+    # Extract the gRPC port from the channel
+    grpc_port = utils.grpc_chan_to_addr_port(channel)[1]
     # If segment list not provided, initialize it to an empty list
     if segments is None:
         segments = []
@@ -1125,8 +1141,8 @@ def change_srv6_behavior(grpc_address, grpc_port, segment,
         arangodb_driver.update_srv6_behavior(
             database=db_conn,
             key=key,
-            grpc_address=utils.grpc_chan_to_addr_port(channel)[0],
-            grpc_port=utils.grpc_chan_to_addr_port(channel)[1],
+            grpc_address=grpc_address,
+            grpc_port=grpc_port,
             segment=segment,
             action=action,
             device=device,
@@ -1468,6 +1484,14 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
         egress_channel = utils.get_grpc_session(egress_ip, egress_port)
         # Set flag to close the channel after the RPC
         close_egress_channel_after_rpc = True
+    # Extract the gRPC address from the ingress channel
+    ingress_ip = utils.grpc_chan_to_addr_port(ingress_channel)[0]
+    # Extract the gRPC port from the ingress channel
+    ingress_port = utils.grpc_chan_to_addr_port(ingress_channel)[1]
+    # Extract the gRPC address from the egress channel
+    egress_ip = utils.grpc_chan_to_addr_port(egress_channel)[0]
+    # Extract the gRPC port from the egress channel
+    egress_port = utils.grpc_chan_to_addr_port(egress_channel)[1]
     # Add seg6 route to <ingress> to steer the packets sent to the
     # <destination> through the SID list <segments>
     #
@@ -1504,18 +1528,17 @@ def create_uni_srv6_tunnel(ingress_ip, ingress_port, egress_ip, egress_port,
             update_db=False,
             db_conn=db_conn
         )
-    # If the persistecy is enable, store the tunnel to the database
+    # If the persistecy is enabled, store the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
         # Save the tunnel to the db
         try:
             arangodb_driver.insert_srv6_tunnel(
                 database=db_conn,
-                l_grpc_address=utils.grpc_chan_to_addr_port(ingress_channel)[
-                    0],
-                l_grpc_port=utils.grpc_chan_to_addr_port(ingress_channel)[1],
-                r_grpc_address=utils.grpc_chan_to_addr_port(egress_channel)[0],
-                r_grpc_port=utils.grpc_chan_to_addr_port(egress_channel)[1],
+                l_grpc_address=ingress_ip,
+                l_grpc_port=ingress_port,
+                r_grpc_address=egress_ip,
+                r_grpc_port=egress_port,
                 sidlist_lr=segments,
                 dest_lr=destination,
                 localseg_lr=localseg,
@@ -1610,6 +1633,14 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
         node_r_channel = utils.get_grpc_session(node_r_ip, node_r_port)
         # Set flag to close the channel after the RPC
         close_rchannel_after_rpc = True
+    # Extract the gRPC address from the channel of the left node
+    node_l_ip = utils.grpc_chan_to_addr_port(node_l_channel)[0]
+    # Extract the gRPC port from the channel of the left node
+    node_l_port = utils.grpc_chan_to_addr_port(node_l_channel)[1]
+    # Extract the gRPC address from the channel of the right node
+    node_r_ip = utils.grpc_chan_to_addr_port(node_r_channel)[0]
+    # Extract the gRPC port from the channel of the right node
+    node_r_port = utils.grpc_chan_to_addr_port(node_r_channel)[1]
     # Create a unidirectional SRv6 tunnel from <node_l> to <node_r>
     try:
         create_uni_srv6_tunnel(
@@ -1642,17 +1673,16 @@ def create_srv6_tunnel(node_l_ip, node_l_port, node_r_ip, node_r_port,
         # Close the channel
         if close_rchannel_after_rpc:
             node_r_channel.close()
-
-    # If the persistecy is enable, store the tunnel to the database
+    # If the persistecy is enabled, store the tunnel to the database
     if os.getenv('ENABLE_PERSISTENCY') in ['true', 'True'] and \
             update_db:
         # Save the tunnel to the db
         arangodb_driver.insert_srv6_tunnel(
             database=db_conn,
-            l_grpc_address=utils.grpc_chan_to_addr_port(node_l_channel)[0],
-            l_grpc_port=utils.grpc_chan_to_addr_port(node_l_channel)[1],
-            r_grpc_address=utils.grpc_chan_to_addr_port(node_r_channel)[0],
-            r_grpc_port=utils.grpc_chan_to_addr_port(node_r_channel)[1],
+            l_grpc_address=node_l_ip,
+            l_grpc_port=node_l_port,
+            r_grpc_address=node_r_ip,
+            r_grpc_port=node_r_port,
             sidlist_lr=sidlist_lr,
             sidlist_rl=sidlist_rl,
             dest_lr=dest_lr,
