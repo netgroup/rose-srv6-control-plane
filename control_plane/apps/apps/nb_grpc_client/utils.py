@@ -73,13 +73,19 @@ STATUS_CODE_TO_DESC = {
 }
 
 
-class InvalidArgumentError(Exception):
+class ControllerException(Exception):
+    """
+    Controller raised an exception.
+    """
+
+
+class InvalidArgumentError(ControllerException):
     """
     Invalid argument.
     """
 
 
-class NodesConfigNotLoadedError(Exception):
+class NodesConfigNotLoadedError(ControllerException):
     """
     NodesConfigNotLoadedError
     """
@@ -89,30 +95,30 @@ def raise_exception_on_error(error_code):   # TODO exeptions more specific
     if error_code == STATUS_SUCCESS:
         return
     if error_code == STATUS_OPERATION_NOT_SUPPORTED:
-        raise InvalidArgumentError
+        raise ControllerException('Operation not supported')
     if error_code == STATUS_BAD_REQUEST:
-        raise InvalidArgumentError
+        raise ControllerException('Bad request')
     if error_code == STATUS_INTERNAL_ERROR:
-        raise InvalidArgumentError
+        raise ControllerException('Internal error')
     if error_code == STATUS_INVALID_GRPC_REQUEST:
-        raise InvalidArgumentError
+        raise ControllerException('Invalid gRPC request')
     if error_code == STATUS_FILE_EXISTS:
-        raise InvalidArgumentError
+        raise ControllerException('File exists')
     if error_code == STATUS_NO_SUCH_PROCESS:
-        raise InvalidArgumentError
+        raise ControllerException('No such process')
     if error_code == STATUS_INVALID_ACTION:
-        raise InvalidArgumentError
+        raise ControllerException('Invalid action')
     if error_code == STATUS_GRPC_SERVICE_UNAVAILABLE:
-        raise InvalidArgumentError
+        raise ControllerException('gRPC service unavailable')
     if error_code == STATUS_GRPC_UNAUTHORIZED:
-        raise InvalidArgumentError
+        raise ControllerException('gRPC unauthorized')
     if error_code == STATUS_NOT_CONFIGURED:
-        raise NodesConfigNotLoadedError
+        raise NodesConfigNotLoadedError('Entity not configured')
     if error_code == STATUS_ALREADY_CONFIGURED:
-        raise InvalidArgumentError
+        raise ControllerException('Entity already configured')
     if error_code == STATUS_NO_SUCH_DEVICE:
-        raise InvalidArgumentError
-    raise InvalidArgumentError
+        raise ControllerException('No such device')
+    raise ControllerException('Invalid argument')
 
 
 # Utiliy function to check if the IP

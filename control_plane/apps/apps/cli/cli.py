@@ -112,6 +112,17 @@ class CustomCmd(Cmd):
                 break
             except KeyboardInterrupt:
                 print("^C")
+            except nb_utils.ControllerException as err:
+                # When an exception is raised, we log the traceback
+                # and keep the CLI open and ready to receive next comands
+                #
+                # We need mute pylint 'broad-except' in order to
+                # avoid annoying warnings
+                logger.error('%s\n', str(err))
+                # However, we want to add the command to the history
+                if readline:
+                    readline.set_history_length(self.histfile_size)
+                    readline.write_history_file(self.histfile)
             except Exception as err:    # pylint: disable=broad-except
                 # When an exception is raised, we log the traceback
                 # and keep the CLI open and ready to receive next comands
