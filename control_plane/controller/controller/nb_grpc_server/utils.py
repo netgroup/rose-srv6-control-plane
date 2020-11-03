@@ -46,8 +46,7 @@ sb_status_to_nb_status = {
     commons_pb2.STATUS_GRPC_UNAUTHORIZED: nb_commons_pb2.STATUS_GRPC_UNAUTHORIZED,
     commons_pb2.STATUS_NOT_CONFIGURED: nb_commons_pb2.STATUS_NOT_CONFIGURED,
     commons_pb2.STATUS_ALREADY_CONFIGURED: nb_commons_pb2.STATUS_ALREADY_CONFIGURED,
-    commons_pb2.STATUS_NO_SUCH_DEVICE: nb_commons_pb2.STATUS_NO_SUCH_DEVICE
-}
+    commons_pb2.STATUS_NO_SUCH_DEVICE: nb_commons_pb2.STATUS_NO_SUCH_DEVICE}
 
 ''' TODO to be removed
 action_to_grpc_repr = {
