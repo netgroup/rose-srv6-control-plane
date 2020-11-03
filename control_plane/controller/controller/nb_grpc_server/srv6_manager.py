@@ -149,7 +149,12 @@ def srv6_mgr_error_handling():
     # Create reply message
     response = nb_srv6_manager_pb2.SRv6ManagerReply()
     try:
-        yield
+        # Set status code
+        yield response
+        # Operation completed successfully, set status code
+        logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[
+            nb_commons_pb2.STATUS_SUCCESS])
+        response.status = nb_commons_pb2.STATUS_SUCCESS
     except utils.OperationNotSupportedException:
         response.status = nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
         logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[response.status])
@@ -278,7 +283,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             #
             # The "with" block is used to avoid duplicating the error handling
             # code
-            with srv6_mgr_error_handling():
+            with srv6_mgr_error_handling() as response:
                 # Extract the encap mode
                 encapmode = grpc_to_py_encap_mode[srv6_path.encapmode]
                 # Extract the forwarding engine
@@ -301,9 +306,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     key=srv6_path.key if srv6_path.key != '' else None,
                     db_conn=self.db_conn
                 )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # If an error occurred, return immediately
+        if response.status != nb_commons_pb2.STATUS_SUCCESS:
+            return response
         # Add the SRv6 paths to the response message
         if srv6_paths is not None:
             for path in srv6_paths:
@@ -320,8 +325,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_path.fwd_engine = py_to_grpc_fwd_engine[path['fwd_engine']]
                 if '_key' in path:
                     _srv6_path.key = path['_key']
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
         return response
 
@@ -336,7 +339,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
             #
             # The "with" block is used to avoid duplicating the error handling
             # code
-            with srv6_mgr_error_handling():
+            with srv6_mgr_error_handling() as response:
                 # Extract the SRv6 action
                 action = grpc_to_py_srv6_action[srv6_behavior.action]
                 # Handle the behavior
@@ -357,9 +360,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     key=srv6_behavior.key if srv6_behavior.key != '' else None,
                     db_conn=self.db_conn
                 )
-                logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[nb_commons_pb2.STATUS_SUCCESS])
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # If an error occurred, return immediately
+        if response.status != nb_commons_pb2.STATUS_SUCCESS:
+            return response
         # Add the SRv6 behaviors to the response message
         if srv6_behaviors is not None:
             for behavior in srv6_behaviors:
@@ -378,8 +381,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_behavior.fwd_engine = py_to_grpc_fwd_engine[behavior['fwd_engine']]
                 if '_key' in behavior:
                     _srv6_behavior.key = behavior['_key']
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
         return response
 
@@ -394,7 +395,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         for srv6_tunnel in request.srv6_unitunnels:
             # The "with" block is used to avoid duplicating the error handling
             # code
-            with srv6_mgr_error_handling():
+            with srv6_mgr_error_handling() as response:
                 srv6_tunnels = None
                 fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
                 if srv6_tunnel.operation == 'add':
@@ -447,8 +448,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     response.status = \
                         nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
                     return response
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # If an error occurred, return immediately
+        if response.status != nb_commons_pb2.STATUS_SUCCESS:
+            return response
         # Add the SRv6 behaviors to the response message
         if srv6_tunnels is not None:
             for tunnel in srv6_tunnels:
@@ -464,8 +466,6 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 _srv6_unitunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
                 if '_key' in tunnel:
                     _srv6_unitunnel.key = tunnel['_key']
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
         return response
 
@@ -480,7 +480,7 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         for srv6_tunnel in request.srv6_biditunnels:
             # The "with" block is used to avoid duplicating the error handling
             # code
-            with srv6_mgr_error_handling():
+            with srv6_mgr_error_handling() as response:
                 srv6_tunnels = None
                 fwd_engine = grpc_to_py_fwd_engine[srv6_tunnel.fwd_engine]
                 if srv6_tunnel.operation == 'add':
@@ -541,8 +541,9 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                     response.status = \
                         nb_commons_pb2.STATUS_OPERATION_NOT_SUPPORTED
                     return response
-        # Create reply message
-        response = nb_srv6_manager_pb2.SRv6ManagerReply()
+        # If an error occurred, return immediately
+        if response.status != nb_commons_pb2.STATUS_SUCCESS:
+            return response
         # Add the SRv6 behaviors to the response message
         if srv6_tunnels is not None:
             for tunnel in srv6_tunnels:
@@ -561,7 +562,5 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
                 if '_key' in tunnel:
                     _srv6_biditunnel.key = tunnel['_key']
                 _srv6_biditunnel.fwd_engine = py_to_grpc_fwd_engine[tunnel['fwd_engine']]
-        # Set status code
-        response.status = nb_commons_pb2.STATUS_SUCCESS
         # Done, return the reply
         return response
