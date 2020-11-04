@@ -176,9 +176,9 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This module contains a collection of utilities used by Controller</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -203,9 +203,9 @@
 
 
 <div class="viewcode-block" id="validate_ipv6_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ipv6_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return True if the provided IP address is a valid IPv6 address</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">ip_address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">try</span><span class="p">:</span>
@@ -218,9 +218,9 @@
 <span class="c1"># Utiliy function to check if the IP</span>
 <span class="c1"># is a valid IPv4 address</span>
 <div class="viewcode-block" id="validate_ipv4_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ipv4_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ipv4_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return True if the provided IP address is a valid IPv4 address</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">ip_address</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">try</span><span class="p">:</span>
@@ -232,10 +232,10 @@
 
 <span class="c1"># Utiliy function to get the IP address family</span>
 <div class="viewcode-block" id="get_address_family"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.get_address_family">[docs]</a><span class="k">def</span> <span class="nf">get_address_family</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the family of the provided IP address</span>
 <span class="sd">    or None if the IP is invalid</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
         <span class="c1"># IPv6 address</span>
         <span class="k">return</span> <span class="n">AF_INET6</span>
@@ -249,9 +249,9 @@
 <span class="c1"># Utiliy function to check if the IP</span>
 <span class="c1"># is a valid IP address</span>
 <div class="viewcode-block" id="validate_ip_address"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.validate_ip_address">[docs]</a><span class="k">def</span> <span class="nf">validate_ip_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return True if the provided IP address</span>
-<span class="sd">    is a valid IPv4 or IPv6 address&#39;&#39;&#39;</span>
+<span class="sd">    is a valid IPv4 or IPv6 address&quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="k">return</span> <span class="n">validate_ipv4_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span> <span class="ow">or</span> \
         <span class="n">validate_ipv6_address</span><span class="p">(</span><span class="n">ip_address</span><span class="p">)</span></div>
@@ -259,7 +259,7 @@
 
 <span class="c1"># Build a grpc stub</span>
 <div class="viewcode-block" id="get_grpc_session"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.get_grpc_session">[docs]</a><span class="k">def</span> <span class="nf">get_grpc_session</span><span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="n">server_port</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">certificate</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a Channel to a server.</span>
 
 <span class="sd">    :param server_ip: The IP address of the gRPC server</span>
@@ -269,7 +269,7 @@
 
 <span class="sd">    :return: The requested gRPC Channel or None if the operation has failed.</span>
 <span class="sd">    :rtype: class: `grpc._channel.Channel`</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Get family of the gRPC IP</span>
     <span class="n">addr_family</span> <span class="o">=</span> <span class="n">get_address_family</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
@@ -319,8 +319,8 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="print_status_message"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.print_status_message">[docs]</a><span class="k">def</span> <span class="nf">print_status_message</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="n">success_msg</span><span class="p">,</span> <span class="n">failure_msg</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="print_status_message"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.print_status_message">[docs]</a><span class="k">def</span> <span class="nf">print_status_message</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="n">success_msg</span><span class="p">,</span> <span class="n">failure_msg</span><span class="p">):</span>    <span class="c1"># TODO to be removed</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print success or failure message depending of the status code</span>
 <span class="sd">    returned by a gRPC operation.</span>
 
@@ -330,7 +330,7 @@
 <span class="sd">    :type success_msg: str</span>
 <span class="sd">    :param failure_msg: The message to print in case of error</span>
 <span class="sd">    :type failure_msg: str</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="k">if</span> <span class="n">status_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
         <span class="c1"># Success</span>
@@ -375,6 +375,114 @@
 <span class="k">def</span> <span class="nf">grpc_chan_to_addr_port</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
     <span class="n">address</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">parse_ip_port</span><span class="p">(</span><span class="n">channel</span><span class="o">.</span><span class="n">_channel</span><span class="o">.</span><span class="n">target</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">address</span><span class="p">),</span> <span class="n">port</span>
+
+
+<div class="viewcode-block" id="OperationNotSupportedException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.OperationNotSupportedException">[docs]</a><span class="k">class</span> <span class="nc">OperationNotSupportedException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Operation not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="BadRequestException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.BadRequestException">[docs]</a><span class="k">class</span> <span class="nc">BadRequestException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bad request.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="InternalError"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.InternalError">[docs]</a><span class="k">class</span> <span class="nc">InternalError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Internal error.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="InvalidGRPCRequestException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.InvalidGRPCRequestException">[docs]</a><span class="k">class</span> <span class="nc">InvalidGRPCRequestException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Invalid gRPC request.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FileExistsException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.FileExistsException">[docs]</a><span class="k">class</span> <span class="nc">FileExistsException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    File already exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NoSuchProcessException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.NoSuchProcessException">[docs]</a><span class="k">class</span> <span class="nc">NoSuchProcessException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    No such process.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="InvalidActionException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.InvalidActionException">[docs]</a><span class="k">class</span> <span class="nc">InvalidActionException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Invalid SRv6 action.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GRPCServiceUnavailableException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.GRPCServiceUnavailableException">[docs]</a><span class="k">class</span> <span class="nc">GRPCServiceUnavailableException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gRPC service unavailable.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="GRPCUnauthorizedException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.GRPCUnauthorizedException">[docs]</a><span class="k">class</span> <span class="nc">GRPCUnauthorizedException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    gRPC unauthorized.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NotConfiguredException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.NotConfiguredException">[docs]</a><span class="k">class</span> <span class="nc">NotConfiguredException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Not configured.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="AlreadyConfiguredException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.AlreadyConfiguredException">[docs]</a><span class="k">class</span> <span class="nc">AlreadyConfiguredException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Already configured.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NoSuchDevicecException"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.NoSuchDevicecException">[docs]</a><span class="k">class</span> <span class="nc">NoSuchDevicecException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    No such device.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="InvalidArgumentError"><a class="viewcode-back" href="../../controller/api/utils.html#controller.utils.InvalidArgumentError">[docs]</a><span class="k">class</span> <span class="nc">InvalidArgumentError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Invalid argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<span class="k">def</span> <span class="nf">raise_exception_on_error</span><span class="p">(</span><span class="n">error_code</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_SUCCESS</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_OPERATION_NOT_SUPPORTED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">OperationNotSupportedException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_BAD_REQUEST</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BadRequestException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INTERNAL_ERROR</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InternalError</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_GRPC_REQUEST</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidGRPCRequestException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_FILE_EXISTS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">FileExistsException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_PROCESS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoSuchProcessException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_INVALID_ACTION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidActionException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_SERVICE_UNAVAILABLE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GRPCServiceUnavailableException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_GRPC_UNAUTHORIZED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GRPCUnauthorizedException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NOT_CONFIGURED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NotConfiguredException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_ALREADY_CONFIGURED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">AlreadyConfiguredException</span>
+    <span class="k">if</span> <span class="n">error_code</span> <span class="o">==</span> <span class="n">commons_pb2</span><span class="o">.</span><span class="n">STATUS_NO_SUCH_DEVICE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoSuchDevicecException</span>
+    <span class="k">raise</span> <span class="n">InvalidArgumentError</span>
 </pre></div>
 
            </div>

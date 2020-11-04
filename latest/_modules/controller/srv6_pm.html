@@ -176,15 +176,15 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This module implements control-plane functionalities for SRv6 PM</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># pylint: disable=too-many-lines</span>
 
+<span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">time</span>
@@ -266,9 +266,9 @@
                      <span class="n">timestamp</span><span class="p">,</span> <span class="n">fw_color</span><span class="p">,</span> <span class="n">rv_color</span><span class="p">,</span> <span class="n">sender_seq_num</span><span class="p">,</span>
                      <span class="n">reflector_seq_num</span><span class="p">,</span> <span class="n">sender_tx_counter</span><span class="p">,</span> <span class="n">sender_rx_counter</span><span class="p">,</span>
                      <span class="n">reflector_tx_counter</span><span class="p">,</span> <span class="n">reflector_rx_counter</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Publish the measurement data to Kafka</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
     <span class="c1">#</span>
@@ -307,9 +307,9 @@
                                 <span class="n">generator_id</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">transfer</span><span class="p">,</span>
                                 <span class="n">transfer_dim</span><span class="p">,</span> <span class="n">bitrate</span><span class="p">,</span> <span class="n">bitrate_dim</span><span class="p">,</span>
                                 <span class="n">retr</span><span class="p">,</span> <span class="n">cwnd</span><span class="p">,</span> <span class="n">cwnd_dim</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Publish IPERF data to Kafka</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
@@ -355,9 +355,9 @@
                             <span class="n">authentication_key</span><span class="p">,</span> <span class="n">timestamp_format</span><span class="p">,</span>
                             <span class="n">delay_measurement_mode</span><span class="p">,</span> <span class="n">padding_mbz</span><span class="p">,</span>
                             <span class="n">loss_measurement_mode</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to start an experiment on the sender</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-return-statements</span>
     <span class="c1">#</span>
@@ -462,9 +462,9 @@
 
 
 <div class="viewcode-block" id="stop_experiment_sender"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.stop_experiment_sender">[docs]</a><span class="k">def</span> <span class="nf">stop_experiment_sender</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">sidlist</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to stop an experiment on the sender</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get the reference of the stub</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6pmService_pb2_grpc</span><span class="o">.</span><span class="n">SRv6PMStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
     <span class="c1"># Create the request message</span>
@@ -476,9 +476,9 @@
 
 
 <div class="viewcode-block" id="retrieve_experiment_results_sender"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.retrieve_experiment_results_sender">[docs]</a><span class="k">def</span> <span class="nf">retrieve_experiment_results_sender</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">sidlist</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to get the results of a running experiment</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get the reference of the stub</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6pmService_pb2_grpc</span><span class="o">.</span><span class="n">SRv6PMStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
     <span class="c1"># Create the request message</span>
@@ -492,9 +492,9 @@
 <div class="viewcode-block" id="set_node_configuration"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.set_node_configuration">[docs]</a><span class="k">def</span> <span class="nf">set_node_configuration</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">send_udp_port</span><span class="p">,</span> <span class="n">refl_udp_port</span><span class="p">,</span>
                            <span class="n">interval_duration</span><span class="p">,</span> <span class="n">delay_margin</span><span class="p">,</span>
                            <span class="n">number_of_color</span><span class="p">,</span> <span class="n">pm_driver</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to set the configuration on a sender node</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
@@ -536,9 +536,9 @@
 
 
 <div class="viewcode-block" id="reset_node_configuration"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.reset_node_configuration">[docs]</a><span class="k">def</span> <span class="nf">reset_node_configuration</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to clear the configuration on a sender node</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get the reference of the stub</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6pmService_pb2_grpc</span><span class="o">.</span><span class="n">SRv6PMStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
     <span class="c1"># Create the request message</span>
@@ -552,9 +552,9 @@
                                <span class="n">measurement_protocol</span><span class="p">,</span> <span class="n">measurement_type</span><span class="p">,</span>
                                <span class="n">authentication_mode</span><span class="p">,</span> <span class="n">authentication_key</span><span class="p">,</span>
                                <span class="n">loss_measurement_mode</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to start an experiment on the reflector</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
     <span class="c1"># Convert string args to int</span>
@@ -630,9 +630,9 @@
 
 
 <div class="viewcode-block" id="stop_experiment_reflector"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.stop_experiment_reflector">[docs]</a><span class="k">def</span> <span class="nf">stop_experiment_reflector</span><span class="p">(</span><span class="n">channel</span><span class="p">,</span> <span class="n">sidlist</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    RPC used to stop an experiment on the reflector</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Get the reference of the stub</span>
     <span class="n">stub</span> <span class="o">=</span> <span class="n">srv6pmService_pb2_grpc</span><span class="o">.</span><span class="n">SRv6PMStub</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
     <span class="c1"># Create the request message</span>
@@ -651,7 +651,7 @@
                         <span class="n">authentication_mode</span><span class="p">,</span> <span class="n">authentication_key</span><span class="p">,</span>
                         <span class="n">timestamp_format</span><span class="p">,</span> <span class="n">delay_measurement_mode</span><span class="p">,</span>
                         <span class="n">padding_mbz</span><span class="p">,</span> <span class="n">loss_measurement_mode</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Start the measurement process on reflector and sender.</span>
 
 <span class="sd">    :param measure_id: Identifier for the experiment</span>
@@ -685,7 +685,7 @@
 <span class="sd">    :param loss_measurement_mode: The loss measurement mode (i.e. Inferred</span>
 <span class="sd">                                  or Direct mode)</span>
 <span class="sd">    :type loss_measurement_mode: str</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, unused-argument</span>
     <span class="c1">#</span>
@@ -747,7 +747,7 @@
 
 <span class="k">def</span> <span class="nf">__get_measurement_results</span><span class="p">(</span><span class="n">sender_channel</span><span class="p">,</span> <span class="n">reflector_channel</span><span class="p">,</span>
                               <span class="n">send_refl_sidlist</span><span class="p">,</span> <span class="n">refl_send_sidlist</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the results of a measurement process.</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -758,7 +758,7 @@
 <span class="sd">    :type send_refl_sidlist: list</span>
 <span class="sd">    :param refl_send_sidlist: The SID list used for reflector-&gt;sender path</span>
 <span class="sd">    :type refl_send_sidlist: list</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=unused-argument</span>
     <span class="c1">#</span>
     <span class="c1"># Retrieve the results of the experiment</span>
@@ -798,7 +798,7 @@
 
 <span class="k">def</span> <span class="nf">__stop_measurement</span><span class="p">(</span><span class="n">sender_channel</span><span class="p">,</span> <span class="n">reflector_channel</span><span class="p">,</span>
                        <span class="n">send_refl_sidlist</span><span class="p">,</span> <span class="n">refl_send_sidlist</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stop a measurement process on reflector and sender.</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -811,7 +811,7 @@
 <span class="sd">    :param refl_send_sidlist: The SID list used for the path</span>
 <span class="sd">                              reflector-&gt;sender</span>
 <span class="sd">    :type refl_send_sidlist: list</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">************** Stop Measurement **************</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1"># Stop the experiment on the sender</span>
@@ -850,7 +850,7 @@
                       <span class="n">send_udp_port</span><span class="p">,</span> <span class="n">refl_udp_port</span><span class="p">,</span>
                       <span class="n">interval_duration</span><span class="p">,</span> <span class="n">delay_margin</span><span class="p">,</span>
                       <span class="n">number_of_color</span><span class="p">,</span> <span class="n">pm_driver</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Set the configuration</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender</span>
@@ -867,7 +867,7 @@
 <span class="sd">    :type delay_margin: int</span>
 <span class="sd">    :param number_of_color: The number of the color</span>
 <span class="sd">    :type number_of_color: int</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
@@ -902,7 +902,7 @@
 
 
 <div class="viewcode-block" id="reset_configuration"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.reset_configuration">[docs]</a><span class="k">def</span> <span class="nf">reset_configuration</span><span class="p">(</span><span class="n">sender_channel</span><span class="p">,</span> <span class="n">reflector_channel</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reset the configuration</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -919,7 +919,7 @@
 <span class="sd">    :type delay_margin: int</span>
 <span class="sd">    :param number_of_color: The number of the color</span>
 <span class="sd">    :type number_of_color: int</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># Reset configuration on the sender</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">reset_node_configuration</span><span class="p">(</span>
@@ -949,7 +949,7 @@
                      <span class="n">padding_mbz</span><span class="p">,</span> <span class="n">loss_measurement_mode</span><span class="p">,</span> <span class="n">measure_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">send_refl_localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refl_send_localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Start an experiment.</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -1006,7 +1006,7 @@
 <span class="sd">                  SRv6 path for the destination already exists. The old SRv6</span>
 <span class="sd">                  path is replaced with the new one (default is False).</span>
 <span class="sd">    :type force: bool, optional</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
     <span class="c1">#</span>
@@ -1069,7 +1069,7 @@
 <div class="viewcode-block" id="get_experiment_results"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.get_experiment_results">[docs]</a><span class="k">def</span> <span class="nf">get_experiment_results</span><span class="p">(</span><span class="n">sender_channel</span><span class="p">,</span> <span class="n">reflector_channel</span><span class="p">,</span>
                            <span class="n">send_refl_sidlist</span><span class="p">,</span> <span class="n">refl_send_sidlist</span><span class="p">,</span>
                            <span class="n">kafka_servers</span><span class="o">=</span><span class="n">KAFKA_SERVERS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the results of an experiment.</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -1084,7 +1084,7 @@
 <span class="sd">    :type refl_send_sidlist: list</span>
 <span class="sd">    :param kafka_servers: IP:port of Kafka server</span>
 <span class="sd">    :type kafka_servers: str</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
     <span class="c1">#</span>
@@ -1135,7 +1135,7 @@
 <div class="viewcode-block" id="stop_experiment"><a class="viewcode-back" href="../../controller/api/srv6_pm.html#controller.srv6_pm.stop_experiment">[docs]</a><span class="k">def</span> <span class="nf">stop_experiment</span><span class="p">(</span><span class="n">sender_channel</span><span class="p">,</span> <span class="n">reflector_channel</span><span class="p">,</span> <span class="n">send_refl_dest</span><span class="p">,</span>
                     <span class="n">refl_send_dest</span><span class="p">,</span> <span class="n">send_refl_sidlist</span><span class="p">,</span> <span class="n">refl_send_sidlist</span><span class="p">,</span>
                     <span class="n">send_refl_localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refl_send_localseg</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Stop a running experiment.</span>
 
 <span class="sd">    :param sender_channel: The gRPC Channel to the sender node</span>
@@ -1166,7 +1166,7 @@
 <span class="sd">                              &#39;send_localseg&#39; isn&#39;t passed in, the seg6local</span>
 <span class="sd">                              End.DT6 route is not removed.</span>
 <span class="sd">    :type refl_send_localseg: str, optional</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
@@ -1199,17 +1199,17 @@
 <span class="k">if</span> <span class="n">ENABLE_GRPC_SERVER</span><span class="p">:</span>
     <span class="k">class</span> <span class="nc">_SRv6PMService</span><span class="p">(</span>
             <span class="n">srv6pmServiceController_pb2_grpc</span><span class="o">.</span><span class="n">SRv6PMControllerServicer</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Private class implementing methods exposed by the gRPC server</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kafka_servers</span><span class="o">=</span><span class="n">KAFKA_SERVERS</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">kafka_servers</span> <span class="o">=</span> <span class="n">kafka_servers</span>
 
         <span class="k">def</span> <span class="nf">SendMeasurementData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-            <span class="sd">&#39;&#39;&#39;</span>
+            <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            RPC used to send measurement data to the controller</span>
-<span class="sd">            &#39;&#39;&#39;</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="c1"># pylint: disable=too-many-locals</span>
             <span class="c1">#</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Measurement data received: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span>
@@ -1248,9 +1248,9 @@
                 <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">SendIperfData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
-            <span class="sd">&#39;&#39;&#39;</span>
+            <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            RPC used to send iperf data to the controller</span>
-<span class="sd">            &#39;&#39;&#39;</span>
+<span class="sd">            &quot;&quot;&quot;</span>
             <span class="c1">#</span>
             <span class="c1"># pylint: disable=too-many-locals</span>
             <span class="c1">#</span>
@@ -1304,7 +1304,7 @@
                             <span class="n">secure</span><span class="o">=</span><span class="n">DEFAULT_SERVER_SECURE</span><span class="p">,</span>
                             <span class="n">key</span><span class="o">=</span><span class="n">DEFAULT_SERVER_KEY</span><span class="p">,</span>
                             <span class="n">certificate</span><span class="o">=</span><span class="n">DEFAULT_SERVER_CERTIFICATE</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Start gRPC on the controller</span>
 
 <span class="sd">        :param grpc_ip: The IP address of the gRPC server</span>
@@ -1320,7 +1320,7 @@
 <span class="sd">        :param key: the path of the server key required for the SSL</span>
 <span class="sd">                    (default is None)</span>
 <span class="sd">        :type key: str</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#</span>
         <span class="c1"># pylint: disable=too-many-arguments</span>
         <span class="c1">#</span>

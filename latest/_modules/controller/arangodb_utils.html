@@ -176,9 +176,9 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">ArangoDB utilities</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">ipaddress</span>
@@ -200,28 +200,35 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="TopologyExtractionException"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.TopologyExtractionException">[docs]</a><span class="k">class</span> <span class="nc">TopologyExtractionException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An error occurred during topology extraction.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
 <div class="viewcode-block" id="save_yaml_dump"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.save_yaml_dump">[docs]</a><span class="k">def</span> <span class="nf">save_yaml_dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Export an object to a YAML file</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Save file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
         <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="load_yaml_dump"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.load_yaml_dump">[docs]</a><span class="k">def</span> <span class="nf">load_yaml_dump</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a YAML file and return a dict representation</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Load YAML file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span></div>
 
 
+<span class="c1"># TODO reuse fill_ip_addresses_from_list</span>
 <div class="viewcode-block" id="fill_ip_addresses"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.fill_ip_addresses">[docs]</a><span class="k">def</span> <span class="nf">fill_ip_addresses</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">addresses_yaml</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add addresses to a nodes dict</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Read IP addresses information from a YAML file and</span>
     <span class="c1"># add addresses to the nodes</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Filling nodes YAML file with IP addresses&#39;</span><span class="p">)</span>
@@ -241,10 +248,10 @@
     <span class="k">return</span> <span class="n">nodes</span></div>
 
 
-<div class="viewcode-block" id="add_hosts"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.add_hosts">[docs]</a><span class="k">def</span> <span class="nf">add_hosts</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="add_hosts"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.add_hosts">[docs]</a><span class="k">def</span> <span class="nf">add_hosts</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="p">):</span>    <span class="c1"># TODO reuse add_hosts_from_list</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add hosts to a topology</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Read hosts information from a YAML file and</span>
     <span class="c1"># add hosts to the nodes and edges lists</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Adding hosts to the topology&#39;</span><span class="p">)</span>
@@ -285,10 +292,71 @@
     <span class="k">return</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span></div>
 
 
+<div class="viewcode-block" id="fill_ip_addresses_from_list"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.fill_ip_addresses_from_list">[docs]</a><span class="k">def</span> <span class="nf">fill_ip_addresses_from_list</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">addrs_config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add addresses to a nodes dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Read IP addresses information from a YAML file and</span>
+    <span class="c1"># add addresses to the nodes</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Filling nodes YAML file with IP addresses&#39;</span><span class="p">)</span>
+    <span class="c1"># Parse addresses</span>
+    <span class="n">node_to_addr</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">addr</span> <span class="ow">in</span> <span class="n">addrs_config</span><span class="p">:</span>
+        <span class="n">node_to_addr</span><span class="p">[</span><span class="n">addr</span><span class="p">[</span><span class="s1">&#39;node&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">addr</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span>
+    <span class="c1"># Fill addresses</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="c1"># Update the dict</span>
+        <span class="n">node</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_to_addr</span><span class="p">[</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;_key&#39;</span><span class="p">]]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Nodes YAML updated</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Return the updated nodes list</span>
+    <span class="k">return</span> <span class="n">nodes</span></div>
+
+
+<div class="viewcode-block" id="add_hosts_from_list"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.add_hosts_from_list">[docs]</a><span class="k">def</span> <span class="nf">add_hosts_from_list</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">hosts_config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add hosts to a topology</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Read hosts information from a YAML file and</span>
+    <span class="c1"># add hosts to the nodes and edges lists</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Adding hosts to the topology&#39;</span><span class="p">)</span>
+    <span class="c1"># Add hosts and links</span>
+    <span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">hosts_config</span><span class="p">:</span>
+        <span class="c1"># Add host</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;_key&#39;</span><span class="p">:</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;host&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;ip_address&#39;</span><span class="p">:</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]</span>
+        <span class="p">})</span>
+        <span class="c1"># Get the subnet</span>
+        <span class="n">net</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ipaddress</span><span class="o">.</span><span class="n">ip_network</span><span class="p">(</span><span class="n">host</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="c1"># Add edge (host to router)</span>
+        <span class="c1"># Character &#39;/&#39; is not accepted in key strign in arango, using</span>
+        <span class="c1"># &#39;-&#39; instead</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;_key&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-dir1&#39;</span> <span class="o">%</span> <span class="n">net</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;_from&#39;</span><span class="p">:</span> <span class="s1">&#39;nodes/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;_to&#39;</span><span class="p">:</span> <span class="s1">&#39;nodes/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;gw&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;edge&#39;</span>
+        <span class="p">})</span>
+        <span class="c1"># Add edge (router to host)</span>
+        <span class="c1"># This is required because we work with</span>
+        <span class="c1"># unidirectional edges</span>
+        <span class="n">edges</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;_key&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">-dir2&#39;</span> <span class="o">%</span> <span class="n">net</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;_to&#39;</span><span class="p">:</span> <span class="s1">&#39;nodes/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;gw&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;_from&#39;</span><span class="p">:</span> <span class="s1">&#39;nodes/</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">host</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;edge&#39;</span>
+        <span class="p">})</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Nodes YAML updated</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;*** Edges YAML updated</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># Return the updated nodes and edges lists</span>
+    <span class="k">return</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span></div>
+
+
 <div class="viewcode-block" id="initialize_db"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.initialize_db">[docs]</a><span class="k">def</span> <span class="nf">initialize_db</span><span class="p">(</span><span class="n">arango_url</span><span class="p">,</span> <span class="n">arango_user</span><span class="p">,</span> <span class="n">arango_password</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize database</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=unused-argument</span>
     <span class="c1">#</span>
@@ -303,10 +371,10 @@
 <div class="viewcode-block" id="extract_topo_from_isis"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.extract_topo_from_isis">[docs]</a><span class="k">def</span> <span class="nf">extract_topo_from_isis</span><span class="p">(</span><span class="n">isis_nodes</span><span class="p">,</span> <span class="n">isisd_pwd</span><span class="p">,</span>
                            <span class="n">nodes_yaml</span><span class="p">,</span> <span class="n">edges_yaml</span><span class="p">,</span>
                            <span class="n">addrs_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract the network topology</span>
 <span class="sd">    from a set of nodes running ISIS protocol</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1">#</span>
@@ -347,9 +415,9 @@
                         <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span>
                         <span class="n">nodes_collection</span><span class="p">,</span> <span class="n">edges_collection</span><span class="p">,</span>
                         <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a network topology on a database</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># Current Arango arguments are not used,</span>
     <span class="c1"># so we can skip the check</span>
@@ -371,10 +439,10 @@
                                               <span class="n">nodes_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                               <span class="n">addrs_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hosts_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                               <span class="n">period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Extract the network topology from a set of nodes running ISIS protocol</span>
 <span class="sd">    and upload it on a database</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
     <span class="c1">#</span>
@@ -439,6 +507,75 @@
                     <span class="n">edges_collection</span><span class="o">=</span><span class="n">edges_collection</span><span class="p">,</span>
                     <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span>
                 <span class="p">)</span>
+        <span class="c1"># Period = 0 means a single extraction</span>
+        <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="c1"># Wait &#39;period&#39; seconds between two extractions</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">period</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_topo_from_isis_and_load_on_arango_stream"><a class="viewcode-back" href="../../controller/api/arangodb_utils.html#controller.arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream">[docs]</a><span class="k">def</span> <span class="nf">extract_topo_from_isis_and_load_on_arango_stream</span><span class="p">(</span><span class="n">isis_nodes</span><span class="p">,</span> <span class="n">isisd_pwd</span><span class="p">,</span>
+                                                     <span class="n">nodes_collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                     <span class="n">edges_collection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                     <span class="n">addrs_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                     <span class="n">hosts_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                     <span class="n">period</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract the network topology from a set of nodes running ISIS protocol</span>
+<span class="sd">    and upload it on a database</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#</span>
+    <span class="c1"># pylint: disable=too-many-arguments, too-many-locals</span>
+    <span class="c1">#</span>
+    <span class="c1"># Param isis_nodes: list of ip-port</span>
+    <span class="c1"># (e.g. [2000::1-2608,2000::2-2608])</span>
+    <span class="c1">#</span>
+    <span class="c1"># Topology Information Extraction</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># Connect to a node and extract the topology</span>
+        <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">node_to_systemid</span> <span class="o">=</span> <span class="n">connect_and_extract_topology_isis</span><span class="p">(</span>
+            <span class="n">ips_ports</span><span class="o">=</span><span class="n">isis_nodes</span><span class="p">,</span>
+            <span class="n">isisd_pwd</span><span class="o">=</span><span class="n">isisd_pwd</span><span class="p">,</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">edges</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">node_to_systemid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Cannot extract topology&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Topology extracted&#39;</span><span class="p">)</span>
+            <span class="c1"># Export the topology in YAML format</span>
+            <span class="c1"># This function returns a representation of nodes and</span>
+            <span class="c1"># edges ready to get uploaded on ArangoDB.</span>
+            <span class="c1"># Optionally, the nodes and the edges are exported in</span>
+            <span class="c1"># YAML format, if &#39;nodes_yaml&#39; and &#39;edges_yaml&#39; variables</span>
+            <span class="c1"># are not None</span>
+            <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">dump_topo_yaml</span><span class="p">(</span>
+                <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>
+                <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">,</span>
+                <span class="n">node_to_systemid</span><span class="o">=</span><span class="n">node_to_systemid</span>
+            <span class="p">)</span>
+            <span class="c1"># Add IP addresses information</span>
+            <span class="k">if</span> <span class="n">addrs_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fill_ip_addresses_from_list</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">addrs_config</span><span class="p">)</span>
+            <span class="c1"># Add hosts information</span>
+            <span class="k">if</span> <span class="n">hosts_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">add_hosts_from_list</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">hosts_config</span><span class="p">)</span>
+            <span class="c1"># Load the topology on Arango DB</span>
+            <span class="k">if</span> <span class="n">nodes_collection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">edges_collection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">load_topo_on_arango</span><span class="p">(</span>
+                    <span class="n">arango_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">user</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">nodes</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>
+                    <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">,</span>
+                    <span class="n">nodes_collection</span><span class="o">=</span><span class="n">nodes_collection</span><span class="p">,</span>
+                    <span class="n">edges_collection</span><span class="o">=</span><span class="n">edges_collection</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">nodes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">edges</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># TODO use a more specific error</span>
+            <span class="k">raise</span> <span class="n">TopologyExtractionException</span><span class="p">(</span><span class="s1">&#39;Cannot extract topology&#39;</span><span class="p">)</span>
+        <span class="c1"># Return nodes and edges</span>
+        <span class="k">yield</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span>
         <span class="c1"># Period = 0 means a single extraction</span>
         <span class="k">if</span> <span class="n">period</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">break</span>

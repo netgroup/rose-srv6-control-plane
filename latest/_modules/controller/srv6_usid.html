@@ -176,15 +176,14 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Control-Plane functionalities for SRv6 Manager</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">pprint</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">ipaddress</span> <span class="kn">import</span> <span class="n">IPv6Address</span>
 
 <span class="kn">from</span> <span class="nn">pyaml</span> <span class="kn">import</span> <span class="n">yaml</span>
@@ -193,6 +192,7 @@
 <span class="kn">import</span> <span class="nn">commons_pb2</span>
 <span class="c1"># Controller dependencies</span>
 <span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">srv6_utils</span>
+<span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">topo_utils</span>
 <span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">utils</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">controller</span> <span class="kn">import</span> <span class="n">arangodb_driver</span>
@@ -212,54 +212,54 @@
 
 
 <div class="viewcode-block" id="InvalidConfigurationError"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.InvalidConfigurationError">[docs]</a><span class="k">class</span> <span class="nc">InvalidConfigurationError</span><span class="p">(</span><span class="n">srv6_utils</span><span class="o">.</span><span class="n">SRv6Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration file is not valid.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="NodeNotFoundError"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.NodeNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NodeNotFoundError</span><span class="p">(</span><span class="n">srv6_utils</span><span class="o">.</span><span class="n">SRv6Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Node not found error.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="TooManySegmentsError"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.TooManySegmentsError">[docs]</a><span class="k">class</span> <span class="nc">TooManySegmentsError</span><span class="p">(</span><span class="n">srv6_utils</span><span class="o">.</span><span class="n">SRv6Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Too many segments error.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="SIDLocatorError"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.SIDLocatorError">[docs]</a><span class="k">class</span> <span class="nc">SIDLocatorError</span><span class="p">(</span><span class="n">srv6_utils</span><span class="o">.</span><span class="n">SRv6Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SID Locator is invalid error.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="InvalidSIDError"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.InvalidSIDError">[docs]</a><span class="k">class</span> <span class="nc">InvalidSIDError</span><span class="p">(</span><span class="n">srv6_utils</span><span class="o">.</span><span class="n">SRv6Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    SID is invalid.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <div class="viewcode-block" id="print_nodes"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.print_nodes">[docs]</a><span class="k">def</span> <span class="nf">print_nodes</span><span class="p">(</span><span class="n">nodes_dict</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print the nodes.</span>
 
 <span class="sd">    :param nodes_dict: Dict containing the nodes</span>
 <span class="sd">    :type nodes_dict: dict</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nodes_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
 
 
 <div class="viewcode-block" id="print_node_to_addr_mapping"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.print_node_to_addr_mapping">[docs]</a><span class="k">def</span> <span class="nf">print_node_to_addr_mapping</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function reads a YAML file containing the mapping</span>
 <span class="sd">    of node names to IP addresses and pretty print it</span>
 
 <span class="sd">    :param node_to_addr_filename: Name of the YAML file containing the</span>
 <span class="sd">                                  mapping of node names to IP addresses</span>
 <span class="sd">    :type node_to_addr_filename: str</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Read the mapping from the file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nodes_file</span><span class="p">:</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">nodes_file</span><span class="p">)</span>
@@ -302,7 +302,7 @@
 
 
 <div class="viewcode-block" id="read_nodes"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.read_nodes">[docs]</a><span class="k">def</span> <span class="nf">read_nodes</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a list of node names into a list of IP addresses.</span>
 
 <span class="sd">    :param nodes_filename: Name of the YAML file containing the</span>
@@ -313,7 +313,7 @@
 <span class="sd">    :raises NodeNotFoundError: Node name not found in the mapping file</span>
 <span class="sd">    :raises InvalidConfigurationError: The mapping file is not a valid</span>
 <span class="sd">                                       YAML file</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Read the mapping from the file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">nodes_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nodes_file</span><span class="p">:</span>
         <span class="n">nodes</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">nodes_file</span><span class="p">)</span>
@@ -361,7 +361,7 @@
 <div class="viewcode-block" id="segments_to_micro_segment"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.segments_to_micro_segment">[docs]</a><span class="k">def</span> <span class="nf">segments_to_micro_segment</span><span class="p">(</span><span class="n">locator</span><span class="p">,</span> <span class="n">segments</span><span class="p">,</span>
                               <span class="n">locator_bits</span><span class="o">=</span><span class="n">DEFAULT_LOCATOR_BITS</span><span class="p">,</span>
                               <span class="n">usid_id_bits</span><span class="o">=</span><span class="n">DEFAULT_USID_ID_BITS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a SID list (with #segments &lt;= 6) into a uSID.</span>
 
 <span class="sd">    :param locator: The SID Locator of the segments.</span>
@@ -378,7 +378,7 @@
 <span class="sd">    :raises TooManySegmentsError: segments arg contains too many segments</span>
 <span class="sd">    :raises SIDLocatorError: SID Locator is wrong for one or more segments</span>
 <span class="sd">    :raises InvalidSIDError: SID is wrong for one or more segments</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Locator mask, used to extract the locator from the SIDs</span>
     <span class="c1">#</span>
     <span class="c1"># It is computed with a binary manipulation</span>
@@ -442,7 +442,7 @@
 
 
 <div class="viewcode-block" id="get_sid_locator"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.get_sid_locator">[docs]</a><span class="k">def</span> <span class="nf">get_sid_locator</span><span class="p">(</span><span class="n">sid_list</span><span class="p">,</span> <span class="n">locator_bits</span><span class="o">=</span><span class="n">DEFAULT_LOCATOR_BITS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the SID Locator (i.e. the first 32 bits) from a SID List.</span>
 
 <span class="sd">    :param sid_list: SID List</span>
@@ -452,7 +452,7 @@
 <span class="sd">    :return: SID Locator</span>
 <span class="sd">    :rtype: str</span>
 <span class="sd">    :raises SIDLocatorError: SID Locator is wrong for one or more segments</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Locator mask, used to extract the locator from the SIDs</span>
     <span class="c1">#</span>
     <span class="c1"># It is computed with a binary manipulation</span>
@@ -489,7 +489,7 @@
 <div class="viewcode-block" id="sidlist_to_usidlist"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.sidlist_to_usidlist">[docs]</a><span class="k">def</span> <span class="nf">sidlist_to_usidlist</span><span class="p">(</span><span class="n">sid_list</span><span class="p">,</span> <span class="n">udt_sids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">locator_bits</span><span class="o">=</span><span class="n">DEFAULT_LOCATOR_BITS</span><span class="p">,</span>
                         <span class="n">usid_id_bits</span><span class="o">=</span><span class="n">DEFAULT_USID_ID_BITS</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a SID List into a uSID List.</span>
 
 <span class="sd">    :param sid_list: SID List to be converted</span>
@@ -502,7 +502,7 @@
 <span class="sd">    :rtype: list</span>
 <span class="sd">    :raises TooManySegmentsError: segments arg contains too many segments</span>
 <span class="sd">    :raises SIDLocatorError: SID Locator is wrong for one or more segments</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">udt_sids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">udt_sids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="c1"># Size of the group of SIDs to be compressed in one uSID</span>
@@ -538,7 +538,7 @@
 
 
 <div class="viewcode-block" id="nodes_to_micro_segments"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.nodes_to_micro_segments">[docs]</a><span class="k">def</span> <span class="nf">nodes_to_micro_segments</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">node_addrs_filename</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a list of nodes into a list of micro segments (uSID List)</span>
 
 <span class="sd">    :param nodes: List of node names</span>
@@ -553,7 +553,7 @@
 <span class="sd">                                       YAML file</span>
 <span class="sd">    :raises TooManySegmentsError: segments arg contains more than 6 segments</span>
 <span class="sd">    :raises SIDLocatorError: SID Locator is wrong for one or more segments</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Convert the list of nodes into a list of IP addresses (SID list)</span>
     <span class="c1"># Translation is based on a file containing the mapping</span>
@@ -579,7 +579,7 @@
 
 
 <div class="viewcode-block" id="validate_usid_id"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.validate_usid_id">[docs]</a><span class="k">def</span> <span class="nf">validate_usid_id</span><span class="p">(</span><span class="n">usid_id</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate a uSID identifier. A valid uSID id should be an integer in the</span>
 <span class="sd">    range (0, 0xffff).</span>
 
@@ -587,7 +587,7 @@
 <span class="sd">    :type usid_id: str</span>
 <span class="sd">    :return: True if the uSID identifier is valid.</span>
 <span class="sd">    :rtype: bool</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># A valid uSID id should be an integer in the range (0, 0xffff)</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mh">0x0</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mh">0xffff</span>
@@ -598,7 +598,7 @@
 
 
 <div class="viewcode-block" id="usid_id_to_usid"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.usid_id_to_usid">[docs]</a><span class="k">def</span> <span class="nf">usid_id_to_usid</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="n">locator</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a uSID identifier into a SID.</span>
 
 <span class="sd">    :param usid_id: uSID idenfier to convert.</span>
@@ -607,14 +607,14 @@
 <span class="sd">    :type locator: str</span>
 <span class="sd">    :return: Generated SID.</span>
 <span class="sd">    :rtype: str</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">IPv6Address</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">IPv6Address</span><span class="p">(</span><span class="n">locator</span><span class="p">))</span> <span class="o">+</span>
                            <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">usid_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">80</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="encode_endpoint_node"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.encode_endpoint_node">[docs]</a><span class="k">def</span> <span class="nf">encode_endpoint_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">grpc_ip</span><span class="p">,</span> <span class="n">grpc_port</span><span class="p">,</span> <span class="n">fwd_engine</span><span class="p">,</span> <span class="n">locator</span><span class="p">,</span>
                          <span class="n">udt</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a dict-representation of a node (endpoint of the path), starting from</span>
 <span class="sd">    gRPC IP and port, uDT sid, forwarding engine and locator.</span>
 
@@ -642,7 +642,7 @@
 <span class="sd">             - fwd_engine</span>
 <span class="sd">    :rtype: dict</span>
 <span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Validation checks</span>
     <span class="c1">#</span>
     <span class="c1"># Validate gRPC address</span>
@@ -689,7 +689,7 @@
 
 
 <div class="viewcode-block" id="encode_intermediate_node"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.encode_intermediate_node">[docs]</a><span class="k">def</span> <span class="nf">encode_intermediate_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">locator</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get a dict-representation of a node (intermediate node of the path),</span>
 <span class="sd">    starting from gRPC IP and port, uDT sid, forwarding engine and locator.</span>
 <span class="sd">    For the intermediate nodes, we don&#39;t need uDT, forwarding engine.</span>
@@ -710,7 +710,7 @@
 <span class="sd">             - fwd_engine (set to None)</span>
 <span class="sd">    :rtype: dict</span>
 <span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Validate params</span>
     <span class="c1">#</span>
     <span class="c1"># Validate locator</span>
@@ -746,7 +746,7 @@
 <div class="viewcode-block" id="fill_nodes_info"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.fill_nodes_info">[docs]</a><span class="k">def</span> <span class="nf">fill_nodes_info</span><span class="p">(</span><span class="n">nodes_info</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">l_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">l_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">r_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decap_sid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fill &#39;nodes_info&#39; dict with the nodes containined in the &#39;nodes&#39; list.</span>
 
 <span class="sd">    :param nodes_info: Dict containined the nodes information where to add the</span>
@@ -777,7 +777,7 @@
 <span class="sd">    :param locator: Locator part of the SIDs (e.g. fcbb:bbbb::).</span>
 <span class="sd">    :type locator: str, optional</span>
 <span class="sd">    :raises InvalidConfigurationError: If the node params are invalid.</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Convert decap SID to uDT</span>
     <span class="n">udt</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">decap_sid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -840,22 +840,21 @@
             <span class="n">nodes_info</span><span class="p">[</span><span class="n">node_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span></div>
 
 
-<div class="viewcode-block" id="handle_srv6_usid_policy"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.handle_srv6_usid_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_usid_policy</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">nodes_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="handle_srv6_usid_policy"><a class="viewcode-back" href="../../controller/api/srv6_usid.html#controller.srv6_usid.handle_srv6_usid_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_srv6_usid_policy</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span>
                             <span class="n">lr_destination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rl_destination</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">nodes_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">nodes_rl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">table</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">metric</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                             <span class="n">persistency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">l_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">l_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                             <span class="n">r_grpc_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">r_grpc_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                            <span class="n">r_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decap_sid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+                            <span class="n">r_fwd_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">decap_sid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">locator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                            <span class="n">db_conn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Handle a SRv6 Policy using uSIDs</span>
 
 <span class="sd">    :param operation: The operation to be performed on the uSID policy</span>
 <span class="sd">                      (i.e. add, get, change, del)</span>
 <span class="sd">    :type operation: str</span>
-<span class="sd">    :param nodes_dict: Dict containing the nodes configuration.</span>
-<span class="sd">    :type nodes_dict: dict</span>
 <span class="sd">    :param destination: Destination of the SRv6 route</span>
 <span class="sd">    :type destination: str</span>
 <span class="sd">    :param nodes: Waypoints of the SRv6 route</span>
@@ -900,15 +899,10 @@
 <span class="sd">    :raises TooManySegmentsError: segments arg contains more than 6 segments</span>
 <span class="sd">    :raises SIDLocatorError: SID Locator is wrong for one or more segments</span>
 <span class="sd">    :raises InvalidSIDError: SID is wrong for one or more segments</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-locals, too-many-arguments</span>
     <span class="c1"># pylint: disable=too-many-return-statements, too-many-branches</span>
     <span class="c1"># pylint: disable=too-many-statements</span>
-    <span class="c1">#</span>
-    <span class="c1"># ArangoDB params</span>
-    <span class="n">arango_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_URL&#39;</span><span class="p">)</span>
-    <span class="n">arango_user</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_USER&#39;</span><span class="p">)</span>
-    <span class="n">arango_password</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;ARANGO_PASSWORD&#39;</span><span class="p">)</span>
     <span class="c1">#</span>
     <span class="c1"># Validate arguments</span>
     <span class="k">if</span> <span class="n">lr_destination</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -928,11 +922,6 @@
             <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">nodes_rl</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">pass</span>
-    <span class="k">if</span> <span class="n">nodes_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">operation</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;del&#39;</span><span class="p">]:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;&quot;nodes_filename&quot; argument is mandatory for </span><span class="si">%s</span><span class="s1"> &#39;</span>
-                         <span class="s1">&#39;operation&#39;</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;change&#39;</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Operation not yet implemented: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">operation</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -940,18 +929,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">persistency</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Error in get(): Persistency is disabled&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
-        <span class="c1"># Connect to ArangoDB</span>
-        <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
-            <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>     <span class="c1"># TODO keep arango connection open</span>
-        <span class="c1"># Connect to the db</span>
-        <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
-            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
-            <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
-            <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
-        <span class="p">)</span>
         <span class="c1"># Get the policy from the db</span>
         <span class="n">policies</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_usid_policy</span><span class="p">(</span>
-            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+            <span class="n">database</span><span class="o">=</span><span class="n">db_conn</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="n">_id</span><span class="p">,</span>
             <span class="n">lr_dst</span><span class="o">=</span><span class="n">lr_destination</span><span class="p">,</span>
             <span class="n">rl_dst</span><span class="o">=</span><span class="n">rl_destination</span><span class="p">,</span>
@@ -966,12 +946,14 @@
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="mi">0</span>
     <span class="k">if</span> <span class="n">operation</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;del&#39;</span><span class="p">]:</span>
+        <span class="c1"># Extract the nodes configuration from the db</span>
+        <span class="n">nodes_config</span> <span class="o">=</span> <span class="n">topo_utils</span><span class="o">.</span><span class="n">get_nodes_config</span><span class="p">()</span>
         <span class="c1">#</span>
         <span class="c1"># In order to perform this translation, a file containing the</span>
         <span class="c1"># mapping of node names to IPv6 addresses is required</span>
         <span class="c1">#</span>
         <span class="c1"># Read nodes from YAML file</span>
-        <span class="n">nodes_info</span> <span class="o">=</span> <span class="n">nodes_dict</span>
+        <span class="n">nodes_info</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]:</span> <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_config</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">]}</span>
         <span class="n">locator_bits</span> <span class="o">=</span> <span class="n">DEFAULT_LOCATOR_BITS</span>  <span class="c1"># TODO configurable locator bits</span>
         <span class="n">usid_id_bits</span> <span class="o">=</span> <span class="n">DEFAULT_USID_ID_BITS</span>  <span class="c1"># TODO configurable uSID id bits</span>
         <span class="c1"># Add nodes list for the left-to-right path to the &#39;nodes_info&#39; dict</span>
@@ -1011,19 +993,9 @@
                 <span class="s1">&#39;rl_nodes&#39;</span><span class="p">:</span> <span class="n">nodes_rl</span>
             <span class="p">}]</span>
         <span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;del&#39;</span><span class="p">:</span>
-            <span class="c1">#</span>
-            <span class="c1"># Connect to ArangoDB</span>
-            <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
-                <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>     <span class="c1"># TODO keep arango connection open</span>
-            <span class="c1"># Connect to the db</span>
-            <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
-                <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
-                <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
-            <span class="p">)</span>
             <span class="c1"># Get the policy from the db</span>
             <span class="n">policies</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">find_usid_policy</span><span class="p">(</span>
-                <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                <span class="n">database</span><span class="o">=</span><span class="n">db_conn</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="n">_id</span><span class="p">,</span>
                 <span class="n">lr_dst</span><span class="o">=</span><span class="n">lr_destination</span><span class="p">,</span>
                 <span class="n">rl_dst</span><span class="o">=</span><span class="n">rl_destination</span><span class="p">,</span>
@@ -1348,18 +1320,9 @@
                 <span class="c1"># Persist uSID policy to database</span>
                 <span class="k">if</span> <span class="n">persistency</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;add&#39;</span><span class="p">:</span>
-                        <span class="c1"># Connect to ArangoDB</span>
-                        <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
-                            <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>  <span class="c1"># TODO keep arango connection open</span>
-                        <span class="c1"># Connect to the db</span>
-                        <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
-                            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
-                            <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
-                            <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
-                        <span class="p">)</span>
                         <span class="c1"># Save the policy to the db</span>
                         <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">insert_usid_policy</span><span class="p">(</span>
-                            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                            <span class="n">database</span><span class="o">=</span><span class="n">db_conn</span><span class="p">,</span>
                             <span class="n">lr_dst</span><span class="o">=</span><span class="n">lr_destination</span><span class="p">,</span>
                             <span class="n">rl_dst</span><span class="o">=</span><span class="n">rl_destination</span><span class="p">,</span>
                             <span class="n">lr_nodes</span><span class="o">=</span><span class="n">nodes_lr</span><span class="p">,</span>
@@ -1376,19 +1339,9 @@
                             <span class="n">locator</span><span class="o">=</span><span class="n">locator</span>
                         <span class="p">)</span>
                     <span class="k">elif</span> <span class="n">operation</span> <span class="o">==</span> <span class="s1">&#39;del&#39;</span><span class="p">:</span>
-                        <span class="c1"># TODO keep arango connection open</span>
-                        <span class="c1"># Connect to ArangoDB</span>
-                        <span class="n">client</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_arango</span><span class="p">(</span>
-                            <span class="n">url</span><span class="o">=</span><span class="n">arango_url</span><span class="p">)</span>
-                        <span class="c1"># Connect to the db</span>
-                        <span class="n">database</span> <span class="o">=</span> <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">connect_srv6_usid_db</span><span class="p">(</span>
-                            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
-                            <span class="n">username</span><span class="o">=</span><span class="n">arango_user</span><span class="p">,</span>
-                            <span class="n">password</span><span class="o">=</span><span class="n">arango_password</span>
-                        <span class="p">)</span>
                         <span class="c1"># Save the policy to the db</span>
                         <span class="n">arangodb_driver</span><span class="o">.</span><span class="n">delete_usid_policy</span><span class="p">(</span>
-                            <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span>
+                            <span class="n">database</span><span class="o">=</span><span class="n">db_conn</span><span class="p">,</span>
                             <span class="n">key</span><span class="o">=</span><span class="n">_id</span><span class="p">,</span>
                             <span class="n">lr_dst</span><span class="o">=</span><span class="n">lr_destination</span><span class="p">,</span>
                             <span class="n">rl_dst</span><span class="o">=</span><span class="n">rl_destination</span><span class="p">,</span>

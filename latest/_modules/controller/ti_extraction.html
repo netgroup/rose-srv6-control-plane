@@ -176,9 +176,9 @@
 <span class="c1">#</span>
 
 
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Topology Information Extraction utilities</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># General imports</span>
 <span class="kn">import</span> <span class="nn">errno</span>
@@ -241,15 +241,15 @@
 
 
 <div class="viewcode-block" id="OptionalModuleNotLoadedError"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.OptionalModuleNotLoadedError">[docs]</a><span class="k">class</span> <span class="nc">OptionalModuleNotLoadedError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The requested feature depends on an optional module that has not been</span>
 <span class="sd">    loaded</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 
 
 <span class="c1"># Utility function to dump relevant information of the topology</span>
 <div class="viewcode-block" id="dump_topo_json"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.dump_topo_json">[docs]</a><span class="k">def</span> <span class="nf">dump_topo_json</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">topo_file</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump the graph to a JSON file</span>
 
 <span class="sd">    :param graph: The graph to be exported</span>
@@ -261,7 +261,7 @@
 <span class="sd">    :raises OptionalModuleNotLoadedError: The NetworkX module required by</span>
 <span class="sd">                                          dump_topo_json has not has not been</span>
 <span class="sd">                                          loaded. Is it installed?</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Export the topology to a JSON file</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;*** Exporting topology to </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">topo_file</span><span class="p">)</span>
     <span class="c1">#</span>
@@ -302,10 +302,10 @@
 
 <div class="viewcode-block" id="dump_topo_yaml"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.dump_topo_yaml">[docs]</a><span class="k">def</span> <span class="nf">dump_topo_yaml</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">node_to_systemid</span><span class="p">,</span>
                    <span class="n">nodes_file_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges_file_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dump the provided set of nodes and edges to a dict representation.</span>
 <span class="sd">    Optionally, nodes and edges are exported as YAML file</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># This function depends on the pyaml library, which is a</span>
     <span class="c1"># optional dependency for this script</span>
@@ -351,9 +351,9 @@
 
 
 <div class="viewcode-block" id="connect_telnet"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.connect_telnet">[docs]</a><span class="k">def</span> <span class="nf">connect_telnet</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Establish a telnet connection to a router on a given port</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># Establish a telnet connection to the router</span>
     <span class="k">try</span><span class="p">:</span>
@@ -375,9 +375,9 @@
 
 <span class="c1"># Build NetworkX Topology graph</span>
 <div class="viewcode-block" id="build_topo_graph"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.build_topo_graph">[docs]</a><span class="k">def</span> <span class="nf">build_topo_graph</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert nodes and edges to a NetworkX graph</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># This function depends on the NetworkX library, which is a</span>
     <span class="c1"># optional dependency for this script</span>
@@ -403,9 +403,9 @@
 
 <span class="c1"># Utility function to export the network graph as an image file</span>
 <div class="viewcode-block" id="draw_topo"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.draw_topo">[docs]</a><span class="k">def</span> <span class="nf">draw_topo</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">svg_topo_file</span><span class="p">,</span> <span class="n">dot_topo_file</span><span class="o">=</span><span class="n">DOT_FILE_TOPO_GRAPH</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Export the NetworkX graph to a SVG image</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># This function depends on the NetworkX library, which is a</span>
     <span class="c1"># optional dependency for this script</span>
@@ -430,10 +430,10 @@
 <div class="viewcode-block" id="connect_and_extract_topology_isis"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.connect_and_extract_topology_isis">[docs]</a><span class="k">def</span> <span class="nf">connect_and_extract_topology_isis</span><span class="p">(</span><span class="n">ips_ports</span><span class="p">,</span>
                                       <span class="n">isisd_pwd</span><span class="o">=</span><span class="n">DEFAULT_ISISD_PASSWORD</span><span class="p">,</span>
                                       <span class="n">verbose</span><span class="o">=</span><span class="n">DEFAULT_VERBOSE</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Establish a telnet connection to isisd process running on a router</span>
 <span class="sd">    and extract the network topology from the router</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-branches, too-many-locals, too-many-statements</span>
     <span class="c1"># ISIS password</span>
@@ -601,10 +601,10 @@
                                          <span class="n">edges_file_yaml</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                          <span class="n">topo_graph</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                                          <span class="n">verbose</span><span class="o">=</span><span class="n">DEFAULT_VERBOSE</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Run Topology Information Extraction from a set of routers.</span>
 <span class="sd">    Optionally export the topology to a JSON file, YAML file or SVG image</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1"># Topology Information Extraction</span>
@@ -641,9 +641,9 @@
 
 <span class="c1"># Parse command line options and dump results</span>
 <div class="viewcode-block" id="parse_arguments"><a class="viewcode-back" href="../../controller/api/ti_extraction.html#controller.ti_extraction.parse_arguments">[docs]</a><span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">():</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Command-line arguments parser</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Initialize parser</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Topology Information Extraction (from ISIS) &#39;</span>
@@ -706,9 +706,9 @@
 
 
 <span class="k">def</span> <span class="nf">__main</span><span class="p">():</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Entry point for this module</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#</span>
     <span class="c1"># Let&#39;s parse input parameters</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">()</span>
