@@ -46,6 +46,7 @@ import logging
 import os
 from argparse import ArgumentParser
 from cmd import Cmd
+from pkg_resources import resource_filename
 
 # Controller dependencies
 from apps.cli import srv6_cli, srv6pm_cli, topo_cli
@@ -65,6 +66,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONTROLLER_ADDRESS = 'localhost'
 # Controller gRPC port
 DEFAULT_CONTROLLER_PORT = 12345
+
+# Default path to the .env file
+DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/cli.env')
 
 # Path to the command history
 HISTFILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -1294,6 +1298,13 @@ def parse_arguments():
     # Get parser
     parser = ArgumentParser(
         description='Command Line Interface (CLI)'
+    )
+    # Configuration file (.env file)
+    # Currently this argument is unused, but reserved for future use
+    parser.add_argument(
+        '-e', '--env-file', dest='env_file', action='store',
+        default=DEFAULT_ENV_FILE_PATH, help='Path to the .env file '
+        'containing the parameters for the node manager'
     )
     # gRPC IP address of the controller
     parser.add_argument(
