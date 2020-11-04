@@ -37,7 +37,7 @@ from socket import AF_INET, AF_INET6
 import grpc
 
 # Proto dependencies
-from commons_pb2 import (STATUS_SUCCESS,
+from nb_commons_pb2 import (STATUS_SUCCESS,
                          STATUS_OPERATION_NOT_SUPPORTED,
                          STATUS_BAD_REQUEST,
                          STATUS_INTERNAL_ERROR,
