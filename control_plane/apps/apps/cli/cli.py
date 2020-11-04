@@ -68,7 +68,7 @@ DEFAULT_CONTROLLER_PORT = 12345
 
 # Path to the command history
 HISTFILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            '.controller_history')
+                             '.controller_history')
 # Size of the command history
 HISTFILE_SIZE = 1000
 
