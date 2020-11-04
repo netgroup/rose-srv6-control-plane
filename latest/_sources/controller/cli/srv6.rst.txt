@@ -603,7 +603,7 @@ Create, get, change or remove a unidirectional SRv6 tunnel between two nodes.
 
 
 ``usid_policy``
-----------
+---------------
 
 Create, get, change or remove a SRv6 uSID policy in a node.
 
