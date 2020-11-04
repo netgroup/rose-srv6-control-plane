@@ -25,5 +25,6 @@ control_plane/nb_protos/gen_py/
 
 control_plane/controller/starter.sh
 control_plane/node-manager/starter.sh
+control_plane/apps/apps/cli/starter.sh
 
 .controller_history
