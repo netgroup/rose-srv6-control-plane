@@ -24,21 +24,44 @@
 #
 
 
-"""Utilities functions used by Controller CLI"""
+"""
+Utilities functions used by Controller CLI.
+"""
 
 # General imports
 import glob as gb
 import os.path as op
 import readline
+import yaml
 
 # Set the delimiters for the auto-completion
 readline.set_completer_delims(' \t\n')
 
 
 def complete_path(path):
-    """Take a partial 'path' as argument and return a
-    list of path names that match the 'path'"""
-
+    """
+    Take a partial 'path' as argument and return a
+    list of path names that match the 'path'.
+    """
+    # Auto-completion for path arguments
     if op.isdir(path):
         return gb.glob(op.join(path, '*'))
     return gb.glob(path + '*')
+
+
+def save_yaml_dump(obj, filename):
+    """
+    Export an object to a YAML file.
+    """
+    # Save object to YAML file
+    with open(filename, 'w') as outfile:
+        yaml.dump(obj, outfile)
+
+
+def load_yaml_dump(filename):
+    """
+    Load a YAML file and return a dict representation
+    """
+    # Load YAML file.
+    with open(filename, 'r') as infile:
+        return yaml.safe_load(infile)

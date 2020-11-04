@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 This module contains a collection of utilities used by Controller
-'''
+"""
 
 # General imports
 import logging
@@ -51,9 +51,9 @@ logger = logging.getLogger(__name__)
 
 
 def validate_ipv6_address(ip_address):
-    '''
+    """
     Return True if the provided IP address is a valid IPv6 address
-    '''
+    """
     if ip_address is None:
         return False
     try:
@@ -66,9 +66,9 @@ def validate_ipv6_address(ip_address):
 # Utiliy function to check if the IP
 # is a valid IPv4 address
 def validate_ipv4_address(ip_address):
-    '''
+    """
     Return True if the provided IP address is a valid IPv4 address
-    '''
+    """
     if ip_address is None:
         return False
     try:
@@ -80,10 +80,10 @@ def validate_ipv4_address(ip_address):
 
 # Utiliy function to get the IP address family
 def get_address_family(ip_address):
-    '''
+    """
     Return the family of the provided IP address
     or None if the IP is invalid
-    '''
+    """
     if validate_ipv6_address(ip_address):
         # IPv6 address
         return AF_INET6
@@ -97,9 +97,9 @@ def get_address_family(ip_address):
 # Utiliy function to check if the IP
 # is a valid IP address
 def validate_ip_address(ip_address):
-    '''
+    """
     Return True if the provided IP address
-    is a valid IPv4 or IPv6 address'''
+    is a valid IPv4 or IPv6 address"""
     #
     return validate_ipv4_address(ip_address) or \
         validate_ipv6_address(ip_address)
@@ -107,7 +107,7 @@ def validate_ip_address(ip_address):
 
 # Build a grpc stub
 def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
-    '''
+    """
     Create a Channel to a server.
 
     :param server_ip: The IP address of the gRPC server
@@ -117,7 +117,7 @@ def get_grpc_session(server_ip, server_port, secure=False, certificate=None):
 
     :return: The requested gRPC Channel or None if the operation has failed.
     :rtype: class: `grpc._channel.Channel`
-    '''
+    """
 
     # Get family of the gRPC IP
     addr_family = get_address_family(server_ip)
@@ -167,8 +167,8 @@ status_code_to_str = {
 }
 
 
-def print_status_message(status_code, success_msg, failure_msg):
-    '''
+def print_status_message(status_code, success_msg, failure_msg):    # TODO to be removed
+    """
     Print success or failure message depending of the status code
     returned by a gRPC operation.
 
@@ -178,7 +178,7 @@ def print_status_message(status_code, success_msg, failure_msg):
     :type success_msg: str
     :param failure_msg: The message to print in case of error
     :type failure_msg: str
-    '''
+    """
     #
     if status_code == commons_pb2.STATUS_SUCCESS:
         # Success
@@ -223,3 +223,111 @@ def parse_ip_port(netloc):
 def grpc_chan_to_addr_port(channel):
     address, port = parse_ip_port(channel._channel.target().decode())
     return str(address), port
+
+
+class OperationNotSupportedException(Exception):
+    """
+    Operation not supported.
+    """
+
+
+class BadRequestException(Exception):
+    """
+    Bad request.
+    """
+
+
+class InternalError(Exception):
+    """
+    Internal error.
+    """
+
+
+class InvalidGRPCRequestException(Exception):
+    """
+    Invalid gRPC request.
+    """
+
+
+class FileExistsException(Exception):
+    """
+    File already exists.
+    """
+
+
+class NoSuchProcessException(Exception):
+    """
+    No such process.
+    """
+
+
+class InvalidActionException(Exception):
+    """
+    Invalid SRv6 action.
+    """
+
+
+class GRPCServiceUnavailableException(Exception):
+    """
+    gRPC service unavailable.
+    """
+
+
+class GRPCUnauthorizedException(Exception):
+    """
+    gRPC unauthorized.
+    """
+
+
+class NotConfiguredException(Exception):
+    """
+    Not configured.
+    """
+
+
+class AlreadyConfiguredException(Exception):
+    """
+    Already configured.
+    """
+
+
+class NoSuchDevicecException(Exception):
+    """
+    No such device.
+    """
+
+
+class InvalidArgumentError(Exception):
+    """
+    Invalid argument.
+    """
+
+
+def raise_exception_on_error(error_code):
+    if error_code == commons_pb2.STATUS_SUCCESS:
+        return
+    if error_code == commons_pb2.STATUS_OPERATION_NOT_SUPPORTED:
+        raise OperationNotSupportedException
+    if error_code == commons_pb2.STATUS_BAD_REQUEST:
+        raise BadRequestException
+    if error_code == commons_pb2.STATUS_INTERNAL_ERROR:
+        raise InternalError
+    if error_code == commons_pb2.STATUS_INVALID_GRPC_REQUEST:
+        raise InvalidGRPCRequestException
+    if error_code == commons_pb2.STATUS_FILE_EXISTS:
+        raise FileExistsException
+    if error_code == commons_pb2.STATUS_NO_SUCH_PROCESS:
+        raise NoSuchProcessException
+    if error_code == commons_pb2.STATUS_INVALID_ACTION:
+        raise InvalidActionException
+    if error_code == commons_pb2.STATUS_GRPC_SERVICE_UNAVAILABLE:
+        raise GRPCServiceUnavailableException
+    if error_code == commons_pb2.STATUS_GRPC_UNAUTHORIZED:
+        raise GRPCUnauthorizedException
+    if error_code == commons_pb2.STATUS_NOT_CONFIGURED:
+        raise NotConfiguredException
+    if error_code == commons_pb2.STATUS_ALREADY_CONFIGURED:
+        raise AlreadyConfiguredException
+    if error_code == commons_pb2.STATUS_NO_SUCH_DEVICE:
+        raise NoSuchDevicecException
+    raise InvalidArgumentError

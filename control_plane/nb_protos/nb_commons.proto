@@ -19,25 +19,28 @@ enum StatusCode {
 }
 
 enum FwdEngine {
-  LINUX = 0;
-  VPP = 1;
+  FWD_ENGINE_UNSPEC = 0;
+  LINUX = 1;
+  VPP = 2;
 }
 
 enum SRv6Action {
-  END = 0;
-  END_X = 1;
-  END_T = 2;
-  END_DX4 = 3;
-  END_DX6 = 4;
-  END_DX2 = 5;
-  END_DT4 = 6;
-  END_DT6 = 7;
-  END_B6 = 8;
-  END_B6_ENCAPS = 9;
+  SRV6_ACTION_UNSPEC = 0;
+  END = 1;
+  END_X = 2;
+  END_T = 3;
+  END_DX4 = 4;
+  END_DX6 = 5;
+  END_DX2 = 6;
+  END_DT4 = 7;
+  END_DT6 = 8;
+  END_B6 = 9;
+  END_B6_ENCAPS = 10;
 }
 
 enum EncapMode {
-  INLINE = 0;
-  ENCAP = 1;
-  L2ENCAP = 2;
+  ENCAP_MODE_UNSPEC = 0;
+  INLINE = 1;
+  ENCAP = 2;
+  L2ENCAP = 3;
 }

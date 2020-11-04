@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 Entry point for controller.
-'''
+"""
 
 # General imports
 import logging
@@ -40,7 +40,8 @@ from dotenv import load_dotenv
 from pkg_resources import resource_filename
 
 # Controller dependencies
-from controller.init_db import init_srv6_usid_db
+from controller import arangodb_driver
+from controller.init_db import init_db
 from controller.init_db import init_db_collections
 from controller.nb_grpc_server import grpc_server
 
@@ -57,11 +58,24 @@ DEFAULT_ENV_FILE_PATH = resource_filename(__name__, '../config/controller.env')
 DEFAULT_DEBUG = False
 
 
+def connect_db():
+    """
+    Initialize and return the ArangoDB client.
+
+    :return: ArangoDB client
+    :rtype: arango.client.ArangoClient
+    """
+    # Get the ArangoDB URL
+    arango_url = os.getenv('ARANGO_URL')
+    # Initialize and return the ArangoDB client
+    return arangodb_driver.connect_arango(url=arango_url)
+
+
 # Class representing the configuration
 class Config:
-    '''
+    """
     Class implementing configuration for the Controller.
-    '''
+    """
     # ArangoDB username
     arango_user = None
     # ArangoDB password
@@ -75,9 +89,9 @@ class Config:
 
     # Load configuration from .env file
     def load_config(self, env_file):
-        '''
+        """
         Load configuration from a .env file.
-        '''
+        """
         logger.info('*** Loading configuration from %s', env_file)
         # Path to the .env file
         env_path = Path(env_file)
@@ -109,9 +123,9 @@ class Config:
                 self.debug = None
 
     def validate_config(self):
-        '''
+        """
         Validate current configuration.
-        '''
+        """
         # pylint: disable=no-self-use
         logger.info('*** Validating configuration')
         success = True      # TODO validation
@@ -119,9 +133,9 @@ class Config:
         return success
 
     def print_config(self):
-        '''
+        """
         Pretty print current configuration.
-        '''
+        """
         print()
         print('****************** CONFIGURATION ******************')
         print()
@@ -136,16 +150,16 @@ class Config:
         print()
 
     def import_dependencies(self):
-        '''
+        """
         Import dependencies.
-        '''
+        """
 
 
 # Parse options
 def parse_arguments():
-    '''
+    """
     Command-line arguments parser.
-    '''
+    """
     # Get parser
     parser = ArgumentParser(
         description='gRPC Southbound APIs for SRv6 Controller'
@@ -165,15 +179,17 @@ def parse_arguments():
 
 
 def __main():
-    '''
+    """
     Entry point for this module.
-    '''
+    """
     # Parse command-line arguments
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
     env_file = args.env_file
     # Initialize database
-    init_srv6_usid_db()
+    init_db('srv6')
+    init_db('srv6pm')
+    init_db('topology')
     # Initialize collections on database
     init_db_collections()
     # Create a new configuration object
@@ -205,8 +221,10 @@ def __main():
     config.import_dependencies()
     # Print configuration
     config.print_config()
+    # Establish a connection to the database
+    db_client = connect_db()
     # Start the northbound gRPC server to expose the controller services
-    grpc_server.start_server()
+    grpc_server.start_server(db_client=db_client)
 
 
 if __name__ == '__main__':

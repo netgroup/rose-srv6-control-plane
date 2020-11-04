@@ -24,9 +24,9 @@
 #
 
 
-'''
+"""
 This module contains a collection of utilities used by Northbound gRPC server.
-'''
+"""
 
 # Proto dependencies
 import commons_pb2
@@ -48,6 +48,7 @@ sb_status_to_nb_status = {
     commons_pb2.STATUS_ALREADY_CONFIGURED: nb_commons_pb2.STATUS_ALREADY_CONFIGURED,
     commons_pb2.STATUS_NO_SUCH_DEVICE: nb_commons_pb2.STATUS_NO_SUCH_DEVICE}
 
+''' TODO to be removed
 action_to_grpc_repr = {
     'End': 'END',
     'End.X': 'END_x',
@@ -62,3 +63,4 @@ action_to_grpc_repr = {
 }
 
 grpc_repr_to_action = {v: k for k, v in action_to_grpc_repr.items()}
+'''
