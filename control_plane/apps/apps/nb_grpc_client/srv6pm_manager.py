@@ -148,7 +148,8 @@ class DelayMeasurementMode(Enum):
     """
     ONE_WAY = srv6pm_manager_pb2.DelayMeasurementMode.Value('OneWay')
     TWO_WAY = srv6pm_manager_pb2.DelayMeasurementMode.Value('TwoWay')
-    LOOPBACK_MODE = srv6pm_manager_pb2.DelayMeasurementMode.Value('LoopbackMode')
+    LOOPBACK_MODE = \
+        srv6pm_manager_pb2.DelayMeasurementMode.Value('LoopbackMode')
 
 
 # Mapping python representation of Delay Measurement Mode to gRPC
