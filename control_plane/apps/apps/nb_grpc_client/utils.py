@@ -37,19 +37,19 @@ from socket import AF_INET, AF_INET6
 import grpc
 
 # Proto dependencies
-from commons_pb2 import (STATUS_SUCCESS,
-                         STATUS_OPERATION_NOT_SUPPORTED,
-                         STATUS_BAD_REQUEST,
-                         STATUS_INTERNAL_ERROR,
-                         STATUS_INVALID_GRPC_REQUEST,
-                         STATUS_FILE_EXISTS,
-                         STATUS_NO_SUCH_PROCESS,
-                         STATUS_INVALID_ACTION,
-                         STATUS_GRPC_SERVICE_UNAVAILABLE,
-                         STATUS_GRPC_UNAUTHORIZED,
-                         STATUS_NOT_CONFIGURED,
-                         STATUS_ALREADY_CONFIGURED,
-                         STATUS_NO_SUCH_DEVICE)
+from nb_commons_pb2 import (STATUS_SUCCESS,
+                            STATUS_OPERATION_NOT_SUPPORTED,
+                            STATUS_BAD_REQUEST,
+                            STATUS_INTERNAL_ERROR,
+                            STATUS_INVALID_GRPC_REQUEST,
+                            STATUS_FILE_EXISTS,
+                            STATUS_NO_SUCH_PROCESS,
+                            STATUS_INVALID_ACTION,
+                            STATUS_GRPC_SERVICE_UNAVAILABLE,
+                            STATUS_GRPC_UNAUTHORIZED,
+                            STATUS_NOT_CONFIGURED,
+                            STATUS_ALREADY_CONFIGURED,
+                            STATUS_NO_SUCH_DEVICE)
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
