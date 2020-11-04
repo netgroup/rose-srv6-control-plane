@@ -115,14 +115,14 @@ def extract_topo_from_isis_and_load_on_arango(controller_channel,
     hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
     # Start periodic extraction
     for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
-                controller_channel=controller_channel,
-                isis_nodes=isis_nodes,
-                isisd_pwd=isisd_pwd,
-                addrs_config=addrs_config,
-                hosts_config=hosts_config,
-                period=period,
-                verbose=verbose
-            ):
+        controller_channel=controller_channel,
+        isis_nodes=isis_nodes,
+        isisd_pwd=isisd_pwd,
+        addrs_config=addrs_config,
+        hosts_config=hosts_config,
+        period=period,
+        verbose=verbose
+    ):
         # Save nodes to a YAML file
         if nodes_yaml is not None:
             cli_utils.save_yaml_dump(nodes, nodes_yaml)
@@ -159,14 +159,14 @@ def topology_information_extraction_isis(controller_channel,
         hosts_config = cli_utils.load_yaml_dump(hosts_yaml)
     # pylint: disable=too-many-arguments, unused-argument
     for nodes, edges in topo_manager.extract_topo_from_isis_and_load_on_arango(
-                controller_channel=controller_channel,
-                isis_nodes=routers,
-                isisd_pwd=isisd_pwd,
-                addrs_config=addrs_config,
-                hosts_config=hosts_config,
-                period=period,
-                verbose=verbose
-            ):
+        controller_channel=controller_channel,
+        isis_nodes=routers,
+        isisd_pwd=isisd_pwd,
+        addrs_config=addrs_config,
+        hosts_config=hosts_config,
+        period=period,
+        verbose=verbose
+    ):
         # Save nodes to a YAML file
         if nodes_file_yaml is not None:
             cli_utils.save_yaml_dump(nodes, nodes_file_yaml)

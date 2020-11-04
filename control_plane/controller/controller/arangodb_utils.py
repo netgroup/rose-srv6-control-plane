@@ -72,7 +72,8 @@ def load_yaml_dump(filename):
         return yaml.safe_load(infile)
 
 
-def fill_ip_addresses(nodes, addresses_yaml):    # TODO reuse fill_ip_addresses_from_list
+# TODO reuse fill_ip_addresses_from_list
+def fill_ip_addresses(nodes, addresses_yaml):
     """
     Add addresses to a nodes dict
     """

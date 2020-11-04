@@ -242,7 +242,7 @@ def handle_srv6_biditunnel(controller_channel, operation, node_l_ip,
         bsid_addr=bsid_addr,
         fwd_engine=fwd_engine,
         key=key
-    )    
+    )
     # If the operation is "get", print the SRv6 tunnels returned by the node
     if operation == 'get':
         if len(srv6_tunnels) == 0:

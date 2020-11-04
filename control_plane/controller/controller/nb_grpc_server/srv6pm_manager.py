@@ -248,7 +248,8 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 pm_driver=request.pm_driver
             )
             logger.debug('Configuration installed successfully')
-            # TODO set_configuration should return an exception in case of error
+            # TODO set_configuration should return an exception in case of
+            # error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Done, create a reply
         return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
@@ -273,7 +274,8 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 reflector_channel=refl_channel
             )
             logger.debug('Configuration reset successfully')
-            # TODO reset_configuration should return an exception in case of error
+            # TODO reset_configuration should return an exception in case of
+            # error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
         # Done, create a reply
         return srv6pm_manager_pb2_grpc.SRv6PMManagerReply(
@@ -298,21 +300,28 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
                 reflector_channel=refl_channel,
                 send_refl_dest=request.send_refl_dest,
                 refl_send_dest=request.refl_send_dest,
-                send_refl_sidlist=list(request.send_refl_sidlist),
-                refl_send_sidlist=list(request.refl_send_sidlist),
-                measurement_protocol=grpc_to_py_measurement_protocol(request.measurement_protocol),
-                measurement_type=grpc_to_py_measurement_type(request.measurement_type),
-                authentication_mode=grpc_to_py_authentication_mode(request.authentication_mode),
+                send_refl_sidlist=list(
+                    request.send_refl_sidlist),
+                refl_send_sidlist=list(
+                    request.refl_send_sidlist),
+                measurement_protocol=grpc_to_py_measurement_protocol(
+                    request.measurement_protocol),
+                measurement_type=grpc_to_py_measurement_type(
+                    request.measurement_type),
+                authentication_mode=grpc_to_py_authentication_mode(
+                    request.authentication_mode),
                 authentication_key=request.authentication_key,
-                timestamp_format=grpc_to_py_timestamp_format(request.timestamp_format),
-                delay_measurement_mode=grpc_to_py_delay_measurement_mode(request.delay_measurement_mode),
+                timestamp_format=grpc_to_py_timestamp_format(
+                    request.timestamp_format),
+                delay_measurement_mode=grpc_to_py_delay_measurement_mode(
+                    request.delay_measurement_mode),
                 padding_mbz=request.padding_mbz,
-                loss_measurement_mode=grpc_to_py_loss_measurement_mode(request.loss_measurement_mode),
+                loss_measurement_mode=grpc_to_py_loss_measurement_mode(
+                    request.loss_measurement_mode),
                 measure_id=request.measure_id,
                 send_refl_localseg=request.send_refl_localseg,
                 refl_send_localseg=request.refl_send_localseg,
-                force=request.force
-            )
+                force=request.force)
             logger.debug('Experiment started successfully')
             # TODO start_experiment should return an exception in case of error
             logger.debug('%s\n\n', utils.STATUS_CODE_TO_DESC[res])
