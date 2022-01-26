@@ -219,19 +219,21 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         """
         # Establish a connection to the "topology" database
         # We will keep the connection open forever
-        self.db_conn = arangodb_driver.connect_db(
-            client=db_client,
-            db_name='topology',
-            username=os.getenv('ARANGO_USER'),
-            password=os.getenv('ARANGO_PASSWORD')
-        )
-        # Init database and return nodes and edges collection
-        self.nodes_collection, self.edges_collection = \
-            arangodb_utils.initialize_db(
-                arango_url=os.getenv('ARANGO_URL'),
-                arango_user=os.getenv('ARANGO_USER'),
-                arango_password=os.getenv('ARANGO_PASSWORD')
-            )  # TODO reuse the existing db connection
+        self.db_conn = None
+        if db_client is not None:
+            self.db_conn = arangodb_driver.connect_db(
+                client=db_client,
+                db_name='topology',
+                username=os.getenv('ARANGO_USER'),
+                password=os.getenv('ARANGO_PASSWORD')
+            )
+            # Init database and return nodes and edges collection
+            self.nodes_collection, self.edges_collection = \
+                arangodb_utils.initialize_db(
+                    arango_url=os.getenv('ARANGO_URL'),
+                    arango_user=os.getenv('ARANGO_USER'),
+                    arango_password=os.getenv('ARANGO_PASSWORD')
+                )  # TODO reuse the existing db connection
 
     def ExtractTopology(self, request, context):
         """
