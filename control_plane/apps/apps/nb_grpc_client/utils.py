@@ -49,7 +49,8 @@ from nb_commons_pb2 import (STATUS_SUCCESS,
                             STATUS_GRPC_UNAUTHORIZED,
                             STATUS_NOT_CONFIGURED,
                             STATUS_ALREADY_CONFIGURED,
-                            STATUS_NO_SUCH_DEVICE)
+                            STATUS_NO_SUCH_DEVICE,
+                            STATUS_PERSISTENCY_NOT_ENABLED)
 
 # Logger reference
 logging.basicConfig(level=logging.NOTSET)
@@ -70,6 +71,7 @@ STATUS_CODE_TO_DESC = {
     STATUS_NOT_CONFIGURED: 'Error: Not configured',
     STATUS_ALREADY_CONFIGURED: 'Error: Already configured',
     STATUS_NO_SUCH_DEVICE: 'Error: Device not found',
+    STATUS_PERSISTENCY_NOT_ENABLED: 'Error: Persistency not enabled',
 }
 
 
@@ -118,6 +120,11 @@ def raise_exception_on_error(error_code):   # TODO exeptions more specific
         raise ControllerException('Entity already configured')
     if error_code == STATUS_NO_SUCH_DEVICE:
         raise ControllerException('No such device')
+    if error_code == STATUS_PERSISTENCY_NOT_ENABLED:
+        raise ControllerException('Persistency must be enabled to execute '
+                                  'the requested operation. Check '
+                                  'ENABLE_PERSISTENCY parameter in '
+                                  'your configuration file')
     raise ControllerException('Invalid argument')
 
 

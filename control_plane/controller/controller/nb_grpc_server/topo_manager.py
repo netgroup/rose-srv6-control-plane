@@ -321,6 +321,12 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
         #
+        # ENABLE_PERSISTENCY config parameter must be set to execute
+        # this operation
+        if os.getenv('ENABLE_PERSISTENCY') not in ['True', 'true']:
+            return topology_manager_pb2.TopologyManagerReply(
+                status=nb_commons_pb2.STATUS_PERSISTENCY_NOT_ENABLED)
+        #
         # Extract the parameters from the gRPC request
         #
         # Extract the nodes from the gRPC request
@@ -364,6 +370,12 @@ class TopologyManager(topology_manager_pb2_grpc.TopologyManagerServicer):
         """
         # pylint: disable=invalid-name, unused-argument, no-self-use
         #
+        # ENABLE_PERSISTENCY config parameter must be set to execute
+        # this operation
+        if os.getenv('ENABLE_PERSISTENCY') not in ['True', 'true']:
+            yield topology_manager_pb2.TopologyManagerReply(
+                status=nb_commons_pb2.STATUS_PERSISTENCY_NOT_ENABLED)
+            return
         # Create the reply message
         response = topology_manager_pb2.TopologyManagerReply()
         #
