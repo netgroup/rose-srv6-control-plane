@@ -229,7 +229,8 @@ def __main():
             # Establish a connection to the database
             db_client = connect_db()
     except requests.exceptions.ConnectionError:
-        logging.fatal('Cannot establish a connection to ArangoDB. Is ArangoDB running?')
+        logging.fatal(
+            'Cannot establish a connection to ArangoDB. Is ArangoDB running?')
         exit(-1)
     # Start the northbound gRPC server to expose the controller services
     grpc_server.start_server(db_client=db_client)
