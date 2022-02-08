@@ -172,86 +172,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-controller.ti_extraction">
-<span id="ti-extraction-module"></span><h1>ti_extraction module<a class="headerlink" href="#module-controller.ti_extraction" title="Permalink to this headline">¶</a></h1>
-<p>Topology Information Extraction utilities</p>
-<dl class="exception">
-<dt id="controller.ti_extraction.OptionalModuleNotLoadedError">
-<em class="property">exception </em><code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">OptionalModuleNotLoadedError</code><a class="reference internal" href="../../_modules/controller/ti_extraction.html#OptionalModuleNotLoadedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.OptionalModuleNotLoadedError" title="Permalink to this definition">¶</a></dt>
-<dd><p>The requested feature depends on an optional module that has not been
-loaded</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.build_topo_graph">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">build_topo_graph</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">edges</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#build_topo_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.build_topo_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert nodes and edges to a NetworkX graph</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.connect_and_extract_topology_isis">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">connect_and_extract_topology_isis</code><span class="sig-paren">(</span><em class="sig-param">ips_ports</em>, <em class="sig-param">isisd_pwd='zebra'</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#connect_and_extract_topology_isis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.connect_and_extract_topology_isis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Establish a telnet connection to isisd process running on a router
-and extract the network topology from the router</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.connect_telnet">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">connect_telnet</code><span class="sig-paren">(</span><em class="sig-param">router</em>, <em class="sig-param">port</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#connect_telnet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.connect_telnet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Establish a telnet connection to a router on a given port</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.draw_topo">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">draw_topo</code><span class="sig-paren">(</span><em class="sig-param">graph</em>, <em class="sig-param">svg_topo_file</em>, <em class="sig-param">dot_topo_file='/tmp/topology.dot'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#draw_topo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.draw_topo" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export the NetworkX graph to a SVG image</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.dump_topo_json">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">dump_topo_json</code><span class="sig-paren">(</span><em class="sig-param">graph</em>, <em class="sig-param">topo_file</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#dump_topo_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.dump_topo_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dump the graph to a JSON file</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (class: <cite>networkx.Graph</cite>) – The graph to be exported</p></li>
-<li><p><strong>topo_file</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The path and the name of the JSON file</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a></p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#controller.ti_extraction.OptionalModuleNotLoadedError" title="controller.ti_extraction.OptionalModuleNotLoadedError"><strong>OptionalModuleNotLoadedError</strong></a> – The NetworkX module required by
-dump_topo_json has not has not been
-loaded. Is it installed?</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.dump_topo_yaml">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">dump_topo_yaml</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">edges</em>, <em class="sig-param">node_to_systemid</em>, <em class="sig-param">nodes_file_yaml=None</em>, <em class="sig-param">edges_file_yaml=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#dump_topo_yaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.dump_topo_yaml" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dump the provided set of nodes and edges to a dict representation.
-Optionally, nodes and edges are exported as YAML file</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.parse_arguments">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">parse_arguments</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#parse_arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.parse_arguments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Command-line arguments parser</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.ti_extraction.topology_information_extraction_isis">
-<code class="sig-prename descclassname">controller.ti_extraction.</code><code class="sig-name descname">topology_information_extraction_isis</code><span class="sig-paren">(</span><em class="sig-param">routers</em>, <em class="sig-param">period</em>, <em class="sig-param">isisd_pwd</em>, <em class="sig-param">topo_file_json=None</em>, <em class="sig-param">nodes_file_yaml=None</em>, <em class="sig-param">edges_file_yaml=None</em>, <em class="sig-param">topo_graph=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/ti_extraction.html#topology_information_extraction_isis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.ti_extraction.topology_information_extraction_isis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run Topology Information Extraction from a set of routers.
-Optionally export the topology to a JSON file, YAML file or SVG image</p>
-</dd></dl>
-
+  <div class="section" id="ti-extraction-module">
+<h1>ti_extraction module<a class="headerlink" href="#ti-extraction-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 

@@ -172,84 +172,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-controller.arangodb_utils">
-<span id="arangodb-utils-module"></span><h1>arangodb_utils module<a class="headerlink" href="#module-controller.arangodb_utils" title="Permalink to this headline">¶</a></h1>
-<p>ArangoDB utilities</p>
-<dl class="exception">
-<dt id="controller.arangodb_utils.TopologyExtractionException">
-<em class="property">exception </em><code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">TopologyExtractionException</code><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#TopologyExtractionException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.TopologyExtractionException" title="Permalink to this definition">¶</a></dt>
-<dd><p>An error occurred during topology extraction.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.add_hosts">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">add_hosts</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">edges</em>, <em class="sig-param">hosts_yaml</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#add_hosts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.add_hosts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add hosts to a topology</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.add_hosts_from_list">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">add_hosts_from_list</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">edges</em>, <em class="sig-param">hosts_config</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#add_hosts_from_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.add_hosts_from_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add hosts to a topology</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.extract_topo_from_isis">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">extract_topo_from_isis</code><span class="sig-paren">(</span><em class="sig-param">isis_nodes</em>, <em class="sig-param">isisd_pwd</em>, <em class="sig-param">nodes_yaml</em>, <em class="sig-param">edges_yaml</em>, <em class="sig-param">addrs_yaml=None</em>, <em class="sig-param">hosts_yaml=None</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#extract_topo_from_isis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.extract_topo_from_isis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the network topology
-from a set of nodes running ISIS protocol</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.extract_topo_from_isis_and_load_on_arango">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">extract_topo_from_isis_and_load_on_arango</code><span class="sig-paren">(</span><em class="sig-param">isis_nodes</em>, <em class="sig-param">isisd_pwd</em>, <em class="sig-param">arango_url=None</em>, <em class="sig-param">arango_user=None</em>, <em class="sig-param">arango_password=None</em>, <em class="sig-param">nodes_yaml=None</em>, <em class="sig-param">edges_yaml=None</em>, <em class="sig-param">addrs_yaml=None</em>, <em class="sig-param">hosts_yaml=None</em>, <em class="sig-param">period=0</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#extract_topo_from_isis_and_load_on_arango"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.extract_topo_from_isis_and_load_on_arango" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the network topology from a set of nodes running ISIS protocol
-and upload it on a database</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">extract_topo_from_isis_and_load_on_arango_stream</code><span class="sig-paren">(</span><em class="sig-param">isis_nodes</em>, <em class="sig-param">isisd_pwd</em>, <em class="sig-param">nodes_collection=None</em>, <em class="sig-param">edges_collection=None</em>, <em class="sig-param">addrs_config=None</em>, <em class="sig-param">hosts_config=None</em>, <em class="sig-param">period=0</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#extract_topo_from_isis_and_load_on_arango_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.extract_topo_from_isis_and_load_on_arango_stream" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extract the network topology from a set of nodes running ISIS protocol
-and upload it on a database</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.fill_ip_addresses">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">fill_ip_addresses</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">addresses_yaml</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#fill_ip_addresses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.fill_ip_addresses" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add addresses to a nodes dict</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.fill_ip_addresses_from_list">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">fill_ip_addresses_from_list</code><span class="sig-paren">(</span><em class="sig-param">nodes</em>, <em class="sig-param">addrs_config</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#fill_ip_addresses_from_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.fill_ip_addresses_from_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add addresses to a nodes dict</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.initialize_db">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">initialize_db</code><span class="sig-paren">(</span><em class="sig-param">arango_url</em>, <em class="sig-param">arango_user</em>, <em class="sig-param">arango_password</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#initialize_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.initialize_db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize database</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.load_topo_on_arango">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">load_topo_on_arango</code><span class="sig-paren">(</span><em class="sig-param">arango_url</em>, <em class="sig-param">user</em>, <em class="sig-param">password</em>, <em class="sig-param">nodes</em>, <em class="sig-param">edges</em>, <em class="sig-param">nodes_collection</em>, <em class="sig-param">edges_collection</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#load_topo_on_arango"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.load_topo_on_arango" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a network topology on a database</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.load_yaml_dump">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">load_yaml_dump</code><span class="sig-paren">(</span><em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#load_yaml_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.load_yaml_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a YAML file and return a dict representation</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="controller.arangodb_utils.save_yaml_dump">
-<code class="sig-prename descclassname">controller.arangodb_utils.</code><code class="sig-name descname">save_yaml_dump</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">filename</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/controller/arangodb_utils.html#save_yaml_dump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#controller.arangodb_utils.save_yaml_dump" title="Permalink to this definition">¶</a></dt>
-<dd><p>Export an object to a YAML file</p>
-</dd></dl>
-
+  <div class="section" id="arangodb-utils-module">
+<h1>arangodb_utils module<a class="headerlink" href="#arangodb-utils-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
