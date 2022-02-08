@@ -31,6 +31,7 @@ Entry point for controller.
 # General imports
 import logging
 import os
+import requests
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
@@ -186,12 +187,6 @@ def __main():
     args = parse_arguments()
     # Path to the .env file containing the parameters for the node manager'
     env_file = args.env_file
-    # Initialize database
-    init_db('srv6')
-    init_db('srv6pm')
-    init_db('topology')
-    # Initialize collections on database
-    init_db_collections()
     # Create a new configuration object
     config = Config()
     # Load configuration from .env file
@@ -221,8 +216,22 @@ def __main():
     config.import_dependencies()
     # Print configuration
     config.print_config()
-    # Establish a connection to the database
-    db_client = connect_db()
+    # Setup persistency
+    try:
+        db_client = None
+        if os.getenv('ENABLE_PERSISTENCY') in ['True', 'true']:
+            # Initialize database
+            init_db('srv6')
+            init_db('srv6pm')
+            init_db('topology')
+            # Initialize collections on database
+            init_db_collections()
+            # Establish a connection to the database
+            db_client = connect_db()
+    except requests.exceptions.ConnectionError:
+        logging.fatal(
+            'Cannot establish a connection to ArangoDB. Is ArangoDB running?')
+        exit(-1)
     # Start the northbound gRPC server to expose the controller services
     grpc_server.start_server(db_client=db_client)
 

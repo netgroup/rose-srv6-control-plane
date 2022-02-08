@@ -224,12 +224,14 @@ class SRv6Manager(nb_srv6_manager_pb2_grpc.SRv6ManagerServicer):
         """
         # Establish a connection to the "srv6" database
         # We will keep the connection open forever
-        self.db_conn = arangodb_driver.connect_db(
-            client=db_client,
-            db_name='srv6',
-            username=os.getenv('ARANGO_USER'),
-            password=os.getenv('ARANGO_PASSWORD')
-        )
+        self.db_conn = None
+        if db_client is not None:
+            self.db_conn = arangodb_driver.connect_db(
+                client=db_client,
+                db_name='srv6',
+                username=os.getenv('ARANGO_USER'),
+                password=os.getenv('ARANGO_PASSWORD')
+            )
 
     def HandleSRv6MicroSIDPolicy(self, request, context):
         """

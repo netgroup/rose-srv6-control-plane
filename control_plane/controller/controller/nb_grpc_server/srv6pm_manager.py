@@ -217,12 +217,14 @@ class SRv6PMManager(srv6pm_manager_pb2_grpc.SRv6PMManagerServicer):
         """
         # Establish a connection to the "srv6pm" database
         # We will keep the connection open forever
-        self.db_conn = arangodb_driver.connect_db(
-            client=db_client,
-            db_name='srv6pm',
-            username=os.getenv('ARANGO_USER'),
-            password=os.getenv('ARANGO_PASSWORD')
-        )
+        self.db_conn = None
+        if db_client is not None:
+            self.db_conn = arangodb_driver.connect_db(
+                client=db_client,
+                db_name='srv6pm',
+                username=os.getenv('ARANGO_USER'),
+                password=os.getenv('ARANGO_PASSWORD')
+            )
 
     def SetConfiguration(self, request, context):
         """
