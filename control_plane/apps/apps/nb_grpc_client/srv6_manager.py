@@ -62,7 +62,7 @@ class SRv6Action(Enum):
     END_DT6 = nb_commons_pb2.SRv6Action.Value('END_DT6')
     END_B6 = nb_commons_pb2.SRv6Action.Value('END_B6')
     END_B6_ENCAPS = nb_commons_pb2.SRv6Action.Value('END_B6_ENCAPS')
-
+    END_DT46 = nb_commons_pb2.SRv6Action.Value('END_DT46')
 
 # Mapping python representation of SRv6 Action to gRPC representation
 py_to_grpc_srv6_action = {
@@ -76,7 +76,8 @@ py_to_grpc_srv6_action = {
     'End.DT4': SRv6Action.END_DT4.value,
     'End.DT6': SRv6Action.END_DT6.value,
     'End.B6': SRv6Action.END_B6.value,
-    'End.B6.Encaps': SRv6Action.END_B6_ENCAPS.value
+    'End.B6.Encaps': SRv6Action.END_B6_ENCAPS.value,
+    'End.DT46': SRv6Action.END_DT46.value
 }
 
 # Mapping gRPC representation of SRv6 Action to python representation

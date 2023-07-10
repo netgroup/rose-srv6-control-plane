@@ -37,6 +37,7 @@ enum SRv6Action {
   END_DT6 = 8;
   END_B6 = 9;
   END_B6_ENCAPS = 10;
+  END_DT46 = 11;
 }
 
 enum EncapMode {

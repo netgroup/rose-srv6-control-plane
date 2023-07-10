@@ -136,6 +136,7 @@ class SRv6ManagerLinux():
             'End.DX4': self.handle_end_dx4_behavior_request,
             'End.DT6': self.handle_end_dt6_behavior_request,
             'End.DT4': self.handle_end_dt4_behavior_request,
+            'End.DT46': self.handle_end_dt46_behavior_request,
             'End.B6': self.handle_end_b6_behavior_request,
             'End.B6.Encaps': self.handle_end_b6_encaps_behavior_request,
             'uN': self.handle_un_behavior_request,
@@ -495,6 +496,47 @@ class SRv6ManagerLinux():
                 'type': 'seg6local',
                 'action': 'End.DT4',
                 'table': lookup_table
+            }
+            # Handle route
+            self.ip_route.route(operation, family=AF_INET6,
+                                dst=segment,
+                                oif=self.interface_to_idx[device],
+                                table=table,
+                                priority=metric,
+                                encap=encap)
+            # and create the response
+            LOGGER.debug('Send response: OK')
+            return commons_pb2.STATUS_SUCCESS
+        # Operation unknown: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+    
+    def handle_end_dt46_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DT46 behavior"""
+        
+        # Extract params from request
+        segment = behavior.segment
+        lookup_table = behavior.lookup_table
+        print('ciao', lookup_table)
+        device = behavior.device
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        device = device if device != '' \
+            else self.non_loopback_interfaces[0]
+        table = table if table != -1 else None
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'del':
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add', 'change']:
+            # Build encap info
+            encap = {
+                'type': 'seg6local',
+                'action': 'End.DT46',
+                'vrf_table': lookup_table
             }
             # Handle route
             self.ip_route.route(operation, family=AF_INET6,

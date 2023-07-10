@@ -80,6 +80,7 @@ class SRv6ManagerVPP():
             'End.DX4': self.handle_end_dx4_behavior_request,
             'End.DT6': self.handle_end_dt6_behavior_request,
             'End.DT4': self.handle_end_dt4_behavior_request,
+            'End.DT46': self.handle_end_dt46_behavior_request,
             'End.B6': self.handle_end_b6_behavior_request,
             'End.B6.Encaps': self.handle_end_b6_encaps_behavior_request,
         }
@@ -702,6 +703,61 @@ class SRv6ManagerVPP():
             #
             # Build the command to add the behavior
             cmd = ('sr localsid address %s behavior end.dt4 %s'
+                   % (segment, lookup_table))
+            # Append the table to the command
+            if table is not None:
+                cmd += ' fib-table %s' % table
+            # Send the command to VPP
+            # This command returns a empty string in case of success
+            # The decode() function is used to convert the response to a
+            # string
+            LOGGER.debug('Sending command to VPP: %s', cmd)
+            res = self.exec_vpp_cmd(cmd).decode()
+            if res != '':
+                # The operation failed
+                logging.error('VPP returned an error: %s', res)
+                return STATUS_CODE['STATUS_INTERNAL_ERROR']
+            # The behavior has been processed, create the response
+            LOGGER.debug('Send response: OK')
+            return srv6_manager_pb2.SRv6ManagerReply(
+                status=STATUS_CODE['STATUS_SUCCESS'])
+        # Unknown operation: this is a bug
+        LOGGER.error('BUG - Unrecognized operation: %s', operation)
+        sys.exit(-1)
+
+    def handle_end_dt46_behavior_request(self, operation, behavior):
+        """Handle seg6local End.DT46 behavior"""
+
+        # Extract params from request
+        segment = behavior.segment
+        lookup_table = behavior.lookup_table
+        table = behavior.table
+        metric = behavior.metric
+        # Check optional params
+        #
+        # Table is a optional parameter
+        # -1 is the default value that means that no table has
+        # been provided
+        table = table if table != -1 else None
+        # Metric is a optional parameter
+        # -1 is the default value that means that no metric has
+        # been provided
+        metric = metric if metric != -1 else None
+        # Perform the operation
+        if operation == 'change':
+            LOGGER.info('Operation %s is not yet implemented\n', operation)
+            return STATUS_CODE['STATUS_OPERATION_NOT_SUPPORTED']
+        if operation == 'del':
+            # The operation is a "delete"
+            return self.handle_srv6_behavior_del_request(behavior)
+        if operation == 'get':
+            # The operation is a "get"
+            return self.handle_srv6_behavior_get_request(behavior)
+        if operation in ['add']:
+            # The operation is a "add"
+            #
+            # Build the command to add the behavior
+            cmd = ('sr localsid address %s behavior end.dt46 %s'
                    % (segment, lookup_table))
             # Append the table to the command
             if table is not None:
