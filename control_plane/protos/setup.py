@@ -2,16 +2,9 @@
 
 
 import os
-import sys
-import subprocess
 import setuptools
-from pathlib import Path
-import shutil
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools.command.egg_info import egg_info
-from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop as _develop
+from setuptools.command.bdist_egg import bdist_egg as _bdist_egg
 
 
 with open("README.md", "r") as fh:
@@ -27,35 +20,43 @@ if os.path.isfile(requirements_path):
         install_requires = f.read().splitlines()
 
 
-def build_protos():
-    subprocess.call(['pip', 'install', 'grpcio-tools'])
+class BuildPackageProtos(setuptools.Command):
+    """Command to generate project *_pb2.py modules from proto files."""
 
-    PYTHON_PATH = sys.executable
+    user_options = []
 
-    dirpath = Path('./gen_py')
-    if dirpath.exists() and dirpath.is_dir():
-        shutil.rmtree(dirpath)
+    def initialize_options(self):
+        pass
 
-    os.makedirs('./gen_py')
+    def finalize_options(self):
+        pass
 
-    open('./gen_py/__init__.py', 'a').close()
-
-    # Generate python grpc stubs from proto files
-    print('Generation of python gRPC stubs')
-    args = "-I. --proto_path=. --python_out=./gen_py --grpc_python_out=./gen_py ./*.proto"
-    result = subprocess.call(
-        "%s -m grpc_tools.protoc %s" %
-        (PYTHON_PATH, args), shell=True)
-    if result != 0:
-        exit(-1)
+    def run(self):
+        # Build protos with strict mode enabled
+        # (i.e. exit with non-zero value if the proto compiling fails)
+        from grpc.tools import command
+        command.build_package_protos(self.distribution.package_dir[''], True)
 
 
-# Compile the proto files before running the setup
-build_protos()
+class develop(_develop):
+
+    def run(self):
+        # Run build_proto_modules command
+        self.run_command('build_proto_modules')
+        # Run develop command
+        _develop.run(self)
+
+
+class bdist_egg(_bdist_egg):
+    def run(self):
+        # Run build_proto_modules command
+        self.run_command('build_proto_modules')
+        # Run bdist_egg command
+        _bdist_egg.run(self)
 
 
 packages = [
-    '.',
+    '',
 ]
 
 setuptools.setup(
@@ -69,14 +70,22 @@ setuptools.setup(
     url="https://github.com/netgroup/rose-srv6-control-plane",
     packages=packages,
     package_dir={
-        '': 'gen_py',
+        '': '.',
     },
     install_requires=install_requires,
+    setup_requires=[
+        'grpcio-tools',
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: Linux',
         'Programming Language :: Python',
     ],
+    cmdclass={
+        'build_proto_modules': BuildPackageProtos,
+        'bdist_egg': bdist_egg,
+        'develop': develop,
+    },
     python_requires='>=3.6',
 )
